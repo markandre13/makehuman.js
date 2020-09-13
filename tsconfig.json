@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "traceResolution": false,
+    "lib": ["es5", "es6", "es2017.object", "dom"],
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "declaration": true,
+    "strict": true,
+    "allowJs": false,
+    "noImplicitAny": true,
+    "inlineSourceMap": false,
+    "sourceMap": true
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
