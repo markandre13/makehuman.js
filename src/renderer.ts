@@ -15,14 +15,17 @@ function main() {
     }
 
     const vertextShaderProgram = `
+    // this is our input per vertex
     attribute vec4 aVertexPosition;
     attribute vec3 aVertexNormal;
     attribute vec4 aVertexColor;
 
+    // input for all vertices (uniform for the whole shader program)
     uniform mat4 uNormalMatrix;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
+    // data exchanged with other graphic pipeline stages
     varying lowp vec4 vColor;
     varying highp vec3 vLighting;
 
@@ -42,6 +45,7 @@ function main() {
     }`
 
     const fragmentShaderProgram = `
+    #pragma vscode_glslint_stage: frag
     varying lowp vec4 vColor;
     varying highp vec3 vLighting;
     void main(void) {
@@ -96,46 +100,46 @@ function main() {
 //
 function initBuffers(gl: WebGL2RenderingContext) {
     // POSITIONS
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-    const positions = [
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+    const vertices = [
         // Front face
-        -1.0, -1.0, 1.0,
-        1.0, -1.0, 1.0,
-        1.0, 1.0, 1.0,
-        -1.0, 1.0, 1.0,
+        -1.0, -1.0, 1.0,   // 0
+        1.0, -1.0, 1.0,    // 1
+        1.0, 1.0, 1.0,     // 2
+        -1.0, 1.0, 1.0,    // 3
 
         // Back face
-        -1.0, -1.0, -1.0,
-        -1.0, 1.0, -1.0,
-        1.0, 1.0, -1.0,
-        1.0, -1.0, -1.0,
+        -1.0, -1.0, -1.0,  // 4
+        -1.0, 1.0, -1.0,   // 5
+        1.0, 1.0, -1.0,    // 6
+        1.0, -1.0, -1.0,   // 7
 
         // Top face
-        -1.0, 1.0, -1.0,
-        -1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0,
-        1.0, 1.0, -1.0,
+        -1.0, 1.0, -1.0,   // 8 = 5
+        -1.0, 1.0, 1.0,    // 9 = 3
+        1.0, 1.0, 1.0,     // 10 = 2
+        1.0, 1.0, -1.0,    // 11 = 6
 
         // Bottom face
-        -1.0, -1.0, -1.0,
-        1.0, -1.0, -1.0,
-        1.0, -1.0, 1.0,
-        -1.0, -1.0, 1.0,
+        -1.0, -1.0, -1.0,  // 12 = 4
+        1.0, -1.0, -1.0,   // 13 = 7
+        1.0, -1.0, 1.0,    // 14 = 1
+        -1.0, -1.0, 1.0,   // 15 = 0
 
         // Right face
-        1.0, -1.0, -1.0,
-        1.0, 1.0, -1.0,
-        1.0, 1.0, 1.0,
-        1.0, -1.0, 1.0,
+        1.0, -1.0, -1.0,   // 16 = 7
+        1.0, 1.0, -1.0,    // 17 = 6
+        1.0, 1.0, 1.0,     // 18 = 2
+        1.0, -1.0, 1.0,    // 19 = 1
 
         // Left face
-        -1.0, -1.0, -1.0,
-        -1.0, -1.0, 1.0,
-        -1.0, 1.0, 1.0,
-        -1.0, 1.0, -1.0,
+        -1.0, -1.0, -1.0,  // 20 = 4
+        -1.0, -1.0, 1.0,   // 21 = 1
+        -1.0, 1.0, 1.0,    // 22 = 3
+        -1.0, 1.0, -1.0,   // 23 = 5
     ]
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
 
     // NORMALS
     const normalBuffer = gl.createBuffer()
@@ -228,7 +232,7 @@ function initBuffers(gl: WebGL2RenderingContext) {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
     return {
-        position: positionBuffer,
+        position: vertexBuffer,
         normal: normalBuffer,
         color: colorBuffer,
         indices: indexBuffer,
@@ -277,34 +281,13 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     // note: glmatrix.js always has the first argument
     // as the destination to receive the result.
-    mat4.perspective(projectionMatrix,
-        fieldOfView,
-        aspect,
-        zNear,
-        zFar)
+    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
 
-    // Set the drawing position to the "identity" point, which is
-    // the center of the scene.
+    // Set the drawing position to the "identity" point, which is the center of the scene.
     const modelViewMatrix = mat4.create()
-    //   const modelViewMatrix = new DOMMatrix()
-
-    // Now move the drawing position a bit to where we want to
-    // start drawing the square.
-    //   modelViewMatrix.translate(-0.0, 0.0, -6.0)
-    //   modelViewMatrix.rotateAxisAngle(0, 0, 1, cubeRotation)
-    //   modelViewMatrix.rotateAxisAngle(0, 1, 0, cubeRotation * .7)
-
-    mat4.translate(modelViewMatrix,     // destination matrix
-        modelViewMatrix,     // matrix to translate
-        [-0.0, 0.0, -6.0])   // amount to translate
-    mat4.rotate(modelViewMatrix,  // destination matrix
-        modelViewMatrix,  // matrix to rotate
-        cubeRotation,     // amount to rotate in radians
-        [0, 0, 1]);       // axis to rotate around (Z)
-    mat4.rotate(modelViewMatrix,  // destination matrix
-        modelViewMatrix,  // matrix to rotate
-        cubeRotation * .7,// amount to rotate in radians
-        [0, 1, 0])        // axis to rotate around (X)
+    mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]) // move the model (cube) away
+    mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
+    mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation * .7, [0, 1, 0])
 
     const normalMatrix = mat4.create();
     mat4.invert(normalMatrix, modelViewMatrix);
@@ -313,11 +296,11 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute
     {
-        const numComponents = 3;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
+        const numComponents = 3
+        const type = gl.FLOAT
+        const normalize = false
+        const stride = 0
+        const offset = 0
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
         gl.vertexAttribPointer(
             programInfo.attribLocations.vertexPosition,
@@ -327,17 +310,17 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
             stride,
             offset);
         gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition);
+            programInfo.attribLocations.vertexPosition)
     }
 
     // Tell WebGL how to pull out the normals from
     // the normal buffer into the vertexNormal attribute.
     {
-        const numComponents = 3;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
+        const numComponents = 3
+        const type = gl.FLOAT
+        const normalize = false
+        const stride = 0
+        const offset = 0
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal)
         gl.vertexAttribPointer(
             programInfo.attribLocations.vertexNormal,
@@ -353,7 +336,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     // Tell WebGL how to pull out the colors from the color buffer
     // into the vertexColor attribute.
     {
-        const numComponents = 4;
+        const numComponents = 4; // RGBA
         const type = gl.FLOAT;
         const normalize = false;
         const stride = 0;
@@ -372,10 +355,9 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     // Tell WebGL which indices to use to index the vertices
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
-
     // Tell WebGL to use our program when drawing
 
-    gl.useProgram(programInfo.program);
+    gl.useProgram(programInfo.program)
 
     // Set the shader uniforms
 
