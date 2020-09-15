@@ -18,7 +18,7 @@ function main() {
     // this is our input per vertex
     attribute vec4 aVertexPosition;
     attribute vec3 aVertexNormal;
-    attribute vec4 aVertexColor;
+    // attribute vec4 aVertexColor;
 
     // input for all vertices (uniform for the whole shader program)
     uniform mat4 uNormalMatrix;
@@ -26,7 +26,7 @@ function main() {
     uniform mat4 uProjectionMatrix;
 
     // data exchanged with other graphic pipeline stages
-    varying lowp vec4 vColor;
+    // varying lowp vec4 vColor;
     varying highp vec3 vLighting;
 
     void main(void) {
@@ -41,15 +41,14 @@ function main() {
       highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
       vLighting = ambientLight + (directionalLightColor * directional);
 
-      vColor = aVertexColor;
+    //   vColor = aVertexColor;
     }`
 
     const fragmentShaderProgram = `
-    #pragma vscode_glslint_stage: frag
     varying lowp vec4 vColor;
     varying highp vec3 vLighting;
     void main(void) {
-      gl_FragColor = vec4(vColor.rgb * vLighting, 1.0);
+      gl_FragColor = vec4(vec3(1,0.8,0.7) * vLighting, 1.0);
     }`
 
     // Initialize a shader program; this is where all the lighting
@@ -64,8 +63,8 @@ function main() {
         program: shaderProgram,
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-            vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
-            vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor')
+            vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal')
+            // vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor')
         },
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
@@ -187,29 +186,29 @@ function initBuffers(gl: WebGL2RenderingContext) {
     // Now set up the colors for the faces. We'll use solid colors
     // for each face.
 
-    const faceColors = [
-        [1.0, 1.0, 1.0, 1.0],    // Front face: white
-        [1.0, 0.0, 0.0, 1.0],    // Back face: red
-        [0.0, 1.0, 0.0, 1.0],    // Top face: green
-        [0.0, 0.0, 1.0, 1.0],    // Bottom face: blue
-        [1.0, 1.0, 0.0, 1.0],    // Right face: yellow
-        [1.0, 0.0, 1.0, 1.0],    // Left face: purple
-    ]
+    // const faceColors = [
+    //     [1.0, 1.0, 1.0, 1.0],    // Front face: white
+    //     [1.0, 0.0, 0.0, 1.0],    // Back face: red
+    //     [0.0, 1.0, 0.0, 1.0],    // Top face: green
+    //     [0.0, 0.0, 1.0, 1.0],    // Bottom face: blue
+    //     [1.0, 1.0, 0.0, 1.0],    // Right face: yellow
+    //     [1.0, 0.0, 1.0, 1.0],    // Left face: purple
+    // ]
 
-    // Convert the array of colors into a table for all the vertices.
+    // // Convert the array of colors into a table for all the vertices.
 
-    let colors = new Array<number>()
+    // let colors = new Array<number>()
 
-    // for (let j = 0; j < faceColors.length; ++j) {
-    //     const c = faceColors[j]
-    for (const c of faceColors) {
-        // Repeat each color four times for the four vertices of the face
-        colors = colors.concat(c, c, c, c)
-    }
+    // // for (let j = 0; j < faceColors.length; ++j) {
+    // //     const c = faceColors[j]
+    // for (const c of faceColors) {
+    //     // Repeat each color four times for the four vertices of the face
+    //     colors = colors.concat(c, c, c, c)
+    // }
 
-    const colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
+    // const colorBuffer = gl.createBuffer();
+    // gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
 
     // Build the element array buffer; this specifies the indices
     // into the vertex arrays for each face's vertices.
@@ -234,7 +233,7 @@ function initBuffers(gl: WebGL2RenderingContext) {
     return {
         position: vertexBuffer,
         normal: normalBuffer,
-        color: colorBuffer,
+        // color: colorBuffer,
         indices: indexBuffer,
     }
 }
@@ -335,23 +334,23 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     // Tell WebGL how to pull out the colors from the color buffer
     // into the vertexColor attribute.
-    {
-        const numComponents = 4; // RGBA
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color)
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexColor)
-    }
+    // {
+    //     const numComponents = 4; // RGBA
+    //     const type = gl.FLOAT;
+    //     const normalize = false;
+    //     const stride = 0;
+    //     const offset = 0;
+    //     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color)
+    //     gl.vertexAttribPointer(
+    //         programInfo.attribLocations.vertexColor,
+    //         numComponents,
+    //         type,
+    //         normalize,
+    //         stride,
+    //         offset);
+    //     gl.enableVertexAttribArray(
+    //         programInfo.attribLocations.vertexColor)
+    // }
 
     // Tell WebGL which indices to use to index the vertices
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
