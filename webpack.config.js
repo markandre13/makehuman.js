@@ -3,25 +3,23 @@ const path = require("path")
 module.exports = {
   mode: "development",
   entry: "./src/renderer.ts",
+  target: 'electron-renderer',
   devtool: "source-map",
   module: {
     rules: [
       {
-        use: [
-          {
-            loader: "ts-loader",
-            options: {
-              configFile: "tsconfig.json"
-            }
-          }
-        ],
-        include: /src/
+        use: "ts-loader",
+        exclude: /node_modules/
       }
     ]
   },
   resolve: {
     extensions: [ ".ts", ".js" ]
   },
+  // node: {
+  //   fs: 'empty',
+  //   readline: 'empty'
+  // },
   optimization: {
     minimize: false
   },

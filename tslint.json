@@ -11,7 +11,8 @@
     "no-bitwise": true,
     "no-conditional-assignment": true,
     "no-consecutive-blank-lines": false,
-    "disable-no-console": true
+    "no-console": true,
+    "max-classes-per-file": false
   },
   "jsRules": {
     "max-line-length": {

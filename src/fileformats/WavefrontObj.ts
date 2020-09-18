@@ -1,5 +1,4 @@
-import * as fs from "fs"
-import * as readline from "readline"
+import { StringToLine } from "./StringToLine"
 
 export class WavefrontObj {
     vertex: Float32Array
@@ -10,22 +9,24 @@ export class WavefrontObj {
         this.indices = new Uint16Array()
     }
 
-    async load(input: fs.ReadStream) {
+    async load(input: string) {
         const vertex = new Array<number>()
         const indices = new Array<number>()
         // const primitives = new Array<any>()
         const group = new Map<string, number>()
-
-        const reader = readline.createInterface(input)
-        for await (const line of reader) {
+        const reader = new StringToLine(input)
+        //  const reader = readline.createInterface(input)
+        let lineNumber = 0
+        for (let line of reader) {
+            ++lineNumber
             // console.log(line)
-            const tokens = line.trim().split(/\s+/)
-            if (tokens.length === 0)
+            line = line.trim()
+            if (line.length === 0)
                 continue
+            if (line[0] === '#')
+                continue
+            const tokens = line.split(/\s+/)
             switch(tokens[0]) {
-                // comment
-                case '#': break
-
                 // vertex data
                 case "v": // vertex X Y Z [W]
                     if (tokens.length < 4)
@@ -58,11 +59,18 @@ export class WavefrontObj {
                 case "l": break // line
                 case "f": // face( vertex[/[texture][/normal]])+
                     if (tokens.length !== 5)
-                        throw Error("can't handle faces which are not quads yet")
+                        throw Error(`can't handle faces which are not quads yet (line ${lineNumber}: '${line}'}`)
+                    // CONVERT QUAD INTO TRIANGLE FOR WEBGL
+                    // 0   1
+                    //
+                    // 3   2
                     for(let i=1; i<tokens.length; ++i) {
                          const split = tokens[i].split('/')
-                         indices.push(parseInt(split[0], 10))
+                         indices.push(parseInt(split[0], 10)-1)
                     }
+                    const idx = indices.length - 4
+                    indices.push(indices[idx+0])
+                    indices.push(indices[idx+2])
                     break
                 case "curv": break // curve
                 case "curv2": break // 2d curve
@@ -105,13 +113,9 @@ export class WavefrontObj {
                 case "stech": break
 
                 default:
-                    throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file.`)
+                    throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file in line '${line}' of length ${line.length}'.`)
             }
-            // console.log(tokens[0])
         }
-
-        console.log(`found ${vertex.length} vertices, ${indices.length / 4} primitives`)
-
         this.vertex = new Float32Array(vertex)
         this.indices = new Uint16Array(indices)
     }

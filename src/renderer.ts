@@ -1,10 +1,27 @@
-import { mat4 } from "gl-matrix"
+import { ipcRenderer } from 'electron'
+import { mat4 } from 'gl-matrix'
+import { WavefrontObj } from "./fileformats/WavefrontObj"
+
+declare global {
+    interface Window {
+        readFileSync(path: string): Promise<string>;
+        ipcRenderer: any
+    }
+}
 
 window.onload = () => { main() }
 
 let cubeRotation = 0.0
 
-function main() {
+async function main() {
+    // const url = "data/3dobjs/base.obj"
+    const url = "data/3dobjs/cube.obj"
+    // const stream = fs.createReadStream(url)
+    const scene = new WavefrontObj()
+    const data = await window.ipcRenderer.invoke('readFileSync', url)
+    // const data = await window.readFileSync(url)
+    scene.load(data)
+
     const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement | null
     if (canvas === null)
         throw Error("No #glcanvas")
@@ -74,7 +91,7 @@ function main() {
     }
 
     // Here's where we call the routine that builds all the objects we'll be drawing.
-    const buffers = initBuffers(gl)
+    const buffers = initBuffers(gl, scene)
 
     let then = 0
 
@@ -84,7 +101,7 @@ function main() {
         const deltaTime = now - then
         then = now
 
-        drawScene(gl, programInfo, buffers, deltaTime)
+        drawScene(gl, programInfo, buffers, deltaTime, scene)
 
         requestAnimationFrame(render)
     }
@@ -97,48 +114,11 @@ function main() {
 // Initialize the buffers we'll need. For this demo, we just
 // have one object -- a simple three-dimensional cube.
 //
-function initBuffers(gl: WebGL2RenderingContext) {
+function initBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj) {
     // POSITIONS
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
-    const vertices = [
-        // Front face
-        -1.0, -1.0, 1.0,   // 0
-        1.0, -1.0, 1.0,    // 1
-        1.0, 1.0, 1.0,     // 2
-        -1.0, 1.0, 1.0,    // 3
-
-        // Back face
-        -1.0, -1.0, -1.0,  // 4
-        -1.0, 1.0, -1.0,   // 5
-        1.0, 1.0, -1.0,    // 6
-        1.0, -1.0, -1.0,   // 7
-
-        // Top face
-        -1.0, 1.0, -1.0,   // 8 = 5
-        -1.0, 1.0, 1.0,    // 9 = 3
-        1.0, 1.0, 1.0,     // 10 = 2
-        1.0, 1.0, -1.0,    // 11 = 6
-
-        // Bottom face
-        -1.0, -1.0, -1.0,  // 12 = 4
-        1.0, -1.0, -1.0,   // 13 = 7
-        1.0, -1.0, 1.0,    // 14 = 1
-        -1.0, -1.0, 1.0,   // 15 = 0
-
-        // Right face
-        1.0, -1.0, -1.0,   // 16 = 7
-        1.0, 1.0, -1.0,    // 17 = 6
-        1.0, 1.0, 1.0,     // 18 = 2
-        1.0, -1.0, 1.0,    // 19 = 1
-
-        // Left face
-        -1.0, -1.0, -1.0,  // 20 = 4
-        -1.0, -1.0, 1.0,   // 21 = 1
-        -1.0, 1.0, 1.0,    // 22 = 3
-        -1.0, 1.0, -1.0,   // 23 = 5
-    ]
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, scene.vertex, gl.STATIC_DRAW)
 
     // NORMALS
     const normalBuffer = gl.createBuffer()
@@ -180,60 +160,23 @@ function initBuffers(gl: WebGL2RenderingContext) {
         -1.0,  0.0,  0.0,
         -1.0,  0.0,  0.0,
       ];
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
-
-
-    // Now set up the colors for the faces. We'll use solid colors
-    // for each face.
-
-    // const faceColors = [
-    //     [1.0, 1.0, 1.0, 1.0],    // Front face: white
-    //     [1.0, 0.0, 0.0, 1.0],    // Back face: red
-    //     [0.0, 1.0, 0.0, 1.0],    // Top face: green
-    //     [0.0, 0.0, 1.0, 1.0],    // Bottom face: blue
-    //     [1.0, 1.0, 0.0, 1.0],    // Right face: yellow
-    //     [1.0, 0.0, 1.0, 1.0],    // Left face: purple
-    // ]
-
-    // // Convert the array of colors into a table for all the vertices.
-
-    // let colors = new Array<number>()
-
-    // // for (let j = 0; j < faceColors.length; ++j) {
-    // //     const c = faceColors[j]
-    // for (const c of faceColors) {
-    //     // Repeat each color four times for the four vertices of the face
-    //     colors = colors.concat(c, c, c, c)
-    // }
-
-    // const colorBuffer = gl.createBuffer();
-    // gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
-
-    // Build the element array buffer; this specifies the indices
-    // into the vertex arrays for each face's vertices.
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
 
     const indexBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-
-    // This array defines each face as two triangles, using the
-    // indices into the vertex array to specify each triangle's
-    // position.
-
-    const indices = [
-        0, 1, 2, 0, 2, 3,    // front
-        4, 5, 6, 4, 6, 7,    // back
-        8, 9, 10, 8, 10, 11,   // top
-        12, 13, 14, 12, 14, 15,   // bottom
-        16, 17, 18, 16, 18, 19,   // right
-        20, 21, 22, 20, 22, 23,   // left
-    ]
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+    // const indices = [
+    //     0, 1, 2, 0, 2, 3,    // front
+    //     4, 5, 6, 4, 6, 7,    // back
+    //     8, 9, 10, 8, 10, 11,   // top
+    //     12, 13, 14, 12, 14, 15,   // bottom
+    //     16, 17, 18, 16, 18, 19,   // right
+    //     20, 21, 22, 20, 22, 23,   // left
+    // ]
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, scene.indices, gl.STATIC_DRAW)
 
     return {
         position: vertexBuffer,
         normal: normalBuffer,
-        // color: colorBuffer,
         indices: indexBuffer,
     }
 }
@@ -253,7 +196,7 @@ function initBuffers(gl: WebGL2RenderingContext) {
 //
 // Draw the scene.
 //
-function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, deltaTime: number) {
+function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, deltaTime: number, scene: WavefrontObj) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)   // Clear to black, fully opaque
     gl.clearDepth(1.0)                  // Clear everything
     gl.enable(gl.DEPTH_TEST)            // Enable depth testing
@@ -360,24 +303,15 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     // Set the shader uniforms
 
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix)
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix)
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.normalMatrix,
-        false,
-        normalMatrix)
+    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix)
+    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix,  false, modelViewMatrix)
+    gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix,     false, normalMatrix)
 
     {
-        const vertexCount = 36
+        const indexCount = scene.indices.length
         const type = gl.UNSIGNED_SHORT
         const offset = 0
-        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset)
+        gl.drawElements(gl.TRIANGLES, indexCount, type, offset)
     }
 
     // Update the rotation for the next draw

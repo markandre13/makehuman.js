@@ -7,9 +7,9 @@
     "lib": ["es5", "es6", "es2017.object", "dom"],
     "outDir": "build",
     "baseUrl": ".",
-    // "paths": {
-    //   "*": ["node_modules/*"]
-    // },
+    "paths": {
+      "*": ["node_modules/*"]
+    },
     "declaration": true,
     "strict": true,
     "allowJs": false,
