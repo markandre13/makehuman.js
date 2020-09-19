@@ -13,16 +13,31 @@ window.onload = () => { main() }
 
 let cubeRotation = 0.0
 
-
-
+// this works via webserver and electron!
+// TODO: have a look into Fetch API (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+// which provides streams
+function get(url: string): Promise<string> {
+	return new Promise((succeed, fail) => {
+		const req = new XMLHttpRequest();
+		req.open("GET", url, true);
+		req.addEventListener("load", () => {
+			if(req.status < 400){
+				succeed(req.responseText);
+			}else{
+				fail(new Error("Request failed: " + req.statusText));
+			}
+		});
+		req.addEventListener("error", () => {
+			fail(new Error("Network error"));
+		});
+		req.send(null);
+	});
+}
 
 async function main() {
     const url = "data/3dobjs/base.obj"
-    // const url = "data/3dobjs/cube.obj"
-    // const stream = fs.createReadStream(url)
     const scene = new WavefrontObj()
-    const data = await window.ipcRenderer.invoke('readFileSync', url)
-    // const data = await window.readFileSync(url)
+    const data = await get(url)
     scene.load(data)
 
     const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement | null
