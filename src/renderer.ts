@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
 
 declare global {
@@ -13,9 +13,12 @@ window.onload = () => { main() }
 
 let cubeRotation = 0.0
 
+
+
+
 async function main() {
-    // const url = "data/3dobjs/base.obj"
-    const url = "data/3dobjs/cube.obj"
+    const url = "data/3dobjs/base.obj"
+    // const url = "data/3dobjs/cube.obj"
     // const stream = fs.createReadStream(url)
     const scene = new WavefrontObj()
     const data = await window.ipcRenderer.invoke('readFileSync', url)
@@ -30,7 +33,7 @@ async function main() {
         alert('Unable to initialize WebGL. Your browser or machine may not support it.')
         return
     }
- 
+
     const vertextShaderProgram = `
     // this is our input per vertex
     attribute vec4 aVertexPosition;
@@ -115,8 +118,8 @@ async function main() {
 // have one object -- a simple three-dimensional cube.
 //
 function initBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj) {
-    let vertex = new Float32Array(scene.vertex)
-    let indices = new Uint16Array(scene.indices)
+    const vertex = new Float32Array(scene.vertex)
+    const indices = new Uint16Array(scene.indices)
 
     // POSITIONS
     const vertexBuffer = gl.createBuffer();
@@ -126,44 +129,8 @@ function initBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj) {
     // NORMALS
     const normalBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
-    const vertexNormals = [
-        // Front
-         0.0,  0.0,  1.0,
-         0.0,  0.0,  1.0,
-         0.0,  0.0,  1.0,
-         0.0,  0.0,  1.0,
-
-        // Back
-         0.0,  0.0, -1.0,
-         0.0,  0.0, -1.0,
-         0.0,  0.0, -1.0,
-         0.0,  0.0, -1.0,
-
-        // Top
-         0.0,  1.0,  0.0,
-         0.0,  1.0,  0.0,
-         0.0,  1.0,  0.0,
-         0.0,  1.0,  0.0,
-
-        // Bottom
-         0.0, -1.0,  0.0,
-         0.0, -1.0,  0.0,
-         0.0, -1.0,  0.0,
-         0.0, -1.0,  0.0,
-
-        // Right
-         1.0,  0.0,  0.0,
-         1.0,  0.0,  0.0,
-         1.0,  0.0,  0.0,
-         1.0,  0.0,  0.0,
-
-        // Left
-        -1.0,  0.0,  0.0,
-        -1.0,  0.0,  0.0,
-        -1.0,  0.0,  0.0,
-        -1.0,  0.0,  0.0,
-      ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
+    const normals = calculateNormals(scene)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW)
 
     const indexBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
@@ -175,6 +142,57 @@ function initBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj) {
         normal: normalBuffer,
         indices: indexBuffer,
     }
+}
+
+function addNormal(normals: number[], counter: number[], index: number, normal: vec3) {
+    const n0 = vec3.fromValues(normals[index], normals[index+1], normals[index+2])
+    const n1 = vec3.create()
+    vec3.add(n1, n0, normal)
+    normals[index] = n1[0]
+    normals[index+1] = n1[1]
+    normals[index+2] = n1[2]
+    ++counter[index/3]
+}
+
+function calculateNormals(scene: WavefrontObj) {
+    const normals = new Array<number>(scene.vertex.length)
+    const counter = new Array<number>(scene.vertex.length / 3)
+    normals.fill(0)
+    counter.fill(0)
+    for (let i = 0; i < scene.indices.length;) {
+        const i1 = scene.indices[i++] * 3
+        const i2 = scene.indices[i++] * 3
+        const i3 = scene.indices[i++] * 3
+
+        const p1 = vec3.fromValues(scene.vertex[i1], scene.vertex[i1 + 1], scene.vertex[i1 + 2])
+        const p2 = vec3.fromValues(scene.vertex[i2], scene.vertex[i2 + 1], scene.vertex[i2 + 2])
+        const p3 = vec3.fromValues(scene.vertex[i3], scene.vertex[i3 + 1], scene.vertex[i3 + 2])
+
+        const u = vec3.create()
+        vec3.subtract(u, p2, p1)
+
+        const v = vec3.create()
+        vec3.subtract(v, p3, p1)
+
+        const n = vec3.create()
+        vec3.cross(n, u, v)
+        vec3.normalize(n, n)
+
+        addNormal(normals, counter, i1, n)
+        addNormal(normals, counter, i2, n)
+        addNormal(normals, counter, i3, n)
+    }
+    let normalIndex = 0, counterIndex = 0
+    while (counterIndex < counter.length) {
+        const normal = vec3.fromValues(normals[normalIndex], normals[normalIndex + 1], normals[normalIndex + 2])
+        vec3.scale(normal, normal, 1.0 / counter[counterIndex])
+        normals[normalIndex] = normal[0]
+        normals[normalIndex + 1] = normal[1]
+        normals[normalIndex + 2] = normal[2]
+        counterIndex += 1
+        normalIndex += 3
+    }
+    return normals
 }
 
 // function createProjectionMatrix(fieldOfViewInRadians: number, aspectRatio: number, near: number, far: number) {
@@ -223,7 +241,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     // Set the drawing position to the "identity" point, which is the center of the scene.
     const modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]) // move the model (cube) away
+    mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
     mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
     mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation * .7, [0, 1, 0])
 

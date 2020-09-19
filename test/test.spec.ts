@@ -1,12 +1,15 @@
 import { expect } from "chai"
 import * as fs from "fs"
+import { mat4 } from 'gl-matrix'
 import { WavefrontObj } from "../src/fileformats/WavefrontObj"
 import { StringToLine } from "../src/fileformats/StringToLine"
 
 // http://paulbourke.net/dataformats/obj/
 
+
+
 describe("class WavefrontOBJ", ()=> {
-    it("can parse base.obj without throwing an exception", async ()=> {
+    it.only("can parse base.obj without throwing an exception", async ()=> {
         const url = "data/3dobjs/base.obj"
         const stream = fs.readFileSync(url).toString()
         const obj = new WavefrontObj()
@@ -14,6 +17,20 @@ describe("class WavefrontOBJ", ()=> {
         expect(obj.vertex.length).to.equal(19158 * 3) // 3 coord per vertex
         expect(obj.indices.length).to.equal(18486 * 3 * 2) // each face is 3 triangles
     })
+
+    // it.only("can parse base.obj without throwing an exception", async ()=> {
+    //     // const url = "data/3dobjs/base.obj"
+    //     const url = "data/3dobjs/cube.obj"
+    //     const stream = fs.readFileSync(url).toString()
+    //     const obj = new WavefrontObj()
+    //     await obj.load(stream)
+    //     // expect(obj.vertex.length).to.equal(19158 * 3) // 3 coord per vertex
+    //     // expect(obj.indices.length).to.equal(18486 * 3 * 2) // each face is 3 triangles
+
+    //     // we can go through the list of triangles and calculate the normals
+
+    //     // console.log(a)
+    // })
 })
 
 describe("class StringToLine", ()=> {

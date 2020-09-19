@@ -8,11 +8,12 @@
     },
     "new-parens": true,
     "no-arg": true,
-    "no-bitwise": true,
+    "no-bitwise": false,
     "no-conditional-assignment": true,
     "no-consecutive-blank-lines": false,
-    "no-console": true,
-    "max-classes-per-file": false
+    "no-console": false,
+    "max-classes-per-file": false,
+    "one-variable-per-declaration": false
   },
   "jsRules": {
     "max-line-length": {
