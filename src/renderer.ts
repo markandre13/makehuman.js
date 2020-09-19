@@ -25,12 +25,12 @@ async function main() {
     const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement | null
     if (canvas === null)
         throw Error("No #glcanvas")
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
+    const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (!gl) {
         alert('Unable to initialize WebGL. Your browser or machine may not support it.')
         return
     }
-
+ 
     const vertextShaderProgram = `
     // this is our input per vertex
     attribute vec4 aVertexPosition;
@@ -115,10 +115,13 @@ async function main() {
 // have one object -- a simple three-dimensional cube.
 //
 function initBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj) {
+    let vertex = new Float32Array(scene.vertex)
+    let indices = new Uint16Array(scene.indices)
+
     // POSITIONS
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, scene.vertex, gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, vertex, gl.STATIC_DRAW)
 
     // NORMALS
     const normalBuffer = gl.createBuffer()
@@ -164,15 +167,8 @@ function initBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj) {
 
     const indexBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-    // const indices = [
-    //     0, 1, 2, 0, 2, 3,    // front
-    //     4, 5, 6, 4, 6, 7,    // back
-    //     8, 9, 10, 8, 10, 11,   // top
-    //     12, 13, 14, 12, 14, 15,   // bottom
-    //     16, 17, 18, 16, 18, 19,   // right
-    //     20, 21, 22, 20, 22, 23,   // left
-    // ]
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, scene.indices, gl.STATIC_DRAW)
+
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
 
     return {
         position: vertexBuffer,

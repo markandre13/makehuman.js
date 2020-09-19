@@ -1,12 +1,12 @@
 import { StringToLine } from "./StringToLine"
 
 export class WavefrontObj {
-    vertex: Float32Array
-    indices: Uint16Array
+    vertex: number[]
+    indices: number[]
 
     constructor() {
-        this.vertex = new Float32Array()
-        this.indices = new Uint16Array()
+        this.vertex = new Array<number>()
+        this.indices = new Array<number>()
     }
 
     async load(input: string) {
@@ -116,8 +116,8 @@ export class WavefrontObj {
                     throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file in line '${line}' of length ${line.length}'.`)
             }
         }
-        this.vertex = new Float32Array(vertex)
-        this.indices = new Uint16Array(indices)
+        this.vertex = vertex
+        this.indices = indices
     }
 
     beginGroup(name: string) {}
