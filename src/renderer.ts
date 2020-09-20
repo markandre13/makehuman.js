@@ -1,4 +1,5 @@
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
+import { calculateNormals } from './fileformats/calculateNormals'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
 
 declare global {
@@ -96,7 +97,6 @@ async function main() {
     }`
 
     const shaderProgram = compileShaders(gl, vertextShaderProgram, fragmentShaderProgram)
-
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
@@ -129,80 +129,6 @@ async function main() {
     requestAnimationFrame(render)
 }
 
-interface Buffers {
-    position: WebGLBuffer
-    normal: WebGLBuffer
-    indices: WebGLBuffer
-}
-
-function createAllBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj): Buffers {
-    return {
-        position: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
-        normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene)),
-        indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, scene.indices)
-    }
-}
-
-function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: any, data: number[]): WebGLBuffer {
-    const buffer = gl.createBuffer()
-    if (buffer === null)
-        throw Error("Failed to create new WebGLBuffer")
-    gl.bindBuffer(target, buffer)
-    gl.bufferData(target, new type(data), usage)
-    return buffer
-}
-
-function addNormal(normals: number[], counter: number[], index: number, normal: vec3) {
-    const n0 = vec3.fromValues(normals[index], normals[index+1], normals[index+2])
-    const n1 = vec3.create()
-    vec3.add(n1, n0, normal)
-    normals[index] = n1[0]
-    normals[index+1] = n1[1]
-    normals[index+2] = n1[2]
-    ++counter[index/3]
-}
-
-function calculateNormals(scene: WavefrontObj) {
-    const normals = new Array<number>(scene.vertex.length)
-    const counter = new Array<number>(scene.vertex.length / 3)
-    normals.fill(0)
-    counter.fill(0)
-    for (let i = 0; i < scene.indices.length;) {
-        const i1 = scene.indices[i++] * 3
-        const i2 = scene.indices[i++] * 3
-        const i3 = scene.indices[i++] * 3
-
-        const p1 = vec3.fromValues(scene.vertex[i1], scene.vertex[i1 + 1], scene.vertex[i1 + 2])
-        const p2 = vec3.fromValues(scene.vertex[i2], scene.vertex[i2 + 1], scene.vertex[i2 + 2])
-        const p3 = vec3.fromValues(scene.vertex[i3], scene.vertex[i3 + 1], scene.vertex[i3 + 2])
-
-        const u = vec3.create()
-        vec3.subtract(u, p2, p1)
-
-        const v = vec3.create()
-        vec3.subtract(v, p3, p1)
-
-        const n = vec3.create()
-        vec3.cross(n, u, v)
-        vec3.normalize(n, n)
-
-        addNormal(normals, counter, i1, n)
-        addNormal(normals, counter, i2, n)
-        addNormal(normals, counter, i3, n)
-    }
-    let normalIndex = 0, counterIndex = 0
-    while (counterIndex < counter.length) {
-        const normal = vec3.fromValues(normals[normalIndex], normals[normalIndex + 1], normals[normalIndex + 2])
-        vec3.scale(normal, normal, 1.0 / counter[counterIndex])
-        normals[normalIndex] = normal[0]
-        normals[normalIndex + 1] = normal[1]
-        normals[normalIndex + 2] = normal[2]
-        counterIndex += 1
-        normalIndex += 3
-    }
-    return normals
-}
-
 function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, deltaTime: number, scene: WavefrontObj) {
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
@@ -211,10 +137,10 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     }
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0)   // Clear to black, fully opaque
-    gl.clearDepth(1.0)                  // Clear everything
-    gl.enable(gl.DEPTH_TEST)            // Enable depth testing
-    gl.depthFunc(gl.LEQUAL)             // Near things obscure far things
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clearDepth(1.0)
+    gl.enable(gl.DEPTH_TEST)
+    gl.depthFunc(gl.LEQUAL)
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -269,7 +195,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
         gl.enableVertexAttribArray(
             programInfo.attribLocations.vertexNormal)
     }
- 
+
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
 
     gl.useProgram(programInfo.program)
@@ -288,9 +214,6 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     cubeRotation += deltaTime
 }
 
-//
-// Initialize a shader program, so WebGL knows how to draw our data
-//
 function compileShaders(gl: any, vertexSharderSrc: string, fragmentShaderSrc: string) {
     const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSharderSrc)
     const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc)
@@ -300,8 +223,6 @@ function compileShaders(gl: any, vertexSharderSrc: string, fragmentShaderSrc: st
     gl.attachShader(program, fragmentShader)
     gl.linkProgram(program)
 
-    // If creating the shader program failed, alert
-
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
         alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program))
         return null
@@ -310,9 +231,6 @@ function compileShaders(gl: any, vertexSharderSrc: string, fragmentShaderSrc: st
     return program
 }
 
-//
-// creates a shader of the given type, uploads the source and compiles it.
-//
 function compileShader(gl: WebGL2RenderingContext, type: GLenum, source: string) {
     const shader = gl.createShader(type)
     if (shader === null)
@@ -325,4 +243,27 @@ function compileShader(gl: WebGL2RenderingContext, type: GLenum, source: string)
         return null
     }
     return shader
+}
+
+interface Buffers {
+    position: WebGLBuffer
+    normal: WebGLBuffer
+    indices: WebGLBuffer
+}
+
+function createAllBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj): Buffers {
+    return {
+        position: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
+        normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene)),
+        indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, scene.indices)
+    }
+}
+
+function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: any, data: number[]): WebGLBuffer {
+    const buffer = gl.createBuffer()
+    if (buffer === null)
+        throw Error("Failed to create new WebGLBuffer")
+    gl.bindBuffer(target, buffer)
+    gl.bufferData(target, new type(data), usage)
+    return buffer
 }
