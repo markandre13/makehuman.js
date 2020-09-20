@@ -1,6 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import { calculateNormals } from './fileformats/calculateNormals'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
+import { Target } from './fileformats/Target'
 
 declare global {
     interface Window {
@@ -111,6 +112,10 @@ async function main() {
         }
     }
 
+    const turl = "data/targets/breast/breast-volume-vert-up.target"
+    const target = new Target()
+    target.load(await get(turl))
+
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
     scene.load(await get(url))
@@ -136,7 +141,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
         canvas.height = canvas.clientHeight
     }
 
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.clearDepth(1.0)
     gl.enable(gl.DEPTH_TEST)
@@ -145,7 +150,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     const fieldOfView = 45 * Math.PI / 180    // in radians
-    const aspect = canvas.clientWidth / canvas.clientHeight
+    const aspect = canvas.width / canvas.height
     const zNear = 0.1
     const zFar = 100.0
     const projectionMatrix = mat4.create()

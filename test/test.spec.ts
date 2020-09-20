@@ -1,7 +1,7 @@
 import { expect } from "chai"
 import * as fs from "fs"
-import { mat4 } from 'gl-matrix'
 import { WavefrontObj } from "../src/fileformats/WavefrontObj"
+import { Target } from "../src/fileformats/Target"
 import { StringToLine } from "../src/fileformats/StringToLine"
 
 // http://paulbourke.net/dataformats/obj/
@@ -9,7 +9,7 @@ import { StringToLine } from "../src/fileformats/StringToLine"
 
 
 describe("class WavefrontOBJ", ()=> {
-    it.only("can parse base.obj without throwing an exception", async ()=> {
+    it("can parse base.obj without throwing an exception", async ()=> {
         const url = "data/3dobjs/base.obj"
         const stream = fs.readFileSync(url).toString()
         const obj = new WavefrontObj()
@@ -31,6 +31,17 @@ describe("class WavefrontOBJ", ()=> {
 
     //     // console.log(a)
     // })
+})
+
+describe("class Target", ()=> {
+    it.only("can parse base.obj without throwing an exception", async ()=> {
+        const url = "data/targets/breast/breast-volume-vert-up.target"
+        const stream = fs.readFileSync(url).toString()
+        const obj = new Target()
+        await obj.load(stream)
+        expect(obj.data .length).to.equal(601)
+        expect(obj.verts.length).to.equal(601 * 3)
+    })
 })
 
 describe("class StringToLine", ()=> {
