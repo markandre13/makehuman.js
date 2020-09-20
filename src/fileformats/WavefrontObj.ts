@@ -1,12 +1,25 @@
 import { StringToLine } from "./StringToLine"
 
+class Group {
+    name: string
+    start: number
+    length: number
+    constructor(name: string, start: number) {
+        this.name = name
+        this.start = start
+        this.length = 0
+    }
+}
+
 export class WavefrontObj {
     vertex: number[]
     indices: number[]
+    groups: Group[]
 
     constructor() {
         this.vertex = new Array<number>()
         this.indices = new Array<number>()
+        this.groups = new Array<Group>()
     }
 
     async load(input: string) {
@@ -89,11 +102,7 @@ export class WavefrontObj {
 
                 // grouping
                 case "g": // <groupname>+ the following elements belong to that group
-                    // Polygonal and free-form geometry statement.
-                    this.endGroups()
-                    for(let i=1; i<tokens.length; ++i) {
-                        this.beginGroup(tokens[i])
-                    }
+                    this.groups.push(new Group(tokens[1], indices.length))
                     break
                 case "s": break
                 case "mg": break
@@ -118,9 +127,9 @@ export class WavefrontObj {
         }
         this.vertex = vertex
         this.indices = indices
+        for(let i=0; i<this.groups.length-1; ++i) {
+            this.groups[i].length = this.groups[i+1].start - this.groups[i].start
+        }
+        this.groups[this.groups.length-1].length = indices.length - this.groups[this.groups.length-1].start
     }
-
-    beginGroup(name: string) {}
-
-    endGroups() {}
 }

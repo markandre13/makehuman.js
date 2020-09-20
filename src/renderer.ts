@@ -205,10 +205,12 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix,     false, normalMatrix)
 
     {
-        const indexCount = scene.indices.length
         const type = gl.UNSIGNED_SHORT
-        const offset = 0
-        gl.drawElements(gl.TRIANGLES, indexCount, type, offset)
+        let i = 0
+        const offset = scene.groups[0].start
+        const count = scene.groups[0].length
+        // console.log(`draw group '${scene.groups[i].name}, offset=${offset}, length=${count}'`)
+        gl.drawElements(gl.TRIANGLES, count, type, offset)
     }
 
     cubeRotation += deltaTime
