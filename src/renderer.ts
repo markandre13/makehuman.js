@@ -1,6 +1,7 @@
-import { ipcRenderer } from 'electron'
+// import { ipcRenderer } from 'electron'
 import { mat4, vec3 } from 'gl-matrix'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
+// import * as readline from 'readline'
 
 declare global {
     interface Window {
@@ -35,12 +36,62 @@ function get(url: string): Promise<string> {
 }
 
 async function main() {
+
+    const glframe = document.createElement("div") // as HTMLCanvasElement
+    glframe.style.position = "absolute"
+    glframe.style.left = "0"
+    glframe.style.right = "0"
+    glframe.style.top = "0"
+    glframe.style.bottom = "0"
+    glframe.style.overflow = "hidden"
+
+    // document.body.style.overflow = "hidden"
+
+    const canvas = document.createElement("canvas")
+    canvas.style.width = "100vw"
+    canvas.style.height = "100vw"
+    canvas.style.display = "block"
+
+    window.onresize = (ev: UIEvent)=> {
+        console.log(ev)
+        console.log(canvas.clientWidth)
+        console.log(canvas.clientHeight)
+        console.log(canvas.width)
+        console.log(canvas.height)
+    }
+
+    glframe.appendChild(canvas)
+    document.body.appendChild(glframe)
+
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
+
+//     const response = await fetch(url)
+//     if (response.status !== 200) {
+//         alert(`Failed to read ${url}: ${response.status} ${response.statusText}`)
+//         return
+//     }
+//     // const data = await response.arrayBuffer()
+//     // const reader = response.body?.getReader()!!
+//     let data = ""
+//     const stream = response.body?.getReader()!!
+//     const reader = readline.createInterface(stream)
+// -   for (const line of reader) {
+//         data += line
+//     }
+
+    // const x = (await reader?.read()).value
+    // const data = new TextDecoder("utf-8").decode(x)
+    // console.log(x)
+
+    // console.log(r)
+    // .then(response => response.json())
+    // .then(data2 => console.log(data2));
+
     const data = await get(url)
     scene.load(data)
 
-    const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement | null
+    // const canvas = document.querySelector('#glcanvas') as HTMLCanvasElement | null
     if (canvas === null)
         throw Error("No #glcanvas")
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
@@ -226,6 +277,13 @@ function calculateNormals(scene: WavefrontObj) {
 // Draw the scene.
 //
 function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, deltaTime: number, scene: WavefrontObj) {
+    const canvas = gl.canvas as HTMLCanvasElement
+    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+        canvas.width = canvas.clientWidth
+        canvas.height = canvas.clientHeight
+    }
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0)   // Clear to black, fully opaque
     gl.clearDepth(1.0)                  // Clear everything
     gl.enable(gl.DEPTH_TEST)            // Enable depth testing
@@ -243,7 +301,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     // and 100 units away from the camera.
 
     const fieldOfView = 45 * Math.PI / 180    // in radians
-    const canvas = gl.canvas as HTMLCanvasElement
+    // const canvas = gl.canvas as HTMLCanvasElement
     const aspect = canvas.clientWidth / canvas.clientHeight
     const zNear = 0.1
     const zFar = 100.0

@@ -11,7 +11,8 @@
   "author": "",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "electron": "^10.1.1"
+    "electron": "^10.1.1",
+    "toad.js": "0.0.10"
   },
   "devDependencies": {
     "@electron/remote": "^1.0.0",
