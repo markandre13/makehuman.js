@@ -112,13 +112,22 @@ async function main() {
         }
     }
 
-    const turl = "data/targets/breast/breast-volume-vert-up.target"
-    const target = new Target()
-    target.load(await get(turl))
-
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
     scene.load(await get(url))
+
+    const stomachPregnantIncr = new Target()
+    stomachPregnantIncr.load(await get("data/targets/stomach/stomach-pregnant-incr.target"))
+    stomachPregnantIncr.apply(scene.vertex)
+
+    const breastVolumeVertUp = new Target()
+    breastVolumeVertUp.load(await get("data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target"))
+    breastVolumeVertUp.apply(scene.vertex)
+
+    const buttocks = new Target()
+    buttocks.load(await get("data/targets/buttocks/buttocks-volume-incr.target"))
+    buttocks.apply(scene.vertex)
+
     const buffers = createAllBuffers(gl, scene)
 
     let then = 0
@@ -158,7 +167,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     const modelViewMatrix = mat4.create()
     mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
-    mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
+    // mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
     mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation * .7, [0, 1, 0])
 
     const normalMatrix = mat4.create();

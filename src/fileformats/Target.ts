@@ -1,4 +1,5 @@
 import { StringToLine } from "./StringToLine"
+import { vec3 } from 'gl-matrix'
 
 // FILE: data/modifiers/modeling_modifiers.json
 // points to the files in the data/targets/ directory: data/targets/<group>/<target>-(<min>|<max>).target
@@ -54,13 +55,21 @@ export class Target {
             if (line[0] === '#')
                 continue
             const tokens = line.split(/\s+/)
-            this.data.push(parseInt(tokens[0], 10)-1)
+            this.data.push(parseInt(tokens[0], 10))
             this.verts.push(parseFloat(tokens[1]))
             this.verts.push(parseFloat(tokens[2]))
             this.verts.push(parseFloat(tokens[3]))
         }
     }
 
-    apply() {
+    apply(verts: number[]) {
+        let dataIndex = 0, vertexIndex = 0
+        while(dataIndex < this.data.length) {
+            let index = this.data[dataIndex++] * 3
+            let scale = 1
+            verts[index++] += this.verts[vertexIndex++] * scale
+            verts[index++] += this.verts[vertexIndex++] * scale
+            verts[index++] += this.verts[vertexIndex++] * scale
+        }
     }
 }
