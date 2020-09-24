@@ -121,6 +121,23 @@ async function main() {
     stomachPregnantIncr.apply(scene.vertex)
 
     const breastVolumeVertUp = new Target()
+
+    // TargetsCrawler, Component, Target
+    // macrodetails/Gender
+    // const x = `data/targets/breast/${gender}-${age}-${muscle}-${weight}-${breastsize}-${breastfirmness}`   6!
+    // apps/human.py: getDominantGender -> female, None, male => called from nowhere
+
+    // data/targets/macrodetails/height/male-old-minmuscle-averageweight-maxheight.target
+    // data/targets/macrodetails/proportions/male-child-maxmuscle-averageweight-uncommonproportions.targetd
+
+    // maleVal, femaleVal
+    // babyVal, childVal, youngVal, oldVal
+
+    //  apps/humanmodifier.py: class Modifier affects a group of targets
+    // UniversalModifier 1 to 3 components
+    // MacroModifier
+    // EthnicModifier
+
     breastVolumeVertUp.load(await get("data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target"))
     breastVolumeVertUp.apply(scene.vertex)
 

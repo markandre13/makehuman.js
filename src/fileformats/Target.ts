@@ -1,6 +1,9 @@
 import { StringToLine } from "./StringToLine"
 import { vec3 } from 'gl-matrix'
 
+// lib/targets.py
+// getTargets()
+
 // FILE: data/modifiers/modeling_modifiers.json
 // points to the files in the data/targets/ directory: data/targets/<group>/<target>-(<min>|<max>).target
 //
@@ -8,12 +11,17 @@ import { vec3 } from 'gl-matrix'
 // {
 //    "group": "<group>"
 //    "modifiers": [
-//       { "macrovar": "<name>" [, "modifierType": ""]
+//       { "macrovar": "<name>" [, "modifierType": "EthnicModifier"]
 //       { "target": "<target>", "min": "<min>", "max": "<max>" },
 //    ]
 // }
 // ]
 //
+// 
+// data/targets/macrodetails/(african|asian|caucasian)-(male|female)-(baby|child|young|old).target
+// data/targets/macrodetails/universal-(male|female)-(baby|child|young|old)-(minweight|averageweight|maxweight).target
+// data/targets/macrodetails/height/(male|female)-(minmuscle|averagemuscle|maxmuscle)-(minweight|averageweight|maxweight)-(minheight|maxheight).target
+// data/targets/macrodetails/proportions/(male|female)-(minmuscle|averagemuscle|maxmuscle)-(minweight|averageweight|maxweight)-(idealproportions|uncommonproportions).target
 // FILE: data/modifiers/modeling_modifiers_desc.json
 // additional description for the UI
 //
