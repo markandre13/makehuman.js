@@ -2,6 +2,7 @@ import { mat4 } from 'gl-matrix'
 import { calculateNormals } from './fileformats/calculateNormals'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
 import { Target } from './fileformats/Target'
+import { TargetFactory } from './fileformats/target/TargetFactory'
 
 declare global {
     interface Window {
@@ -115,6 +116,8 @@ async function main() {
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
     scene.load(await get(url))
+
+    loadMacroTargets()
 
     const stomachPregnantIncr = new Target()
     stomachPregnantIncr.load(await get("data/targets/stomach/stomach-pregnant-incr.target"))
@@ -300,3 +303,48 @@ function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum,
     gl.bufferData(target, new type(data), usage)
     return buffer
 }
+
+function loadMacroTargets() {
+    const targetFactory = new TargetFactory()
+    // for target in targets.getTargets().findTargets('macrodetails'):
+    for (const target of targetFactory.findTargets('macrodetails')) {
+    //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
+    //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
+        console.log(target.path)
+    // target.getTarget()
+    }
+}
+
+// apps/human.py
+//   class Human
+//     setGender(gender: number) // 0 femaile to 1 male
+//        if updateModifier:
+//            modifier = self.getModifier('macrodetails/Gender')
+//            modifier.setValue(gender)
+//            self.applyAllTargets()
+//            return
+//        gender = min(max(gender, 0.0), 1.0)
+//        if self.gender == gender:
+//            return
+//        self.gender = gender
+//        self._setGenderVals()
+//        self.callEvent('onChanging', events3d.HumanEvent(self, 'gender'))
+//    getModifier(self, name):
+//        return self._modifiers[name]
+//    addModifier(modifier)
+//  app/humanmodifier.py
+//    class ModifierAction
+//      do()/undo()
+//    class Modifier
+//      setHuman(human)
+//        self.human = human
+//        human.addModifier(self)
+//    class SimpleModifier: Modifier
+//    class ManagedTargetModifier: Modifier
+//    class UniversalModifier: ManagedTargetModifier
+//    class MacroModifier: ManagedTargetModifier
+//    class EthnicModifier: MacroModifier
+//    loadModifiers() // modifiers/modeling_modifiers.json && modifiers/measurement_modifiers.json
+
+// maybe we can tweak the python code to log slider changes
+// and then track which targets are applied, how much and why?

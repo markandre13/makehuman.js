@@ -35,7 +35,7 @@ class TargetsFilesystemAdapter implements TargetsDirectoryAdapter {
     }
 }
 
-export class TargetsCrawler {
+export class TargetFactory {
     rootComponent: Component
     images: Map<string, string> // list of all PNG files found while crawling
 
@@ -46,7 +46,7 @@ export class TargetsCrawler {
 
     adapter: TargetsDirectoryAdapter
 
-    constructor(adapter: TargetsDirectoryAdapter) {
+    constructor(adapter: TargetsDirectoryAdapter = new TargetsFilesystemAdapter()) {
         this.adapter = adapter
         this.rootComponent = new Component()
         this.images = new Map<string, string>()
@@ -55,9 +55,35 @@ export class TargetsCrawler {
         this.index = new Map<string, (Component|string)[]>() // Component key names to ...
     }
 
-    findTargets() {
+    loadTargetDirectory() {
         this.walkTargets('', this.rootComponent)
         this.buildIndex()
+    }
+
+    findTargets(partialGroup: string): Component[] {
+        // if isinstance(partialGroup, str):
+        //     partialGroup = tuple(partialGroup.split('-'))
+        // elif not isinstance(partialGroup, tuple):
+        //     partialGroup = tuple(partialGroup)
+        // if partialGroup not in self.index:
+        if (!this.index.has(partialGroup))
+        //     return []
+            return []
+        // result = []
+        const result = new Array<Component>()
+        // for entry in self.index[partialGroup]:
+        for (const entry of this.index.get(partialGroup)!!) {
+        //     if isinstance(entry, Component):
+            if (entry instanceof Component)
+        //         result.append(entry)
+                result.push(entry)
+        //     else:
+            else
+        //         result.extend(self.findTargets(entry))
+                result.concat(this.findTargets(entry))
+        }
+        // return result
+        return result
     }
 
     walkTargets(root: string, base: Component) {

@@ -1,5 +1,5 @@
-import { StringToLine } from "./StringToLine"
-import { vec3 } from 'gl-matrix'
+import { StringToLine } from "../StringToLine"
+// import { vec3 } from 'gl-matrix'
 
 // lib/targets.py
 // getTargets()
