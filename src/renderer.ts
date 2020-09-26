@@ -4,7 +4,7 @@ import { get } from './fileformats/lib/http'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
-import { loadModifiers } from './fileformats/modifier/Modifier'
+import { loadModifiers } from "./fileformats/modifier/loadModifiers"
 import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 
 window.onload = () => { main() }
@@ -101,6 +101,8 @@ async function main() {
     const tf = new TargetFactory(fs)
     loadModifiers(fs.readFile("data/modifiers/modeling_modifiers.json"))
     loadModifiers(fs.readFile("data/modifiers/measurement_modifiers.json"))
+
+    // buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
 
     const stomachPregnantIncr = new Target()
     stomachPregnantIncr.load(await get("data/targets/stomach/stomach-pregnant-incr.target"))

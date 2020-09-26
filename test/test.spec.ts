@@ -3,7 +3,7 @@ import * as fs from "fs"
 import { WavefrontObj } from "../src/fileformats/WavefrontObj"
 import { Target } from "../src/fileformats/target/Target"
 import { StringToLine } from "../src/fileformats/lib/StringToLine"
-import { loadModifiers } from "../src/fileformats/modifier/Modifier"
+import { loadModifiers } from "../src/fileformats/modifier/loadModifiers"
 
 // http://paulbourke.net/dataformats/obj/
 describe("class WavefrontOBJ", ()=> {
