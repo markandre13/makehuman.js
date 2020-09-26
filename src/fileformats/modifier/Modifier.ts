@@ -1,5 +1,5 @@
 import { Target } from "../target/Target"
-import * as path from 'path'
+// import * as path from 'path'
 
 class Human {
 
@@ -178,12 +178,13 @@ class SimpleModifier extends Modifier {
             .replace('/', '-')
             .replace('\\', '-')
         )
-        this.filename = path.join(basepath, targetpath)
+        // this.filename = path.join(basepath, targetpath)
+        this.filename = `${basepath}/${targetpath}`
         this.targets = this.expandTemplate([[this.filename, []]])
     }
 
     getFactors(value: number): any {
-        return { 'dummy': 1.0}
+        return { 'dummy': 1.0 }
     }
 
     clampValue(value: number): number {

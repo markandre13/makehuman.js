@@ -4,6 +4,8 @@ import { get } from './fileformats/lib/http'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
+import { loadModifiers } from './fileformats/modifier/Modifier'
+import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 
 window.onload = () => { main() }
 
@@ -93,31 +95,18 @@ async function main() {
 
     // loadMacroTargets()
 
+    const fs = new ElectronFSAdapter()
+
     console.log(`load targets`)
-    const tf = new TargetFactory()
-    
+    const tf = new TargetFactory(fs)
+    loadModifiers(fs.readFile("data/modifiers/modeling_modifiers.json"))
+    loadModifiers(fs.readFile("data/modifiers/measurement_modifiers.json"))
+
     const stomachPregnantIncr = new Target()
     stomachPregnantIncr.load(await get("data/targets/stomach/stomach-pregnant-incr.target"))
     stomachPregnantIncr.apply(scene.vertex)
 
     const breastVolumeVertUp = new Target()
-
-    // TargetsCrawler, Component, Target
-    // macrodetails/Gender
-    // const x = `data/targets/breast/${gender}-${age}-${muscle}-${weight}-${breastsize}-${breastfirmness}`   6!
-    // apps/human.py: getDominantGender -> female, None, male => called from nowhere
-
-    // data/targets/macrodetails/height/male-old-minmuscle-averageweight-maxheight.target
-    // data/targets/macrodetails/proportions/male-child-maxmuscle-averageweight-uncommonproportions.targetd
-
-    // maleVal, femaleVal
-    // babyVal, childVal, youngVal, oldVal
-
-    //  apps/humanmodifier.py: class Modifier affects a group of targets
-    // UniversalModifier 1 to 3 components
-    // MacroModifier
-    // EthnicModifier
-
     breastVolumeVertUp.load(await get("data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target"))
     breastVolumeVertUp.apply(scene.vertex)
 

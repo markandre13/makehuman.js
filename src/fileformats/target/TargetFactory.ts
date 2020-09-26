@@ -1,81 +1,18 @@
-// import * as fs from "fs"
-// import * as path from "path"
 import { Component} from "./Component"
-import { get } from "../lib/http"
-
-interface API {
-    readFile(path: string): string
-    isFile(path: string): boolean
-    isDir(path: string): boolean
-    listDir(path: string): string[]
-    realPath(path: string): string
-    joinPath(pathname0: string, pathname1: string): string
-}
-
-declare global {
-    interface Window  {
-        api: API
-    }
-}
-
-// targets      := [ target, ... ]
-// target       := ( keyArray, categoryDict, filename )
-// groups       := { keyTupple: [ target, ... ] }
-// keyArray     := ['key', ...]
-// keyTupple    := ('key', ...)
-// categoryDict := { 'category': 'value'|None, ... }
-// filename     := 'filename'
-
-export interface TargetsDirectoryAdapter {
-    isFile(pathname: string): boolean
-    isDir(pathname: string): boolean
-    listDir(pathname: string): string[]
-    realPath(pathname: string): string
-    joinPath(pathname1: string, pathname2: string): string
-}
-
-// class TargetsFilesystemAdapter implements TargetsDirectoryAdapter {
-//     isFile(pathname: string): boolean {
-//         return fs.lstatSync(pathname).isFile()
-//     }
-
-//     isDir(pathname: string): boolean {
-//         return fs.lstatSync(pathname).isDirectory()
-//     }
-
-//     listDir(pathname: string): string[] {
-//         return fs.readdirSync(pathname)
-//     }
-
-//     realPath(pathname: string): string {
-//         return path.join(__dirname, "../data/"+pathname)
-//     }
-//
-//     joinPath(pathname1: string, pathname2: string): string {
-//         return path.join(pathname1, pathname2)
-//     }
-// }
-
-class TargetsFilesystemAdapter implements TargetsDirectoryAdapter {
-    isFile(pathname: string): boolean { return window.api.isFile(pathname) }
-    isDir(pathname: string): boolean { return window.api.isDir(pathname) }
-    listDir(pathname: string): string[] { return window.api.listDir(pathname) }
-    realPath(pathname: string): string { return window.api.realPath(pathname) }
-    joinPath(pathname1: string, pathname2: string): string { return window.api.joinPath(pathname1, pathname2) }
-}
+import { FilesystemAdapter } from "../../filesystem/FilesystemAdapter"
+import { ElectronFSAdapter } from "../../filesystem/ElectronFSAdapter"
 
 export class TargetFactory {
     rootComponent: Component
+
+    targets: Component[] // all leaf(?) components
+    groups: Map<string, Component[]> // Component.keys to Components
+    index: Map<string, (Component|string)[]>
     images: Map<string, string> // list of all PNG files found while crawling
 
-    targets: Component[] // all components
-    groups: Map<string, Component[]> // Component.keys to Components
+    adapter: FilesystemAdapter
 
-    index: Map<string, (Component|string)[]>
-
-    adapter: TargetsDirectoryAdapter
-
-    constructor(adapter: TargetsDirectoryAdapter = new TargetsFilesystemAdapter()) {
+    constructor(adapter: FilesystemAdapter = new ElectronFSAdapter()) {
         this.adapter = adapter
         this.rootComponent = new Component()
         this.images = new Map<string, string>()
