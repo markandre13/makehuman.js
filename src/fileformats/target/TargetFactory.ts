@@ -1,6 +1,22 @@
-import * as fs from "fs"
-import * as path from "path"
+// import * as fs from "fs"
+// import * as path from "path"
 import { Component} from "./Component"
+import { get } from "../lib/http"
+
+interface API {
+    readFile(path: string): string
+    isFile(path: string): boolean
+    isDir(path: string): boolean
+    listDir(path: string): string[]
+    realPath(path: string): string
+    joinPath(pathname0: string, pathname1: string): string
+}
+
+declare global {
+    interface Window  {
+        api: API
+    }
+}
 
 // targets      := [ target, ... ]
 // target       := ( keyArray, categoryDict, filename )
@@ -15,24 +31,37 @@ export interface TargetsDirectoryAdapter {
     isDir(pathname: string): boolean
     listDir(pathname: string): string[]
     realPath(pathname: string): string
+    joinPath(pathname1: string, pathname2: string): string
 }
 
+// class TargetsFilesystemAdapter implements TargetsDirectoryAdapter {
+//     isFile(pathname: string): boolean {
+//         return fs.lstatSync(pathname).isFile()
+//     }
+
+//     isDir(pathname: string): boolean {
+//         return fs.lstatSync(pathname).isDirectory()
+//     }
+
+//     listDir(pathname: string): string[] {
+//         return fs.readdirSync(pathname)
+//     }
+
+//     realPath(pathname: string): string {
+//         return path.join(__dirname, "../data/"+pathname)
+//     }
+//
+//     joinPath(pathname1: string, pathname2: string): string {
+//         return path.join(pathname1, pathname2)
+//     }
+// }
+
 class TargetsFilesystemAdapter implements TargetsDirectoryAdapter {
-    isFile(pathname: string): boolean {
-        return fs.lstatSync(pathname).isFile()
-    }
-
-    isDir(pathname: string): boolean {
-        return fs.lstatSync(pathname).isDirectory()
-    }
-
-    listDir(pathname: string): string[] {
-        return fs.readdirSync(pathname)
-    }
-
-    realPath(pathname: string): string {
-        return path.join(__dirname, "../data/"+pathname)
-    }
+    isFile(pathname: string): boolean { return window.api.isFile(pathname) }
+    isDir(pathname: string): boolean { return window.api.isDir(pathname) }
+    listDir(pathname: string): string[] { return window.api.listDir(pathname) }
+    realPath(pathname: string): string { return window.api.realPath(pathname) }
+    joinPath(pathname1: string, pathname2: string): string { return window.api.joinPath(pathname1, pathname2) }
 }
 
 export class TargetFactory {
@@ -53,9 +82,10 @@ export class TargetFactory {
         this.targets = new Array<Component>()
         this.groups = new Map<string, Component[]>()
         this.index = new Map<string, (Component|string)[]>() // Component key names to ...
+        this.loadTargetDirectory()
     }
 
-    loadTargetDirectory() {
+    private loadTargetDirectory() {
         this.walkTargets('', this.rootComponent)
         this.buildIndex()
     }
@@ -86,7 +116,7 @@ export class TargetFactory {
         return result
     }
 
-    walkTargets(root: string, base: Component) {
+    private walkTargets(root: string, base: Component) {
         // console.log(this.listDir("animations/walks"))
         // return
 
@@ -95,7 +125,7 @@ export class TargetFactory {
         // console.log(`dir=${dir}`)
         for(const name of dir) {
             // console.log(`directoryPath='${directoryPath}', dir=${dir}, name='${name}'`)
-            const p = path.join(directoryPath, name)
+            const p = this.adapter.joinPath(directoryPath, name)
 
             if (this.adapter.isFile(p) && ! p.toLowerCase().endsWith(".target")) {
                 if (p.toLowerCase().endsWith(".png")) {
@@ -111,7 +141,7 @@ export class TargetFactory {
                 }
 
                 if (this.adapter.isDir(p)) {
-                    const nextRoot = path.join(root, name)
+                    const nextRoot = this.adapter.joinPath(root, name)
                     this.walkTargets(nextRoot, item)
                 } else {
                     item.finish(p)
@@ -128,7 +158,7 @@ export class TargetFactory {
         }
     }
 
-    buildIndex() {
+    private buildIndex() {
         for(const target of this.targets) {
             if (!this.index.has(target.tuple())) {
                 this.index.set(target.tuple(), new Array())

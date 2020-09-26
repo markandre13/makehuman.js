@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { WavefrontObj } from "./WavefrontObj";
+import { WavefrontObj } from "../WavefrontObj";
 
 export function calculateNormals(scene: WavefrontObj) {
 

@@ -1,42 +1,16 @@
 import { mat4 } from 'gl-matrix'
-import { calculateNormals } from './fileformats/calculateNormals'
+import { calculateNormals } from './fileformats/lib/calculateNormals'
+import { get } from './fileformats/lib/http'
 import { WavefrontObj } from "./fileformats/WavefrontObj"
-import { Target } from './fileformats/Target'
+import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
-
-declare global {
-    interface Window {
-        readFileSync(path: string): Promise<string>;
-        ipcRenderer: any
-    }
-}
 
 window.onload = () => { main() }
 
 let cubeRotation = 0.0
 
-// this works via webserver and electron!
-// TODO: have a look into Fetch API (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
-// which provides a streaming api to save memory
-function get(url: string): Promise<string> {
-	return new Promise((succeed, fail) => {
-		const req = new XMLHttpRequest();
-		req.open("GET", url, true);
-		req.addEventListener("load", () => {
-			if(req.status < 400){
-				succeed(req.responseText);
-			}else{
-				fail(new Error("Request failed: " + req.statusText));
-			}
-		});
-		req.addEventListener("error", () => {
-			fail(new Error("Network error"));
-		});
-		req.send(null);
-	});
-}
-
 async function main() {
+
     const glframe = document.createElement("div") // as HTMLCanvasElement
     glframe.style.position = "absolute"
     glframe.style.left = "0"
@@ -117,8 +91,11 @@ async function main() {
     const scene = new WavefrontObj()
     scene.load(await get(url))
 
-    loadMacroTargets()
+    // loadMacroTargets()
 
+    console.log(`load targets`)
+    const tf = new TargetFactory()
+    
     const stomachPregnantIncr = new Target()
     stomachPregnantIncr.load(await get("data/targets/stomach/stomach-pregnant-incr.target"))
     stomachPregnantIncr.apply(scene.vertex)
@@ -304,16 +281,17 @@ function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum,
     return buffer
 }
 
-function loadMacroTargets() {
-    const targetFactory = new TargetFactory()
-    // for target in targets.getTargets().findTargets('macrodetails'):
-    for (const target of targetFactory.findTargets('macrodetails')) {
-    //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
-    //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
-        console.log(target.path)
-    // target.getTarget()
-    }
-}
+// function loadMacroTargets() {
+//     console.log()
+//     const targetFactory = new TargetFactory()
+//     // for target in targets.getTargets().findTargets('macrodetails'):
+//     for (const target of targetFactory.findTargets('macrodetails')) {
+//     //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
+//     //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
+//         console.log(target.path)
+//     // target.getTarget()
+//     }
+// }
 
 // apps/human.py
 //   class Human

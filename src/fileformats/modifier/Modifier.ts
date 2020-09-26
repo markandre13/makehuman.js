@@ -48,7 +48,7 @@ class Modifier {
     }
 
     getMax() {
-        return 0.0
+        return 1.0
     }
 
     setValue(value: number, {skipDependencies = false} = {}) {
@@ -289,15 +289,24 @@ class UniversalModifier extends ManagedTargetModifier {
 class MacroModifier extends ManagedTargetModifier {}
 class EthnicModifier extends MacroModifier {}
 
+// {
+//     "group": "<groupname>",
+//     "modifiers": [
+//         { "target": ... } |
+//         { "target": ..., "min": ..., "max": ... } |
+//         {"macrovar": ...} |
+//         {"macrovar": ..., "modifierType": ...}, ...
+//     ]
+// }, ...
 export function loadModifiers(data: string) {
     const filename="<string>"
 
     const classesMapping = new Map<string, any>([
-        ['Modifier', Modifier],
-        ['SimpleModifier', SimpleModifier],
-        ['ManagedTargetModifier', ManagedTargetModifier],
-        ['UniversalModifier', UniversalModifier],
-        ['MacroModifier', MacroModifier],
+        // ['Modifier', Modifier],
+        // ['SimpleModifier', SimpleModifier],
+        // ['ManagedTargetModifier', ManagedTargetModifier],
+        // ['UniversalModifier', UniversalModifier],
+        // ['MacroModifier', MacroModifier],
         ['EthnicModifier', EthnicModifier]
     ])
     const json = JSON.parse(data)
@@ -307,14 +316,15 @@ export function loadModifiers(data: string) {
     for (const modifierGroup of json) {
         const groupName = modifierGroup.group
         for(const mDef of modifierGroup.modifiers) {
-            let modifierClass: any
+            let modifierClass: typeof Modifier
             let modifier: Modifier
-            if ("modifierType" in mDef)
+            if ("modifierType" in mDef) {
                 modifierClass = classesMapping.get(mDef.modifierType)
-            else if ("macrovar" in mDef)
+            } else if ("macrovar" in mDef) {
                 modifierClass = MacroModifier
-            else
+            } else {
                 modifierClass = UniversalModifier
+            }
 
             if ("macrovar" in mDef) {
                 modifier = new modifierClass(groupName, mDef.macrovar)
@@ -323,7 +333,9 @@ export function loadModifiers(data: string) {
                 }
             } else {
 //             modifier = modifierClass(groupName, mDef['target'], mDef.get('min',None), mDef.get('max',None), mDef.get('mid',None))
-                modifier = new modifierClass(groupName, mDef.target, mDef.min, mDef.max, mDef.mid)
+                if (modifierClass !== UniversalModifier)
+                    throw Error()
+                modifier = new (modifierClass as typeof UniversalModifier)(groupName, mDef.target, mDef.min, mDef.max, mDef.mid)
             }
 
             if ("defaultValue" in mDef) {

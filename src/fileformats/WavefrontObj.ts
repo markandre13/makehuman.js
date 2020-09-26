@@ -1,4 +1,4 @@
-import { StringToLine } from "./StringToLine"
+import { StringToLine } from "./lib/StringToLine"
 
 class Group {
     name: string
