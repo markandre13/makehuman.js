@@ -1,8 +1,5 @@
 import { Target } from "../target/Target"
-
-class Human {
-
-}
+import { TargetRef } from "./TargetRef"
 
 export class Modifier {
     groupName: string
@@ -13,9 +10,10 @@ export class Modifier {
 
     // eventType
 
-    // verts
-    // faces
-    targets: Target[]
+    targets: TargetRef[]
+
+    verts?: number[]
+    faces?: number[]
 
     macroVariable: any
     macroDependencies: any[]
@@ -46,9 +44,9 @@ export class Modifier {
 
     setValue(value: number, {skipDependencies = false} = {}) {
         throw Error("Not implemented")
-        // value = this.clampValue(value)
-        // const factors = this.getFactors(value)
-        // tWeights = getTargetWeights(self.targets, factors, value)
+        const clampledValue = this.clampValue(value)
+        // const factors = this.getFactors(clampledValue)
+        // tWeights = getTargetWeights(self.targets, factors, clampledValue)
         // for tpath, tWeight in tWeights.items():
         //     self.human.setDetail(tpath, tWeight)
 
@@ -102,7 +100,11 @@ export class Modifier {
     }
 
     buildLists() {
-        throw Error("Not implemented")
+        if (this.verts !== undefined || this.faces !== undefined)
+            return
+        for (const target in this.targets) {
+
+        }        
     }
 
     updateValue(value: number, {updateNormals = 1, skipUpdate = false} = {} ) {

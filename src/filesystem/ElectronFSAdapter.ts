@@ -1,4 +1,4 @@
-import { FilesystemAdapter } from "./FilesystemAdapter";
+import { AbstractFileSystemAdapter } from "./AbstractFileSystemAdapter";
 
 interface API {
     readFile(path: string): string
@@ -15,7 +15,7 @@ declare global {
     }
 }
 
-export class ElectronFSAdapter implements FilesystemAdapter {
+export class ElectronFSAdapter implements AbstractFileSystemAdapter {
     readFile(pathname: string): string { return window.api.readFile(pathname) }
     isFile(pathname: string): boolean { return window.api.isFile(pathname) }
     isDir(pathname: string): boolean { return window.api.isDir(pathname) }

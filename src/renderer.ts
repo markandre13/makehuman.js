@@ -315,5 +315,64 @@ function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum,
 //    class EthnicModifier: MacroModifier
 //    loadModifiers() // modifiers/modeling_modifiers.json && modifiers/measurement_modifiers.json
 
-// maybe we can tweak the python code to log slider changes
-// and then track which targets are applied, how much and why?
+// Modifier.buildLists()
+//    this.verts
+//    this.faces
+//
+// Human
+//   meshData: 3DObject
+//
+// core/module3d
+//   class FaceGroup(parent: Object3D, name: string, idx: number)
+//     object // 3DObject parent
+//     name   // group name
+//     idx    // group start
+//     color: byte[] // RGBA
+//     colorID
+//
+// 3DObject contains the mesh data...
+//   name: string
+//   vertPerPrimitive: number = 4 
+//
+//   orig_coord
+//   coord: vertex coordinates (Float32,Float32,Float32)[]
+//   nvorm: vertex normals     (Float32,Float32,Float32)[]
+//   vtang: (Float32,Float32,Float32,Float32)[]
+//   color: vertex colors (uint8,uint8,uint8,uint8)[]
+//   vface: (uint32, uint32, uint32, uint32)[]
+//   nfaces: uint8[]
+//
+//   _faceGroups: Array<FaceGroup>
+//   _groups_rev: Map<string, FaceGrouo>
+//
+//   cameraMode: number = 0 WTF?
+//   _visibility: boolean = true
+//   pickable = false
+//   calculateTangents = True
+//   object3d = undefined  the object in the GUI???
+//   _priority = 0
+//   MAX_FACES = 8
+//
+//   Cache used for retrieving vertex colors multiplied with material diffuse color
+//   _old_diff = undefined
+//   _r_color_diff = undefined
+//
+//   setCoords( coords: (float, float, float)[] )
+//   setUVs( coords: (float, float)[])
+//   setFaces(fverts: (int,int,int,int)[], fuvs: (int,int,int,int)[] | undefined, groups: int[])
+//   getVertexCount() = this.coord.length
+//
+//   __object = undefined
+//
+// class MHApplication {
+//   loadHuman() {
+//     self.selectedHuman = self.addObject(
+//        human.Human(
+//          files3d.loadMesh(  // load Wavefront OBJ and return it as Object3D
+//            mh.getSysDataPath("3dobjs/base.obj")
+//            , maxFaces = 5 // max number of faces per vertex... why?
+//          )
+//        )
+//      )
+//   }
+// } 

@@ -13,8 +13,8 @@ import { Modifier } from "./Modifier"
 //     ]
 // }, ...
 
-export function loadModifiers(data: string) {
-    const filename = "<string>";
+export function loadModifiers(data: string): Modifier[] {
+    const filename = "<string>"
 
     const classesMapping = new Map<string, any>([
         // ['Modifier', Modifier],
@@ -24,12 +24,12 @@ export function loadModifiers(data: string) {
         // ['MacroModifier', MacroModifier],
         ['EthnicModifier', EthnicModifier]
     ]);
-    const json = JSON.parse(data);
+    const json = JSON.parse(data)
     const modifiers = new Array<Modifier>()
     const lookup = new Map<string, Modifier>()
 
     for (const modifierGroup of json) {
-        const groupName = modifierGroup.group;
+        const groupName = modifierGroup.group
         for (const mDef of modifierGroup.modifiers) {
             let modifierClass: typeof Modifier;
             let modifier: Modifier;
@@ -38,36 +38,36 @@ export function loadModifiers(data: string) {
                 if (modifierClass === undefined)
                     throw Error(`failed to instantiate modifer ${mDef.modifierType}`)
             } else if ("macrovar" in mDef) {
-                modifierClass = MacroModifier;
+                modifierClass = MacroModifier
             } else {
-                modifierClass = UniversalModifier;
+                modifierClass = UniversalModifier
             }
 
             if ("macrovar" in mDef) {
-                modifier = new modifierClass(groupName, mDef.macrovar);
+                modifier = new modifierClass(groupName, mDef.macrovar)
                 if (!modifier.isMacro()) {
-                    console.log(`Expected modifier ${modifier} to be a macro modifier, but identifies as a regular one. Please check variable category definitions in class Component.`);
+                    console.log(`Expected modifier ${modifier} to be a macro modifier, but identifies as a regular one. Please check variable category definitions in class Component.`)
                 }
             } else {
                 //             modifier = modifierClass(groupName, mDef['target'], mDef.get('min',None), mDef.get('max',None), mDef.get('mid',None))
                 if (modifierClass !== UniversalModifier)
-                    throw Error();
-                modifier = new (modifierClass as typeof UniversalModifier)(groupName, mDef.target, mDef.min, mDef.max, mDef.mid);
+                    throw Error()
+                modifier = new (modifierClass as typeof UniversalModifier)(groupName, mDef.target, mDef.min, mDef.max, mDef.mid)
             }
 
             if ("defaultValue" in mDef) {
-                modifier.defaultValue = mDef.defaultValue;
+                modifier.defaultValue = mDef.defaultValue
             }
 
-            modifiers.push(modifier);
-            lookup.set(modifier.fullName, modifier);
-            console.log(modifier.fullName);
+            modifiers.push(modifier)
+            lookup.set(modifier.fullName, modifier)
+            console.log(modifier.fullName)
         }
     }
     // if human is not None:
     //     for modifier in modifiers:
     //         modifier.setHuman(human)
-    console.log(`Loaded ${modifiers.length} modifiers from file ${filename}`);
+    console.log(`Loaded ${modifiers.length} modifiers from file ${filename}`)
 
     // # Attempt to load modifier descriptions
     // _tmp = os.path.splitext(filename)
@@ -88,5 +88,5 @@ export function loadModifiers(data: string) {
     // for mName, mHasDesc in hasDesc.items():
     //     if not mHasDesc:
     //         log.warning("No description defined for modifier %s!", mName)
-    // return modifiers
+    return modifiers
 }

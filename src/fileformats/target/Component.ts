@@ -72,6 +72,16 @@ export class Component {
         return s
     }
 
+    getVariables(): string[] {
+        // return [value for key,value in list(self.data.items()) if value != None]
+        const result = []
+        for(const [key, value] of this.data.entries()) {
+            if (value !== undefined)
+                result.push(value)
+        }
+        return result
+    }
+
     private addKey(key: string) {
         this.key.push(key)
     }

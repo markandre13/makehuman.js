@@ -6,7 +6,7 @@
     "build": "tsc --outDir dist src/main.ts src/preload.ts && webpack",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "start": "npm run build && electron ./dist/main.js",
-    "test": "mocha -r ts-node/register 'test/**/*.spec.ts'"
+    "test": "mocha -r ts-node/register -r test/bootstrap.ts 'test/**/*.spec.ts'"
   },
   "author": "",
   "license": "AGPL-3.0-or-later",

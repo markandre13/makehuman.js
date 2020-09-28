@@ -1,7 +1,7 @@
 import { Modifier } from "./Modifier"
 
 // single target file, value in [0,1]
-class SimpleModifier extends Modifier {
+export class SimpleModifier extends Modifier {
     filename: string
 
     constructor(groupName: string, basepath: string, targetpath: string) {
@@ -13,7 +13,7 @@ class SimpleModifier extends Modifier {
                 .replace('\\', '-')
         )
         // this.filename = path.join(basepath, targetpath)
-        this.filename = `${basepath}/${targetpath}`;
+        this.filename = `${basepath}/${targetpath}`
         this.targets = this.expandTemplate([[this.filename, []]])
     }
 

@@ -1,6 +1,7 @@
+import { Target } from "./Target"
 import { Component} from "./Component"
-import { FilesystemAdapter } from "../../filesystem/FilesystemAdapter"
-import { ElectronFSAdapter } from "../../filesystem/ElectronFSAdapter"
+import { AbstractFileSystemAdapter } from "../../filesystem/AbstractFileSystemAdapter"
+import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
 
 export class TargetFactory {
     rootComponent: Component
@@ -10,9 +11,9 @@ export class TargetFactory {
     index: Map<string, (Component|string)[]>
     images: Map<string, string> // list of all PNG files found while crawling
 
-    adapter: FilesystemAdapter
+    adapter: AbstractFileSystemAdapter
 
-    constructor(adapter: FilesystemAdapter = new ElectronFSAdapter()) {
+    constructor(adapter: AbstractFileSystemAdapter) {
         this.adapter = adapter
         this.rootComponent = new Component()
         this.images = new Map<string, string>()
@@ -20,6 +21,13 @@ export class TargetFactory {
         this.groups = new Map<string, Component[]>()
         this.index = new Map<string, (Component|string)[]>() // Component key names to ...
         this.loadTargetDirectory()
+    }
+
+    private static instance?: TargetFactory
+    static getInstance(): TargetFactory {
+        if (TargetFactory.instance === undefined)
+            TargetFactory.instance = new TargetFactory(FileSystemAdapter.getInstance())
+        return TargetFactory.instance
     }
 
     private loadTargetDirectory() {
@@ -51,6 +59,10 @@ export class TargetFactory {
         }
         // return result
         return result
+    }
+
+    getTargetsByGroup(group: string): Component[]|undefined {
+        return this.groups.get(group)
     }
 
     private walkTargets(root: string, base: Component) {
@@ -115,4 +127,28 @@ export class TargetFactory {
             }
         }
     }
+}
+
+
+// class FaceGroup // a group of faces with a unique name
+
+// class Object3D
+
+// FROM: core/algos3d.py
+// filename to target?
+const targetBuffer = new Map<string, Target>()
+
+function getTarget(obj: any, filename: string) {
+    let target = targetBuffer.get(filename)
+    if (target !== undefined)
+        return target
+    target = new Target() // Target(3DObject, filename)
+    // target.load ...
+    targetBuffer.set(filename, target)
+    return target
+}
+
+function refreshCachedTarget(filename: string) {
+    if (targetBuffer.has(filename))
+        targetBuffer.delete(filename)
 }
