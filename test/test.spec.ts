@@ -95,9 +95,21 @@ class Human {
     // private breastSize: NumberModel
     // private breastFirmness: NumberModel
     // private bodyProportions: NumberModel
-    // private caucasianVal: NumberModel
-    // private asianVal: NumberModel
-    // private afrianVal: NumberModel
+
+    // the above values are transformed into the values below,
+    // which are then used by the modifiers (which have code to
+    // fetch values ending in 'Val' and the prefix being provided
+    // through a string)
+
+    // maleVal, femaleVal
+    // oldVal, babyVal, youngVal, childVal
+    // maxweightVal, minweightVal, averageweightVal
+    // maxmuscleVal, minmuscleVal, averagemuscleVal
+    // maxheightVal, minheightVal, averageheightVal
+    // maxcupVal, mincupVal, averagecupVal
+    // maxfirmnessVal, minfirmnessVal, averagefirmnessVal
+    // idealproportionsVal, uncommonproportionsVal, regularproportionsVal
+    // private caucasianVal, asianVal, afrianVal
 
     constructor() {
         this.modifiers = new Map<string, Modifier>()
@@ -211,8 +223,7 @@ describe("Human", ()=> {
 })
 
 describe("Modifier", ()=> {
-    it("initialize UniversalModifier from JSON", ()=>{
-        
+    it.only("initialize UniversalModifier from JSON", ()=>{
         // const url = "data/modifiers/modeling_modifiers.json" // "modifiers/measurement_modifiers.json"
         // const data = fs.readFileSync(url).toString()
         // loadModifiers(data)
@@ -223,7 +234,7 @@ describe("Modifier", ()=> {
                 ]
             }
         ]`)
-        console.log(result[0])
+        // console.log(result[0])
 
         expect(result[0]).to.be.instanceOf(UniversalModifier)
         const um = result[0] as UniversalModifier
@@ -234,6 +245,19 @@ describe("Modifier", ()=> {
         expect(um.left).to.equal("buttocks-buttocks-volume-decr")
         expect(um.center).to.equal(undefined)
         expect(um.right).to.equal("buttocks-buttocks-volume-incr")
+
+        console.log(um.targets)
+        expect(um.targets.length).to.equal(2)
+        expect(um.targets[0].targetPath).to.equal('data/targets/buttocks/buttocks-volume-decr.target')
+        expect(um.targets[0].factorDependencies.length).to.equal(1)
+        expect(um.targets[0].factorDependencies[0]).to.equal('buttocks-buttocks-volume-decr')
+        expect(um.targets[1].targetPath).to.equal('data/targets/buttocks/buttocks-volume-incr.target')
+        expect(um.targets[1].factorDependencies.length).to.equal(1)
+        expect(um.targets[1].factorDependencies[0]).to.equal('buttocks-buttocks-volume-incr')
+
+        // um.setValue()
+
+        um.getValue()
     })
 
     it("Human", ()=> {

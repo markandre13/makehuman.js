@@ -34,7 +34,7 @@ export class UniversalModifier extends ManagedTargetModifier {
     rTargets?: TargetRef[]
 
     constructor(groupName: string, targetName: string, leftExt?: string, rightExt?: string, centerExt?: string) {
-        console.log(`UniversalModifier('${groupName}', '${targetName}', '${leftExt}', '${rightExt}', '${centerExt}')`)
+        // console.log(`UniversalModifier('${groupName}', '${targetName}', '${leftExt}', '${rightExt}', '${centerExt}')`)
         let fullTargetName = `${groupName}-${targetName}`
         let name: string
         let left: string | undefined

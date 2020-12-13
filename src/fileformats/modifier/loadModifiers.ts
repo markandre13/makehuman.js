@@ -61,7 +61,7 @@ export function loadModifiers(data: string): Modifier[] {
 
             modifiers.push(modifier)
             lookup.set(modifier.fullName, modifier)
-            console.log(modifier.fullName)
+            // console.log(modifier.fullName)
         }
     }
     // if human is not None:

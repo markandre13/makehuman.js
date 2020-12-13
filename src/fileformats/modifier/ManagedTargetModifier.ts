@@ -21,13 +21,33 @@ export class ManagedTargetModifier extends Modifier {
 
     setValue(value: number, { skipDependencies = false } = {}) {
         throw Error("Not implemented")
+        // value = self.clampValue(value)
+        // factors = self.getFactors(value)
+
+        // tWeights = getTargetWeights(self.targets, factors, value)
+        // for tpath, tWeight in tWeights.items():
+        //     self.human.setDetail(tpath, tWeight)
+
+        // if skipDependencies:
+        //     return
+
+        // # Update dependent modifiers
+        // self.propagateUpdate(realtime = False)
+
     }
 
     getValue(): number {
         throw Error("Not implemented")
+        // return sum([self.human.getDetail(target[0]) for target in self.targets])
     }
 
+    // weight for each factor, e.g. {'old':0.8,'young':0.2, 'child':0}
     getFactors(value: number): any {
         throw Error("Not implemented")
+        // return dict((name, getattr(self.human, name + 'Val'))
+        //             for name in self._variables)
+
     }
+
+    // get
 }

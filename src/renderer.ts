@@ -6,6 +6,7 @@ import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from "./fileformats/modifier/loadModifiers"
 import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
+import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 
 window.onload = () => { main() }
 
@@ -89,13 +90,15 @@ async function main() {
         }
     }
 
+    const fs = new ElectronFSAdapter()
+    FileSystemAdapter.setInstance(fs)
+
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
     scene.load(await get(url))
 
+/*    
     // loadMacroTargets()
-
-    const fs = new ElectronFSAdapter()
 
     console.log(`load targets`)
     const tf = new TargetFactory(fs)
@@ -115,7 +118,7 @@ async function main() {
     const buttocks = new Target()
     buttocks.load(await get("data/targets/buttocks/buttocks-volume-incr.target"))
     buttocks.apply(scene.vertex)
-
+*/
     const buffers = createAllBuffers(gl, scene)
 
     let then = 0
