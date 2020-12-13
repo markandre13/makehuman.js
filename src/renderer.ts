@@ -91,19 +91,21 @@ async function main() {
     }
 
     const fs = new ElectronFSAdapter()
+    // const fs = new FileSystemAdapter()
     FileSystemAdapter.setInstance(fs)
 
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
     scene.load(await get(url))
 
-/*    
+    
     // loadMacroTargets()
 
     console.log(`load targets`)
-    const tf = new TargetFactory(fs)
-    loadModifiers(fs.readFile("data/modifiers/modeling_modifiers.json"))
-    loadModifiers(fs.readFile("data/modifiers/measurement_modifiers.json"))
+    // const tf = new TargetFactory(fs)
+    // loadModifiers(fs.readFile("data/modifiers/modeling_modifiers.json"))
+    // loadModifiers(await get("data/modifiers/modeling_modifiers.json"))
+    // loadModifiers(fs.readFile("data/modifiers/measurement_modifiers.json"))
 
     // buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
 
@@ -118,7 +120,7 @@ async function main() {
     const buttocks = new Target()
     buttocks.load(await get("data/targets/buttocks/buttocks-volume-incr.target"))
     buttocks.apply(scene.vertex)
-*/
+
     const buffers = createAllBuffers(gl, scene)
 
     let then = 0

@@ -1,4 +1,8 @@
 import { expect } from "chai"
+
+var chai = require('chai');
+chai.use(require('chai-string'));
+
 import * as fs from "fs"
 import { WavefrontObj } from "../src/fileformats/WavefrontObj"
 import { Target } from "../src/fileformats/target/Target"
@@ -223,7 +227,7 @@ describe("Human", ()=> {
 })
 
 describe("Modifier", ()=> {
-    it.only("initialize UniversalModifier from JSON", ()=>{
+    it("initialize UniversalModifier from JSON", ()=>{
         // const url = "data/modifiers/modeling_modifiers.json" // "modifiers/measurement_modifiers.json"
         // const data = fs.readFileSync(url).toString()
         // loadModifiers(data)
@@ -246,22 +250,23 @@ describe("Modifier", ()=> {
         expect(um.center).to.equal(undefined)
         expect(um.right).to.equal("buttocks-buttocks-volume-incr")
 
-        console.log(um.targets)
+        // console.log(um.targets)
         expect(um.targets.length).to.equal(2)
-        expect(um.targets[0].targetPath).to.equal('data/targets/buttocks/buttocks-volume-decr.target')
+        expect(um.targets[0].targetPath).to.endWith('data/targets/buttocks/buttocks-volume-decr.target')
         expect(um.targets[0].factorDependencies.length).to.equal(1)
-        expect(um.targets[0].factorDependencies[0]).to.equal('buttocks-buttocks-volume-decr')
-        expect(um.targets[1].targetPath).to.equal('data/targets/buttocks/buttocks-volume-incr.target')
+        expect(um.targets[0].factorDependencies[0]).to.endWith('buttocks-buttocks-volume-decr')
+        expect(um.targets[1].targetPath).to.endWith('data/targets/buttocks/buttocks-volume-incr.target')
         expect(um.targets[1].factorDependencies.length).to.equal(1)
-        expect(um.targets[1].factorDependencies[0]).to.equal('buttocks-buttocks-volume-incr')
+        expect(um.targets[1].factorDependencies[0]).to.endWith('buttocks-buttocks-volume-incr')
 
         // um.setValue()
 
-        um.getValue()
+        // um.getValue()
     })
 
     it("Human", ()=> {
         const modifiers = loadModifiers(fs.readFileSync("data/modifiers/modeling_modifiers.json").toString())
         // "buttocks-buttocks-volume-decr|incr"
+        const measurement_modifiers = loadModifiers(fs.readFileSync("data/modifiers/measurement_modifiers.json").toString())
     })
 })
