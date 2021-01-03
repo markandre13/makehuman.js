@@ -1,5 +1,7 @@
 # MakeHumanX
 
+TODO: add testsuite to the python source, then duplicate these tests here
+
 An experimental Makehuman port to Typescript/Web/Electron, aiming for better UX, Clean Code and
 TDD.
 
@@ -39,3 +41,19 @@ A morph target's vectors are multiplied by 0 to 1 and added to the base mesh to 
   * **MacroModifier**: ManagedTargetModifier
   * **EthnicModifier**: MacroModifier
   * **WarpModifier** extends UniversalModifier
+
+## Original Python Code
+
+<pre>
+makehuman/
+  makehuman/
+    core/
+      mhmain.py
+        Human(mesh)
+    lib/
+      targets.py
+    apps/
+      human.py
+        class Human
+      humanmodifier.py
+</pre>

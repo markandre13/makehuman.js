@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
     "traceResolution": false,
-    "lib": ["es5", "es6", "es2017.object", "dom"],
-    "outDir": "build",
+    "lib": ["es6", "es2017.object", "dom"],
     "baseUrl": ".",
     "paths": {
-      "*": ["node_modules/*"]
+      "@makehuman/*": ["src/*"],
     },
     "declaration": true,
     "strict": true,
@@ -18,6 +18,10 @@
     "sourceMap": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+      "node_modules"
   ]
 }

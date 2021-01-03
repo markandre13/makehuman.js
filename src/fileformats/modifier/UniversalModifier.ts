@@ -92,4 +92,34 @@ export class UniversalModifier extends ManagedTargetModifier {
     getFactors(value: number): any {
         throw Error("Not implemented")
     }
+
+    setValue(value: number) {
+        value = this.clampValue(value)
+        const factors = this.getFactors(value)
+        // const tWeights = this.getTargetWeights(this.targets, factors)
+        
+
+        // value = self.clampValue(value)
+        // factors = self.getFactors(value)
+
+        // tWeights = getTargetWeights(self.targets, factors)
+        // for tpath, tWeight in tWeights.items():
+        //     self.human.setDetail(tpath, tWeight)
+
+        // if skipDependencies:
+        //     return
+
+        // # Update dependent modifiers
+        // self.propagateUpdate(realtime = False)
+
+    }
+
+    getValue(): number {
+        throw Error("Not implemented")
+        // right = sum([self.human.getDetail(target[0]) for target in self.r_targets])
+        // if right:
+        //     return right
+        // else:
+        //     return -sum([self.human.getDetail(target[0]) for target in self.l_targets])
+    }
 }

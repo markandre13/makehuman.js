@@ -2,6 +2,8 @@ import { EthnicModifier } from "./EthnicModifier"
 import { MacroModifier } from "./MacroModifier"
 import { UniversalModifier } from "./UniversalModifier"
 import { Modifier } from "./Modifier"
+import { Human } from "../../Human"
+import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
 
 // {
 //     "group": "<groupname>",
@@ -13,9 +15,15 @@ import { Modifier } from "./Modifier"
 //     ]
 // }, ...
 
-export function loadModifiers(data: string): Modifier[] {
-    const filename = "<string>"
+// from apps/humanmodifier.py
+export function loadModifiers(filename: string, human?: Human): Modifier[] {
+    return parseModifiers(
+        FileSystemAdapter.getInstance().readFile(filename),
+        human,
+        filename)
+}
 
+export function parseModifiers(data: string, human?: Human, filename: string = "memory"): Modifier[] {
     const classesMapping = new Map<string, any>([
         // ['Modifier', Modifier],
         // ['SimpleModifier', SimpleModifier],
@@ -64,9 +72,13 @@ export function loadModifiers(data: string): Modifier[] {
             // console.log(modifier.fullName)
         }
     }
-    // if human is not None:
-    //     for modifier in modifiers:
-    //         modifier.setHuman(human)
+
+    if (human !== undefined) {
+        for(const modifier of modifiers) {
+            modifier.setHuman(human)
+        }
+    }
+
     console.log(`Loaded ${modifiers.length} modifiers from file ${filename}`)
 
     // # Attempt to load modifier descriptions

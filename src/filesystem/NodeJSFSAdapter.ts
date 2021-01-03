@@ -3,7 +3,15 @@ import * as path from 'path'
 import { AbstractFileSystemAdapter } from "./AbstractFileSystemAdapter"
 
 export class NodeJSFSAdapter implements AbstractFileSystemAdapter {
-    readFile(pathname: string): string { return fs.readFileSync(pathname).toString("utf8") }
+    readFile(pathname: string): string { 
+        try {
+        return fs.readFileSync(pathname).toString("utf8")
+        }
+        catch(e) {
+            console.log(`### FAILED TO READ ${pathname}`)
+            throw e
+        }
+    }
     isFile(pathname: string): boolean { return fs.lstatSync(pathname).isFile() }
     isDir(pathname: string): boolean { return fs.lstatSync(pathname).isDirectory() }
     listDir(pathname: string): string[] {

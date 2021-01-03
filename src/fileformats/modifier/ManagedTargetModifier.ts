@@ -38,7 +38,6 @@ export class ManagedTargetModifier extends Modifier {
 
     getValue(): number {
         throw Error("Not implemented")
-        // return sum([self.human.getDetail(target[0]) for target in self.targets])
     }
 
     // weight for each factor, e.g. {'old':0.8,'young':0.2, 'child':0}

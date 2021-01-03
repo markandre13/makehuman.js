@@ -1,6 +1,8 @@
 import { Target } from "../target/Target"
 import { TargetRef } from "./TargetRef"
+import { Human } from "../../Human"
 
+// from apps/humanmodifier.py
 export class Modifier {
     groupName: string
     name: string
@@ -18,6 +20,8 @@ export class Modifier {
     macroVariable: any
     macroDependencies: any[]
 
+    human?: Human
+
     constructor(groupName: string, name: string) {
         this.groupName = groupName.replace('/', '-')
         this.name = name.replace('/', '-')
@@ -28,6 +32,10 @@ export class Modifier {
         this.targets = []
         this.macroVariable = undefined
         this.macroDependencies = []
+    }
+
+    setHuman(human: Human) {
+        this.human = human
     }
 
     get fullName (): string {
