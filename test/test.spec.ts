@@ -118,7 +118,7 @@ describe("Human", ()=> {
 })
 
 describe("Modifier", ()=> {
-    it.only("initialize UniversalModifier from JSON", ()=>{
+    it("initialize UniversalModifier from JSON", ()=>{
         // const url = "data/modifiers/modeling_modifiers.json" // "modifiers/measurement_modifiers.json"
         // const data = fs.readFileSync(url).toString()
         // loadModifiers(data)
@@ -164,7 +164,7 @@ describe("Modifier", ()=> {
         um.getValue()
     })
 
-    it("can load the applications modifier files", ()=> {
+    it.only("can load the applications modifier files", ()=> {
         const modifiers = loadModifiers("data/modifiers/modeling_modifiers.json")
         // "buttocks-buttocks-volume-decr|incr"
         const measurement_modifiers = loadModifiers("data/modifiers/measurement_modifiers.json")

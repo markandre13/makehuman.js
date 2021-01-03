@@ -13,5 +13,8 @@ export function loadSliders(filename: string): void {
 }
 
 export function parseSliders(data: string, filename: string = "memory"): void {
-    
+    const json = JSON.parse(data)
+    for(const o of json) {
+        console.log(o)
+    }
 }

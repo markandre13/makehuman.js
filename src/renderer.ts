@@ -5,6 +5,7 @@ import { WavefrontObj } from "./fileformats/WavefrontObj"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from "./fileformats/modifier/loadModifiers"
+import { loadSliders } from "./fileformats/modifier/loadSliders"
 import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 
@@ -106,6 +107,8 @@ async function main() {
     // loadModifiers(fs.readFile("data/modifiers/modeling_modifiers.json"))
     // loadModifiers(await get("data/modifiers/modeling_modifiers.json"))
     // loadModifiers(fs.readFile("data/modifiers/measurement_modifiers.json"))
+
+    loadSliders("data/modifiers/modeling_sliders.json")
 
     // buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
 
