@@ -164,9 +164,19 @@ describe("Modifier", ()=> {
         um.getValue()
     })
 
-    it.only("can load the applications modifier files", ()=> {
-        const modifiers = loadModifiers("data/modifiers/modeling_modifiers.json")
-        // "buttocks-buttocks-volume-decr|incr"
-        const measurement_modifiers = loadModifiers("data/modifiers/measurement_modifiers.json")
+    it("can load the application's modifier files into a human", ()=> {
+        // GIVEN a human with modifiers being loaded from a file
+        const human = new Human()
+        loadModifiers("data/modifiers/modeling_modifiers.json", human)
+        loadModifiers("data/modifiers/measurement_modifiers.json", human)
+
+        // WHEN getting a modifier from the human
+        const modifier = human.getModifier("head/head-age-decr|incr")
+
+        // THEN we get the modifier we've loaded from the file
+        expect(modifier).is.not.undefined
+        expect(modifier).to.be.instanceOf(UniversalModifier)
+        expect(modifier!!.groupName).to.equal("head")
+        expect(modifier!!.name).to.equal("head-age-decr|incr")
     })
 })

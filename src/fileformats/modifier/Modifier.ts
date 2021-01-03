@@ -34,8 +34,10 @@ export class Modifier {
         this.macroDependencies = []
     }
 
+    // set/add/link/assign modifier to human
     setHuman(human: Human) {
         this.human = human
+        human.addModifier(this)
     }
 
     get fullName (): string {
@@ -52,9 +54,9 @@ export class Modifier {
 
     setValue(value: number, {skipDependencies = false} = {}) {
         throw Error("Not implemented")
-        const clampledValue = this.clampValue(value)
-        // const factors = this.getFactors(clampledValue)
-        // tWeights = getTargetWeights(self.targets, factors, clampledValue)
+        const clampedValue = this.clampValue(value)
+        // const factors = this.getFactors(clampedValue)
+        // tWeights = getTargetWeights(self.targets, factors, clampedValue)
         // for tpath, tWeight in tWeights.items():
         //     self.human.setDetail(tpath, tWeight)
 

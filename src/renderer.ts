@@ -108,7 +108,7 @@ async function main() {
     // loadModifiers(await get("data/modifiers/modeling_modifiers.json"))
     // loadModifiers(fs.readFile("data/modifiers/measurement_modifiers.json"))
 
-    loadSliders("data/modifiers/modeling_sliders.json")
+    // loadSliders("data/modifiers/modeling_sliders.json")
 
     // buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
 
