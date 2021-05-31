@@ -21,11 +21,10 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
         return this.model && this.treeCell(row, this.model.rows[row].node.label)
     }
 }
+TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
 
 async function main() {
     try {
-        TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
-
         console.log(`loading assets...`)
         const fs = new HTTPFSAdapter()
         FileSystemAdapter.setInstance(fs)
@@ -35,12 +34,11 @@ async function main() {
         loadModifiers("data/modifiers/modeling_modifiers.json")
         loadModifiers("data/modifiers/measurement_modifiers.json")
         const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
-        let tree = new TreeNodeModel(SliderNode, sliderNodes)
+        const tree = new TreeNodeModel(SliderNode, sliderNodes)
         bind("tree", tree)
 
         console.log('everything is loaded...')
-
-        document.body.innerHTML = `<toad-table model="tree"></toad-table>`
+        document.body.innerHTML = `<div style="border: 1px solid #000;"><toad-table model="tree"></toad-table></div>`
     }
     catch(e) {
         console.log(e)
@@ -128,12 +126,9 @@ async function render() {
         }
     }
 
-
-
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
     scene.load(await get(url))
-
     
     // loadMacroTargets()
 

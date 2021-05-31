@@ -92,7 +92,7 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
                 if (lastSliderNode)
                     lastSliderNode.next = sliderNode
                 else
-                    lastTabNode.down = sliderNode
+                lastCategoryNode.down = sliderNode
                 lastSliderNode = sliderNode
                 // console.log(`        ${label}`)
             }
