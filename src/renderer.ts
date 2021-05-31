@@ -10,18 +10,11 @@ import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 
-import { TreeNodeModel, TreeAdapter, bind } from 'toad.js'
+import { TreeNodeModel, bind } from 'toad.js'
 
 window.onload = () => { main() }
 
 let cubeRotation = 0.0
-
-class SliderTreeAdapter extends TreeAdapter<SliderNode> {
-    override displayCell(col: number, row: number): Node | undefined {       
-        return this.model && this.treeCell(row, this.model.rows[row].node.label)
-    }
-}
-TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
 
 async function main() {
     try {
@@ -35,10 +28,10 @@ async function main() {
         loadModifiers("data/modifiers/measurement_modifiers.json")
         const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
         const tree = new TreeNodeModel(SliderNode, sliderNodes)
-        bind("tree", tree)
+        bind("sliders", tree)
 
         console.log('everything is loaded...')
-        document.body.innerHTML = `<div style="border: 1px solid #000;"><toad-table model="tree"></toad-table></div>`
+        document.body.innerHTML = `<div style="border: 1px solid #000;"><toad-table model="sliders"></toad-table></div>`
     }
     catch(e) {
         console.log(e)

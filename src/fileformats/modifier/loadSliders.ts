@@ -1,9 +1,26 @@
 import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
 import { TreeNode, TreeNodeModel, TreeAdapter } from "toad.js"
 
+export interface Category {
+    sortOrder: number
+    label?: string
+    cameraView: string
+    showMacroStats?: boolean
+    modifiers: any
+}
+
+export interface Modifier {
+    mod: string
+    label: string
+    cam?: string
+    enabledCondition?: string
+}
+
 export class SliderNode implements TreeNode {
     static count = 0
     label: string
+    category?: Category
+    modifier?: Modifier
     next?: SliderNode
     down?: SliderNode
     constructor(label?: string) {
@@ -12,13 +29,12 @@ export class SliderNode implements TreeNode {
     }
 }
 
-interface X {
-    sortOrder: number
-    label?: string
-    cameraView: string
-    showMacroStats?: boolean
-    modifiers: any
+class SliderTreeAdapter extends TreeAdapter<SliderNode> {
+    override displayCell(col: number, row: number): Node | undefined {       
+        return this.model && this.treeCell(row, this.model.rows[row].node.label)
+    }
 }
+TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
 
 function capitalize(s: string): string {
     return s[0].toUpperCase() +  s.slice(1)
@@ -57,44 +73,45 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
     const json = JSON.parse(data)
     let rootNode: SliderNode | undefined
     let lastTabNode: SliderNode | undefined
-    for(const [k, v] of Object.entries(json).sort(
+    for(const [tabKey, tabValue] of Object.entries(json).sort(
         (a: [string, any], b: [string, any]): number => a[1].sortOrder - b[1].sortOrder )
     ) {
-        let label = k
-        const o = v as X
-        if (o.label !== undefined)
-            label = o.label
-        // console.log(label)          // Tab
+        const tab = tabValue as Category
+
+        let label = tabKey       
+        if (tab.label !== undefined)
+            label = tab.label
+
         const tabNode = new SliderNode(label)
+        tabNode.category = tab
         if (lastTabNode)
             lastTabNode.next = tabNode
         else
             rootNode = tabNode
         lastTabNode = tabNode
+
         let lastCategoryNode: SliderNode | undefined
-        for(const [k, v] of Object.entries(o.modifiers)) {
-            // console.log(`    ${capitalize(k)}`) // Category
-            const categoryNode = new SliderNode(capitalize(k))
+        for(const [categoryKey, categoryValue] of Object.entries(tab.modifiers)) {
+            const categoryNode = new SliderNode(capitalize(categoryKey))
             if (lastCategoryNode)
                 lastCategoryNode.next = categoryNode
             else
                 lastTabNode.down = categoryNode
             lastCategoryNode = categoryNode
             let lastSliderNode: SliderNode | undefined
-            for(const o of v as []) {
-                const m = o as any
-                let label = (o as any).label
+            for(const modifier of categoryValue as Modifier[]) {
+                let label = modifier.label
                 if (label === undefined) {
-                    const name = m.mod.split("/")
+                    const name = modifier.mod.split("/")
                     label = labelFromModifier(name[0], name[1])
                 }
                 const sliderNode = new SliderNode(label)
+                sliderNode.modifier = modifier
                 if (lastSliderNode)
                     lastSliderNode.next = sliderNode
                 else
                 lastCategoryNode.down = sliderNode
                 lastSliderNode = sliderNode
-                // console.log(`        ${label}`)
             }
         }
     }
