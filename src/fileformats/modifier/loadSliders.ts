@@ -6,18 +6,11 @@ export class SliderNode implements TreeNode {
     label: string
     next?: SliderNode
     down?: SliderNode
-    constructor(label: string) {
+    constructor(label?: string) {
         SliderNode.count++
-        this.label = label
+        this.label = label || ""
     }
 }
-
-// class SliderTreeAdapter extends TreeAdapter<SliderNode> {
-//     override displayCell(col: number, row: number): Node | undefined {       
-//         return this.model && this.treeCell(row, this.model.rows[row].node.label)
-//     }
-// }
-// TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
 
 interface X {
     sortOrder: number

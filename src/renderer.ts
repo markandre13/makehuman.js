@@ -5,17 +5,27 @@ import { WavefrontObj } from "./fileformats/WavefrontObj"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from "./fileformats/modifier/loadModifiers"
-import { loadSliders } from "./fileformats/modifier/loadSliders"
+import { loadSliders, SliderNode } from "./fileformats/modifier/loadSliders"
 import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
+
+import { TreeNodeModel, TreeAdapter, bind } from 'toad.js'
 
 window.onload = () => { main() }
 
 let cubeRotation = 0.0
 
+class SliderTreeAdapter extends TreeAdapter<SliderNode> {
+    override displayCell(col: number, row: number): Node | undefined {       
+        return this.model && this.treeCell(row, this.model.rows[row].node.label)
+    }
+}
+
 async function main() {
     try {
+        TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
+
         console.log(`loading assets...`)
         const fs = new HTTPFSAdapter()
         FileSystemAdapter.setInstance(fs)
@@ -24,9 +34,13 @@ async function main() {
 
         loadModifiers("data/modifiers/modeling_modifiers.json")
         loadModifiers("data/modifiers/measurement_modifiers.json")
-        loadSliders("data/modifiers/modeling_sliders.json")
+        const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
+        let tree = new TreeNodeModel(SliderNode, sliderNodes)
+        bind("tree", tree)
 
         console.log('everything is loaded...')
+
+        document.body.innerHTML = `<toad-table model="tree"></toad-table>`
     }
     catch(e) {
         console.log(e)
