@@ -17,11 +17,11 @@ export class SimpleModifier extends Modifier {
         this.targets = this.expandTemplate([[this.filename, []]])
     }
 
-    getFactors(value: number): any {
+    override getFactors(value: number): any {
         return { 'dummy': 1.0 }
     }
 
-    clampValue(value: number): number {
+    override clampValue(value: number): number {
         return Math.max(0.0, Math.min(1.0, value))
     }
 

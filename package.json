@@ -4,7 +4,9 @@
   "description": "An experimental Makehuman port to Typescript/Web/Electron, aiming for better UX, Clean Code and TDD",
   "scripts": {
     "build": "tsc --outDir dist src/main.ts src/preload.ts && webpack",
+    "build:watch": "tsc --outDir dist src/main.ts src/preload.ts && webpack --watch",
     "lint": "eslint -c tslint.json -p tsconfig.json",
+    "makedir": "tsc --outDir dist src/makedir.ts && node dist/makedir.js",
     "start": "npm run build && electron ./dist/main.js",
     "test": "mocha -r ts-node/register -r test/bootstrap.ts 'test/**/*.spec.ts'",
     "update": "npx npm-check-updates -u && npm install"

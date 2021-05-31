@@ -82,18 +82,18 @@ export class UniversalModifier extends ManagedTargetModifier {
                     this.targets.push(t1)
     }
 
-    getMin(): number {
+    override getMin(): number {
         if (this.left !== undefined)
             return -1.0
         else
             return 0.0
     }
 
-    getFactors(value: number): any {
+    override getFactors(value: number): any {
         throw Error("Not implemented")
     }
 
-    setValue(value: number) {
+    override setValue(value: number) {
         value = this.clampValue(value)
         const factors = this.getFactors(value)
         // const tWeights = this.getTargetWeights(this.targets, factors)
@@ -114,7 +114,7 @@ export class UniversalModifier extends ManagedTargetModifier {
 
     }
 
-    getValue(): number {
+    override getValue(): number {
         throw Error("Not implemented")
         // right = sum([self.human.getDetail(target[0]) for target in self.r_targets])
         // if right:

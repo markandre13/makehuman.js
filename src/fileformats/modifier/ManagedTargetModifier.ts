@@ -9,7 +9,7 @@ export class ManagedTargetModifier extends Modifier {
         super(groupName, name)
     }
 
-    clampValue(value: number): number {
+    override clampValue(value: number): number {
         value = Math.min(value)
         if (this.left !== undefined)
             value = Math.max(-1.0, value)
@@ -19,7 +19,7 @@ export class ManagedTargetModifier extends Modifier {
         return value
     }
 
-    setValue(value: number, { skipDependencies = false } = {}) {
+    override setValue(value: number, { skipDependencies = false } = {}) {
         throw Error("Not implemented")
         // value = self.clampValue(value)
         // factors = self.getFactors(value)
@@ -36,12 +36,12 @@ export class ManagedTargetModifier extends Modifier {
 
     }
 
-    getValue(): number {
+    override getValue(): number {
         throw Error("Not implemented")
     }
 
     // weight for each factor, e.g. {'old':0.8,'young':0.2, 'child':0}
-    getFactors(value: number): any {
+    override getFactors(value: number): any {
         throw Error("Not implemented")
         // return dict((name, getattr(self.human, name + 'Val'))
         //             for name in self._variables)

@@ -1,4 +1,3 @@
-import { Target } from "../target/Target"
 import { TargetRef } from "./TargetRef"
 import { Human } from "../../Human"
 

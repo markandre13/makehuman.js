@@ -1,9 +1,23 @@
-import { EthnicModifier } from "./EthnicModifier"
-import { MacroModifier } from "./MacroModifier"
-import { UniversalModifier } from "./UniversalModifier"
-import { Modifier } from "./Modifier"
-import { Human } from "../../Human"
 import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
+import { TreeNode, TreeNodeModel, TreeAdapter } from "toad.js"
+
+export class SliderNode implements TreeNode {
+    static count = 0
+    label: string
+    next?: SliderNode
+    down?: SliderNode
+    constructor(label: string) {
+        SliderNode.count++
+        this.label = label
+    }
+}
+
+// class SliderTreeAdapter extends TreeAdapter<SliderNode> {
+//     override displayCell(col: number, row: number): Node | undefined {       
+//         return this.model && this.treeCell(row, this.model.rows[row].node.label)
+//     }
+// }
+// TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
 
 interface X {
     sortOrder: number
@@ -38,14 +52,18 @@ export function labelFromModifier(groupName: String, name: string): string {
  *
  * (the original is located in apps/gui/guimodifier.py)
  */
-export function loadSliders(filename: string): void {
-    return parseSliders(
+export function loadSliders(filename: string): SliderNode {
+    const root = parseSliders(
         FileSystemAdapter.getInstance().readFile(filename),
         filename)
+    console.log(`Loaded ${SliderNode.count} slider nodes from file ${filename}`)
+    return root
 }
 
-export function parseSliders(data: string, filename: string = "memory"): void {
+export function parseSliders(data: string, filename: string = "memory"): SliderNode {
     const json = JSON.parse(data)
+    let rootNode: SliderNode | undefined
+    let lastTabNode: SliderNode | undefined
     for(const [k, v] of Object.entries(json).sort(
         (a: [string, any], b: [string, any]): number => a[1].sortOrder - b[1].sortOrder )
     ) {
@@ -53,9 +71,23 @@ export function parseSliders(data: string, filename: string = "memory"): void {
         const o = v as X
         if (o.label !== undefined)
             label = o.label
-        console.log(label)          // Tab
+        // console.log(label)          // Tab
+        const tabNode = new SliderNode(label)
+        if (lastTabNode)
+            lastTabNode.next = tabNode
+        else
+            rootNode = tabNode
+        lastTabNode = tabNode
+        let lastCategoryNode: SliderNode | undefined
         for(const [k, v] of Object.entries(o.modifiers)) {
-            console.log(`    ${capitalize(k)}`) // Category
+            // console.log(`    ${capitalize(k)}`) // Category
+            const categoryNode = new SliderNode(capitalize(k))
+            if (lastCategoryNode)
+                lastCategoryNode.next = categoryNode
+            else
+                lastTabNode.down = categoryNode
+            lastCategoryNode = categoryNode
+            let lastSliderNode: SliderNode | undefined
             for(const o of v as []) {
                 const m = o as any
                 let label = (o as any).label
@@ -63,8 +95,17 @@ export function parseSliders(data: string, filename: string = "memory"): void {
                     const name = m.mod.split("/")
                     label = labelFromModifier(name[0], name[1])
                 }
-                console.log(`        ${label}`)
+                const sliderNode = new SliderNode(label)
+                if (lastSliderNode)
+                    lastSliderNode.next = sliderNode
+                else
+                    lastTabNode.down = sliderNode
+                lastSliderNode = sliderNode
+                // console.log(`        ${label}`)
             }
         }
     }
+    if (rootNode === undefined)
+        throw Error("No sliders found.")
+    return rootNode
 }

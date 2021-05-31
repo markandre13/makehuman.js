@@ -8,12 +8,35 @@ import { loadModifiers } from "./fileformats/modifier/loadModifiers"
 import { loadSliders } from "./fileformats/modifier/loadSliders"
 import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 
 window.onload = () => { main() }
 
 let cubeRotation = 0.0
 
 async function main() {
+    try {
+        console.log(`loading assets...`)
+        const fs = new HTTPFSAdapter()
+        FileSystemAdapter.setInstance(fs)
+        const scene = new WavefrontObj()
+        scene.load(fs.readFile("data/3dobjs/base.obj"))
+
+        loadModifiers("data/modifiers/modeling_modifiers.json")
+        loadModifiers("data/modifiers/measurement_modifiers.json")
+        loadSliders("data/modifiers/modeling_sliders.json")
+
+        console.log('everything is loaded...')
+    }
+    catch(e) {
+        console.log(e)
+    }
+}
+
+async function render() {
+    // const fs = new ElectronFSAdapter()
+    // const fs = new FileSystemAdapter()
+    // FileSystemAdapter.setInstance(fs)
 
     const glframe = document.createElement("div") // as HTMLCanvasElement
     glframe.style.position = "absolute"
@@ -91,9 +114,7 @@ async function main() {
         }
     }
 
-    const fs = new ElectronFSAdapter()
-    // const fs = new FileSystemAdapter()
-    FileSystemAdapter.setInstance(fs)
+
 
     const url = "data/3dobjs/base.obj"
     const scene = new WavefrontObj()
