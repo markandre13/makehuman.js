@@ -70,11 +70,10 @@ export class Target {
         }
     }
 
-    apply(verts: number[]) {
+    apply(verts: number[], scale: number) {
         let dataIndex = 0, vertexIndex = 0
         while(dataIndex < this.data.length) {
             let index = this.data[dataIndex++] * 3
-            let scale = 1
             verts[index++] += this.verts[vertexIndex++] * scale
             verts[index++] += this.verts[vertexIndex++] * scale
             verts[index++] += this.verts[vertexIndex++] * scale

@@ -12,7 +12,7 @@ import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 
 import * as toad from 'toad.js'
 
-import { TreeNodeModel, bind } from 'toad.js'
+import { TreeNodeModel, bind, Fragment } from 'toad.js'
 
 window.onload = () => { main() }
 
@@ -37,42 +37,18 @@ async function render() {
     loadModifiers("data/modifiers/modeling_modifiers.json")
     loadModifiers("data/modifiers/measurement_modifiers.json")
     const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
-    const tree = new TreeModel2(SliderNode, sliderNodes)
-    bind("sliders", tree)
 
     console.log('everything is loaded...')
 
-    // FIXME: it would be easier if we could provide the model directly
-    const div = <toad-table
-        model="sliders"
-        style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: "500px"
-        }} />
-    document.body.appendChild(div)
-
-    // const fs = new ElectronFSAdapter()
-    // const fs = new FileSystemAdapter()
-    // FileSystemAdapter.setInstance(fs)
-
-    const glframe = document.createElement("div") // as HTMLCanvasElement
-    glframe.style.position = "absolute"
-    glframe.style.left = "500px"
-    glframe.style.right = "0"
-    glframe.style.top = "0"
-    glframe.style.bottom = "0"
-    glframe.style.overflow = "hidden"
-
-    const canvas = document.createElement("canvas")
-    canvas.style.width = "100%"
-    canvas.style.height = "100%"
-    // canvas.style.display = "block"
-
-    glframe.appendChild(canvas)
-    document.body.appendChild(glframe)
+    const tree = new TreeModel2(SliderNode, sliderNodes)
+    const fragment = <>
+        <toad-table model={tree} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }} />
+        <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
+            <canvas style={{ width: "100%", height: "100%" }} />
+        </div>
+    </> as Fragment
+    fragment.appendTo(document.body)
+    const canvas = fragment.children[1].children[0] as HTMLCanvasElement
 
     if (canvas === null)
         throw Error("No #glcanvas")
@@ -149,18 +125,19 @@ async function render() {
     // loadSliders("data/modifiers/modeling_sliders.json")
 
     // buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
+    // slider.mod has "stomach/stomach-pregnant-decr|incr"
 
     const stomachPregnantIncr = new Target()
     stomachPregnantIncr.load(await get("data/targets/stomach/stomach-pregnant-incr.target"))
-    stomachPregnantIncr.apply(scene.vertex)
+    stomachPregnantIncr.apply(scene.vertex, 1)
 
     const breastVolumeVertUp = new Target()
     breastVolumeVertUp.load(await get("data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target"))
-    breastVolumeVertUp.apply(scene.vertex)
+    breastVolumeVertUp.apply(scene.vertex, 1)
 
     const buttocks = new Target()
     buttocks.load(await get("data/targets/buttocks/buttocks-volume-incr.target"))
-    buttocks.apply(scene.vertex)
+    buttocks.apply(scene.vertex, 1)
 
     const buffers = createAllBuffers(gl, scene)
 

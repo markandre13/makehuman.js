@@ -1,5 +1,5 @@
 import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
-import { TreeNode, TreeNodeModel, TreeAdapter } from "toad.js"
+import { TreeNode, TreeNodeModel, TreeAdapter, NumberModel } from "toad.js"
 
 import * as toad from 'toad.js'
 
@@ -23,11 +23,36 @@ export class SliderNode implements TreeNode {
     label: string
     category?: Category
     modifier?: Modifier
+    model?: NumberModel
     next?: SliderNode
     down?: SliderNode
-    constructor(label?: string) {
+    constructor(label?: string, modifier?: Modifier) {
         SliderNode.count++
         this.label = label || ""
+        this.modifier = modifier
+
+        if (modifier) {
+            // modifier.mod can have values like
+            //   buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
+            //   stomach/stomach-pregnant-decr|incr
+            // this should define the number range (decr: start at -1, incr: end at 1, incr-decr: ????)
+
+            // using modifier.mod we then need to find the target files to load
+            //   data/targets/stomach/stomach-pregnant-incr.target
+            //   data/targets/buttocks/buttocks-volume-incr.target
+
+            // if a target can only be influenced by a single slider, we could store the targets in the SliderNode
+
+            // the value then needs to be translated back to scale factors for each target
+
+            // the model needs to be re-rendered
+
+            this.model = new NumberModel(0, {min: 0, max: 1, step: 0.01})
+            this.model.modified.add( ()=> {
+                console.log(modifier)
+                console.log(this.model!.value)
+            })
+        }
     }
 }
 
@@ -40,8 +65,8 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
             case 0:
                 return this.treeCell(row, node.label)
             case 1:
-                if (node.modifier) {
-                    return <input type="range" />
+                if (node.model) {
+                    return <toad-slider model={node.model} />
                 }
         }
         return undefined
@@ -126,8 +151,7 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
                     const name = modifier.mod.split("/")
                     label = labelFromModifier(name[0], name[1])
                 }
-                const sliderNode = new SliderNode(label)
-                sliderNode.modifier = modifier
+                const sliderNode = new SliderNode(label, modifier)
                 if (lastSliderNode)
                     lastSliderNode.next = sliderNode
                 else
