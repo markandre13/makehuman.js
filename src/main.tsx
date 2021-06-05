@@ -1,0 +1,202 @@
+import { WavefrontObj } from "./fileformats/WavefrontObj"
+import { Target } from './fileformats/target/Target'
+import { TargetFactory } from './fileformats/target/TargetFactory'
+import { loadModifiers } from "./fileformats/modifier/loadModifiers"
+import { loadSliders, SliderNode } from "./fileformats/modifier/loadSliders"
+
+import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
+import { render } from './render'
+
+import * as toad from 'toad.js'
+import { TreeNodeModel, TreeAdapter, Fragment } from "toad.js"
+
+window.onload = () => { main() }
+
+function main() {
+    try {
+        run()
+    }
+    catch (e) {
+        console.log(e)
+    }
+}
+
+function run() {
+    console.log(`loading assets...`)
+    FileSystemAdapter.setInstance(new HTTPFSAdapter())
+
+    const scene = new WavefrontObj()
+    scene.load("data/3dobjs/base.obj")
+
+    loadModifiers("data/modifiers/modeling_modifiers.json")
+    loadModifiers("data/modifiers/measurement_modifiers.json")
+    const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
+
+    loadMacroTargets()
+
+    // TargetFactory.getInstance()
+    const stomachPregnantIncr = new Target()
+    stomachPregnantIncr.load("data/targets/stomach/stomach-pregnant-incr.target")
+    stomachPregnantIncr.apply(scene.vertex, 1)
+
+    const breastVolumeVertUp = new Target()
+    breastVolumeVertUp.load("data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target")
+    breastVolumeVertUp.apply(scene.vertex, 1)
+
+    const buttocks = new Target()
+    buttocks.load("data/targets/buttocks/buttocks-volume-incr.target")
+    buttocks.apply(scene.vertex, 1)
+
+    console.log('everything is loaded...')
+
+    const tree = new TreeModel2(SliderNode, sliderNodes)
+    const fragment = <>
+        <toad-table model={tree} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }} />
+        <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
+            <canvas style={{ width: "100%", height: "100%" }} />
+        </div>
+    </> as Fragment
+    fragment.appendTo(document.body)
+    const canvas = fragment.children[1].children[0] as HTMLCanvasElement
+
+    render(canvas, scene)
+}
+
+// FIXME: we don't want to do this. do not call colCount from TableView, pipe it through the TableAdapter
+export class TreeModel2 extends TreeNodeModel<SliderNode> {
+    override get colCount(): number {
+        return 2
+    }
+}
+
+// this tells <toad-table> how to render TreeNodeModel<SliderNode>
+class SliderTreeAdapter extends TreeAdapter<SliderNode> {
+    override displayCell(col: number, row: number): Node | undefined {
+        if (this.model === undefined)
+            return undefined
+        const node = this.model.rows[row].node
+        switch (col) {
+            case 0:
+                return this.treeCell(row, node.label)
+            case 1:
+                if (node.model) {
+                    return <span>
+                        <toad-text model={node.model} style={{width: "50px"}}/>
+                        <toad-slider model={node.model} />
+                    </span>
+                }
+        }
+        return undefined
+    }
+}
+
+TreeAdapter.register(SliderTreeAdapter, TreeModel2, SliderNode)
+
+//
+// more makehuman stuff i need to figure out:
+//
+
+function loadMacroTargets() {
+    const targetFactory = TargetFactory.getInstance()
+    // for target in targets.getTargets().findTargets('macrodetails'):
+    for (const target of targetFactory.findTargets('macrodetails')) {
+    //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
+    //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
+    // console.log(target.path)
+    // target.getTarget()
+    }
+}
+
+// apps/human.py
+//   class Human
+//     setGender(gender: number) // 0 femaile to 1 male
+//        if updateModifier:
+//            modifier = self.getModifier('macrodetails/Gender')
+//            modifier.setValue(gender)
+//            self.applyAllTargets()
+//            return
+//        gender = min(max(gender, 0.0), 1.0)
+//        if self.gender == gender:
+//            return
+//        self.gender = gender
+//        self._setGenderVals()
+//        self.callEvent('onChanging', events3d.HumanEvent(self, 'gender'))
+//    getModifier(self, name):
+//        return self._modifiers[name]
+//    addModifier(modifier)
+//  app/humanmodifier.py
+//    class ModifierAction
+//      do()/undo()
+//    class Modifier
+//      setHuman(human)
+//        self.human = human
+//        human.addModifier(self)
+//    class SimpleModifier: Modifier
+//    class ManagedTargetModifier: Modifier
+//    class UniversalModifier: ManagedTargetModifier
+//    class MacroModifier: ManagedTargetModifier
+//    class EthnicModifier: MacroModifier
+//    loadModifiers() // modifiers/modeling_modifiers.json && modifiers/measurement_modifiers.json
+
+// Modifier.buildLists()
+//    this.verts
+//    this.faces
+//
+// Human
+//   meshData: 3DObject
+//
+// core/module3d
+//   class FaceGroup(parent: Object3D, name: string, idx: number)
+//     object // 3DObject parent
+//     name   // group name
+//     idx    // group start
+//     color: byte[] // RGBA
+//     colorID
+//
+// 3DObject contains the mesh data...
+//   name: string
+//   vertPerPrimitive: number = 4 
+//
+//   orig_coord
+//   coord: vertex coordinates (Float32,Float32,Float32)[]
+//   nvorm: vertex normals     (Float32,Float32,Float32)[]
+//   vtang: (Float32,Float32,Float32,Float32)[]
+//   color: vertex colors (uint8,uint8,uint8,uint8)[]
+//   vface: (uint32, uint32, uint32, uint32)[]
+//   nfaces: uint8[]
+//
+//   _faceGroups: Array<FaceGroup>
+//   _groups_rev: Map<string, FaceGrouo>
+//
+//   cameraMode: number = 0 WTF?
+//   _visibility: boolean = true
+//   pickable = false
+//   calculateTangents = True
+//   object3d = undefined  the object in the GUI???
+//   _priority = 0
+//   MAX_FACES = 8
+//
+//   Cache used for retrieving vertex colors multiplied with material diffuse color
+//   _old_diff = undefined
+//   _r_color_diff = undefined
+//
+//   setCoords( coords: (float, float, float)[] )
+//   setUVs( coords: (float, float)[])
+//   setFaces(fverts: (int,int,int,int)[], fuvs: (int,int,int,int)[] | undefined, groups: int[])
+//   getVertexCount() = this.coord.length
+//
+//   __object = undefined
+//
+// class MHApplication {
+//   loadHuman() {
+//     self.selectedHuman = self.addObject(
+//        human.Human(
+//          files3d.loadMesh(  // load Wavefront OBJ and return it as Object3D
+//            mh.getSysDataPath("3dobjs/base.obj")
+//            , maxFaces = 5 // max number of faces per vertex... why?
+//          )
+//        )
+//      )
+//   }
+// } 

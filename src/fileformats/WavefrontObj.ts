@@ -1,4 +1,5 @@
 import { StringToLine } from "./lib/StringToLine"
+import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
 
 class Group {
     name: string
@@ -22,12 +23,13 @@ export class WavefrontObj {
         this.groups = new Array<Group>()
     }
 
-    async load(input: string) {
+    async load(filename: string) {
+        const data = FileSystemAdapter.getInstance().readFile(filename)
         const vertex = new Array<number>()
         const indices = new Array<number>()
         // const primitives = new Array<any>()
         const group = new Map<string, number>()
-        const reader = new StringToLine(input)
+        const reader = new StringToLine(data)
         //  const reader = readline.createInterface(input)
         let lineNumber = 0
         for (let line of reader) {

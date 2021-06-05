@@ -1,32 +1,28 @@
 import { Target } from "./Target"
 import { Component} from "./Component"
-import { AbstractFileSystemAdapter } from "../../filesystem/AbstractFileSystemAdapter"
 import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
 
 export class TargetFactory {
     rootComponent: Component
-
-    targets: Component[] // all leaf(?) components
+    targets: Component[] // all components
     groups: Map<string, Component[]> // Component.keys to Components
     index: Map<string, (Component|string)[]>
     images: Map<string, string> // list of all PNG files found while crawling
 
-    adapter: AbstractFileSystemAdapter
-
-    constructor(adapter: AbstractFileSystemAdapter) {
-        this.adapter = adapter
+    private constructor() {
         this.rootComponent = new Component()
         this.images = new Map<string, string>()
         this.targets = new Array<Component>()
         this.groups = new Map<string, Component[]>()
         this.index = new Map<string, (Component|string)[]>() // Component key names to ...
         this.loadTargetDirectory()
+        console.log(`Loaded target directory: ${this.targets.length} targets, ${this.groups.size} groups, ${this.index.size} indizes, ${this.images.size} images`)
     }
 
     private static instance?: TargetFactory
     static getInstance(): TargetFactory {
         if (TargetFactory.instance === undefined)
-            TargetFactory.instance = new TargetFactory(FileSystemAdapter.getInstance())
+            TargetFactory.instance = new TargetFactory()
         return TargetFactory.instance
     }
 
@@ -66,17 +62,15 @@ export class TargetFactory {
     }
 
     private walkTargets(root: string, base: Component) {
-        // console.log(this.listDir("animations/walks"))
-        // return
-
-        const directoryPath = this.adapter.realPath(root)
-        const dir = this.adapter.listDir(directoryPath).sort()
+        const fs = FileSystemAdapter.getInstance()
+        const directoryPath = fs.realPath(root)
+        const dir = fs.listDir(directoryPath).sort()
         // console.log(`dir=${dir}`)
         for(const name of dir) {
             // console.log(`directoryPath='${directoryPath}', dir=${dir}, name='${name}'`)
-            const p = this.adapter.joinPath(directoryPath, name)
+            const p = fs.joinPath(directoryPath, name)
 
-            if (this.adapter.isFile(p) && ! p.toLowerCase().endsWith(".target")) {
+            if (fs.isFile(p) && ! p.toLowerCase().endsWith(".target")) {
                 if (p.toLowerCase().endsWith(".png")) {
                     this.images.set(name.toLowerCase(), p)
                 }
@@ -89,8 +83,8 @@ export class TargetFactory {
                     item.update(part[1])
                 }
 
-                if (this.adapter.isDir(p)) {
-                    const nextRoot = this.adapter.joinPath(root, name)
+                if (fs.isDir(p)) {
+                    const nextRoot = fs.joinPath(root, name)
                     this.walkTargets(nextRoot, item)
                 } else {
                     item.finish(p)

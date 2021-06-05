@@ -1,7 +1,5 @@
 import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
-import { TreeNode, TreeNodeModel, TreeAdapter, NumberModel } from "toad.js"
-
-import * as toad from 'toad.js'
+import { TreeNode, NumberModel } from "toad.js"
 
 export interface Category {
     sortOrder: number
@@ -36,6 +34,21 @@ export class SliderNode implements TreeNode {
             //   buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
             //   stomach/stomach-pregnant-decr|incr
             // this should define the number range (decr: start at -1, incr: end at 1, incr-decr: ????)
+            // there's no separate target file for 'incr-decr'
+
+            // what's inside TargetFactory:
+            //   groups: Map<target name, Component>
+            //      "buttocks-buttocks-volume-decr"
+            ///       parent: key: ["buttocks"]
+            //        key: the name splitted at '-'
+            //        data: gender, age, race, muscle, weight, height, breastsize, breastfirmness, bodypropotions: all undefined
+            //        path: "/targets/buttocks/buttocks-volume-decr.target"
+            //   images: Map<target name, image filename>
+            //   index: (superset of groups?)
+            //     "buttocks" -> ["buttocks-buttocks-volume-decr", "buttocks-buttocks-volume-incr"]
+            //     "buttocks-buttocks-volume-decr" -> Component
+            //     "buttocks-buttocks-volume-incr" -> Component
+            //   targets:
 
             // using modifier.mod we then need to find the target files to load
             //   data/targets/stomach/stomach-pregnant-incr.target
@@ -47,8 +60,8 @@ export class SliderNode implements TreeNode {
 
             // the model needs to be re-rendered
 
-            this.model = new NumberModel(0, {min: 0, max: 1, step: 0.01})
-            this.model.modified.add( ()=> {
+            this.model = new NumberModel(0, { min: 0, max: 1, step: 0.01 })
+            this.model.modified.add(() => {
                 console.log(modifier)
                 console.log(this.model!.value)
             })
@@ -56,40 +69,14 @@ export class SliderNode implements TreeNode {
     }
 }
 
-class SliderTreeAdapter extends TreeAdapter<SliderNode> {
-    override displayCell(col: number, row: number): Node | undefined {
-        if (this.model === undefined)
-            return undefined
-        const node = this.model.rows[row].node
-        switch(col) {
-            case 0:
-                return this.treeCell(row, node.label)
-            case 1:
-                if (node.model) {
-                    return <toad-slider model={node.model} />
-                }
-        }
-        return undefined
-    }
-}
-
-// FIXME: we don't want to do this. do not call colCount from TableView, pipe it through the TableAdapter
-export class TreeModel2 extends TreeNodeModel<SliderNode> {
-    override get colCount(): number {
-        return 2
-    }
-}
-
-TreeAdapter.register(SliderTreeAdapter, TreeModel2, SliderNode)
-
 function capitalize(s: string): string {
-    return s[0].toUpperCase() +  s.slice(1)
+    return s[0].toUpperCase() + s.slice(1)
 }
 
 export function labelFromModifier(groupName: String, name: string): string {
     const tlabel = name.split("-")
 
-    if (tlabel[tlabel.length-1].indexOf("|") !== -1)
+    if (tlabel[tlabel.length - 1].indexOf("|") !== -1)
         tlabel.pop()
 
     if (tlabel.length > 1 && tlabel[0] === groupName)
@@ -119,12 +106,12 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
     const json = JSON.parse(data)
     let rootNode: SliderNode | undefined
     let lastTabNode: SliderNode | undefined
-    for(const [tabKey, tabValue] of Object.entries(json).sort(
-        (a: [string, any], b: [string, any]): number => a[1].sortOrder - b[1].sortOrder )
+    for (const [tabKey, tabValue] of Object.entries(json).sort(
+        (a: [string, any], b: [string, any]): number => a[1].sortOrder - b[1].sortOrder)
     ) {
         const tab = tabValue as Category
 
-        let label = tabKey       
+        let label = tabKey
         if (tab.label !== undefined)
             label = tab.label
 
@@ -137,7 +124,7 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
         lastTabNode = tabNode
 
         let lastCategoryNode: SliderNode | undefined
-        for(const [categoryKey, categoryValue] of Object.entries(tab.modifiers)) {
+        for (const [categoryKey, categoryValue] of Object.entries(tab.modifiers)) {
             const categoryNode = new SliderNode(capitalize(categoryKey))
             if (lastCategoryNode)
                 lastCategoryNode.next = categoryNode
@@ -145,7 +132,7 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
                 lastTabNode.down = categoryNode
             lastCategoryNode = categoryNode
             let lastSliderNode: SliderNode | undefined
-            for(const modifier of categoryValue as Modifier[]) {
+            for (const modifier of categoryValue as Modifier[]) {
                 let label = modifier.label
                 if (label === undefined) {
                     const name = modifier.mod.split("/")
@@ -155,7 +142,7 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
                 if (lastSliderNode)
                     lastSliderNode.next = sliderNode
                 else
-                lastCategoryNode.down = sliderNode
+                    lastCategoryNode.down = sliderNode
                 lastSliderNode = sliderNode
             }
         }

@@ -1,4 +1,5 @@
 import { StringToLine } from "../lib/StringToLine"
+import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
 // import { vec3 } from 'gl-matrix'
 
 // lib/targets.py
@@ -40,6 +41,8 @@ import { StringToLine } from "../lib/StringToLine"
 // Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array
 // Float32Array, Float64Array
 // BigInt64Array, BigUint64Array
+
+// morph target
 export class Target {
     verts: Array<number>; // x, y, z
     data: Array<number>; // index
@@ -49,7 +52,8 @@ export class Target {
         this.data = new Array<number>();
     }
 
-    load(data: string) {
+    load(filename: string) {
+        const data = FileSystemAdapter.getInstance().readFile(filename)
         // index x y, z
         const reader = new StringToLine(data)
         //  const reader = readline.createInterface(input)
