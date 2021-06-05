@@ -12,6 +12,8 @@
       "@makehuman/*": ["src/*"],
     },
     "jsx": "react",
+    "jsxFactory": "toad.createElement",
+    "jsxFragmentFactory": "toad.Fragment",
     "experimentalDecorators": true,
     "declaration": true,
     "strict": true,
@@ -24,8 +26,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "test/**/*.ts"
-  ],
+    "src/**/*.tsx",
+    "test/**/*.ts" ],
   "exclude": [
       "node_modules"
   ]

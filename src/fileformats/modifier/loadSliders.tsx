@@ -1,6 +1,8 @@
 import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
 import { TreeNode, TreeNodeModel, TreeAdapter } from "toad.js"
 
+import * as toad from 'toad.js'
+
 export interface Category {
     sortOrder: number
     label?: string
@@ -30,11 +32,30 @@ export class SliderNode implements TreeNode {
 }
 
 class SliderTreeAdapter extends TreeAdapter<SliderNode> {
-    override displayCell(col: number, row: number): Node | undefined {       
-        return this.model && this.treeCell(row, this.model.rows[row].node.label)
+    override displayCell(col: number, row: number): Node | undefined {
+        if (this.model === undefined)
+            return undefined
+        const node = this.model.rows[row].node
+        switch(col) {
+            case 0:
+                return this.treeCell(row, node.label)
+            case 1:
+                if (node.modifier) {
+                    return <input type="range" />
+                }
+        }
+        return undefined
     }
 }
-TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
+
+// FIXME: we don't want to do this. do not call colCount from TableView, pipe it through the TableAdapter
+export class TreeModel2 extends TreeNodeModel<SliderNode> {
+    override get colCount(): number {
+        return 2
+    }
+}
+
+TreeAdapter.register(SliderTreeAdapter, TreeModel2, SliderNode)
 
 function capitalize(s: string): string {
     return s[0].toUpperCase() +  s.slice(1)

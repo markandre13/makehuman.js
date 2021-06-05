@@ -5,10 +5,12 @@ import { WavefrontObj } from "./fileformats/WavefrontObj"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from "./fileformats/modifier/loadModifiers"
-import { loadSliders, SliderNode } from "./fileformats/modifier/loadSliders"
+import { loadSliders, SliderNode, TreeModel2 } from "./fileformats/modifier/loadSliders"
 import { ElectronFSAdapter } from './filesystem/ElectronFSAdapter'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
+
+import * as toad from 'toad.js'
 
 import { TreeNodeModel, bind } from 'toad.js'
 
@@ -18,43 +20,56 @@ let cubeRotation = 0.0
 
 async function main() {
     try {
-        console.log(`loading assets...`)
-        const fs = new HTTPFSAdapter()
-        FileSystemAdapter.setInstance(fs)
-        const scene = new WavefrontObj()
-        scene.load(fs.readFile("data/3dobjs/base.obj"))
-
-        loadModifiers("data/modifiers/modeling_modifiers.json")
-        loadModifiers("data/modifiers/measurement_modifiers.json")
-        const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
-        const tree = new TreeNodeModel(SliderNode, sliderNodes)
-        bind("sliders", tree)
-
-        console.log('everything is loaded...')
-        document.body.innerHTML = `<div style="border: 1px solid #000;"><toad-table model="sliders"></toad-table></div>`
+        await render()
     }
-    catch(e) {
+    catch (e) {
         console.log(e)
     }
 }
 
 async function render() {
+    console.log(`loading assets...`)
+    const fs = new HTTPFSAdapter()
+    FileSystemAdapter.setInstance(fs)
+    const scene = new WavefrontObj()
+    scene.load(fs.readFile("data/3dobjs/base.obj"))
+
+    loadModifiers("data/modifiers/modeling_modifiers.json")
+    loadModifiers("data/modifiers/measurement_modifiers.json")
+    const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
+    const tree = new TreeModel2(SliderNode, sliderNodes)
+    bind("sliders", tree)
+
+    console.log('everything is loaded...')
+
+    // FIXME: it would be easier if we could provide the model directly
+    const div = <toad-table
+        model="sliders"
+        style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: "500px"
+        }} />
+    document.body.appendChild(div)
+
     // const fs = new ElectronFSAdapter()
     // const fs = new FileSystemAdapter()
     // FileSystemAdapter.setInstance(fs)
 
     const glframe = document.createElement("div") // as HTMLCanvasElement
     glframe.style.position = "absolute"
-    glframe.style.left = "0"
+    glframe.style.left = "500px"
     glframe.style.right = "0"
     glframe.style.top = "0"
     glframe.style.bottom = "0"
     glframe.style.overflow = "hidden"
 
     const canvas = document.createElement("canvas")
-    canvas.style.width = "100vw"
-    canvas.style.height = "100vh"
-    canvas.style.display = "block"
+    canvas.style.width = "100%"
+    canvas.style.height = "100%"
+    // canvas.style.display = "block"
 
     glframe.appendChild(canvas)
     document.body.appendChild(glframe)
@@ -119,13 +134,13 @@ async function render() {
         }
     }
 
-    const url = "data/3dobjs/base.obj"
-    const scene = new WavefrontObj()
-    scene.load(await get(url))
-    
+    // const url = "data/3dobjs/base.obj"
+    // const scene = new WavefrontObj()
+    // scene.load(await get(url))
+
     // loadMacroTargets()
 
-    console.log(`load targets`)
+    // console.log(`load targets`)
     // const tf = new TargetFactory(fs)
     // loadModifiers(fs.readFile("data/modifiers/modeling_modifiers.json"))
     // loadModifiers(await get("data/modifiers/modeling_modifiers.json"))
@@ -151,7 +166,7 @@ async function render() {
 
     let then = 0
     function render(now: number) {
-        now *= 0.001;  // convert to seconds
+        now *= 0.001  // convert to seconds
         const deltaTime = now - then
         then = now
 
@@ -169,7 +184,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
         canvas.height = canvas.clientHeight
     }
 
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.clearDepth(1.0)
     gl.enable(gl.DEPTH_TEST)
@@ -187,11 +202,11 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     const modelViewMatrix = mat4.create()
     mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
     // mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
-    mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation * .7, [0, 1, 0])
+    mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
 
-    const normalMatrix = mat4.create();
-    mat4.invert(normalMatrix, modelViewMatrix);
-    mat4.transpose(normalMatrix, normalMatrix);
+    const normalMatrix = mat4.create()
+    mat4.invert(normalMatrix, modelViewMatrix)
+    mat4.transpose(normalMatrix, normalMatrix)
 
     {
         const numComponents = 3
@@ -206,7 +221,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
             type,
             normalize,
             stride,
-            offset);
+            offset)
         gl.enableVertexAttribArray(
             programInfo.attribLocations.vertexPosition)
     }
@@ -224,7 +239,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
             type,
             normalize,
             stride,
-            offset);
+            offset)
         gl.enableVertexAttribArray(
             programInfo.attribLocations.vertexNormal)
     }
@@ -234,8 +249,8 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     gl.useProgram(programInfo.program)
 
     gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix)
-    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix,  false, modelViewMatrix)
-    gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix,     false, normalMatrix)
+    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix)
+    gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
 
     {
         const type = gl.UNSIGNED_SHORT

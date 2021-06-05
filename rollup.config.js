@@ -3,7 +3,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
  
 export default {
-    input: './src/renderer.ts',
+    input: './src/renderer.tsx',
     output: {
       name: 'fretboard',
       file: 'dist/renderer.js',
