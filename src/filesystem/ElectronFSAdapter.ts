@@ -1,4 +1,4 @@
-import { AbstractFileSystemAdapter } from "./AbstractFileSystemAdapter";
+import { AbstractFileSystemAdapter } from './AbstractFileSystemAdapter'
 
 interface API {
     readFile(path: string): string

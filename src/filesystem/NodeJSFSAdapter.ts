@@ -1,11 +1,11 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { AbstractFileSystemAdapter } from "./AbstractFileSystemAdapter"
+import { AbstractFileSystemAdapter } from './AbstractFileSystemAdapter'
 
 export class NodeJSFSAdapter implements AbstractFileSystemAdapter {
     readFile(pathname: string): string { 
         try {
-        return fs.readFileSync(pathname).toString("utf8")
+            return fs.readFileSync(pathname).toString('utf8')
         }
         catch(e) {
             console.log(`### FAILED TO READ ${pathname}`)
@@ -19,7 +19,7 @@ export class NodeJSFSAdapter implements AbstractFileSystemAdapter {
         return fs.readdirSync(pathname)
     }
     realPath(pathname: string): string {
-        const result = path.join(__dirname, "../../data/" + pathname)
+        const result = path.join(__dirname, '../../data/' + pathname)
         // console.log(`realPath('${pathname}') -> '${result}' (__dirname='${__dirname}, __filename='${__filename}')`)
         return result
     }

@@ -1,15 +1,15 @@
-import { WavefrontObj } from "./fileformats/WavefrontObj"
+import { WavefrontObj } from './fileformats/WavefrontObj'
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
-import { loadModifiers } from "./fileformats/modifier/loadModifiers"
-import { loadSliders, SliderNode } from "./fileformats/modifier/loadSliders"
+import { loadModifiers } from './fileformats/modifier/loadModifiers'
+import { loadSliders, SliderNode } from './fileformats/modifier/loadSliders'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 import { render } from './render'
 
 import * as toad from 'toad.js'
-import { TreeNodeModel, TreeAdapter, Fragment } from "toad.js"
+import { TreeNodeModel, TreeAdapter, Fragment } from 'toad.js'
 
 window.onload = () => { main() }
 
@@ -19,42 +19,46 @@ function main() {
     }
     catch (e) {
         console.log(e)
+        if (e instanceof Error)
+            alert(`${e.name}: ${e.message}`)
+        else
+            alert(e)
     }
 }
 
 function run() {
-    console.log(`loading assets...`)
+    console.log('loading assets...')
     FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
     const scene = new WavefrontObj()
-    scene.load("data/3dobjs/base.obj")
+    scene.load('data/3dobjs/base.obj')
 
-    loadModifiers("data/modifiers/modeling_modifiers.json")
-    loadModifiers("data/modifiers/measurement_modifiers.json")
-    const sliderNodes = loadSliders("data/modifiers/modeling_sliders.json")
+    loadModifiers('data/modifiers/modeling_modifiers.json')
+    loadModifiers('data/modifiers/measurement_modifiers.json')
+    const sliderNodes = loadSliders('data/modifiers/modeling_sliders.json')
 
     loadMacroTargets()
 
     // TargetFactory.getInstance()
     const stomachPregnantIncr = new Target()
-    stomachPregnantIncr.load("data/targets/stomach/stomach-pregnant-incr.target")
+    stomachPregnantIncr.load('data/targets/stomach/stomach-pregnant-incr.target')
     stomachPregnantIncr.apply(scene.vertex, 1)
 
     const breastVolumeVertUp = new Target()
-    breastVolumeVertUp.load("data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target")
+    breastVolumeVertUp.load('data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target')
     breastVolumeVertUp.apply(scene.vertex, 1)
 
     const buttocks = new Target()
-    buttocks.load("data/targets/buttocks/buttocks-volume-incr.target")
+    buttocks.load('data/targets/buttocks/buttocks-volume-incr.target')
     buttocks.apply(scene.vertex, 1)
 
     console.log('everything is loaded...')
 
     const tree = new TreeModel2(SliderNode, sliderNodes)
     const fragment = <>
-        <toad-table model={tree} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }} />
-        <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
-            <canvas style={{ width: "100%", height: "100%" }} />
+        <toad-table model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
+        <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
+            <canvas style={{ width: '100%', height: '100%' }} />
         </div>
     </> as Fragment
     fragment.appendTo(document.body)
@@ -77,15 +81,15 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
             return undefined
         const node = this.model.rows[row].node
         switch (col) {
-            case 0:
-                return this.treeCell(row, node.label)
-            case 1:
-                if (node.model) {
-                    return <span>
-                        <toad-text model={node.model} style={{width: "50px"}}/>
-                        <toad-slider model={node.model} />
-                    </span>
-                }
+        case 0:
+            return this.treeCell(row, node.label)
+        case 1:
+            if (node.model) {
+                return <span>
+                    <toad-text model={node.model} style={{width: '50px'}}/>
+                    <toad-slider model={node.model} />
+                </span>
+            }
         }
         return undefined
     }

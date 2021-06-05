@@ -1,7 +1,7 @@
-import { ipcRenderer, contextBridge } from "electron"
+import { ipcRenderer, contextBridge } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
-    readFile: (path: string): string => { return ipcRenderer.sendSync("readFile", path) },
+    readFile: (path: string): string => { return ipcRenderer.sendSync('readFile', path) },
     isFile: (path: string): boolean => { return ipcRenderer.sendSync('isFile', path) },
     isDir: (path: string): boolean => { return ipcRenderer.sendSync('isFile', path) },
     listDir: (path: string): string[] => { return ipcRenderer.sendSync('listDir', path) },

@@ -1,70 +1,40 @@
 import { mat4 } from 'gl-matrix'
 import { calculateNormals } from './fileformats/lib/calculateNormals'
-import { WavefrontObj } from "./fileformats/WavefrontObj"
+import { WavefrontObj } from './fileformats/WavefrontObj'
 
 let cubeRotation = 0.0
 
-export function render(canvas: HTMLCanvasElement, scene: WavefrontObj) {
-
-        const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
-    if (!gl) {
-        alert('Unable to initialize WebGL. Your browser or machine may not support it.')
-        return
+interface ProgramInfo {
+    program: WebGLProgram
+    attribLocations: {
+        vertexPosition: number
+        vertexNormal: number
+        // vertexColor: number
     }
+    uniformLocations: {
+        projectionMatrix: WebGLUniformLocation
+        modelViewMatrix: WebGLUniformLocation
+        normalMatrix: WebGLUniformLocation
+    }
+}
 
-    const vertextShaderProgram = `
-    // this is our input per vertex
-    attribute vec4 aVertexPosition;
-    attribute vec3 aVertexNormal;
-    // attribute vec4 aVertexColor;
+interface Buffers {
+    position: WebGLBuffer
+    normal: WebGLBuffer
+    indices: WebGLBuffer
+}
 
-    // input for all vertices (uniform for the whole shader program)
-    uniform mat4 uNormalMatrix;
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
+export function render(canvas: HTMLCanvasElement, scene: WavefrontObj): void {
 
-    // data exchanged with other graphic pipeline stages
-    // varying lowp vec4 vColor;
-    varying highp vec3 vLighting;
-
-    void main(void) {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-
-      highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
-      highp vec3 directionalLightColor = vec3(1, 1, 1);
-      highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-
-      highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
-
-      highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
-      vLighting = ambientLight + (directionalLightColor * directional);
-
-    //   vColor = aVertexColor;
-    }`
-
-    const fragmentShaderProgram = `
-    varying lowp vec4 vColor;
-    varying highp vec3 vLighting;
-    void main(void) {
-      gl_FragColor = vec4(vec3(1,0.8,0.7) * vLighting, 1.0);
-    }`
-
-    const shaderProgram = compileShaders(gl, vertextShaderProgram, fragmentShaderProgram)
-    const programInfo = {
-        program: shaderProgram,
-        attribLocations: {
-            vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-            vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal')
-            // vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor')
-        },
-        uniformLocations: {
-            projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-            modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-            normalMatrix: gl.getUniformLocation(shaderProgram, 'uNormalMatrix')
-        }
+    const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
+    if (!gl) {
+        throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
     }
 
     const buffers = createAllBuffers(gl, scene)
+    const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSharderSrc)
+    const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc)
+    const programInfo = linkProgram(gl, vertexShader, fragmentShader)
 
     let then = 0
     function render(now: number) {
@@ -79,7 +49,7 @@ export function render(canvas: HTMLCanvasElement, scene: WavefrontObj) {
     requestAnimationFrame(render)
 }
 
-function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, deltaTime: number, scene: WavefrontObj) {
+function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: WavefrontObj): void {
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
         canvas.width = canvas.clientWidth
@@ -156,7 +126,6 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
 
     {
         const type = gl.UNSIGNED_SHORT
-        let i = 0
         const offset = scene.groups[0].start
         const count = scene.groups[0].length
         // console.log(`draw group '${scene.groups[i].name}, offset=${offset}, length=${count}'`)
@@ -166,41 +135,89 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: any, buffers: any, d
     cubeRotation += deltaTime
 }
 
-function compileShaders(gl: any, vertexSharderSrc: string, fragmentShaderSrc: string) {
-    const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSharderSrc)
-    const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc)
+const vertexSharderSrc = `
+// this is our input per vertex
+attribute vec4 aVertexPosition;
+attribute vec3 aVertexNormal;
+// attribute vec4 aVertexColor;
 
+// input for all vertices (uniform for the whole shader program)
+uniform mat4 uNormalMatrix;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+
+// data exchanged with other graphic pipeline stages
+// varying lowp vec4 vColor;
+varying highp vec3 vLighting;
+
+void main(void) {
+  gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+
+  highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+  highp vec3 directionalLightColor = vec3(1, 1, 1);
+  highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+
+  highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+
+  highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+  vLighting = ambientLight + (directionalLightColor * directional);
+
+//   vColor = aVertexColor;
+}`
+
+const fragmentShaderSrc = `
+varying lowp vec4 vColor;
+varying highp vec3 vLighting;
+void main(void) {
+  gl_FragColor = vec4(vec3(1,0.8,0.7) * vLighting, 1.0);
+}`
+
+function compileShader(gl: WebGL2RenderingContext, type: GLenum, source: string): WebGLShader {
+    const shader = gl.createShader(type)
+    if (shader === null)
+        throw Error('Unable to create WebGLShader')
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader)
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader)
+        throw Error(`An error occurred compiling the ${type} WebGLShader: ${gl.getShaderInfoLog(shader)}`)
+    }
+    return shader
+}
+
+function linkProgram(gl: WebGL2RenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): ProgramInfo {
     const program = gl.createProgram()
+    if (program === null) {
+        throw Error('Unable to create WebGLProgram')
+    }
     gl.attachShader(program, vertexShader)
     gl.attachShader(program, fragmentShader)
     gl.linkProgram(program)
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program))
-        return null
+        throw Error(`Unable to initialize WebGLProgram: ${gl.getProgramInfoLog(program)}`)
     }
 
-    return program
-}
-
-function compileShader(gl: WebGL2RenderingContext, type: GLenum, source: string) {
-    const shader = gl.createShader(type)
-    if (shader === null)
-        throw Error("failed to create shader")
-    gl.shaderSource(shader, source)
-    gl.compileShader(shader)
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        alert(`An error occurred compiling the ${type} shader: ${gl.getShaderInfoLog(shader)}`)
-        gl.deleteShader(shader)
-        return null
+    return {
+        program: program,
+        attribLocations: {
+            vertexPosition: gl.getAttribLocation(program, 'aVertexPosition'),
+            vertexNormal: gl.getAttribLocation(program, 'aVertexNormal'),
+            // vertexColor: gl.getAttribLocation(program, 'aVertexColor'),
+        },
+        uniformLocations: {
+            projectionMatrix: getUniformLocation(gl, program, 'uProjectionMatrix'),
+            modelViewMatrix: getUniformLocation(gl, program, 'uModelViewMatrix'),
+            normalMatrix: getUniformLocation(gl, program, 'uNormalMatrix')
+        }
     }
-    return shader
 }
 
-interface Buffers {
-    position: WebGLBuffer
-    normal: WebGLBuffer
-    indices: WebGLBuffer
+function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, name: string): WebGLUniformLocation {
+    const location = gl.getUniformLocation(program, name)
+    if (location === null)
+        throw Error(`Internal Error: Failed to get uniform location for ${name}`)
+    return location
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj): Buffers {
@@ -211,10 +228,10 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj): Buff
     }
 }
 
-function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: any, data: number[]): WebGLBuffer {
+function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: Float32ArrayConstructor|Uint16ArrayConstructor, data: number[]): WebGLBuffer {
     const buffer = gl.createBuffer()
     if (buffer === null)
-        throw Error("Failed to create new WebGLBuffer")
+        throw Error('Failed to create new WebGLBuffer')
     gl.bindBuffer(target, buffer)
     gl.bufferData(target, new type(data), usage)
     return buffer

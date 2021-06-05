@@ -1,14 +1,14 @@
 const categoryData = {
     // category        values
-    "gender":          ["male", "female"],
-    "age":             ['baby', 'child', 'young', 'old'],
-    "race":            ['caucasian', 'asian', 'african'],
-    "muscle":          ['maxmuscle', 'averagemuscle', 'minmuscle'],
-    "weight":          ['minweight', 'averageweight', 'maxweight'],
-    "height":          ['minheight', 'averageheight', 'maxheight'],
-    "breastsize":      ['mincup', 'averagecup', 'maxcup'],
-    "breastfirmness":  ['minfirmness', 'averagefirmness', 'maxfirmness'],
-    "bodyproportions": ['uncommonproportions', 'regularproportions', 'idealproportions']
+    'gender':          ['male', 'female'],
+    'age':             ['baby', 'child', 'young', 'old'],
+    'race':            ['caucasian', 'asian', 'african'],
+    'muscle':          ['maxmuscle', 'averagemuscle', 'minmuscle'],
+    'weight':          ['minweight', 'averageweight', 'maxweight'],
+    'height':          ['minheight', 'averageheight', 'maxheight'],
+    'breastsize':      ['mincup', 'averagecup', 'maxcup'],
+    'breastfirmness':  ['minfirmness', 'averagefirmness', 'maxfirmness'],
+    'bodyproportions': ['uncommonproportions', 'regularproportions', 'idealproportions']
 }
 const validCategories = new Array<string>()
 const valueToCategory = new Map<string, string>()
@@ -57,16 +57,16 @@ export class Component {
         if (category !== undefined) {
             this.setData(category, value)
         } else
-        if (value !== "target") {
+        if (value !== 'target') {
             this.addKey(value)
         }
     }
 
     tuple(): string {
-        let s = ""
+        let s = ''
         for(const key of this.key) {
             if (s.length !== 0)
-                s += "-"
+                s += '-'
             s += key
         }
         return s

@@ -1,4 +1,4 @@
-import { Modifier } from "./Modifier"
+import { Modifier } from './Modifier'
 
 // single target file, value in [0,1]
 export class SimpleModifier extends Modifier {
@@ -8,7 +8,7 @@ export class SimpleModifier extends Modifier {
         super(
             groupName,
             targetpath
-                .replace(".target", "")
+                .replace('.target', '')
                 .replace('/', '-')
                 .replace('\\', '-')
         )
@@ -26,6 +26,6 @@ export class SimpleModifier extends Modifier {
     }
 
     private expandTemplate(t: any): any {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 }

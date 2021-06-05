@@ -1,6 +1,6 @@
-import { Target } from "./Target"
-import { Component} from "./Component"
-import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
+import { Target } from './Target'
+import { Component} from './Component'
+import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
 
 export class TargetFactory {
     rootComponent: Component
@@ -43,14 +43,14 @@ export class TargetFactory {
         // result = []
         const result = new Array<Component>()
         // for entry in self.index[partialGroup]:
-        for (const entry of this.index.get(partialGroup)!!) {
+        for (const entry of this.index.get(partialGroup)!) {
         //     if isinstance(entry, Component):
             if (entry instanceof Component)
-        //         result.append(entry)
+            //         result.append(entry)
                 result.push(entry)
-        //     else:
+            //     else:
             else
-        //         result.extend(self.findTargets(entry))
+            //         result.extend(self.findTargets(entry))
                 result.concat(this.findTargets(entry))
         }
         // return result
@@ -70,15 +70,15 @@ export class TargetFactory {
             // console.log(`directoryPath='${directoryPath}', dir=${dir}, name='${name}'`)
             const p = fs.joinPath(directoryPath, name)
 
-            if (fs.isFile(p) && ! p.toLowerCase().endsWith(".target")) {
-                if (p.toLowerCase().endsWith(".png")) {
+            if (fs.isFile(p) && ! p.toLowerCase().endsWith('.target')) {
+                if (p.toLowerCase().endsWith('.png')) {
                     this.images.set(name.toLowerCase(), p)
                 }
             } else {
                 const item = base.createChild()
-                const parts = name.replace("_", "-").replace(".", "-").split("-")
+                const parts = name.replace('_', '-').replace('.', '-').split('-')
                 for(const part of parts.entries()) {
-                    if (part[0]===0 && part[1]==="targets")
+                    if (part[0]===0 && part[1]==='targets')
                         continue
                     item.update(part[1])
                 }
@@ -95,7 +95,7 @@ export class TargetFactory {
                         a = new Array<Component>()
                         this.groups.set(key, a)
                     }
-                    a!!.push(item)
+                    a!.push(item)
                 }
             }
         }
@@ -104,9 +104,9 @@ export class TargetFactory {
     private buildIndex() {
         for(const target of this.targets) {
             if (!this.index.has(target.tuple())) {
-                this.index.set(target.tuple(), new Array())
+                this.index.set(target.tuple(), [])
             }
-            this.index.get(target.tuple())!!.push(target)
+            this.index.get(target.tuple())!.push(target)
             let component = target
             while(component.parent !== undefined) {
                 const parent = component.parent
@@ -114,8 +114,8 @@ export class TargetFactory {
                     this.index.set(parent.tuple(), new Array<Component|string>())
                 }
                 if (component.tuple() !== parent.tuple() &&
-                     !this.index.get(parent.tuple())!!.includes(component.tuple()) ) {
-                        this.index.get(parent.tuple())!!.push(component.tuple())
+                     !this.index.get(parent.tuple())!.includes(component.tuple()) ) {
+                        this.index.get(parent.tuple())!.push(component.tuple())
                 }
                 component = parent
             }

@@ -1,8 +1,8 @@
-import { ManagedTargetModifier } from "./ManagedTargetModifier"
-import { Target } from "../target/Target"
-import { TargetFactory } from "../target/TargetFactory"
-import { Component } from "../target/Component"
-import { TargetRef } from "./TargetRef"
+import { ManagedTargetModifier } from './ManagedTargetModifier'
+import { Target } from '../target/Target'
+import { TargetFactory } from '../target/TargetFactory'
+import { Component } from '../target/Component'
+import { TargetRef } from './TargetRef'
 
 // findTargets('buttocks-buttocks-volume-decr') -> [('data/targets/buttocks/buttocks-volume-decr.target', ['buttocks-buttocks-volume-decr'])]
 // findTargets('buttocks-buttocks-volume-incr') -> [('data/targets/buttocks/buttocks-volume-incr.target', ['buttocks-buttocks-volume-incr'])]
@@ -12,11 +12,11 @@ function findTargets(path: string|undefined):TargetRef[] {
     const targetsList = TargetFactory.getInstance().getTargetsByGroup(path) as Component[]
     const result = []
     for (const component of targetsList) {
-        const targetgroup = "-"+component.tuple()
+        const targetgroup = '-'+component.tuple()
         const factordependencies = component.getVariables()
         factordependencies.push(targetgroup)
         result.push(
-            new TargetRef(component.path!!, factordependencies)
+            new TargetRef(component.path!, factordependencies)
         )
     }
     return result
@@ -90,7 +90,7 @@ export class UniversalModifier extends ManagedTargetModifier {
     }
 
     override getFactors(value: number): any {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     override setValue(value: number) {
@@ -115,7 +115,7 @@ export class UniversalModifier extends ManagedTargetModifier {
     }
 
     override getValue(): number {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
         // right = sum([self.human.getDetail(target[0]) for target in self.r_targets])
         // if right:
         //     return right

@@ -1,4 +1,4 @@
-import { StringToLineIterator } from "./StringToLineIterator"
+import { StringToLineIterator } from './StringToLineIterator'
 
 export class StringToLine implements Iterable<string> {
     data: string;

@@ -1,4 +1,4 @@
-import { Modifier } from "./fileformats/modifier/Modifier"
+import { Modifier } from './fileformats/modifier/Modifier'
 
 export class Human {  
     private modifiers: Map<string, Modifier>
@@ -73,7 +73,7 @@ export class Human {
             //             self._modifier_groups[modifier.groupName] = []
             this.modifierGroups.set(modifier.groupName, new Array<Modifier>())
         //         self._modifier_groups[modifier.groupName].append(modifier)
-        this.modifierGroups.get(modifier.groupName)!!.push(modifier)
+        this.modifierGroups.get(modifier.groupName)!.push(modifier)
         //         # Update dependency mapping
         //         if modifier.macroVariable and modifier.macroVariable != 'None':
         //             if modifier.macroVariable in self._modifier_varMapping and \

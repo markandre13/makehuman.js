@@ -1,5 +1,5 @@
-import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
-import { TreeNode, NumberModel } from "toad.js"
+import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
+import { TreeNode, NumberModel } from 'toad.js'
 
 export interface Category {
     sortOrder: number
@@ -26,7 +26,7 @@ export class SliderNode implements TreeNode {
     down?: SliderNode
     constructor(label?: string, modifier?: Modifier) {
         SliderNode.count++
-        this.label = label || ""
+        this.label = label || ''
         this.modifier = modifier
 
         if (modifier) {
@@ -73,10 +73,10 @@ function capitalize(s: string): string {
     return s[0].toUpperCase() + s.slice(1)
 }
 
-export function labelFromModifier(groupName: String, name: string): string {
-    const tlabel = name.split("-")
+export function labelFromModifier(groupName: string, name: string): string {
+    const tlabel = name.split('-')
 
-    if (tlabel[tlabel.length - 1].indexOf("|") !== -1)
+    if (tlabel[tlabel.length - 1].indexOf('|') !== -1)
         tlabel.pop()
 
     if (tlabel.length > 1 && tlabel[0] === groupName)
@@ -84,7 +84,7 @@ export function labelFromModifier(groupName: String, name: string): string {
 
     tlabel[0] = capitalize(tlabel[0])
 
-    return tlabel.join(" ")
+    return tlabel.join(' ')
 }
 
 /*
@@ -102,7 +102,7 @@ export function loadSliders(filename: string): SliderNode {
     return root
 }
 
-export function parseSliders(data: string, filename: string = "memory"): SliderNode {
+export function parseSliders(data: string, filename = 'memory'): SliderNode {
     const json = JSON.parse(data)
     let rootNode: SliderNode | undefined
     let lastTabNode: SliderNode | undefined
@@ -135,7 +135,7 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
             for (const modifier of categoryValue as Modifier[]) {
                 let label = modifier.label
                 if (label === undefined) {
-                    const name = modifier.mod.split("/")
+                    const name = modifier.mod.split('/')
                     label = labelFromModifier(name[0], name[1])
                 }
                 const sliderNode = new SliderNode(label, modifier)
@@ -148,6 +148,6 @@ export function parseSliders(data: string, filename: string = "memory"): SliderN
         }
     }
     if (rootNode === undefined)
-        throw Error("No sliders found.")
+        throw Error('No sliders found.')
     return rootNode
 }

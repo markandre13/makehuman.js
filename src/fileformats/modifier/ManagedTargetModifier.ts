@@ -1,4 +1,4 @@
-import { Modifier } from "./Modifier"
+import { Modifier } from './Modifier'
 
 // 2 targets from the TargetFactory, value in [0, 1] or [-1, 1]
 export class ManagedTargetModifier extends Modifier {
@@ -20,7 +20,7 @@ export class ManagedTargetModifier extends Modifier {
     }
 
     override setValue(value: number, { skipDependencies = false } = {}) {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
         // value = self.clampValue(value)
         // factors = self.getFactors(value)
 
@@ -37,12 +37,12 @@ export class ManagedTargetModifier extends Modifier {
     }
 
     override getValue(): number {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     // weight for each factor, e.g. {'old':0.8,'young':0.2, 'child':0}
     override getFactors(value: number): any {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
         // return dict((name, getattr(self.human, name + 'Val'))
         //             for name in self._variables)
 

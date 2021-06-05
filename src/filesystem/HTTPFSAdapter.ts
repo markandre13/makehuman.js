@@ -1,5 +1,5 @@
-import { fileURLToPath } from "url"
-import { AbstractFileSystemAdapter } from "./AbstractFileSystemAdapter"
+import { fileURLToPath } from 'url'
+import { AbstractFileSystemAdapter } from './AbstractFileSystemAdapter'
 
 interface FileInfo {
     file: string
@@ -13,12 +13,12 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
 
     readFile(pathname: string): string {
         // console.log(`HTTPJSFSAdapter.readFile('${pathname}')`)
-        const req = new XMLHttpRequest();
-		req.open("GET", pathname, false);
-		req.send(null)
+        const req = new XMLHttpRequest()
+        req.open('GET', pathname, false)
+        req.send(null)
     	if(req.status < 400)
-		    return req.responseText;
-		throw new Error("Request failed: " + req.statusText);
+		    return req.responseText
+        throw new Error('Request failed: ' + req.statusText)
     }
     isFile(pathname: string): boolean {
         // console.log(`HTTPJSFSAdapter.isFile('${pathname}')`)
@@ -41,7 +41,7 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     }
     isDir(pathname: string): boolean {
         // console.log(`HTTPJSFSAdapter.isDir('${pathname}')`)
-        let info = HTTPFSAdapter.path2info.get(pathname)
+        const info = HTTPFSAdapter.path2info.get(pathname)
         if (info === undefined) {
             throw Error(`HTTPJSFSAdapter.isFile('${pathname}')`)
         }
@@ -56,12 +56,12 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
         }
 
         if (info === undefined)
-            info = {file: "", isDir: true, dir: undefined}
+            info = {file: '', isDir: true, dir: undefined}
 
         const d = this.readFile(`data/${pathname}/directory.json`)
         const j = JSON.parse(d)
         info.dir = []
-        for(let x of j) {
+        for(const x of j) {
             const fullfile = `${pathname}/${x.file}`
             // console.log(`${pathname}/${x.file}`)
             info.dir.push(x.file)

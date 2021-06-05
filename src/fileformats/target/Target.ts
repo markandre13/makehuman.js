@@ -1,5 +1,5 @@
-import { StringToLine } from "../lib/StringToLine"
-import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
+import { StringToLine } from '../lib/StringToLine'
+import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
 // import { vec3 } from 'gl-matrix'
 
 // lib/targets.py
@@ -48,8 +48,8 @@ export class Target {
     data: Array<number>; // index
 
     constructor() {
-        this.verts = new Array<number>();
-        this.data = new Array<number>();
+        this.verts = new Array<number>()
+        this.data = new Array<number>()
     }
 
     load(filename: string) {

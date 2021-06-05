@@ -1,9 +1,9 @@
-import { EthnicModifier } from "./EthnicModifier"
-import { MacroModifier } from "./MacroModifier"
-import { UniversalModifier } from "./UniversalModifier"
-import { Modifier } from "./Modifier"
-import { Human } from "../../Human"
-import { FileSystemAdapter } from "../../filesystem/FileSystemAdapter"
+import { EthnicModifier } from './EthnicModifier'
+import { MacroModifier } from './MacroModifier'
+import { UniversalModifier } from './UniversalModifier'
+import { Modifier } from './Modifier'
+import { Human } from '../../Human'
+import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
 
 // {
 //     "group": "<groupname>",
@@ -23,7 +23,7 @@ export function loadModifiers(filename: string, human?: Human): Modifier[] {
         filename)
 }
 
-export function parseModifiers(data: string, human?: Human, filename: string = "memory"): Modifier[] {
+export function parseModifiers(data: string, human?: Human, filename = 'memory'): Modifier[] {
     const classesMapping = new Map<string, any>([
         // ['Modifier', Modifier],
         // ['SimpleModifier', SimpleModifier],
@@ -31,7 +31,7 @@ export function parseModifiers(data: string, human?: Human, filename: string = "
         // ['UniversalModifier', UniversalModifier],
         // ['MacroModifier', MacroModifier],
         ['EthnicModifier', EthnicModifier]
-    ]);
+    ])
     const json = JSON.parse(data)
     const modifiers = new Array<Modifier>()
     const lookup = new Map<string, Modifier>()
@@ -39,19 +39,19 @@ export function parseModifiers(data: string, human?: Human, filename: string = "
     for (const modifierGroup of json) {
         const groupName = modifierGroup.group
         for (const mDef of modifierGroup.modifiers) {
-            let modifierClass: typeof Modifier;
-            let modifier: Modifier;
-            if ("modifierType" in mDef) {
+            let modifierClass: typeof Modifier
+            let modifier: Modifier
+            if ('modifierType' in mDef) {
                 modifierClass = classesMapping.get(mDef.modifierType)
                 if (modifierClass === undefined)
                     throw Error(`failed to instantiate modifer ${mDef.modifierType}`)
-            } else if ("macrovar" in mDef) {
+            } else if ('macrovar' in mDef) {
                 modifierClass = MacroModifier
             } else {
                 modifierClass = UniversalModifier
             }
 
-            if ("macrovar" in mDef) {
+            if ('macrovar' in mDef) {
                 modifier = new modifierClass(groupName, mDef.macrovar)
                 if (!modifier.isMacro()) {
                     console.log(`Expected modifier ${modifier} to be a macro modifier, but identifies as a regular one. Please check variable category definitions in class Component.`)
@@ -63,7 +63,7 @@ export function parseModifiers(data: string, human?: Human, filename: string = "
                 modifier = new (modifierClass as typeof UniversalModifier)(groupName, mDef.target, mDef.min, mDef.max, mDef.mid)
             }
 
-            if ("defaultValue" in mDef) {
+            if ('defaultValue' in mDef) {
                 modifier.defaultValue = mDef.defaultValue
             }
 

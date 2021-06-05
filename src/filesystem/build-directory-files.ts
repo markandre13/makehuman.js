@@ -25,24 +25,24 @@ import * as path from 'path'
 //     joinPath(pathname1: string, pathname2: string): string { return path.join(pathname1, pathname2) }
 // }
 
-const directorFile = "directory.json"
+const directorFile = 'directory.json'
 
 function build(path: string) {
-    let out = "[\n"
-    for (let file of fs.readdirSync(path)) {
+    let out = '[\n'
+    for (const file of fs.readdirSync(path)) {
         if (file === directorFile)
             continue
         const isDir = fs.lstatSync(`${path}/${file}`).isDirectory()
         if (out.length > 2)
-            out += ",\n"
-        out += `  {"file": "${file}", "isDir": ${isDir ? "true" : "false"}}`
+            out += ',\n'
+        out += `  {"file": "${file}", "isDir": ${isDir ? 'true' : 'false'}}`
 
         if (isDir)
             build(`${path}/${file}`)
     }
-    out += "\n]\n"
+    out += '\n]\n'
     fs.writeFileSync(`${path}/${directorFile}`, out)
 }
 
-build("data")
+build('data')
 

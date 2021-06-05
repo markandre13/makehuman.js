@@ -1,5 +1,5 @@
-import { TargetRef } from "./TargetRef"
-import { Human } from "../../Human"
+import { TargetRef } from './TargetRef'
+import { Human } from '../../Human'
 
 // from apps/humanmodifier.py
 export class Modifier {
@@ -24,7 +24,7 @@ export class Modifier {
     constructor(groupName: string, name: string) {
         this.groupName = groupName.replace('/', '-')
         this.name = name.replace('/', '-')
-        this.description = ""
+        this.description = ''
 
         this.value = 0
         this.defaultValue = 0
@@ -52,7 +52,7 @@ export class Modifier {
     }
 
     setValue(value: number, {skipDependencies = false} = {}) {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
         const clampedValue = this.clampValue(value)
         // const factors = this.getFactors(clampedValue)
         // tWeights = getTargetWeights(self.targets, factors, clampedValue)
@@ -73,7 +73,7 @@ export class Modifier {
     }
 
     propagateUpdate(realtime = false) {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
         // let f
         // if (realtime)
         //     f = realtimeDependencyUpdates
@@ -92,16 +92,16 @@ export class Modifier {
     }
 
     clampValue(value: number) {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     getFactors(value: number): any {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     getValue(): number {
         // return sum([self.human.getDetail(target[0]) for target in self.targets])
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     getDefaultValue(): number {
@@ -117,52 +117,52 @@ export class Modifier {
     }
 
     updateValue(value: number, {updateNormals = 1, skipUpdate = false} = {} ) {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
         // if (this.verts === undefined && this.faces === undefined)
         //     this.buildLists()
 
-//    # Update detail state
-//    old_detail = [self.human.getDetail(target[0]) for target in self.targets]
-//    self.setValue(value, skipDependencies = True)
-//    new_detail = [self.human.getDetail(target[0]) for target in self.targets]
+        //    # Update detail state
+        //    old_detail = [self.human.getDetail(target[0]) for target in self.targets]
+        //    self.setValue(value, skipDependencies = True)
+        //    new_detail = [self.human.getDetail(target[0]) for target in self.targets]
 
-//    # Apply changes
-//    for target, old, new in zip(self.targets, old_detail, new_detail):
-//        if new == old:
-//            continue
-//        if self.human.isPosed():
-//            # Apply target with pose transformation
-//            animatedMesh = self.human
-//        else:
-//            animatedMesh = None
-//        algos3d.loadTranslationTarget(self.human.meshData, target[0], new - old, None, 0, 0, animatedMesh=animatedMesh)
+        //    # Apply changes
+        //    for target, old, new in zip(self.targets, old_detail, new_detail):
+        //        if new == old:
+        //            continue
+        //        if self.human.isPosed():
+        //            # Apply target with pose transformation
+        //            animatedMesh = self.human
+        //        else:
+        //            animatedMesh = None
+        //        algos3d.loadTranslationTarget(self.human.meshData, target[0], new - old, None, 0, 0, animatedMesh=animatedMesh)
 
-//    if skipUpdate:
-//        # Used for dependency updates (avoid dependency loops and double updates to human)
-//        return
+        //    if skipUpdate:
+        //        # Used for dependency updates (avoid dependency loops and double updates to human)
+        //        return
 
-//    # Update dependent modifiers
-//    self.propagateUpdate(realtime = True)
+        //    # Update dependent modifiers
+        //    self.propagateUpdate(realtime = True)
 
-//    # Update vertices
-//    if updateNormals:
-//        self.human.meshData.calcNormals(1, 1, self.verts, self.faces)
-//    self.human.meshData.update()
-//    event = events3d.HumanEvent(self.human, self.eventType)
-//    event.modifier = self.fullName
-//    self.human.callEvent('onChanging', event)
+        //    # Update vertices
+        //    if updateNormals:
+        //        self.human.meshData.calcNormals(1, 1, self.verts, self.faces)
+        //    self.human.meshData.update()
+        //    event = events3d.HumanEvent(self.human, self.eventType)
+        //    event.modifier = self.fullName
+        //    self.human.callEvent('onChanging', event)
     }
 
     getSymmetrySide(): string|undefined {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     getSymmetricOpposite(): string|undefined {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     getSimilar(): any {
-        throw Error("Not implemented")
+        throw Error('Not implemented')
     }
 
     isMacro() {
