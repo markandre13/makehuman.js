@@ -1,9 +1,15 @@
 import { Modifier } from './Modifier'
+// import { Target } from '../target/Target'
+import { TargetRef } from './TargetRef'
 
 // 2 targets from the TargetFactory, value in [0, 1] or [-1, 1]
 export class ManagedTargetModifier extends Modifier {
     left?: string
     right?: string
+
+    lTargets?: TargetRef[]
+    cTargets?: TargetRef[]
+    rTargets?: TargetRef[]
 
     constructor(groupName: string, name: string) {
         super(groupName, name)
@@ -20,11 +26,10 @@ export class ManagedTargetModifier extends Modifier {
     }
 
     override setValue(value: number, { skipDependencies = false } = {}) {
-        throw Error('Not implemented')
-        // value = self.clampValue(value)
-        // factors = self.getFactors(value)
+        value = this.clampValue(value)
+        const factors = this.getFactors(value)
 
-        // tWeights = getTargetWeights(self.targets, factors, value)
+        const tWeights = getTargetWeights(this.targets, factors, value)
         // for tpath, tWeight in tWeights.items():
         //     self.human.setDetail(tpath, tWeight)
 
@@ -37,7 +42,16 @@ export class ManagedTargetModifier extends Modifier {
     }
 
     override getValue(): number {
-        throw Error('Not implemented')
+        if (this.rTargets) {
+            let sum = 0
+            for(let target of this.rTargets)
+                sum += this.human!.getDetail(target.factorDependencies[0]) // FIXME: this is just a guess
+            return sum
+        }
+        let sum = 0
+        for(let target of this.lTargets!)
+            sum += this.human!.getDetail(target.factorDependencies[0]) // FIXME: this is just a guess
+        return sum
     }
 
     // weight for each factor, e.g. {'old':0.8,'young':0.2, 'child':0}
@@ -49,4 +63,19 @@ export class ManagedTargetModifier extends Modifier {
     }
 
     // get
+}
+
+function getTargetWeights(targets: TargetRef[], factors: any, value = 1.0, ignoreNotfound = false) {
+    const result = new Map<string, number>()
+    if (ignoreNotfound) {
+        targets.forEach( (e) => {
+            result.set(e.targetPath, value )
+        })
+    //     for (tpath, tfactors) in targets:
+    //         result[tpath] = value * reduce(operator.mul, [factors.get(factor, 1.0) for factor in tfactors])
+    } else {
+    //     for (tpath, tfactors) in targets:
+    //         result[tpath] = value * reduce(operator.mul, [factors[factor] for factor in tfactors])
+    }
+    return result
 }

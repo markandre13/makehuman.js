@@ -2,7 +2,7 @@ import { TargetRef } from './TargetRef'
 import { Human } from '../../Human'
 
 // from apps/humanmodifier.py
-export class Modifier {
+export abstract class Modifier {
     groupName: string
     name: string
     description: string
@@ -96,9 +96,7 @@ export class Modifier {
         throw Error('Not implemented')
     }
 
-    getFactors(value: number): any {
-        throw Error('Not implemented')
-    }
+    abstract getFactors(value: number): any
 
     getValue(): number {
         // return sum([self.human.getDetail(target[0]) for target in self.targets])

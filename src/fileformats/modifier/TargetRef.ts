@@ -1,6 +1,6 @@
 export class TargetRef {
-    targetPath: string
-    factorDependencies: string[]
+    targetPath: string // tPath
+    factorDependencies: string[] // fFactors
     constructor(targetPath: string, factorDependencies: string[]) {
         this.targetPath = targetPath
         this.factorDependencies = factorDependencies

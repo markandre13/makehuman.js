@@ -9,7 +9,10 @@ import { TargetRef } from './TargetRef'
 function findTargets(path: string|undefined):TargetRef[] {
     if (path === undefined)
         return []
-    const targetsList = TargetFactory.getInstance().getTargetsByGroup(path) as Component[]
+    const targetsList = TargetFactory.getInstance().getTargetsByGroup(path)
+    if (targetsList === undefined)
+        throw Error(`findTargets(): failed to get targetsList for ${path}`)
+    // console.log(targetsList)
     const result = []
     for (const component of targetsList) {
         const targetgroup = '-'+component.tuple()
@@ -24,14 +27,8 @@ function findTargets(path: string|undefined):TargetRef[] {
 
 // 1 to 3 targets from the TargetFactory, value in [0, 1] or [-1, 1]
 export class UniversalModifier extends ManagedTargetModifier {
-
     targetName: string
-
     center?: string
-
-    lTargets?: TargetRef[]
-    cTargets?: TargetRef[]
-    rTargets?: TargetRef[]
 
     constructor(groupName: string, targetName: string, leftExt?: string, rightExt?: string, centerExt?: string) {
         // console.log(`UniversalModifier('${groupName}', '${targetName}', '${leftExt}', '${rightExt}', '${centerExt}')`)
@@ -90,38 +87,46 @@ export class UniversalModifier extends ManagedTargetModifier {
     }
 
     override getFactors(value: number): any {
-        throw Error('Not implemented')
+        const factors = super.getFactors(value)
+
+        if (this.left !== undefined)
+            factors[this.left] = -Math.min(value, 0)
+        if (this.center !== undefined)
+            factors[this.center] = 1.0 - Math.abs(value)
+        factors[this.right!] = Math.max(0, value)
+
+        return factors
     }
 
-    override setValue(value: number) {
-        value = this.clampValue(value)
+    // override setValue(value: number) {
+    //     value = this.clampValue(value)
 
-        console.log(`UniversalModifier.setValue(${value}) // modifier ${this.fullName}`)
+    //     console.log(`UniversalModifier.setValue(${value}) // modifier ${this.fullName}`)
 
-        // const factors = this.getFactors(value)
-        // const tWeights = this.getTargetWeights(this.targets, factors)
+    //     // const factors = this.getFactors(value)
+    //     // const tWeights = this.getTargetWeights(this.targets, factors)
         
 
-        // value = self.clampValue(value)
-        // factors = self.getFactors(value)
+    //     // value = self.clampValue(value)
+    //     // factors = self.getFactors(value)
 
-        // tWeights = getTargetWeights(self.targets, factors)
-        // for tpath, tWeight in tWeights.items():
-        //     self.human.setDetail(tpath, tWeight)
+    //     // tWeights = getTargetWeights(self.targets, factors)
+    //     // for tpath, tWeight in tWeights.items():
+    //     //     self.human.setDetail(tpath, tWeight)
 
-        // if skipDependencies:
-        //     return
+    //     // if skipDependencies:
+    //     //     return
 
-        // # Update dependent modifiers
-        // self.propagateUpdate(realtime = False)
-    }
+    //     // # Update dependent modifiers
+    //     // self.propagateUpdate(realtime = False)
+    // }
 
-    override getValue(): number {
-        throw Error('Not implemented')
-        // right = sum([self.human.getDetail(target[0]) for target in self.r_targets])
-        // if right:
-        //     return right
-        // else:
-        //     return -sum([self.human.getDetail(target[0]) for target in self.l_targets])
-    }
+    // override getValue(): number {
+    //     throw Error('Not implemented')
+    //     // right = sum([self.human.getDetail(target[0]) for target in self.r_targets])
+    //     // if right:
+    //     //     return right
+    //     // else:
+    //     //     return -sum([self.human.getDetail(target[0]) for target in self.l_targets])
+    // }
 }

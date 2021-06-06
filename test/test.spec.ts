@@ -3,13 +3,12 @@ import { expect } from "chai"
 var chai = require('chai');
 chai.use(require('chai-string'));
 
-import * as fs from "fs"
 import { WavefrontObj } from "../src/fileformats/WavefrontObj"
 import { Target } from "../src/fileformats/target/Target"
 import { StringToLine } from "../src/fileformats/lib/StringToLine"
 import { loadModifiers, parseModifiers } from "../src/fileformats/modifier/loadModifiers"
-import { Modifier } from "../src/fileformats/modifier/Modifier"
 import { UniversalModifier } from "../src/fileformats/modifier/UniversalModifier"
+import { ManagedTargetModifier } from "../src/fileformats/modifier/ManagedTargetModifier"
 import { Human } from "../src/Human"
 // import { NumberModel } from "toad.js"
 
@@ -92,14 +91,14 @@ describe("Human", ()=> {
     describe("modifiers", ()=> {
         it("adding a modifier with the same fullName is an error", ()=> {
             const human = new Human()
-            human.addModifier(new Modifier("buttocks", "buttocks-volume"))
+            human.addModifier(new ManagedTargetModifier("buttocks", "buttocks-volume"))
             expect( ()=> {
-                human.addModifier(new Modifier("buttocks", "buttocks-volume"))
+                human.addModifier(new ManagedTargetModifier("buttocks", "buttocks-volume"))
             }).to.throw()
         })
         it("getModifier", ()=>{
             const human = new Human()
-            const m0 = new Modifier("buttocks", "buttocks-volume")
+            const m0 = new ManagedTargetModifier("buttocks", "buttocks-volume")
             human.addModifier(m0)
 
             const m = human.getModifier("buttocks/buttocks-volume")
@@ -107,7 +106,7 @@ describe("Human", ()=> {
         })
         it("getModifiersByGroup", ()=>{
             const human = new Human()
-            const m0 = new Modifier("buttocks", "buttocks-volume")
+            const m0 = new ManagedTargetModifier("buttocks", "buttocks-volume")
             human.addModifier(m0)
 
             const g = human.getModifiersByGroup("buttocks")
@@ -161,7 +160,10 @@ describe("Modifier", ()=> {
 
         // expect(g[0]).to.equal(m0)
 
-        // um.getValue()
+        const value = um.getValue()
+        console.log(value)
+
+        // um.setValue(0.5)
     })
 
     it("can load the application's modifier files into a human", ()=> {

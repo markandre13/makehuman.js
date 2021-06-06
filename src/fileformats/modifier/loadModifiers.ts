@@ -40,8 +40,7 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
         const groupName = modifierGroup.group
 
         for (const modifierDef of modifierGroup.modifiers) {
-
-            let modifierClass: typeof Modifier
+            let modifierClass: new(...args: any[]) => Modifier
             let modifier: Modifier
             if ('modifierType' in modifierDef) {
                 modifierClass = classesMapping.get(modifierDef.modifierType)
