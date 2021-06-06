@@ -74,7 +74,7 @@ export abstract class Modifier {
     }
 
     propagateUpdate(realtime = false) {
-        throw Error('Not implemented')
+        console.log('please note: Modifier.propagateUpdate is not implemented')
         // let f
         // if (realtime)
         //     f = realtimeDependencyUpdates
@@ -96,7 +96,7 @@ export abstract class Modifier {
         throw Error('Not implemented')
     }
 
-    abstract getFactors(value: number): any
+    abstract getFactors(value: number): Map<string, number>
 
     getValue(): number {
         // return sum([self.human.getDetail(target[0]) for target in self.targets])

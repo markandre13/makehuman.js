@@ -27,7 +27,11 @@ function main() {
     }
 }
 
+// core/mhmain.py
+//   class MHApplication
+//     startupSequence()
 function run() {
+
     console.log('loading assets...')
     FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
@@ -118,6 +122,8 @@ function loadMacroTargets() {
     }
 }
 
+// core/mhmain.py
+//   startupSequence()
 // apps/human.py
 //   class Human
 //     setGender(gender: number) // 0 femaile to 1 male

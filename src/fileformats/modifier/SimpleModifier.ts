@@ -17,8 +17,8 @@ export class SimpleModifier extends Modifier {
         this.targets = this.expandTemplate([[this.filename, []]])
     }
 
-    override getFactors(value: number): any {
-        return { 'dummy': 1.0 }
+    override getFactors(value: number): Map<string, number> {
+        return new Map([['dummy', 1.0]])
     }
 
     override clampValue(value: number): number {

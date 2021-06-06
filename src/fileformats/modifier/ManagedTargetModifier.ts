@@ -26,22 +26,27 @@ export class ManagedTargetModifier extends Modifier {
     }
 
     override setValue(value: number, { skipDependencies = false } = {}) {
+        console.log(`ManagedTargetModifier.setValue(${value})`)
         value = this.clampValue(value)
         const factors = this.getFactors(value)
+        const tWeights = getTargetWeights(this.targets, factors)
+        console.log(value)
+        console.log(factors)
+        console.log(tWeights)
+        for(const weight of tWeights) {
+            this.human!.setDetail(weight[0], weight[1])
+        }
 
-        const tWeights = getTargetWeights(this.targets, factors, value)
-        // for tpath, tWeight in tWeights.items():
-        //     self.human.setDetail(tpath, tWeight)
+        if (skipDependencies)
+            return
 
-        // if skipDependencies:
-        //     return
-
-        // # Update dependent modifiers
-        // self.propagateUpdate(realtime = False)
-
+        // Update dependent modifiers
+        this.propagateUpdate(false)
     }
 
+    // ADD A UNIT TEST FOR THIS ONE
     override getValue(): number {
+        console.log(`ManagedTargetModifier.getValue() '${this.fullName}'`)
         if (this.rTargets) {
             let sum = 0
             for(let target of this.rTargets)
@@ -54,28 +59,50 @@ export class ManagedTargetModifier extends Modifier {
         return sum
     }
 
-    // weight for each factor, e.g. {'old':0.8,'young':0.2, 'child':0}
-    override getFactors(value: number): any {
-        throw Error('Not implemented')
-        // return dict((name, getattr(self.human, name + 'Val'))
-        //             for name in self._variables)
-
+    // return map of all Human's *Val attributes
+    override getFactors(value: number): Map<string, number> {
+        const result = new Map<string, number>()
+        const desc = Object.getOwnPropertyDescriptors(this.human)
+        for(const name in desc) {
+            if (!name.endsWith("Val"))
+                continue
+            result.set(
+                name.substring(0, name.length - 3), // name without the 'Val' suffix
+                desc[name].value.value)             // NumberModel.value
+        }
+        return result
     }
-
-    // get
 }
 
-function getTargetWeights(targets: TargetRef[], factors: any, value = 1.0, ignoreNotfound = false) {
+// {'data/targets/buttocks/buttocks-volume-decr.target': -0.0, 'data/targets/buttocks/buttocks-volume-incr.target': 0.5}
+export function getTargetWeights(targets: TargetRef[], factors: Map<string, number>, value = 1.0, ignoreNotfound = false) {
+    // console.log(`getTargetWeights(..,..,${value}, ${ignoreNotfound})"`)
     const result = new Map<string, number>()
     if (ignoreNotfound) {
         targets.forEach( (e) => {
-            result.set(e.targetPath, value )
+            // console.log([1, 2, 5].reduce( (a, v) => a*v))
+            // for factors in tfactors
+            let mul = 1
+            e.factorDependencies.forEach( factor => {
+                const f = factors.get(factor)
+                if (f !== undefined)
+                    mul *= f
+            })
+            result.set(e.targetPath, value * mul)
         })
-    //     for (tpath, tfactors) in targets:
-    //         result[tpath] = value * reduce(operator.mul, [factors.get(factor, 1.0) for factor in tfactors])
+        //     for (tpath, tfactors) in targets:
+        //         result[tpath] = value * reduce(operator.mul, [factors.get(factor, 1.0) for factor in tfactors])
     } else {
-    //     for (tpath, tfactors) in targets:
-    //         result[tpath] = value * reduce(operator.mul, [factors[factor] for factor in tfactors])
+        targets.forEach( (e) => {
+            // console.log([1, 2, 5].reduce( (a, v) => a*v))
+            // for factors in tfactors
+            let mul = 1
+            e.factorDependencies.forEach( factor => {
+                mul *= factors.get(factor)!
+            })
+            result.set(e.targetPath, value * mul)
+        })
     }
+    // console.log(result)
     return result
 }

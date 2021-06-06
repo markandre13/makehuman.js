@@ -14,13 +14,15 @@
     "jsx": "react",
     "jsxFactory": "toad.createElement",
     "jsxFragmentFactory": "toad.Fragment",
-    "experimentalDecorators": true,
-    "declaration": true,
-    "strict": true,
-    "strictNullChecks": true,
+
     "allowJs": false,
+    "experimentalDecorators": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
+    "strict": true,
+    "strictNullChecks": true,
+
+    "declaration": true,
     "inlineSourceMap": false,
     "sourceMap": true
   },

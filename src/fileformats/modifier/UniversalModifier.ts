@@ -4,6 +4,7 @@ import { TargetFactory } from '../target/TargetFactory'
 import { Component } from '../target/Component'
 import { TargetRef } from './TargetRef'
 
+// static method of ManagedTargetModifiers
 // findTargets('buttocks-buttocks-volume-decr') -> [('data/targets/buttocks/buttocks-volume-decr.target', ['buttocks-buttocks-volume-decr'])]
 // findTargets('buttocks-buttocks-volume-incr') -> [('data/targets/buttocks/buttocks-volume-incr.target', ['buttocks-buttocks-volume-incr'])]
 function findTargets(path: string|undefined):TargetRef[] {
@@ -15,7 +16,7 @@ function findTargets(path: string|undefined):TargetRef[] {
     // console.log(targetsList)
     const result = []
     for (const component of targetsList) {
-        const targetgroup = '-'+component.tuple()
+        const targetgroup = component.tuple()
         const factordependencies = component.getVariables()
         factordependencies.push(targetgroup)
         result.push(
@@ -36,7 +37,7 @@ export class UniversalModifier extends ManagedTargetModifier {
         let name: string
         let left: string | undefined
         let center: string | undefined
-        let right: string | undefined
+        let right: string
         if (leftExt !== undefined && rightExt !== undefined) {
             left = `${fullTargetName}-${leftExt}`
             right = `${fullTargetName}-${rightExt}`
@@ -73,10 +74,10 @@ export class UniversalModifier extends ManagedTargetModifier {
         // self.macroDependencies = list(self.macroDependencies)
 
         // self.targets = self.l_targets + self.r_targets + self.c_targets
-        for(const t0 of [this.lTargets, this.rTargets, this.cTargets])
-            if (t0 !== undefined)
-                for(const t1 of t0)
-                    this.targets.push(t1)
+        for(const targets of [this.lTargets, this.rTargets, this.cTargets])
+            if (targets !== undefined)
+                for(const target of targets)
+                    this.targets.push(target)
     }
 
     override getMin(): number {
@@ -86,14 +87,14 @@ export class UniversalModifier extends ManagedTargetModifier {
             return 0.0
     }
 
-    override getFactors(value: number): any {
+    override getFactors(value: number): Map<string, number> {
         const factors = super.getFactors(value)
 
         if (this.left !== undefined)
-            factors[this.left] = -Math.min(value, 0)
+            factors.set(this.left, -Math.min(value, 0))
         if (this.center !== undefined)
-            factors[this.center] = 1.0 - Math.abs(value)
-        factors[this.right!] = Math.max(0, value)
+            factors.set(this.center, 1.0 - Math.abs(value))
+        factors.set(this.right!, Math.max(0, value))
 
         return factors
     }

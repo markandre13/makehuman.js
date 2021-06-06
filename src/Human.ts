@@ -1,49 +1,62 @@
 import { Modifier } from './fileformats/modifier/Modifier'
+import { NumberModel } from 'toad.js/src/model/NumberModel'
 
+// apps/human.py class Human
 export class Human {  
     private modifiers: Map<string, Modifier>
     private modifierGroups: Map<string, Modifier[]>
 
     private targetsDetailStack: Map<string, number>
 
-    // private age: NumberModel
-    // private gender: NumberModel
-    // private weight: NumberModel
-    // private muscle: NumberModel
-    // private height: NumberModel
-    // private breastSize: NumberModel
-    // private breastFirmness: NumberModel
-    // private bodyProportions: NumberModel
+    private age = new NumberModel(0.5, {min: 0, max: 1})
+    private gender = new NumberModel(0.5, {min: 0, max: 1})
+    private weight = new NumberModel(0.5, {min: 0, max: 1})
+    private muscle = new NumberModel(0.5, {min: 0, max: 1})
+    private height = new NumberModel(0.5, {min: 0, max: 1})
+    private breastSize = new NumberModel(0.5, {min: 0, max: 1})
+    private breastFirmness = new NumberModel(0.5, {min: 0, max: 1})
+    private bodyProportions = new NumberModel(0.5, {min: 0, max: 1})
+
     // the above values are transformed into the values below,
     // which are then used by the modifiers (which have code to
     // fetch values ending in 'Val' and the prefix being provided
     // through a string)
-    // maleVal, femaleVal
-    // oldVal, babyVal, youngVal, childVal
-    // maxweightVal, minweightVal, averageweightVal
-    // maxmuscleVal, minmuscleVal, averagemuscleVal
-    // maxheightVal, minheightVal, averageheightVal
-    // maxcupVal, mincupVal, averagecupVal
-    // maxfirmnessVal, minfirmnessVal, averagefirmnessVal
-    // idealproportionsVal, uncommonproportionsVal, regularproportionsVal
-    // private caucasianVal, asianVal, afrianVal
+
+    private maleVal = new NumberModel(0)
+    private femaleVal = new NumberModel(0)
+    private oldVal = new NumberModel(0)
+    private babyVal = new NumberModel(0)
+    private youngVal = new NumberModel(0)
+    private childVal = new NumberModel(0)
+    private maxweightVal = new NumberModel(0)
+    private minweightVal = new NumberModel(0)
+    private averageweightVal = new NumberModel(0)
+    private maxmuscleVal = new NumberModel(0)
+    private minmuscleVal = new NumberModel(0)
+    private averagemuscleVal = new NumberModel(0)
+    private maxheightVal = new NumberModel(0)
+    private minheightVal = new NumberModel(0)
+    private averageheightVal = new NumberModel(0)
+    private maxcupVal = new NumberModel(0)
+    private mincupVal = new NumberModel(0)
+    private averagecupVal = new NumberModel(0)
+    private maxfirmnessVal = new NumberModel(0)
+    private minfirmnessVal = new NumberModel(0)
+    private averagefirmnessVal = new NumberModel(0)
+    private idealproportionsVal = new NumberModel(0)
+    private uncommonproportionsVal = new NumberModel(0)
+    private regularproportionsVal = new NumberModel(0)
+    private caucasianVal = new NumberModel(0)
+    private asianVal = new NumberModel(0)
+    private afrianVal = new NumberModel(0)
+
     constructor() {
+
+        this.setDefaultValues()
+
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
         this.targetsDetailStack = new Map()
-
-        // TODO: this includes toad.js/src/view.ts, which requires HTMLElement
-        // this.age = new NumberModel(0.5, {})
-        // this.gender = new NumberModel(0.5, {})
-        // this.weight = new NumberModel(0.5, {})
-        // this.muscle = new NumberModel(0.5, {})
-        // this.height = new NumberModel(0.5, {})
-        // this.breastSize = new NumberModel(0.5, {})
-        // this.breastFirmness = new NumberModel(0.5, {})
-        // this.bodyProportions = new NumberModel(0.5, {})
-        // this.caucasianVal = new NumberModel(1.0/3.0, {})
-        // this.asianVal = new NumberModel(1.0/3.0, {})
-        // this.afrianVal = new NumberModel(1.0/3.0, {})
     }
 
     private static instance?: Human
@@ -123,6 +136,7 @@ export class Human {
     }
 
     setDetail(name: string, value: number|undefined) {
+        console.log(`Human.setDetail('${name}', ${value})`)
         // TODO: name to canonicalpath
         if (value !== undefined) {
             this.targetsDetailStack.set(name, value)
@@ -131,11 +145,122 @@ export class Human {
         }
     }
 
-    getDetail(name: string): number {
-        // TODO: name to canonicalpath
-        const value = this.targetsDetailStack.get(name)
+    getDetail(name: string): number {        // TODO: name to canonicalpath
+        let value = this.targetsDetailStack.get(name)
         if (value === undefined)
-            return 0.0
+            value = 0
+        console.log(`Human.getDetail('${name}') -> ${value}`)
         return value
+    }
+
+    setDefaultValues() {
+        this.age.value = 0.5
+        this.gender.value = 0.5
+        this.weight.value = 0.5
+        this.muscle.value = 0.5
+        this.height.value = 0.5
+        this.breastSize.value = 0.5
+        this.breastFirmness.value = 0.5
+        this.bodyProportions.value = 0.5
+
+        this._setGenderVals()
+        this._setAgeVals()
+        this._setWeightVals()
+        this._setMuscleVals()
+        this._setHeightVals()
+        this._setBreastSizeVals()
+        this._setBreastFirmnessVals()
+        this._setBodyProportionVals()
+
+        this.caucasianVal.value = 1/3
+        this.asianVal.value = 1/3
+        this.afrianVal.value = 1/3
+    }
+
+    _setGenderVals() {
+        this.maleVal.value = this.gender.value
+        this.femaleVal.value = 1 - this.gender.value
+    }
+
+    _setAgeVals() {
+        // New system (A8):
+        // ----------------
+        //
+        // 1y       10y       25y            90y
+        // baby    child     young           old
+        // |---------|---------|--------------|
+        // 0      0.1875      0.5             1  = age [0, 1]
+        //
+        // val ^     child young     old
+        //   1 |baby\ / \ /   \    /
+        //     |     \   \      /
+        //     |    / \ / \  /    \ young
+        //   0 ______________________________> age
+        //        0  0.1875 0.5      1
+        if (this.age.value < 0.5) {
+            this.oldVal.value = 0.0
+            this.babyVal.value = Math.max(0.0, 1 - this.age.value * 5.333)  // 1/0.1875 = 5.333
+            this.youngVal.value = Math.max(0.0, (this.age.value-0.1875) * 3.2) // 1/(0.5-0.1875) = 3.2
+            this.childVal.value = Math.max(0.0, Math.min(1.0, 5.333 * this.age.value) - this.youngVal.value)
+        } else {
+            this.childVal.value = 0.0
+            this.babyVal.value = 0.0
+            this.oldVal.value = Math.max(0.0, this.age.value * 2 - 1)
+            this.youngVal.value = 1 - this.oldVal.value
+        }
+    }
+
+    _setWeightVals() {
+        this.maxweightVal.value = Math.max(0.0, this.weight.value * 2 - 1)
+        this.minweightVal.value = Math.max(0.0, 1 - this.weight.value * 2)
+        this.averageweightVal.value = 1 - (this.maxweightVal.value + this.minweightVal.value)
+    }
+
+    _setMuscleVals() {
+        this.maxmuscleVal.value = Math.max(0.0, this.muscle.value * 2 - 1)
+        this.minmuscleVal.value = Math.max(0.0, 1 - this.muscle.value * 2)
+        this.averagemuscleVal.value = 1 - (this.maxmuscleVal.value + this.minmuscleVal.value)
+    }
+
+    _setHeightVals() {
+        this.maxheightVal.value = Math.max(0.0, this.height.value * 2 - 1)
+        this.minheightVal.value = Math.max(0.0, 1 - this.height.value * 2)
+        if (this.maxheightVal.value > this.minheightVal.value) {
+            this.averageheightVal.value = 1 - this.maxheightVal.value
+        } else {
+            this.averageheightVal.value = 1 - this.minheightVal.value
+        }
+    }
+
+    _setBreastSizeVals() {
+        this.maxcupVal.value = Math.max(0.0, this.breastSize.value * 2 - 1)
+        this.mincupVal.value = Math.max(0.0, 1 - this.breastSize.value * 2)
+        if (this.maxcupVal.value > this.mincupVal.value) {
+            this.averagecupVal.value = 1 - this.maxcupVal.value
+        } else {
+            this.averagecupVal.value = 1 - this.mincupVal.value
+        }
+    }
+
+    _setBreastFirmnessVals() {
+        this.maxfirmnessVal.value = Math.max(0.0, this.breastFirmness.value * 2 - 1)
+        this.minfirmnessVal.value = Math.max(0.0, 1 - this.breastFirmness.value * 2)
+
+        if (this.maxfirmnessVal.value > this.minfirmnessVal.value) {
+            this.averagefirmnessVal.value = 1 - this.maxfirmnessVal.value
+        } else {
+            this.averagefirmnessVal.value = 1 - this.minfirmnessVal.value
+        }
+    }
+
+    _setBodyProportionVals() {
+        this.idealproportionsVal.value = Math.max(0.0, this.bodyProportions.value * 2 - 1)
+        this.uncommonproportionsVal.value = Math.max(0.0, 1 - this.bodyProportions.value * 2)
+
+        if (this.idealproportionsVal > this.uncommonproportionsVal) {
+            this.regularproportionsVal.value = 1 - this.idealproportionsVal.value
+        } else {
+            this.regularproportionsVal.value = 1 - this.uncommonproportionsVal.value
+        }
     }
 }

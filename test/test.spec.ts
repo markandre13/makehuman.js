@@ -1,20 +1,23 @@
 import { expect } from "chai"
 
-var chai = require('chai');
-chai.use(require('chai-string'));
+var chai = require('chai')
+chai.use(require('chai-string'))
 
 import { WavefrontObj } from "../src/fileformats/WavefrontObj"
 import { Target } from "../src/fileformats/target/Target"
 import { StringToLine } from "../src/fileformats/lib/StringToLine"
 import { loadModifiers, parseModifiers } from "../src/fileformats/modifier/loadModifiers"
 import { UniversalModifier } from "../src/fileformats/modifier/UniversalModifier"
-import { ManagedTargetModifier } from "../src/fileformats/modifier/ManagedTargetModifier"
+import { ManagedTargetModifier, getTargetWeights } from "../src/fileformats/modifier/ManagedTargetModifier"
 import { Human } from "../src/Human"
+// import { Target } from '../target/Target'
+import { TargetRef } from '../src/fileformats/modifier/TargetRef'
+
 // import { NumberModel } from "toad.js"
 
 // http://paulbourke.net/dataformats/obj/
-describe("class WavefrontOBJ", ()=> {
-    it("can parse base.obj without throwing an exception", async ()=> {
+describe("class WavefrontOBJ", () => {
+    it("can parse base.obj without throwing an exception", async () => {
         const url = "data/3dobjs/base.obj"
         // const stream = fs.readFileSync(url).toString()
         const obj = new WavefrontObj()
@@ -38,65 +41,65 @@ describe("class WavefrontOBJ", ()=> {
     // })
 })
 
-describe("class Target", ()=> {
-    it("can parse base.obj without throwing an exception", async ()=> {
+describe("class Target", () => {
+    it("can parse base.obj without throwing an exception", async () => {
         const url = "data/targets/breast/breast-volume-vert-up.target"
         // const stream = fs.readFileSync(url).toString()
         const obj = new Target()
         await obj.load(url)
-        expect(obj.data .length).to.equal(601)
+        expect(obj.data.length).to.equal(601)
         expect(obj.verts.length).to.equal(601 * 3)
     })
 })
 
-describe("class StringToLine", ()=> {
-    it("empty", ()=> {
+describe("class StringToLine", () => {
+    it("empty", () => {
         let result = ""
         const reader = new StringToLine("")
-        for(const line of reader)
+        for (const line of reader)
             result = `${result}${line}<CR>`
         expect(result).to.equal("")
     })
-    it("just a line feed", ()=> {
+    it("just a line feed", () => {
         let result = ""
         const reader = new StringToLine("\n")
-        for(const line of reader)
+        for (const line of reader)
             result = `${result}${line}<CR>`
         expect(result).to.equal("<CR><CR>")
     })
-    it("one line without line feed", ()=> {
+    it("one line without line feed", () => {
         let result = ""
         const reader = new StringToLine("line 0")
-        for(const line of reader)
+        for (const line of reader)
             result = `${result}${line}<CR>`
         expect(result).to.equal("line 0<CR>")
     })
-    it("one line with line feed", ()=> {
+    it("one line with line feed", () => {
         let result = ""
         const reader = new StringToLine("line 0\n")
-        for(const line of reader)
+        for (const line of reader)
             result = `${result}${line}<CR>`
         expect(result).to.equal("line 0<CR><CR>")
     })
-    it("three lines", ()=> {
+    it("three lines", () => {
         let result = ""
         const reader = new StringToLine("line 0\nline 1\nline 2")
-        for(const line of reader)
+        for (const line of reader)
             result = `${result}${line}<CR>`
         expect(result).to.equal("line 0<CR>line 1<CR>line 2<CR>")
     })
 })
 
-describe("Human", ()=> {
-    describe("modifiers", ()=> {
-        it("adding a modifier with the same fullName is an error", ()=> {
+describe("Human", () => {
+    describe("modifiers", () => {
+        it("adding a modifier with the same fullName is an error", () => {
             const human = new Human()
             human.addModifier(new ManagedTargetModifier("buttocks", "buttocks-volume"))
-            expect( ()=> {
+            expect(() => {
                 human.addModifier(new ManagedTargetModifier("buttocks", "buttocks-volume"))
             }).to.throw()
         })
-        it("getModifier", ()=>{
+        it("getModifier", () => {
             const human = new Human()
             const m0 = new ManagedTargetModifier("buttocks", "buttocks-volume")
             human.addModifier(m0)
@@ -104,7 +107,7 @@ describe("Human", ()=> {
             const m = human.getModifier("buttocks/buttocks-volume")
             expect(m).to.equal(m0)
         })
-        it("getModifiersByGroup", ()=>{
+        it("getModifiersByGroup", () => {
             const human = new Human()
             const m0 = new ManagedTargetModifier("buttocks", "buttocks-volume")
             human.addModifier(m0)
@@ -116,11 +119,10 @@ describe("Human", ()=> {
     })
 })
 
-describe("Modifier", ()=> {
-    it("initialize UniversalModifier from JSON", ()=>{
+describe("Modifier", () => {
+    it.only("initialize UniversalModifier from JSON", () => {
         // const url = "data/modifiers/modeling_modifiers.json" // "modifiers/measurement_modifiers.json"
-        // const data = fs.readFileSync(url).toString()
-        // loadModifiers(data)
+        // loadModifiers(url)
         const human = new Human()
         const result = parseModifiers(`[
             { "group": "buttocks",
@@ -141,14 +143,14 @@ describe("Modifier", ()=> {
         expect(um.center).to.equal(undefined)
         expect(um.right).to.equal("buttocks-buttocks-volume-incr")
 
-        // console.log(um.targets)
+        console.log(um.targets)
         expect(um.targets.length).to.equal(2)
-        expect(um.targets[0].targetPath).to.endWith('data/targets/buttocks/buttocks-volume-decr.target')
+        expect(um.targets[0].targetPath).to.equal('data/targets/buttocks/buttocks-volume-decr.target')
         expect(um.targets[0].factorDependencies.length).to.equal(1)
-        expect(um.targets[0].factorDependencies[0]).to.endWith('buttocks-buttocks-volume-decr')
-        expect(um.targets[1].targetPath).to.endWith('data/targets/buttocks/buttocks-volume-incr.target')
+        expect(um.targets[0].factorDependencies[0]).to.equal('buttocks-buttocks-volume-decr')
+        expect(um.targets[1].targetPath).to.equal('data/targets/buttocks/buttocks-volume-incr.target')
         expect(um.targets[1].factorDependencies.length).to.equal(1)
-        expect(um.targets[1].factorDependencies[0]).to.endWith('buttocks-buttocks-volume-incr')
+        expect(um.targets[1].factorDependencies[0]).to.equal('buttocks-buttocks-volume-incr')
 
         // um.setValue()
         // human.addModifier(um)
@@ -156,17 +158,77 @@ describe("Modifier", ()=> {
         const g = human.getModifiersByGroup("buttocks")
         expect(g.length).to.equal(1)
 
-        // console.log(g)
+        const m = human.getModifier("buttocks/buttocks-volume-decr|incr")!
+        expect(m).to.be.instanceOf(UniversalModifier)
 
-        // expect(g[0]).to.equal(m0)
+        expect(m.getMin()).to.equal(-1)
+        expect(m.getMax()).to.equal(1)
+        expect(m.getDefaultValue()).to.equal(0)
+        expect(m.getValue()).to.equal(0)
 
-        const value = um.getValue()
-        console.log(value)
-
-        // um.setValue(0.5)
+        console.log("-------------------- m.setValue(0.5) ---------------------")
+        m.setValue(0.5)
+        console.log("--------------------- m.getValue() -----------------------")
+        expect(m.getValue()).to.equal(0.5)
     })
 
-    it("can load the application's modifier files into a human", ()=> {
+    describe("getTargetWeights(targets, factors, value)", () => {
+        it("2 targets, 1 modifier per target, value 1 => each target with it's modifer value", () => {
+            const targets = [
+                new TargetRef("tfile0", ["mod0"]),
+                new TargetRef("tfile1", ["mod1"])
+            ]
+            const factors = new Map([
+                ["mod0", 0.1],
+                ["mod1", 1]
+            ])
+
+            const r = getTargetWeights(targets, factors, 1)
+
+            expect(r.size).to.equal(2)
+            expect(r.get("tfile0")).to.equal(0.1)
+            expect(r.get("tfile1")).to.equal(1)
+        })
+
+        it("2 targets, 1 modifier per target, value 10 => each target with it's modifer value times 10", () => {
+            const targets = [
+                new TargetRef("tfile0", ["mod0"]),
+                new TargetRef("tfile1", ["mod1"])
+            ]
+            const factors = new Map([
+                ["mod0", 0.1],
+                ["mod1", 1]
+            ])
+
+            const r = getTargetWeights(targets, factors, 10)
+
+            expect(r.size).to.equal(2)
+            expect(r.get("tfile0")).to.equal(1)
+            expect(r.get("tfile1")).to.equal(10)
+        })
+        it("2 targets, 2 modifier per target, value 10 => each target with it's modifer values multiplied times 10", () => {
+            const targets = [
+                new TargetRef("tfile0", ["mod00", "mod01"]),
+                new TargetRef("tfile1", ["mod10", "mod11"])
+            ]
+            const factors = new Map([
+                ["mod00", 1],
+                ["mod01", 2],
+                ["mod10", 3],
+                ["mod11", 5]
+
+            ])
+
+            const r = getTargetWeights(targets, factors, 10)
+
+            expect(r.size).to.equal(2)
+            expect(r.get("tfile0")).to.equal(20)
+            expect(r.get("tfile1")).to.equal(150)
+        })
+
+    })
+
+    it("can load the application's modifier files into a human", () => {
         // GIVEN a human with modifiers being loaded from a file
         const human = new Human()
         loadModifiers("data/modifiers/modeling_modifiers.json", human)

@@ -103,7 +103,7 @@ export class TargetFactory {
                     const nextRoot = fs.joinPath(root, name)
                     this.walkTargets(nextRoot, item)
                 } else {
-                    item.finish(p)
+                    item.finish(`data/${root}/${name}`)
                     this.targets.push(item)
                     const key = item.tuple()
                     let a = this.groups.get(key)
