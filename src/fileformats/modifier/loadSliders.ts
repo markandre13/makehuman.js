@@ -1,4 +1,5 @@
 import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
+import { Human } from '../../Human'
 import { TreeNode, NumberModel } from 'toad.js'
 
 export interface Category {
@@ -9,7 +10,7 @@ export interface Category {
     modifiers: any
 }
 
-export interface Modifier {
+export interface ModifierSpec {
     mod: string
     label: string
     cam?: string
@@ -20,51 +21,36 @@ export class SliderNode implements TreeNode {
     static count = 0
     label: string
     category?: Category
-    modifier?: Modifier
+    modifierSpec?: ModifierSpec
     model?: NumberModel
     next?: SliderNode
     down?: SliderNode
-    constructor(label?: string, modifier?: Modifier) {
+    constructor(label?: string, modifierSpec?: ModifierSpec) {
         SliderNode.count++
         this.label = label || ''
-        this.modifier = modifier
+        this.modifierSpec = modifierSpec
 
-        if (modifier) {
+        if (modifierSpec) {
             // modifier.mod can have values like
             //   buttocks/buttocks-buttocks-volume-decr|incr-decr|incr
             //   stomach/stomach-pregnant-decr|incr
-            // this should define the number range (decr: start at -1, incr: end at 1, incr-decr: ????)
-            // there's no separate target file for 'incr-decr'
+            // human.getModifier(modifier.mod) locates the Modifier for that name
+            // for this to work, modifiers need to have been added with human.addModifier(...)
 
-            // what's inside TargetFactory:
-            //   groups: Map<target name, Component>
-            //      "buttocks-buttocks-volume-decr"
-            ///       parent: key: ["buttocks"]
-            //        key: the name splitted at '-'
-            //        data: gender, age, race, muscle, weight, height, breastsize, breastfirmness, bodypropotions: all undefined
-            //        path: "/targets/buttocks/buttocks-volume-decr.target"
-            //   images: Map<target name, image filename>
-            //   index: (superset of groups?)
-            //     "buttocks" -> ["buttocks-buttocks-volume-decr", "buttocks-buttocks-volume-incr"]
-            //     "buttocks-buttocks-volume-decr" -> Component
-            //     "buttocks-buttocks-volume-incr" -> Component
-            //   targets:
+            // in apps/gui/guimodifier.py loadModifierTaskViews
 
-            // using modifier.mod we then need to find the target files to load
-            //   data/targets/stomach/stomach-pregnant-incr.target
-            //   data/targets/buttocks/buttocks-volume-incr.target
-
-            // if a target can only be influenced by a single slider, we could store the targets in the SliderNode
-
-            // the value then needs to be translated back to scale factors for each target
-
-            // the model needs to be re-rendered
-
-            this.model = new NumberModel(0, { min: 0, max: 1, step: 0.01 })
-            this.model.modified.add(() => {
-                console.log(modifier)
-                console.log(this.model!.value)
-            })
+            // class Modifier has getMin() & getMax() to get the range
+            const human = Human.getInstance()
+            const modifier = human.getModifier(modifierSpec.mod)
+            if (modifier !== undefined) {
+                this.model = new NumberModel(modifier.getDefaultValue(), { min: modifier.getMin(), max: modifier.getMax(), step: 0.01 })
+                this.model.modified.add(() => {
+                    // console.log(modifierSpec)
+                    // console.log(this.model!.value)
+                })
+            } else {
+                console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)
+            }
         }
     }
 }
@@ -132,7 +118,7 @@ export function parseSliders(data: string, filename = 'memory'): SliderNode {
                 lastTabNode.down = categoryNode
             lastCategoryNode = categoryNode
             let lastSliderNode: SliderNode | undefined
-            for (const modifier of categoryValue as Modifier[]) {
+            for (const modifier of categoryValue as ModifierSpec[]) {
                 let label = modifier.label
                 if (label === undefined) {
                     const name = modifier.mod.split('/')

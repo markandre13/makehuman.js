@@ -27,7 +27,7 @@ export class Human {
     // maxfirmnessVal, minfirmnessVal, averagefirmnessVal
     // idealproportionsVal, uncommonproportionsVal, regularproportionsVal
     // private caucasianVal, asianVal, afrianVal
-    constructor() {
+    private constructor() {
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
         this.targetsDetailStack = new Map()
@@ -46,6 +46,13 @@ export class Human {
         // this.afrianVal = new NumberModel(1.0/3.0, {})
     }
 
+    private static instance?: Human
+    static getInstance(): Human {
+        if (Human.instance === undefined)
+        Human.instance = new Human()
+        return Human.instance
+    }
+
     getModifier(name: string): Modifier | undefined {
         return this.modifiers.get(name)
     }
@@ -60,20 +67,27 @@ export class Human {
     }
 
     addModifier(modifier: Modifier) {
+        // console.log(`Human.addModifier(${modifier.fullName})`)
         //         if modifier.fullName in self._modifiers:
-        if (this.modifiers.has(modifier.fullName))
+        if (this.modifiers.has(modifier.fullName)) {
             //             log.error("Modifier with name %s is already attached to human.", modifier.fullName)
             //             raise RuntimeError("Modifier with name %s is already attached to human." % modifier.fullName)
             throw Error(`Modifier with name ${modifier.fullName} is already attached to human.`)
+        }
+
         //         self._modifier_type_cache = dict()
         //         self._modifiers[modifier.fullName] = modifier
         this.modifiers.set(modifier.fullName, modifier)
+        
         //         if modifier.groupName not in self._modifier_groups:
-        if (!this.modifierGroups.has(modifier.groupName))
-            //             self._modifier_groups[modifier.groupName] = []
+        if (!this.modifierGroups.has(modifier.groupName)) {
+        //             self._modifier_groups[modifier.groupName] = []
             this.modifierGroups.set(modifier.groupName, new Array<Modifier>())
+        }
+
         //         self._modifier_groups[modifier.groupName].append(modifier)
         this.modifierGroups.get(modifier.groupName)!.push(modifier)
+
         //         # Update dependency mapping
         //         if modifier.macroVariable and modifier.macroVariable != 'None':
         //             if modifier.macroVariable in self._modifier_varMapping and \

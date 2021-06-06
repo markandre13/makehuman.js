@@ -2,6 +2,22 @@ import { Target } from './Target'
 import { Component} from './Component'
 import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
 
+
+// what's inside TargetFactory:
+//   groups: Map<target name, Component>
+//      "buttocks-buttocks-volume-decr"
+///       parent: key: ["buttocks"]
+//        key: the name splitted at '-'
+//        data: gender, age, race, muscle, weight, height, breastsize, breastfirmness, bodypropotions: all undefined
+//        path: "/targets/buttocks/buttocks-volume-decr.target"
+//   images: Map<target name, image filename>
+//   index: (superset of groups?)
+//     "buttocks" -> ["buttocks-buttocks-volume-decr", "buttocks-buttocks-volume-incr"]
+//     "buttocks-buttocks-volume-decr" -> Component
+//     "buttocks-buttocks-volume-incr" -> Component
+//   targets:
+//     list of all Components
+
 export class TargetFactory {
     rootComponent: Component
     targets: Component[] // all components

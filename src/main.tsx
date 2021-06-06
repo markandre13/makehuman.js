@@ -1,8 +1,9 @@
-import { WavefrontObj } from './fileformats/WavefrontObj'
+import { Human } from "../src/Human"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from './fileformats/modifier/loadModifiers'
 import { loadSliders, SliderNode } from './fileformats/modifier/loadSliders'
+import { WavefrontObj } from './fileformats/WavefrontObj'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
@@ -30,11 +31,16 @@ function run() {
     console.log('loading assets...')
     FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
+    const human = Human.getInstance()
+
     const scene = new WavefrontObj()
     scene.load('data/3dobjs/base.obj')
 
-    loadModifiers('data/modifiers/modeling_modifiers.json')
-    loadModifiers('data/modifiers/measurement_modifiers.json')
+    // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
+    loadModifiers('data/modifiers/modeling_modifiers.json', human)
+    loadModifiers('data/modifiers/measurement_modifiers.json', human)
+
+    // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
     const sliderNodes = loadSliders('data/modifiers/modeling_sliders.json')
 
     loadMacroTargets()

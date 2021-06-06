@@ -38,21 +38,23 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
 
     for (const modifierGroup of json) {
         const groupName = modifierGroup.group
-        for (const mDef of modifierGroup.modifiers) {
+
+        for (const modifierDef of modifierGroup.modifiers) {
+
             let modifierClass: typeof Modifier
             let modifier: Modifier
-            if ('modifierType' in mDef) {
-                modifierClass = classesMapping.get(mDef.modifierType)
+            if ('modifierType' in modifierDef) {
+                modifierClass = classesMapping.get(modifierDef.modifierType)
                 if (modifierClass === undefined)
-                    throw Error(`failed to instantiate modifer ${mDef.modifierType}`)
-            } else if ('macrovar' in mDef) {
+                    throw Error(`failed to instantiate modifer ${modifierDef.modifierType}`)
+            } else if ('macrovar' in modifierDef) {
                 modifierClass = MacroModifier
             } else {
                 modifierClass = UniversalModifier
             }
 
-            if ('macrovar' in mDef) {
-                modifier = new modifierClass(groupName, mDef.macrovar)
+            if ('macrovar' in modifierDef) {
+                modifier = new modifierClass(groupName, modifierDef.macrovar)
                 if (!modifier.isMacro()) {
                     console.log(`Expected modifier ${modifier} to be a macro modifier, but identifies as a regular one. Please check variable category definitions in class Component.`)
                 }
@@ -60,13 +62,17 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
                 //             modifier = modifierClass(groupName, mDef['target'], mDef.get('min',None), mDef.get('max',None), mDef.get('mid',None))
                 if (modifierClass !== UniversalModifier)
                     throw Error()
-                modifier = new (modifierClass as typeof UniversalModifier)(groupName, mDef.target, mDef.min, mDef.max, mDef.mid)
+                modifier = new (modifierClass as typeof UniversalModifier)(groupName, modifierDef.target, modifierDef.min, modifierDef.max, modifierDef.mid)
             }
 
-            if ('defaultValue' in mDef) {
-                modifier.defaultValue = mDef.defaultValue
+            if ('defaultValue' in modifierDef) {
+                modifier.defaultValue = modifierDef.defaultValue
             }
 
+            if (modifier.fullName === undefined) {
+                console.log(`ERROR: modifier has no fullName`)
+                console.log(modifier)
+            }
             modifiers.push(modifier)
             lookup.set(modifier.fullName, modifier)
             // console.log(modifier.fullName)
