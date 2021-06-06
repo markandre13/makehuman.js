@@ -95,7 +95,10 @@ export class UniversalModifier extends ManagedTargetModifier {
 
     override setValue(value: number) {
         value = this.clampValue(value)
-        const factors = this.getFactors(value)
+
+        console.log(`UniversalModifier.setValue(${value}) // modifier ${this.fullName}`)
+
+        // const factors = this.getFactors(value)
         // const tWeights = this.getTargetWeights(this.targets, factors)
         
 
@@ -111,7 +114,6 @@ export class UniversalModifier extends ManagedTargetModifier {
 
         // # Update dependent modifiers
         // self.propagateUpdate(realtime = False)
-
     }
 
     override getValue(): number {

@@ -45,8 +45,7 @@ export class SliderNode implements TreeNode {
             if (modifier !== undefined) {
                 this.model = new NumberModel(modifier.getDefaultValue(), { min: modifier.getMin(), max: modifier.getMax(), step: 0.01 })
                 this.model.modified.add(() => {
-                    // console.log(modifierSpec)
-                    // console.log(this.model!.value)
+                    modifier.setValue(this.model!.value)
                 })
             } else {
                 console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)

@@ -52,8 +52,9 @@ export class Modifier {
     }
 
     setValue(value: number, {skipDependencies = false} = {}) {
-        throw Error('Not implemented')
-        const clampedValue = this.clampValue(value)
+        console.log(`Modifier.setValue(${value}) // modifier ${this.fullName}`)
+        // throw Error('Not implemented')
+        // const clampedValue = this.clampValue(value)
         // const factors = this.getFactors(clampedValue)
         // tWeights = getTargetWeights(self.targets, factors, clampedValue)
         // for tpath, tWeight in tWeights.items():
@@ -63,7 +64,7 @@ export class Modifier {
         //     return
 
         // # Update dependent modifiers
-        this.propagateUpdate(false)
+        // this.propagateUpdate(false)
     }
 
     resetValue(): number {
@@ -91,7 +92,7 @@ export class Modifier {
         // }
     }
 
-    clampValue(value: number) {
+    clampValue(value: number): number {
         throw Error('Not implemented')
     }
 
