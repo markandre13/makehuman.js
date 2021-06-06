@@ -1,12 +1,16 @@
 import { Modifier } from './fileformats/modifier/Modifier'
 import { NumberModel } from 'toad.js/src/model/NumberModel'
+import { Signal } from 'toad.js/src/Signal'
 
 // apps/human.py class Human
-export class Human {  
+export class Human {
+    modified = new Signal()
+
     private modifiers: Map<string, Modifier>
     private modifierGroups: Map<string, Modifier[]>
 
-    private targetsDetailStack: Map<string, number>
+    // for now HumanMesh is our quick'n dirty friend
+    public targetsDetailStack: Map<string, number>
 
     private age = new NumberModel(0.5, {min: 0, max: 1})
     private gender = new NumberModel(0.5, {min: 0, max: 1})
@@ -266,8 +270,9 @@ export class Human {
     }
 
     updateProxyMesh(fitToPosed = false) {
-        console.log("Human.updateProxyMesh with:")
-        this.targetsDetailStack.forEach( (value, targetName) => console.log(`${targetName}=${value}`) )
+        // console.log("Human.updateProxyMesh with:")
+        this.modified.trigger()
+        // this.targetsDetailStack.forEach( (value, targetName) => console.log(`${targetName}=${value}`) )
         // if self.proxy and self.__proxyMesh:
         //     self.proxy.update(self.__proxyMesh, fit_to_posed)
         //     self.__proxyMesh.update()

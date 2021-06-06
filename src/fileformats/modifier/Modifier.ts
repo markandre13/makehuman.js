@@ -115,7 +115,7 @@ export abstract class Modifier {
     }
 
     updateValue(value: number, {updateNormals = 1, skipUpdate = false} = {} ) {
-        console.log(`Modifier.updateValue() is not implemented // ${this.fullName}`)
+        // console.log(`Modifier.updateValue() is not implemented // ${this.fullName}`)
         // if (this.verts === undefined && this.faces === undefined)
         //     this.buildLists()
 

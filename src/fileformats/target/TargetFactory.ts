@@ -148,17 +148,17 @@ export class TargetFactory {
 // filename to target?
 const targetBuffer = new Map<string, Target>()
 
-function getTarget(obj: any, filename: string) {
+export function getTarget(filename: string) {
     let target = targetBuffer.get(filename)
     if (target !== undefined)
         return target
     target = new Target() // Target(3DObject, filename)
-    // target.load ...
+    target.load(filename)
     targetBuffer.set(filename, target)
     return target
 }
 
-function refreshCachedTarget(filename: string) {
+export function refreshCachedTarget(filename: string) {
     if (targetBuffer.has(filename))
         targetBuffer.delete(filename)
 }

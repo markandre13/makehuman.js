@@ -19,7 +19,7 @@ interface ProgramInfo {
 }
 
 interface Buffers {
-    position: WebGLBuffer
+    vertex: WebGLBuffer
     normal: WebGLBuffer
     indices: WebGLBuffer
 }
@@ -45,7 +45,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
 
         if (scene.updateRequired) {
             scene.update()
-            buffers.position = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
+            buffers.vertex = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
             buffers.normal = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene))
         }
 
@@ -93,7 +93,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         const normalize = false
         const stride = 0
         const offset = 0
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertex)
         gl.vertexAttribPointer(
             programInfo.attribLocations.vertexPosition,
             numComponents,
@@ -229,7 +229,7 @@ function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, n
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
     return {
-        position: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
+        vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
         normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene)),
         indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, scene.indices)
     }

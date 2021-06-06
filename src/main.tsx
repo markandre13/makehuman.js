@@ -1,5 +1,4 @@
 import { Human } from "./Human"
-import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from './fileformats/modifier/loadModifiers'
 import { loadSliders, SliderNode } from './fileformats/modifier/loadSliders'
@@ -41,6 +40,7 @@ function run() {
     const obj = new WavefrontObj()
     obj.load('data/3dobjs/base.obj')
     const scene = new HumanMesh(human, obj)
+    human.modified.add( () => scene.updateRequired = true )
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
     loadModifiers('data/modifiers/modeling_modifiers.json', human)
@@ -52,20 +52,7 @@ function run() {
     loadMacroTargets()
 
     // TargetFactory.getInstance()
-
     // const vertexCopy = [scene.vertex]
-
-    const stomachPregnantIncr = new Target()
-    stomachPregnantIncr.load('data/targets/stomach/stomach-pregnant-incr.target')
-    stomachPregnantIncr.apply(scene.vertex, 1)
-
-    const breastVolumeVertUp = new Target()
-    breastVolumeVertUp.load('data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target')
-    breastVolumeVertUp.apply(scene.vertex, 1)
-
-    const buttocks = new Target()
-    buttocks.load('data/targets/buttocks/buttocks-volume-incr.target')
-    buttocks.apply(scene.vertex, 1)
 
     console.log('everything is loaded...')
 
