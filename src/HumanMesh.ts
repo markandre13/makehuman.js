@@ -35,7 +35,7 @@ export class HumanMesh {
         this.human.targetsDetailStack.forEach( (value, targetName) => {
             if (isZero(value))
                 return
-            console.log(`apply target ${targetName} with value ${value}`)
+            // console.log(`apply target ${targetName} with value ${value}`)
             const target = getTarget(targetName)
             target.apply(this.vertex, value)
         })

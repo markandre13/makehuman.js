@@ -1,59 +1,23 @@
-# MakeHumanX
+# makehuman.js
 
-TODO: add testsuite to the python source, then duplicate these tests here
+<div style="text-align: center">
+  <img src="data/screenshot.png" />
 
-An experimental Makehuman port to Typescript/Web/Electron, aiming for better UX, Clean Code and
-TDD.
+  An **experimental** port of [Makehuman](http://www.makehumancommunity.org) to Typescript/The Web.
+</div>
 
-## Architecture
+## Current Status
 
-### BaseMesh (the human 3d model to be deformed by the MorphTargets)
-* /data/data/3dobjs/base.obj contains the base mesh, meaning the human 3d model to be deformed by the MorphTargets
-* class **3DObject** contains the mesh data
+* Totally unusable work in progress. 😅
+* As of 2021-06-06 I succeeded to make some modifiers work.
+* The UI is done with [toad.js](https://github.com/markandre13/toad.js#readme) and needs the variant in git master.
+  (Say "Hi!" to `npm link`)
 
-### MorphTargets
-A morph target's vectors are multiplied by 0 to 1 and added to the base mesh to achieve a deformation, ie. a longer nose.
-* data/targets/**/*.target contains the various morph targets
-* class **TargetFactory** scans the /data/targets/ directory and creates a tree of
-  * class **Component** is a node in TargetFactories target tree, containing the filename
-    and data to classify the file derived from it's filename
-  * class **Target** holds the data of a target file
+## Why?
 
-### Modifiers (modifiers control one or more targets)
-* data/modifiers/(modeling|measurement)_modifiers.json definition of the modifiers
-  * **Modifier** base class only
+* I've been using MakeHuman for more than a decade but often struggled with the UI and the source code.
+* I'm up to [something](https://mark13.org) with [Blender](https://www.blender.org) and [Chordata](https://chordata.cc) and in need for full artistic control of my toolchain. 😎
 
-    * buildLists()
-      calls getTarget(3DObject, filename: string) to load the target file, but 
-      it doesn't seem to use it?
+## Similar Projects
 
-  * **SimpleModifier** extends Modifier, not used by the provided data/ directory
-  * **ManagedTargetModifier** extends Modifier, base class only
-
-    Uses TargetFactory to 
-    * static findTargets(path): (targetpath, factordependencies)[]
-    * static findMacroDependencies(path): Set<>
-
-  * **UniversalModifier**: ManagedTargetModifier
-
-    manages 1, 2 or 3 targets
-
-  * **MacroModifier**: ManagedTargetModifier
-  * **EthnicModifier**: MacroModifier
-  * **WarpModifier** extends UniversalModifier
-
-## Original Python Code
-
-<pre>
-makehuman/
-  makehuman/
-    core/
-      mhmain.py
-        Human(mesh)
-    lib/
-      targets.py
-    apps/
-      human.py
-        class Human
-      humanmodifier.py
-</pre>
+* [makehuman-js](https://github.com/makehuman-js/makehuman-js) Another port of Makehuman to the Web. Close to the original.

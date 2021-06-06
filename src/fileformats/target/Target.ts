@@ -75,7 +75,7 @@ export class Target {
     }
 
     apply(verts: number[], scale: number) {
-        console.log(`morphing ${this.data.length} vertices by ${scale}`)
+        // console.log(`morphing ${this.data.length} vertices by ${scale}`)
         let dataIndex = 0, vertexIndex = 0
         while(dataIndex < this.data.length) {
             let index = this.data[dataIndex++] * 3
