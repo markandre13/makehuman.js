@@ -7,13 +7,11 @@ import { WavefrontObj } from "../src/fileformats/WavefrontObj"
 import { Target } from "../src/fileformats/target/Target"
 import { StringToLine } from "../src/fileformats/lib/StringToLine"
 import { loadModifiers, parseModifiers } from "../src/fileformats/modifier/loadModifiers"
+import { getTargetWeights } from "../src/fileformats/modifier/Modifier"
 import { UniversalModifier } from "../src/fileformats/modifier/UniversalModifier"
-import { ManagedTargetModifier, getTargetWeights } from "../src/fileformats/modifier/ManagedTargetModifier"
+import { ManagedTargetModifier } from "../src/fileformats/modifier/ManagedTargetModifier"
 import { Human } from "../src/Human"
-// import { Target } from '../target/Target'
 import { TargetRef } from '../src/fileformats/modifier/TargetRef'
-
-// import { NumberModel } from "toad.js"
 
 // http://paulbourke.net/dataformats/obj/
 describe("class WavefrontOBJ", () => {
@@ -120,7 +118,7 @@ describe("Human", () => {
 })
 
 describe("Modifier", () => {
-    it.only("initialize UniversalModifier from JSON", () => {
+    it("initialize UniversalModifier from JSON", () => {
         // const url = "data/modifiers/modeling_modifiers.json" // "modifiers/measurement_modifiers.json"
         // loadModifiers(url)
         const human = new Human()
@@ -143,7 +141,7 @@ describe("Modifier", () => {
         expect(um.center).to.equal(undefined)
         expect(um.right).to.equal("buttocks-buttocks-volume-incr")
 
-        console.log(um.targets)
+        // console.log(um.targets)
         expect(um.targets.length).to.equal(2)
         expect(um.targets[0].targetPath).to.equal('data/targets/buttocks/buttocks-volume-decr.target')
         expect(um.targets[0].factorDependencies.length).to.equal(1)
@@ -166,10 +164,11 @@ describe("Modifier", () => {
         expect(m.getDefaultValue()).to.equal(0)
         expect(m.getValue()).to.equal(0)
 
-        console.log("-------------------- m.setValue(0.5) ---------------------")
         m.setValue(0.5)
-        console.log("--------------------- m.getValue() -----------------------")
         expect(m.getValue()).to.equal(0.5)
+
+        m.setValue(-0.5)
+        expect(m.getValue()).to.equal(-0.5)
     })
 
     describe("getTargetWeights(targets, factors, value)", () => {

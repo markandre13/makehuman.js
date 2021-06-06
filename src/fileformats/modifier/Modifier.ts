@@ -39,7 +39,7 @@ export abstract class Modifier {
         human.addModifier(this)
     }
 
-    get fullName (): string {
+    get fullName(): string {
         return `${this.groupName}/${this.name}`
     }
 
@@ -53,18 +53,17 @@ export abstract class Modifier {
 
     setValue(value: number, {skipDependencies = false} = {}) {
         console.log(`Modifier.setValue(${value}) // modifier ${this.fullName}`)
-        // throw Error('Not implemented')
-        // const clampedValue = this.clampValue(value)
-        // const factors = this.getFactors(clampedValue)
-        // tWeights = getTargetWeights(self.targets, factors, clampedValue)
-        // for tpath, tWeight in tWeights.items():
-        //     self.human.setDetail(tpath, tWeight)
+        const clampedValue = this.clampValue(value)
+        const factors = this.getFactors(clampedValue)
+        const tWeights = getTargetWeights(this.targets, factors, clampedValue)
+        for(let x of tWeights)
+            this.human!.setDetail(x[0], x[1])
 
-        // if skipDependencies:
-        //     return
+        if (skipDependencies)
+            return
 
-        // # Update dependent modifiers
-        // this.propagateUpdate(false)
+        // Update dependent modifiers
+        this.propagateUpdate(false)
     }
 
     resetValue(): number {
@@ -92,15 +91,15 @@ export abstract class Modifier {
         // }
     }
 
-    clampValue(value: number): number {
-        throw Error('Not implemented')
-    }
-
+    abstract clampValue(value: number): number
     abstract getFactors(value: number): Map<string, number>
 
     getValue(): number {
         // return sum([self.human.getDetail(target[0]) for target in self.targets])
-        throw Error('Not implemented')
+        let sum = 0
+        for(let target of this.targets)
+            sum += this.human!.getDetail(target.targetPath)
+        return sum
     }
 
     getDefaultValue(): number {
@@ -116,13 +115,13 @@ export abstract class Modifier {
     }
 
     updateValue(value: number, {updateNormals = 1, skipUpdate = false} = {} ) {
-        throw Error('Not implemented')
+        console.log(`Modifier.updateValue() is not implemented // ${this.fullName}`)
         // if (this.verts === undefined && this.faces === undefined)
         //     this.buildLists()
 
         //    # Update detail state
         //    old_detail = [self.human.getDetail(target[0]) for target in self.targets]
-        //    self.setValue(value, skipDependencies = True)
+        this.setValue(value, {skipDependencies: true})
         //    new_detail = [self.human.getDetail(target[0]) for target in self.targets]
 
         //    # Apply changes
@@ -169,3 +168,35 @@ export abstract class Modifier {
     }
 }
 
+// {'data/targets/buttocks/buttocks-volume-decr.target': -0.0, 'data/targets/buttocks/buttocks-volume-incr.target': 0.5}
+export function getTargetWeights(targets: TargetRef[], factors: Map<string, number>, value = 1.0, ignoreNotfound = false) {
+    // console.log(`getTargetWeights(..,..,${value}, ${ignoreNotfound})"`)
+    const result = new Map<string, number>()
+    if (ignoreNotfound) {
+        targets.forEach( (e) => {
+            // console.log([1, 2, 5].reduce( (a, v) => a*v))
+            // for factors in tfactors
+            let mul = 1
+            e.factorDependencies.forEach( factor => {
+                const f = factors.get(factor)
+                if (f !== undefined)
+                    mul *= f
+            })
+            result.set(e.targetPath, value * mul)
+        })
+        //     for (tpath, tfactors) in targets:
+        //         result[tpath] = value * reduce(operator.mul, [factors.get(factor, 1.0) for factor in tfactors])
+    } else {
+        targets.forEach( (e) => {
+            // console.log([1, 2, 5].reduce( (a, v) => a*v))
+            // for factors in tfactors
+            let mul = 1
+            e.factorDependencies.forEach( factor => {
+                mul *= factors.get(factor)!
+            })
+            result.set(e.targetPath, value * mul)
+        })
+    }
+    // console.log(result)
+    return result
+}

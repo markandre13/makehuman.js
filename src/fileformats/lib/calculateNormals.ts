@@ -1,7 +1,7 @@
 import { vec3 } from 'gl-matrix'
-import { WavefrontObj } from '../WavefrontObj'
+import { Mesh } from '../Mesh'
 
-export function calculateNormals(scene: WavefrontObj) {
+export function calculateNormals(scene: Mesh) {
 
     function addNormal(index: number, normal: vec3) {
         const n0 = vec3.fromValues(normals[index], normals[index + 1], normals[index + 2])

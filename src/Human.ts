@@ -136,20 +136,21 @@ export class Human {
     }
 
     setDetail(name: string, value: number|undefined) {
-        console.log(`Human.setDetail('${name}', ${value})`)
-        // TODO: name to canonicalpath
-        if (value !== undefined) {
+        // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
+        // console.log(`Human.setDetail('${name}', ${value})`)
+        if (value !== undefined) { // TODO: check if '&& isZero(value)' is a valid optimization
             this.targetsDetailStack.set(name, value)
         } else {
             this.targetsDetailStack.delete(name)
         }
     }
 
-    getDetail(name: string): number {        // TODO: name to canonicalpath
+    getDetail(name: string): number {
+        // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
         let value = this.targetsDetailStack.get(name)
         if (value === undefined)
             value = 0
-        console.log(`Human.getDetail('${name}') -> ${value}`)
+        // console.log(`Human.getDetail('${name}') -> ${value}`)
         return value
     }
 
@@ -263,4 +264,13 @@ export class Human {
             this.regularproportionsVal.value = 1 - this.uncommonproportionsVal.value
         }
     }
+
+    updateProxyMesh(fitToPosed = false) {
+        console.log("Human.updateProxyMesh with:")
+        this.targetsDetailStack.forEach( (value, targetName) => console.log(`${targetName}=${value}`) )
+        // if self.proxy and self.__proxyMesh:
+        //     self.proxy.update(self.__proxyMesh, fit_to_posed)
+        //     self.__proxyMesh.update()
+    }
+
 }

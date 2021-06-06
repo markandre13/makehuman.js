@@ -1,18 +1,8 @@
 import { StringToLine } from './lib/StringToLine'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
+import { Mesh, Group } from './Mesh'
 
-class Group {
-    name: string
-    start: number
-    length: number
-    constructor(name: string, start: number) {
-        this.name = name
-        this.start = start
-        this.length = 0
-    }
-}
-
-export class WavefrontObj {
+export class WavefrontObj implements Mesh {
     vertex: number[]
     indices: number[]
     groups: Group[]

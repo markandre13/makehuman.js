@@ -1,9 +1,10 @@
-import { Human } from "../src/Human"
+import { Human } from "./Human"
 import { Target } from './fileformats/target/Target'
 import { TargetFactory } from './fileformats/target/TargetFactory'
 import { loadModifiers } from './fileformats/modifier/loadModifiers'
 import { loadSliders, SliderNode } from './fileformats/modifier/loadSliders'
 import { WavefrontObj } from './fileformats/WavefrontObj'
+import { HumanMesh } from './HumanMesh'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
@@ -37,8 +38,9 @@ function run() {
 
     const human = Human.getInstance()
 
-    const scene = new WavefrontObj()
-    scene.load('data/3dobjs/base.obj')
+    const obj = new WavefrontObj()
+    obj.load('data/3dobjs/base.obj')
+    const scene = new HumanMesh(human, obj)
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
     loadModifiers('data/modifiers/modeling_modifiers.json', human)
@@ -50,6 +52,9 @@ function run() {
     loadMacroTargets()
 
     // TargetFactory.getInstance()
+
+    // const vertexCopy = [scene.vertex]
+
     const stomachPregnantIncr = new Target()
     stomachPregnantIncr.load('data/targets/stomach/stomach-pregnant-incr.target')
     stomachPregnantIncr.apply(scene.vertex, 1)

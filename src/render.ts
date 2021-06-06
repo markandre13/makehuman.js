@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { calculateNormals } from './fileformats/lib/calculateNormals'
-import { WavefrontObj } from './fileformats/WavefrontObj'
+import { HumanMesh } from './HumanMesh'
 
 let cubeRotation = 0.0
 
@@ -24,7 +24,7 @@ interface Buffers {
     indices: WebGLBuffer
 }
 
-export function render(canvas: HTMLCanvasElement, scene: WavefrontObj): void {
+export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
 
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (!gl) {
@@ -32,6 +32,7 @@ export function render(canvas: HTMLCanvasElement, scene: WavefrontObj): void {
     }
 
     const buffers = createAllBuffers(gl, scene)
+
     const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSharderSrc)
     const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc)
     const programInfo = linkProgram(gl, vertexShader, fragmentShader)
@@ -42,6 +43,12 @@ export function render(canvas: HTMLCanvasElement, scene: WavefrontObj): void {
         const deltaTime = now - then
         then = now
 
+        if (scene.updateRequired) {
+            scene.update()
+            buffers.position = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
+            buffers.normal = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene))
+        }
+
         drawScene(gl, programInfo, buffers, deltaTime, scene)
 
         requestAnimationFrame(render)
@@ -49,7 +56,7 @@ export function render(canvas: HTMLCanvasElement, scene: WavefrontObj): void {
     requestAnimationFrame(render)
 }
 
-function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: WavefrontObj): void {
+function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh): void {
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
         canvas.width = canvas.clientWidth
@@ -220,7 +227,7 @@ function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, n
     return location
 }
 
-function createAllBuffers(gl: WebGL2RenderingContext, scene: WavefrontObj): Buffers {
+function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
     return {
         position: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
         normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene)),
