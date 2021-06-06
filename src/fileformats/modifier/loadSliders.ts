@@ -1,6 +1,7 @@
 import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
 import { Human } from '../../Human'
-import { TreeNode, NumberModel } from 'toad.js'
+import { TreeNode } from 'toad.js/src/table/TreeNode'
+import { NumberModel } from 'toad.js/src/model/NumberModel'
 
 export interface Category {
     sortOrder: number
@@ -43,12 +44,12 @@ export class SliderNode implements TreeNode {
             const human = Human.getInstance()
             const modifier = human.getModifier(modifierSpec.mod)
             if (modifier !== undefined) {
-                this.model = new NumberModel(modifier.getDefaultValue(), { min: modifier.getMin(), max: modifier.getMax(), step: 0.01 })
+                this.model = new NumberModel(modifier.getDefaultValue(), { min: modifier.getMin(), max: modifier.getMax() })
                 this.model.modified.add(() => {
                     modifier.setValue(this.model!.value)
                 })
-            } else {
-                console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)
+            // } else {
+            //     console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)
             }
         }
     }

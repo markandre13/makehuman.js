@@ -17,9 +17,9 @@ import { Human } from "../src/Human"
 describe("class WavefrontOBJ", ()=> {
     it("can parse base.obj without throwing an exception", async ()=> {
         const url = "data/3dobjs/base.obj"
-        const stream = fs.readFileSync(url).toString()
+        // const stream = fs.readFileSync(url).toString()
         const obj = new WavefrontObj()
-        await obj.load(stream)
+        await obj.load(url)
         expect(obj.vertex.length).to.equal(19158 * 3) // 3 coord per vertex
         expect(obj.indices.length).to.equal(18486 * 3 * 2) // each face is 3 triangles
     })
@@ -42,9 +42,9 @@ describe("class WavefrontOBJ", ()=> {
 describe("class Target", ()=> {
     it("can parse base.obj without throwing an exception", async ()=> {
         const url = "data/targets/breast/breast-volume-vert-up.target"
-        const stream = fs.readFileSync(url).toString()
+        // const stream = fs.readFileSync(url).toString()
         const obj = new Target()
-        await obj.load(stream)
+        await obj.load(url)
         expect(obj.data .length).to.equal(601)
         expect(obj.verts.length).to.equal(601 * 3)
     })
@@ -152,16 +152,16 @@ describe("Modifier", ()=> {
         expect(um.targets[1].factorDependencies[0]).to.endWith('buttocks-buttocks-volume-incr')
 
         // um.setValue()
-        human.addModifier(um)
+        // human.addModifier(um)
 
         const g = human.getModifiersByGroup("buttocks")
         expect(g.length).to.equal(1)
 
-        console.log(g)
+        // console.log(g)
 
         // expect(g[0]).to.equal(m0)
 
-        um.getValue()
+        // um.getValue()
     })
 
     it("can load the application's modifier files into a human", ()=> {

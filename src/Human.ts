@@ -27,7 +27,7 @@ export class Human {
     // maxfirmnessVal, minfirmnessVal, averagefirmnessVal
     // idealproportionsVal, uncommonproportionsVal, regularproportionsVal
     // private caucasianVal, asianVal, afrianVal
-    private constructor() {
+    constructor() {
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
         this.targetsDetailStack = new Map()

@@ -5,10 +5,8 @@ chai.use(require('chai-string'));
 
 import { loadSliders, labelFromModifier } from "../../../src/fileformats/modifier/loadSliders"
 
-
-
 describe("Modifier", ()=> {
-    it.only("loadSliders", async ()=> {
+    it("loadSliders", async ()=> {
         loadSliders("data/modifiers/modeling_sliders.json")
     })
 
