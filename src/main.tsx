@@ -56,7 +56,7 @@ function run() {
 
     console.log('everything is loaded...')
 
-    const tree = new TreeModel2(SliderNode, sliderNodes)
+    const tree = new TreeNodeModel(SliderNode, sliderNodes)
     const fragment = <>
         <toad-table model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
@@ -69,15 +69,12 @@ function run() {
     render(canvas, scene)
 }
 
-// FIXME: we don't want to do this. do not call colCount from TableView, pipe it through the TableAdapter
-export class TreeModel2 extends TreeNodeModel<SliderNode> {
+// this tells <toad-table> how to render TreeNodeModel<SliderNode>
+class SliderTreeAdapter extends TreeAdapter<SliderNode> {
     override get colCount(): number {
         return 2
     }
-}
 
-// this tells <toad-table> how to render TreeNodeModel<SliderNode>
-class SliderTreeAdapter extends TreeAdapter<SliderNode> {
     override displayCell(col: number, row: number): Node | undefined {
         if (this.model === undefined)
             return undefined
@@ -97,7 +94,7 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
     }
 }
 
-TreeAdapter.register(SliderTreeAdapter, TreeModel2, SliderNode)
+TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
 
 //
 // more makehuman stuff i need to figure out:
