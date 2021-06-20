@@ -64,7 +64,7 @@ function run() {
         </div>
     </> as Fragment
     fragment.appendTo(document.body)
-    const canvas = fragment.children[1].children[0] as HTMLCanvasElement
+    const canvas = fragment[1].children[0] as HTMLCanvasElement
 
     render(canvas, scene)
 }
@@ -75,7 +75,7 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
         return 2
     }
 
-    override displayCell(col: number, row: number): Node | undefined {
+    override getDisplayCell(col: number, row: number): Element | Element[] | undefined {
         if (this.model === undefined)
             return undefined
         const node = this.model.rows[row].node
