@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 export default {
     input: './src/main.tsx',
     output: {
-      name: 'fretboard',
+      name: 'makehuman',
       file: 'dist/makehuman.js',
       format: 'iife',
       sourcemap: true

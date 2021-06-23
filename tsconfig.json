@@ -11,9 +11,8 @@
     "paths": {
       "@makehuman/*": ["src/*"],
     },
-    "jsx": "react",
-    "jsxFactory": "toad.createElement",
-    "jsxFragmentFactory": "toad.Fragment",
+    "jsx": "react-jsx",
+    "jsxImportSource": "toad.js",
 
     "allowJs": false,
     "experimentalDecorators": true,
