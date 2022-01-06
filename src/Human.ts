@@ -1,6 +1,6 @@
 import { Modifier } from './fileformats/modifier/Modifier'
-import { NumberModel } from 'toad.js/src/model/NumberModel'
-import { Signal } from 'toad.js/src/Signal'
+import { NumberModel } from 'toad.js'
+import { Signal } from 'toad.js'
 
 // apps/human.py class Human
 export class Human {

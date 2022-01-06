@@ -16,27 +16,28 @@
   "author": "Mark-André Hopf <mhopf@mark13.org> based on work of the MakeHuman Team (www.makehumancommunity.org)",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "electron": "^13.0.1",
-    "toad.js": "0.0.11"
+    "electron": "^16.0.6",
+    "toad.js": "0.0.21",
+    "toad.jsx": "^0.0.3"
   },
   "devDependencies": {
-    "@electron/remote": "^1.1.0",
-    "@rollup/plugin-commonjs": "^19.0.0",
-    "@rollup/plugin-node-resolve": "^13.0.0",
-    "@types/chai": "^4.2.18",
+    "@electron/remote": "^2.0.1",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.1.3",
+    "@types/chai": "^4.3.0",
     "@types/chai-string": "^1.4.2",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^15.6.1",
-    "@typescript-eslint/eslint-plugin": "^4.26.0",
-    "@typescript-eslint/parser": "^4.26.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^17.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
+    "@typescript-eslint/parser": "^5.9.0",
     "chai": "^4.3.4",
     "chai-string": "^1.5.0",
-    "eslint": "^7.27.0",
-    "gl-matrix": "^3.3.0",
-    "mocha": "^8.4.0",
-    "rollup": "^2.50.5",
-    "rollup-plugin-typescript2": "^0.30.0",
-    "ts-node": "^10.0.0",
-    "typescript": "^4.3.2"
+    "eslint": "^8.6.0",
+    "gl-matrix": "^3.4.3",
+    "mocha": "^9.1.3",
+    "rollup": "^2.63.0",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
   }
 }

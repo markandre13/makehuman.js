@@ -12,7 +12,7 @@
       "@makehuman/*": ["src/*"],
     },
     "jsx": "react-jsx",
-    "jsxImportSource": "toad.js",
+    "jsxImportSource": "toad.jsx/lib",
 
     "allowJs": false,
     "experimentalDecorators": true,

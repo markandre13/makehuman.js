@@ -9,8 +9,7 @@ import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 import { render } from './render'
 
-import * as toad from 'toad.js'
-import { TreeNodeModel, TreeAdapter, Fragment } from 'toad.js'
+import { TableView, TreeNodeModel, TreeAdapter, Fragment, ref, Text, Slider } from 'toad.js'
 
 window.onload = () => { main() }
 
@@ -57,16 +56,17 @@ function run() {
     console.log('everything is loaded...')
 
     const tree = new TreeNodeModel(SliderNode, sliderNodes)
+    const references = new class {
+        canvas!: HTMLCanvasElement
+    }
     const fragment = <>
-        <toad-table model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
+        <TableView model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
-            <canvas style={{ width: '100%', height: '100%' }} />
+            <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
         </div>
     </> as Fragment
     fragment.appendTo(document.body)
-    const canvas = fragment[1].children[0] as HTMLCanvasElement
-
-    render(canvas, scene)
+    render(references.canvas, scene)
 }
 
 // this tells <toad-table> how to render TreeNodeModel<SliderNode>
@@ -85,8 +85,8 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
         case 1:
             if (node.model) {
                 return <span>
-                    <toad-text model={node.model} style={{width: '50px'}}/>
-                    <toad-slider model={node.model} />
+                    <Text model={node.model} style={{width: '50px'}}/>
+                    <Slider model={node.model} />
                 </span>
             }
         }
