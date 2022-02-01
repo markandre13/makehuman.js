@@ -10,8 +10,7 @@
 
 * Totally unusable work in progress. 😅
 * As of 2021-06-06 I succeeded to make some modifiers work.
-* The UI is done with [toad.js](https://github.com/markandre13/toad.js#readme) and needs the variant in git master.
-  (Say "Hi!" to `npm link`)
+* The UI is done with [toad.js](https://github.com/markandre13/toad.js#readme).
 
 ## Why?
 
