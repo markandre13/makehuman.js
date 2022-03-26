@@ -9,7 +9,12 @@ import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 import { render } from './render'
 
-import { TableView, TreeNodeModel, TreeAdapter, Fragment, ref, Text, Slider } from 'toad.js'
+import { TableView } from 'toad.js/table/TableView'
+import { TreeNodeModel } from 'toad.js/table/TreeNodeModel'
+import { TreeAdapter } from "toad.js/table/TreeAdapter"
+import { Fragment, ref } from "toad.jsx"
+import { Text } from 'toad.js/view/Text'
+import { Slider } from 'toad.js/view/Slider'
 
 window.onload = () => { main() }
 
