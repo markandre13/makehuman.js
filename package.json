@@ -5,8 +5,7 @@
   "scripts": {
     "build": "rollup --config rollup.config.js",
     "build:watch": "rollup --config rollup.config.js --watch",
-    "build:electron": "tsc --outDir dist/electron src/electron/main.ts src/electron/preload.ts",
-    "build:directoryfiles": "tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && node dist/filesystem/build-directory-files.js",
+    "build:data": "tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && node dist/filesystem/build-directory-files.js",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "start": "npm run build && electron ./dist/main.js",
