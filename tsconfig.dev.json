@@ -1,0 +1,20 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "es6",
+        "esModuleInterop": true,
+        "plugins": [
+            { "transform": "@zerollup/ts-transform-paths" },
+            {
+                "transform": "@zoltu/typescript-transformer-append-js-extension",
+                "after": true,
+            }
+        ],
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "test/skeleton.spec.ts",
+     ],
+}

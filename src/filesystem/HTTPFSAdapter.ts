@@ -12,7 +12,6 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     static path2info = new Map<string, FileInfo>()
 
     readFile(pathname: string): string {
-        // console.log(`HTTPJSFSAdapter.readFile('${pathname}')`)
         const req = new XMLHttpRequest()
         req.open('GET', pathname, false)
         req.send(null)

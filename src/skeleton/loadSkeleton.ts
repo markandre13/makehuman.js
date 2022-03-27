@@ -4,13 +4,19 @@ export function loadSkeleton(filename: string) {
     const root = parseSkeleton(
         FileSystemAdapter.getInstance().readFile(filename),
         filename)
-    console.log(`Loaded skeleton from file ${filename}?x`)
+    console.log(`Loaded skeleton from file ${filename}`)
     return root
 }
 
 export function parseSkeleton(data: string, filename = 'memory') {
-    const json = JSON.parse(data)
-    // console.log(json)
+    let json
+    try {
+        json = JSON.parse(data)
+    }
+    catch(error) {
+        console.log(`Failed to parse JSON in ${filename}:\n${data.substring(0, 256)}`)
+        throw error
+    }
     return new Skeleton(json)
 }
 

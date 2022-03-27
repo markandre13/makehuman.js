@@ -1,34 +1,32 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "build",
     "target": "es6",
-    "downlevelIteration": true,
     "module": "commonjs",
     "moduleResolution": "node",
     "traceResolution": false,
-    "lib": ["es6", "es2017.object", "dom", "dom.iterable"],
-    "baseUrl": ".",
+    "lib": ["ESNext", "DOM"],
+    "baseUrl": "src",
     "paths": {
-      "@makehuman/*": ["src/*"],
+      "src/*": ["src/*"],
     },
+    "incremental": false,
     "jsx": "react-jsx",
     "jsxImportSource": "toad.jsx/lib",
-
-    "allowJs": false,
+    "esModuleInterop": true,
     "experimentalDecorators": true,
-    "noImplicitAny": true,
-    "noImplicitOverride": true,
+    "downlevelIteration": true,
     "strict": true,
     "strictNullChecks": true,
-
-    "declaration": true,
-    "inlineSourceMap": false,
-    "sourceMap": true
+    "allowJs": false,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "sourceMap": true,
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "test/**/*.ts" ],
+ ],
   "exclude": [
       "data",
       "node_modules"
