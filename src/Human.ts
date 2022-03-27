@@ -13,6 +13,7 @@ export class Human {
     // for now HumanMesh is our quick'n dirty friend
     public targetsDetailStack: Map<string, number>
 
+    // values to be edited by the macro/ethnic modifiers
     age = new NumberModel(0.5, {min: 0, max: 1})
     gender = new NumberModel(0.5, {min: 0, max: 1})
     weight = new NumberModel(0.5, {min: 0, max: 1})
@@ -22,15 +23,13 @@ export class Human {
     breastFirmness = new NumberModel(0.5, {min: 0, max: 1})
     bodyProportions = new NumberModel(0.5, {min: 0, max: 1})
 
+    // all variables suffixed with 'Val' will be read by ManagedTargetModifier.getFactors()
     caucasianVal = new NumberModel(1/3, {min: 0, max: 1})
     asianVal = new NumberModel(1/3, {min: 0, max: 1})
-    afrianVal = new NumberModel(1/3, {min: 0, max: 1})
+    africanVal = new NumberModel(1/3, {min: 0, max: 1})
 
     // the above values are transformed into the values below,
-    // which are then used by the modifiers (which have code to
-    // fetch values ending in 'Val' and the prefix being provided
-    // through a string)
-
+    // which are then used by the modifiers
     private maleVal = new NumberModel(0)
     private femaleVal = new NumberModel(0)
     private oldVal = new NumberModel(0)
@@ -67,7 +66,7 @@ export class Human {
         this.breastSize.modified.add( () => this._setBreastSizeVals() )
         this.breastFirmness.modified.add( () => this._setBreastFirmnessVals() )
         this.bodyProportions.modified.add( () => this._setBodyProportionVals() )
-        this.afrianVal.modified.add( () => this._setEthnicVals("African") )
+        this.africanVal.modified.add( () => this._setEthnicVals("African") )
         this.asianVal.modified.add( () => this._setEthnicVals("Asian") )
         this.caucasianVal.modified.add( () => this._setEthnicVals("Caucasian") )
 
@@ -120,7 +119,6 @@ export class Human {
 
         //         # Update dependency mapping
         //         if modifier.macroVariable and modifier.macroVariable != 'None':
-        if (modifier instanceof MacroModifier) {
         //             if modifier.macroVariable in self._modifier_varMapping and \
         //                self._modifier_varMapping[modifier.macroVariable] != modifier.groupName:
         //                 log.error("Error, multiple modifier groups setting var %s (%s and %s)", modifier.macroVariable, modifier.groupName, self._modifier_varMapping[modifier.macroVariable])
@@ -151,7 +149,6 @@ export class Human {
         //                 self._modifier_dependencyMapping[dep].append(modifier.groupName)
         //             if modifier.isMacro():
         //                 self.updateMacroModifiers()
-        }
     }
 
     setDetail(targetName: string, value: number|undefined) {
@@ -184,7 +181,7 @@ export class Human {
         this.bodyProportions.value = 0.5
         this.caucasianVal.value = 1/3
         this.asianVal.value = 1/3
-        this.afrianVal.value = 1/3
+        this.africanVal.value = 1/3
         this._setDependendValues()
     }
 
@@ -291,11 +288,11 @@ export class Human {
         if (this.flag)
             return
         this.flag = true
-        this.afrianVal.modified.lock()
+        this.africanVal.modified.lock()
         this.asianVal.modified.lock()
         this.caucasianVal.modified.lock()
         this._setEthnicValsCore(exclude)
-        this.afrianVal.modified.unlock()
+        this.africanVal.modified.unlock()
         this.asianVal.modified.unlock()
         this.caucasianVal.modified.unlock()
         this.flag = false
@@ -305,9 +302,9 @@ export class Human {
         let remaining = 1
         let otherTotal = 0
         if (exclude !== "African") {
-            otherTotal += this.afrianVal.value
+            otherTotal += this.africanVal.value
         } else {
-            remaining -= this.afrianVal.value
+            remaining -= this.africanVal.value
         }
         if (exclude !== "Asian") {
             otherTotal += this.asianVal.value
@@ -325,14 +322,14 @@ export class Human {
                 // All values 0, this cannot be. Reset to default values.
                 this.caucasianVal.value = 1/3
                 this.asianVal.value = 1/3
-                this.afrianVal.value = 1/3
+                this.africanVal.value = 1/3
             }
             else if (Math.abs(remaining) < 0.001) {
                 // One ethnicity is 1, the rest is 0
                 if (exclude !== "African") {
-                    this.afrianVal.value = 1
+                    this.africanVal.value = 1
                 } else {
-                    this.afrianVal.value = 0
+                    this.africanVal.value = 0
                 }
                 if (exclude !== "Asian") {
                     this.asianVal.value = 1
@@ -347,7 +344,7 @@ export class Human {
             } else {
                 // Increase values of other ethnicities (that were 0) to hit total sum of 1
                 if (exclude !== "African") {
-                    this.afrianVal.value = 0.01
+                    this.africanVal.value = 0.01
                 }
                 if (exclude !== "Asian") {
                     this.asianVal.value = 0.01
@@ -359,7 +356,7 @@ export class Human {
             }
         } else {
             if (exclude !== "African") {
-                this.afrianVal.value = remaining * this.afrianVal.value / otherTotal
+                this.africanVal.value = remaining * this.africanVal.value / otherTotal
             }
             if (exclude !== "Asian") {
                 this.asianVal.value = remaining * this.asianVal.value / otherTotal

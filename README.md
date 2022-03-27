@@ -8,9 +8,8 @@
 
 ## Current Status
 
-* Totally unusable work in progress. 😅
-* As of 2021-06-06 I succeeded to make some modifiers work.
-* The UI is done with [toad.js](https://github.com/markandre13/toad.js#readme).
+* All modifiers work and update the mesh.
+* Nothing else... 😅
 
 ## Why?
 

@@ -27,9 +27,11 @@ export class HumanMesh {
     }
 
     update(): void {
+        if (!this.updateRequired) {
+            return
+        }
         this.updateRequired = false
         
-        // console.log("HumanMesh.update()")
         this.vertex = [...this.origVertex]
         this.human.targetsDetailStack.forEach( (value, targetName) => {
             if (isNaN(value)) {

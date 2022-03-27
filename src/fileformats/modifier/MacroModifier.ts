@@ -3,8 +3,6 @@ import { findTargets } from './findTargets'
 import { findMacroDependencies } from './findMacroDependencies'
 import { validCategories, valueToCategory } from '../target/Component'
 
-import { NumberModel } from 'toad.js'
-
 export class MacroModifier extends ManagedTargetModifier {
     constructor(groupName: string, name: string) {
         // e.g. macrodetails/Gender
@@ -19,14 +17,9 @@ export class MacroModifier extends ManagedTargetModifier {
         }
     }
 
-    // uh??? why not this.name?
-    get variable() {
-        return this.name
-    }
-
     protected getMacroVariable(): string | undefined {
-        if (this.variable) {
-            let v = this.variable.toLowerCase()
+        if (this.name) {
+            let v = this.name.toLowerCase()
             if (validCategories.indexOf(v) !== -1)
                 return v
             if (valueToCategory.has(v))
@@ -40,6 +33,7 @@ export class MacroModifier extends ManagedTargetModifier {
     }
 
     override setValue(value: number, { skipDependencies = false } = {}): void {
+        // console.log(`MacroModifier(${this.fullName}).setValue(${value})`)
         value = this.clampValue(value)
         this.getModel().value = value
         super.setValue(value, { skipDependencies }) 
@@ -91,7 +85,7 @@ export class MacroModifier extends ManagedTargetModifier {
                 this.model = this.human.breastFirmness
                 break
             case "African":
-                this.model = this.human.afrianVal
+                this.model = this.human.africanVal
                 break
             case "Asian":
                 this.model = this.human.asianVal
