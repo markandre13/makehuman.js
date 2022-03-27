@@ -1,30 +1,7 @@
 import { ManagedTargetModifier } from './ManagedTargetModifier'
 import { Target } from '../target/Target'
-import { TargetFactory } from '../target/TargetFactory'
 import { Component } from '../target/Component'
-import { TargetRef } from './TargetRef'
-
-// static method of ManagedTargetModifiers
-// findTargets('buttocks-buttocks-volume-decr') -> [('data/targets/buttocks/buttocks-volume-decr.target', ['buttocks-buttocks-volume-decr'])]
-// findTargets('buttocks-buttocks-volume-incr') -> [('data/targets/buttocks/buttocks-volume-incr.target', ['buttocks-buttocks-volume-incr'])]
-function findTargets(path: string|undefined):TargetRef[] {
-    if (path === undefined)
-        return []
-    const targetsList = TargetFactory.getInstance().getTargetsByGroup(path)
-    if (targetsList === undefined)
-        throw Error(`findTargets(): failed to get targetsList for ${path}`)
-    // console.log(targetsList)
-    const result = []
-    for (const component of targetsList) {
-        const targetgroup = component.tuple()
-        const factordependencies = component.getVariables()
-        factordependencies.push(targetgroup)
-        result.push(
-            new TargetRef(component.path!, factordependencies)
-        )
-    }
-    return result
-}
+import { findTargets } from './findTargets'
 
 // 1 to 3 targets from the TargetFactory, value in [0, 1] or [-1, 1]
 export class UniversalModifier extends ManagedTargetModifier {

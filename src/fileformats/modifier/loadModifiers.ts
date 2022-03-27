@@ -10,8 +10,8 @@ import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
 //     "modifiers": [
 //         { "target": ... } |
 //         { "target": ..., "min": ..., "max": ... } |
-//         {"macrovar": ...} |
-//         {"macrovar": ..., "modifierType": ...}, ...
+//         { "macrovar": ...} |
+//         { "macrovar": ..., "modifierType": ...}, ...
 //     ]
 // }, ...
 

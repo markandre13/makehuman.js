@@ -1,4 +1,5 @@
-import { Modifier, getTargetWeights } from './Modifier'
+import { Modifier } from './Modifier'
+import { getTargetWeights } from "./getTargetWeights"
 // import { Target } from '../target/Target'
 import { TargetRef } from './TargetRef'
 
@@ -29,9 +30,12 @@ export class ManagedTargetModifier extends Modifier {
         // console.log(`ManagedTargetModifier.setValue(${value})`)
         value = this.clampValue(value)
         const factors = this.getFactors(value)
-        const tWeights = getTargetWeights(this.targets, factors)
+        // console.log(factors)
+        const targetWeights = getTargetWeights(this.targets, factors)
+        // console.log(targetWeights)
   
-        for(const weight of tWeights) {
+        for(const weight of targetWeights) {
+            // console.log(`ManagedTargetModifier.setValue(${value}) -> human.setDetail(${weight[0]}, ${weight[1]})`)
             this.human!.setDetail(weight[0], weight[1])
         }
 

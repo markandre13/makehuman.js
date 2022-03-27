@@ -8,7 +8,6 @@ export function isZero(a: number): boolean {
     return Math.abs(a) <= epsilon
 }
 
-
 export class HumanMesh {
     human: Human
     obj: Mesh
@@ -33,9 +32,14 @@ export class HumanMesh {
         // console.log("HumanMesh.update()")
         this.vertex = [...this.origVertex]
         this.human.targetsDetailStack.forEach( (value, targetName) => {
-            if (isZero(value))
+            if (isNaN(value)) {
+                // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)
                 return
-            // console.log(`apply target ${targetName} with value ${value}`)
+            }
+
+            if (isZero(value) || isNaN(value))
+                return
+            // console.log(`HumanMesh.update(): apply target ${targetName} with value ${value}`)
             const target = getTarget(targetName)
             target.apply(this.vertex, value)
         })

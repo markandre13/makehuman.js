@@ -1,4 +1,5 @@
 import { Modifier } from './fileformats/modifier/Modifier'
+import { MacroModifier } from './fileformats/modifier/MacroModifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 
@@ -12,14 +13,14 @@ export class Human {
     // for now HumanMesh is our quick'n dirty friend
     public targetsDetailStack: Map<string, number>
 
-    private age = new NumberModel(0.5, {min: 0, max: 1})
-    private gender = new NumberModel(0.5, {min: 0, max: 1})
-    private weight = new NumberModel(0.5, {min: 0, max: 1})
-    private muscle = new NumberModel(0.5, {min: 0, max: 1})
-    private height = new NumberModel(0.5, {min: 0, max: 1})
-    private breastSize = new NumberModel(0.5, {min: 0, max: 1})
-    private breastFirmness = new NumberModel(0.5, {min: 0, max: 1})
-    private bodyProportions = new NumberModel(0.5, {min: 0, max: 1})
+    age = new NumberModel(0.5, {min: 0, max: 1})
+    gender = new NumberModel(0.5, {min: 0, max: 1})
+    weight = new NumberModel(0.5, {min: 0, max: 1})
+    muscle = new NumberModel(0.5, {min: 0, max: 1})
+    height = new NumberModel(0.5, {min: 0, max: 1})
+    breastSize = new NumberModel(0.5, {min: 0, max: 1})
+    breastFirmness = new NumberModel(0.5, {min: 0, max: 1})
+    bodyProportions = new NumberModel(0.5, {min: 0, max: 1})
 
     // the above values are transformed into the values below,
     // which are then used by the modifiers (which have code to
@@ -50,12 +51,12 @@ export class Human {
     private idealproportionsVal = new NumberModel(0)
     private uncommonproportionsVal = new NumberModel(0)
     private regularproportionsVal = new NumberModel(0)
+
     private caucasianVal = new NumberModel(0)
     private asianVal = new NumberModel(0)
     private afrianVal = new NumberModel(0)
 
     constructor() {
-
         this.setDefaultValues()
 
         this.modifiers = new Map<string, Modifier>()
@@ -107,6 +108,7 @@ export class Human {
 
         //         # Update dependency mapping
         //         if modifier.macroVariable and modifier.macroVariable != 'None':
+        if (modifier instanceof MacroModifier) {
         //             if modifier.macroVariable in self._modifier_varMapping and \
         //                self._modifier_varMapping[modifier.macroVariable] != modifier.groupName:
         //                 log.error("Error, multiple modifier groups setting var %s (%s and %s)", modifier.macroVariable, modifier.groupName, self._modifier_varMapping[modifier.macroVariable])
@@ -137,21 +139,22 @@ export class Human {
         //                 self._modifier_dependencyMapping[dep].append(modifier.groupName)
         //             if modifier.isMacro():
         //                 self.updateMacroModifiers()
-    }
-
-    setDetail(name: string, value: number|undefined) {
-        // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
-        // console.log(`Human.setDetail('${name}', ${value})`)
-        if (value !== undefined) { // TODO: check if '&& isZero(value)' is a valid optimization
-            this.targetsDetailStack.set(name, value)
-        } else {
-            this.targetsDetailStack.delete(name)
         }
     }
 
-    getDetail(name: string): number {
+    setDetail(targetName: string, value: number|undefined) {
         // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
-        let value = this.targetsDetailStack.get(name)
+        // console.log(`Human.setDetail('${name}', ${value})`)
+        if (value !== undefined) { // TODO: check if '&& isZero(value)' is a valid optimization
+            this.targetsDetailStack.set(targetName, value)
+        } else {
+            this.targetsDetailStack.delete(targetName)
+        }
+    }
+
+    getDetail(targetName: string): number {
+        // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
+        let value = this.targetsDetailStack.get(targetName)
         if (value === undefined)
             value = 0
         // console.log(`Human.getDetail('${name}') -> ${value}`)

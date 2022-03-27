@@ -64,13 +64,13 @@ function run() {
     const references = new class {
         canvas!: HTMLCanvasElement
     }
-    const fragment = <>
+    const mainScreen = <>
         <TableView model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
             <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
         </div>
     </> as Fragment
-    fragment.appendTo(document.body)
+    mainScreen.appendTo(document.body)
     render(references.canvas, scene)
 }
 

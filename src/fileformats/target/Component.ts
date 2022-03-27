@@ -1,3 +1,4 @@
+// _cat_data
 const categoryData = {
     // category        values
     'gender':          ['male', 'female'],
@@ -10,8 +11,10 @@ const categoryData = {
     'breastfirmness':  ['minfirmness', 'averagefirmness', 'maxfirmness'],
     'bodyproportions': ['uncommonproportions', 'regularproportions', 'idealproportions']
 }
-const validCategories = new Array<string>()
-const valueToCategory = new Map<string, string>()
+// _categories
+export const validCategories = new Array<string>()
+// _value_cat
+export const valueToCategory = new Map<string, string>()
 
 for(const category in categoryData) {
     if (!categoryData.hasOwnProperty(category))
