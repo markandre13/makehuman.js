@@ -1,6 +1,6 @@
-import { Human } from './Human'
-import { getTarget } from './fileformats/target/TargetFactory'
-import { Mesh, Group } from './fileformats/Mesh'
+import { Human } from '../Human'
+import { getTarget } from '../target/TargetFactory'
+import { Mesh, Group } from './Mesh'
 
 let epsilon = 0.000000001
 

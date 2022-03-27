@@ -3,15 +3,15 @@ import { expect } from "chai"
 var chai = require('chai')
 chai.use(require('chai-string'))
 
-import { WavefrontObj } from "../src/fileformats/WavefrontObj"
-import { Target } from "../src/fileformats/target/Target"
-import { StringToLine } from "../src/fileformats/lib/StringToLine"
-import { loadModifiers, parseModifiers } from "../src/fileformats/modifier/loadModifiers"
-import { getTargetWeights } from "../src/fileformats/modifier/getTargetWeights"
-import { UniversalModifier } from "../src/fileformats/modifier/UniversalModifier"
-import { ManagedTargetModifier } from "../src/fileformats/modifier/ManagedTargetModifier"
+import { WavefrontObj } from "../src/mesh/WavefrontObj"
+import { Target } from "../src/target/Target"
+import { StringToLine } from "../src/lib/StringToLine"
+import { loadModifiers, parseModifiers } from "../src/modifier/loadModifiers"
+import { getTargetWeights } from "../src/modifier/getTargetWeights"
+import { UniversalModifier } from "../src/modifier/UniversalModifier"
+import { ManagedTargetModifier } from "../src/modifier/ManagedTargetModifier"
 import { Human } from "../src/Human"
-import { TargetRef } from '../src/fileformats/modifier/TargetRef'
+import { TargetRef } from '../src/modifier/TargetRef'
 
 // http://paulbourke.net/dataformats/obj/
 describe("class WavefrontOBJ", () => {

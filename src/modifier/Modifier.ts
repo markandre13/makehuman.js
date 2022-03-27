@@ -1,5 +1,5 @@
 import { TargetRef } from './TargetRef'
-import { Human } from '../../Human'
+import { Human } from '../Human'
 import { getTargetWeights } from './getTargetWeights'
 
 import { NumberModel } from 'toad.js'

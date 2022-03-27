@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix'
-import { Mesh } from '../Mesh'
+import { Mesh } from '../mesh/Mesh'
 
 export function calculateNormals(scene: Mesh) {
 

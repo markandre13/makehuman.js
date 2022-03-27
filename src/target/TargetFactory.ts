@@ -1,6 +1,6 @@
 import { Target } from './Target'
 import { Component} from './Component'
-import { FileSystemAdapter } from '../../filesystem/FileSystemAdapter'
+import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
 
 // what's inside TargetFactory:

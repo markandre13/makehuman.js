@@ -1,5 +1,5 @@
-import { Modifier } from './fileformats/modifier/Modifier'
-import { MacroModifier } from './fileformats/modifier/MacroModifier'
+import { Modifier } from './modifier/Modifier'
+import { MacroModifier } from './modifier/MacroModifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 

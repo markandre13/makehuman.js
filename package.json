@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "description": "An experimental Makehuman port to Typescript/Web/Electron, aiming for better UX, Clean Code and TDD",
   "scripts": {
-    "build": "rollup --config rollup.config.js",
-    "build:watch": "rollup --config rollup.config.js --watch",
+    "build": "npm run build:data && npm run build:once",
+    "build:once": "rollup --config rollup.config.js",
     "build:data": "tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && node dist/filesystem/build-directory-files.js",
+    "build:watch": "rollup --config rollup.config.js --watch",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "start": "npm run build && electron ./dist/main.js",

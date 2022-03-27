@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
-import { calculateNormals } from './fileformats/lib/calculateNormals'
-import { HumanMesh } from './HumanMesh'
+import { calculateNormals } from './lib/calculateNormals'
+import { HumanMesh } from './mesh/HumanMesh'
 
 let cubeRotation = 0.0
 

@@ -3,7 +3,7 @@ import { expect } from "chai"
 var chai = require('chai');
 chai.use(require('chai-string'));
 
-import { loadSliders, labelFromModifier } from "../../../src/fileformats/modifier/loadSliders"
+import { loadSliders, labelFromModifier } from "../../src/modifier/loadSliders"
 
 describe("Modifier", ()=> {
     it("loadSliders", async ()=> {

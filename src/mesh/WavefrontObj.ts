@@ -1,4 +1,4 @@
-import { StringToLine } from './lib/StringToLine'
+import { StringToLine } from '../lib/StringToLine'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { Mesh, Group } from './Mesh'
 

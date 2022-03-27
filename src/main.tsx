@@ -1,9 +1,10 @@
 import { Human } from "./Human"
-import { TargetFactory } from './fileformats/target/TargetFactory'
-import { loadModifiers } from './fileformats/modifier/loadModifiers'
-import { loadSliders, SliderNode } from './fileformats/modifier/loadSliders'
-import { WavefrontObj } from './fileformats/WavefrontObj'
-import { HumanMesh } from './HumanMesh'
+import { TargetFactory } from './target/TargetFactory'
+import { loadSkeleton } from "./skeleton/loadSkeleton"
+import { loadModifiers } from './modifier/loadModifiers'
+import { loadSliders, SliderNode } from './modifier/loadSliders'
+import { WavefrontObj } from './mesh/WavefrontObj'
+import { HumanMesh } from './mesh/HumanMesh'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
@@ -45,6 +46,8 @@ function run() {
     obj.load('data/3dobjs/base.obj')
     const scene = new HumanMesh(human, obj)
     human.modified.add( () => scene.updateRequired = true )
+
+    loadSkeleton('rigs/default.mhskel')
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
     loadModifiers('data/modifiers/modeling_modifiers.json', human)
