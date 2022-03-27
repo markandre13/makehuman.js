@@ -58,6 +58,19 @@ export class Human {
 
     constructor() {
         this._setDependendValues()
+
+        this.gender.modified.add( () => this._setGenderVals() )
+        this.age.modified.add( () => this._setAgeVals() )
+        this.muscle.modified.add( () => this._setMuscleVals() )
+        this.weight.modified.add( () => this._setWeightVals() )
+        this.height.modified.add( () => this._setHeightVals() )
+        this.breastSize.modified.add( () => this._setBreastSizeVals() )
+        this.breastFirmness.modified.add( () => this._setBreastFirmnessVals() )
+        this.bodyProportions.modified.add( () => this._setBodyProportionVals() )
+        this.afrianVal.modified.add( () => this._setEthnicVals("African") )
+        this.asianVal.modified.add( () => this._setEthnicVals("Asian") )
+        this.caucasianVal.modified.add( () => this._setEthnicVals("Caucasian") )
+
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
         this.targetsDetailStack = new Map()

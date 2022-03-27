@@ -36,89 +36,13 @@ export class MacroModifier extends ManagedTargetModifier {
     }
 
     override getValue(): number {
-        switch (this.name) {
-            case "Gender":
-                return this.human!.gender.value
-            case "Age":
-                return this.human!.age.value
-            case "Muscle":
-                return this.human!.muscle.value
-            case "Weight":
-                return this.human!.weight.value
-            case "Height":
-                return this.human!.height.value
-            case "BodyProportions":
-                return this.human!.bodyProportions.value
-            case "BreastSize":
-                return this.human!.breastSize.value
-            case "BreastFirmness":
-                return this.human!.breastFirmness.value
-            case "African":
-                return this.human!.afrianVal.value
-            case "Asian":
-                return this.human!.asianVal.value
-            case "Caucasian":
-                return this.human!.caucasianVal.value
-        }
-        console.log(`MacroModifier.getValue() for ${this.fullName} is not implemented`)
-        return 0
+        return this.getModel().value
     }
 
     override setValue(value: number, { skipDependencies = false } = {}): void {
         value = this.clampValue(value)
-        this.human!.modified.lock()
-        // getattr(self.human, self.setter)(value, updateModifier=False) // e.g. self.human.setGender()
-        switch (this.name) {
-            case "Gender":
-                this.human!.gender.value = value
-                this.human!._setGenderVals()
-                break
-            case "Age":
-                this.human!.age.value = value
-                this.human!._setAgeVals()
-                break
-            case "Muscle":
-                this.human!.muscle.value = value
-                this.human!._setMuscleVals()
-                break
-            case "Weight":
-                this.human!.weight.value = value
-                this.human!._setWeightVals()
-                break
-            case "Height":
-                this.human!.height.value = value
-                this.human!._setHeightVals()
-                break
-            case "BodyProportions":
-                this.human!.bodyProportions.value = value
-                this.human!._setBodyProportionVals()
-                break
-            case "BreastSize":
-                this.human!.breastSize.value = value
-                this.human!._setBreastSizeVals()
-                break
-            case "BreastFirmness":
-                this.human!.breastFirmness.value = value
-                this.human!._setBreastFirmnessVals()
-                break
-            case "African":
-                this.human!.afrianVal.value = value
-                this.human!._setEthnicVals(this.name)
-                break
-            case "Asian":
-                this.human!.asianVal.value = value
-                this.human!._setEthnicVals(this.name)
-                break
-            case "Caucasian":
-                this.human!.caucasianVal.value = value
-                this.human!._setEthnicVals(this.name)
-                break
-            default:
-                console.log(`MacroModifier.setValue() for ${this.fullName} is not implemented (${this.groupName}, ${this.name})`)
-        }
-        this.human!.modified.unlock()
-        // super(MacroModifier, self).setValue(value, skipDependencies)
-        super.setValue(value, { skipDependencies })
+        this.getModel().value = value
+        super.setValue(value, { skipDependencies }) 
     }
 
     override clampValue(value: number): number {
