@@ -44,7 +44,7 @@ export class SliderNode implements TreeNode {
             const human = Human.getInstance()
             const modifier = human.getModifier(modifierSpec.mod)
             if (modifier !== undefined) {
-                this.model = new NumberModel(modifier.getDefaultValue(), { min: modifier.getMin(), max: modifier.getMax() })
+                this.model = modifier.getModel()
                 this.model.modified.add(() => {
                     // modifier.setValue(this.model!.value)
                     modifier.updateValue(this.model!.value)

@@ -2,6 +2,8 @@ import { TargetRef } from './TargetRef'
 import { Human } from '../../Human'
 import { getTargetWeights } from './getTargetWeights'
 
+import { NumberModel } from 'toad.js'
+
 // from apps/humanmodifier.py
 export abstract class Modifier {
     groupName: string
@@ -9,6 +11,7 @@ export abstract class Modifier {
     description: string
     value: number
     defaultValue: number
+    model?: NumberModel
 
     // eventType
 
@@ -164,6 +167,13 @@ export abstract class Modifier {
 
     isMacro() {
         return this.macroVariable === undefined
+    }
+
+    getModel() {
+        if (this.model === undefined) {
+            this.model = new NumberModel(this.getDefaultValue(), { min: this.getMin(), max: this.getMax() })
+        }
+        return this.model
     }
 }
 
