@@ -19,7 +19,7 @@ import { Slider } from 'toad.js/view/Slider'
 
 window.onload = () => { main() }
 
-function main() {
+export function main() {
     try {
         run()
     }
@@ -36,7 +36,6 @@ function main() {
 //   class MHApplication
 //     startupSequence()
 function run() {
-
     console.log('loading assets...')
     FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
@@ -47,7 +46,7 @@ function run() {
     const scene = new HumanMesh(human, obj)
     human.modified.add( () => scene.updateRequired = true )
 
-    loadSkeleton('rigs/default.mhskel')
+    loadSkeleton('data/rigs/default.mhskel')
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
     loadModifiers('data/modifiers/modeling_modifiers.json', human)
