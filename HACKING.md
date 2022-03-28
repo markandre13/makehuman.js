@@ -28,6 +28,13 @@ Mesh of a human body, which can be adjusted using pre-defined morph targets.
 * Human: apps/human.py
 * modifiers: apps/humanmodifier.py.
 
+  SimpleModifier extends Modifier
+  ManagedTargetModifier extends Modifier
+  UniversalModifier extends ManagedTargetModifier
+  MacroModifier extends ManagedTargetModifier
+  EthnicModifier extends MacroModifier
+
+
 ## Skeleton (Pose/Animate Tab)
 
 Skeleton/rigs for the mesh.
