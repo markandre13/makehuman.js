@@ -15,6 +15,7 @@ interface ProgramInfo {
         projectionMatrix: WebGLUniformLocation
         modelViewMatrix: WebGLUniformLocation
         normalMatrix: WebGLUniformLocation
+        color: WebGLUniformLocation
     }
 }
 
@@ -25,6 +26,10 @@ interface Buffers {
 }
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
+
+    // for(let i=0; i<10; ++i) {
+    //     console.log(`draw group '${scene.groups[i].name}, offset=${scene.groups[i].startIndex}, length=${scene.groups[i].length}'`)
+    // }
 
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (!gl) {
@@ -69,6 +74,9 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     gl.enable(gl.DEPTH_TEST)
     gl.depthFunc(gl.LEQUAL)
 
+    // gl.enable(gl.BLEND)
+    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     const fieldOfView = 45 * Math.PI / 180    // in radians
@@ -101,8 +109,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
             normalize,
             stride,
             offset)
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition)
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
     }
 
     {
@@ -131,13 +138,46 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix)
     gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
 
-    {
+
+    for(let x of [
+        // [0, [1.0, 0.8, 0.7, 0.01]],
+        // [1, [0.5, 0.5, 0.5, 1]],
+        // [126, [0.5, 0.0, 0, 1]],
+        [128, [0.0, 0.5, 1, 1]],
+        [129, [0.0, 0.5, 1, 1]],
+        [131, [1.0, 0.0, 0, 1]],
+        [132, [1.0, 0.0, 0, 1]],
+        [169, [1.0, 0.0, 0, 1]],
+        [171, [1.0, 0.0, 0.5, 1]],
+    ]) {
+        const idx = x[0] as number
+        // const c = x[1]
+        // 1: pants helper
+        // 126: skirt
+        // 127: hair
+        // 128, 129: eyeball
+        // 130: penis
+        // 131: mouth gum top
+        // 132: mouth gum bottom
+        // 169: tounge
+        // 171: cube
+        gl.uniform4fv(programInfo.uniformLocations.color, x[1] as number[])
         const type = gl.UNSIGNED_SHORT
-        const offset = scene.groups[0].startIndex
-        const count = scene.groups[0].length
+        const offset = scene.groups[idx].startIndex * 2
+        const count = scene.groups[idx].length
         // console.log(`draw group '${scene.groups[i].name}, offset=${offset}, length=${count}'`)
         gl.drawElements(gl.TRIANGLES, count, type, offset)
     }
+
+    // all joints
+    {
+        gl.uniform4fv(programInfo.uniformLocations.color, [1,1,1,1])
+        const type = gl.UNSIGNED_SHORT
+        const offset = scene.groups[2].startIndex * 2
+        const count = scene.groups[2].length * 124
+        gl.drawElements(gl.TRIANGLES, count, type, offset)
+    }
+
 
     cubeRotation += deltaTime
 }
@@ -152,9 +192,10 @@ attribute vec3 aVertexNormal;
 uniform mat4 uNormalMatrix;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
+uniform vec4 uColor;
 
 // data exchanged with other graphic pipeline stages
-// varying lowp vec4 vColor;
+varying lowp vec4 vColor;
 varying highp vec3 vLighting;
 
 void main(void) {
@@ -169,14 +210,16 @@ void main(void) {
   highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
   vLighting = ambientLight + (directionalLightColor * directional);
 
-//   vColor = aVertexColor;
+  vColor = uColor;
 }`
 
+// skin color
 const fragmentShaderSrc = `
 varying lowp vec4 vColor;
 varying highp vec3 vLighting;
 void main(void) {
-  gl_FragColor = vec4(vec3(1,0.8,0.7) * vLighting, 1.0);
+  gl_FragColor = vec4(vec3(vColor[0],vColor[1],vColor[2]) * vLighting, vColor[3]);
+    // gl_FragColor = vColor;
 }`
 
 function compileShader(gl: WebGL2RenderingContext, type: GLenum, source: string): WebGLShader {
@@ -215,7 +258,8 @@ function linkProgram(gl: WebGL2RenderingContext, vertexShader: WebGLShader, frag
         uniformLocations: {
             projectionMatrix: getUniformLocation(gl, program, 'uProjectionMatrix'),
             modelViewMatrix: getUniformLocation(gl, program, 'uModelViewMatrix'),
-            normalMatrix: getUniformLocation(gl, program, 'uNormalMatrix')
+            normalMatrix: getUniformLocation(gl, program, 'uNormalMatrix'),
+            color: getUniformLocation(gl, program, 'uColor')
         }
     }
 }
