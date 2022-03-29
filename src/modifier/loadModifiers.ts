@@ -44,8 +44,9 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
             let modifier: Modifier
             if ('modifierType' in modifierDef) {
                 modifierClass = classesMapping.get(modifierDef.modifierType)
-                if (modifierClass === undefined)
+                if (modifierClass === undefined) {
                     throw Error(`failed to instantiate modifer ${modifierDef.modifierType}`)
+                }
             } else if ('macrovar' in modifierDef) {
                 modifierClass = MacroModifier
             } else {
@@ -55,7 +56,7 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
             if ('macrovar' in modifierDef) {
                 modifier = new modifierClass(groupName, modifierDef.macrovar)
                 if (!modifier.isMacro()) {
-                    console.log(`Expected modifier ${modifier} to be a macro modifier, but identifies as a regular one. Please check variable category definitions in class Component.`)
+                    console.log(`Expected modifier ${modifierClass.name} to be a macro modifier, but identifies as a regular one. Please check variable category definitions in class Component.`)
                 }
             } else {
                 //             modifier = modifierClass(groupName, mDef['target'], mDef.get('min',None), mDef.get('max',None), mDef.get('mid',None))

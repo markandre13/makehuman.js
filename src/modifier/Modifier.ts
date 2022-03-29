@@ -166,7 +166,7 @@ export abstract class Modifier {
     }
 
     isMacro() {
-        return this.macroVariable === undefined
+        return this.macroVariable !== undefined
     }
 
     getModel() {

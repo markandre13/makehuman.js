@@ -133,7 +133,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
 
     {
         const type = gl.UNSIGNED_SHORT
-        const offset = scene.groups[0].start
+        const offset = scene.groups[0].startIndex
         const count = scene.groups[0].length
         // console.log(`draw group '${scene.groups[i].name}, offset=${offset}, length=${count}'`)
         gl.drawElements(gl.TRIANGLES, count, type, offset)
