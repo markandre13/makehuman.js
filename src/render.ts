@@ -140,18 +140,18 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
 
 
     for(let x of [
-        // [0, [1.0, 0.8, 0.7, 0.01]],
-        // [1, [0.5, 0.5, 0.5, 1]],
-        // [126, [0.5, 0.0, 0, 1]],
-        [128, [0.0, 0.5, 1, 1]],
-        [129, [0.0, 0.5, 1, 1]],
-        [131, [1.0, 0.0, 0, 1]],
-        [132, [1.0, 0.0, 0, 1]],
-        [169, [1.0, 0.0, 0, 1]],
-        [171, [1.0, 0.0, 0.5, 1]],
+        // [0, [1.0, 0.8, 0.7, 1], gl.LINES],
+        [0, [1.0/5, 0.8/5, 0.7/5, 1], gl.LINES],
+        // [1, [0.5, 0.5, 0.5, 1], gl.TRIANGLES],
+        // [126, [0.5, 0.0, 0, 1], gl.TRIANGLES],
+        [128, [0.0, 0.5, 1, 1], gl.TRIANGLES],
+        [129, [0.0, 0.5, 1, 1], gl.TRIANGLES],
+        [131, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [132, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [169, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [171, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
         const idx = x[0] as number
-        // const c = x[1]
         // 1: pants helper
         // 126: skirt
         // 127: hair
@@ -166,7 +166,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         const offset = scene.groups[idx].startIndex * 2
         const count = scene.groups[idx].length
         // console.log(`draw group '${scene.groups[i].name}, offset=${offset}, length=${count}'`)
-        gl.drawElements(gl.TRIANGLES, count, type, offset)
+        gl.drawElements(x[2] as number, count, type, offset)
     }
 
     // all joints
