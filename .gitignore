@@ -5,3 +5,4 @@ dist
 build
 package-lock.json
 data/**/directory.json
+data/**/*.z

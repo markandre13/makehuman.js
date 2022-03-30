@@ -42,18 +42,18 @@ function run() {
     const human = Human.getInstance()
 
     const obj = new WavefrontObj()
-    obj.load('data/3dobjs/base.obj')
+    obj.load('data/3dobjs/base.obj.z')
     const scene = new HumanMesh(human, obj)
     human.modified.add( () => scene.updateRequired = true )
 
-    loadSkeleton('data/rigs/default.mhskel')
+    loadSkeleton('data/rigs/default.mhskel.z')
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
-    loadModifiers('data/modifiers/modeling_modifiers.json', human)
-    loadModifiers('data/modifiers/measurement_modifiers.json', human)
+    loadModifiers('data/modifiers/modeling_modifiers.json.z', human)
+    loadModifiers('data/modifiers/measurement_modifiers.json.z', human)
 
     // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
-    const sliderNodes = loadSliders('data/modifiers/modeling_sliders.json')
+    const sliderNodes = loadSliders('data/modifiers/modeling_sliders.json.z')
 
     loadMacroTargets()
 

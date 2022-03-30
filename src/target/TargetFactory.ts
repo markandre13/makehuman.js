@@ -85,7 +85,6 @@ export class TargetFactory {
         for(const name of dir) {
             // console.log(`directoryPath='${directoryPath}', dir=${dir}, name='${name}'`)
             const p = fs.joinPath(directoryPath, name)
-
             if (fs.isFile(p) && ! p.toLowerCase().endsWith('.target')) {
                 if (p.toLowerCase().endsWith('.png')) {
                     this.images.set(name.toLowerCase(), p)

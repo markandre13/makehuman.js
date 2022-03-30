@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'url'
 import { AbstractFileSystemAdapter } from './AbstractFileSystemAdapter'
+import { unzlibSync } from 'fflate'
 
 interface FileInfo {
     file: string
@@ -12,12 +13,38 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     static path2info = new Map<string, FileInfo>()
 
     readFile(pathname: string): string {
-        const req = new XMLHttpRequest()
-        req.open('GET', pathname, false)
-        req.send(null)
-    	if(req.status < 400)
-		    return req.responseText
-        throw new Error('Request failed: ' + req.statusText)
+        if (HTTPFSAdapter.path2info.has(`${pathname.substring(5)}.z`) || // strip "data/"
+            HTTPFSAdapter.path2info.has(`${pathname.substring(6)}.z`) // // strip "data//"
+        ) {
+            return this.readFile(`${pathname}.z`)
+        }
+        if (pathname.endsWith(".z")) {
+            // console.log(`load compressed file ${pathname}`)
+            const req = new XMLHttpRequest()
+            req.overrideMimeType('text/plain; charset=x-user-defined')
+            req.open('GET', pathname, false)
+            req.send(null)
+            if (req.status > 400) {
+                throw new Error(`Request failed for '${pathname}': ${req.statusText}`)
+            }
+            const ab = new ArrayBuffer(req.responseText.length)
+            const ua = new Uint8Array(ab)
+            for (let i = 0; i < req.responseText.length; ++i) {
+                ua[i] = req.responseText.charCodeAt(i)
+            }
+            var dec = new TextDecoder("utf-8")
+            return dec.decode(unzlibSync(ua))
+        } else {
+            // if (!pathname.endsWith("/directory.json")) {
+            //     console.log(`load uncompressed file ${pathname}`)
+            // }
+            const req = new XMLHttpRequest()
+            req.open('GET', pathname, false)
+            req.send(null)
+            if (req.status < 400)
+                return req.responseText
+            throw new Error(`Request failed for '${pathname}': ${req.statusText}`)
+        }
     }
     isFile(pathname: string): boolean {
         // console.log(`HTTPJSFSAdapter.isFile('${pathname}')`)
@@ -55,17 +82,17 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
         }
 
         if (info === undefined)
-            info = {file: '', isDir: true, dir: undefined}
+            info = { file: '', isDir: true, dir: undefined }
 
         const d = this.readFile(`data/${pathname}/directory.json`)
         const j = JSON.parse(d)
         info.dir = []
-        for(const x of j) {
+        for (const x of j) {
             const fullfile = `${pathname}/${x.file}`
             // console.log(`${pathname}/${x.file}`)
             info.dir.push(x.file)
             if (!x.isDir)
-                HTTPFSAdapter.path2info.set(fullfile, {file: x.file, isDir: false})
+                HTTPFSAdapter.path2info.set(fullfile, { file: x.file, isDir: false })
         }
         HTTPFSAdapter.path2info.set(pathname, info)
         return info.dir
@@ -75,7 +102,7 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
         // throw Error()
         return pathname
     }
-    joinPath(pathname1: string, pathname2: string): string { 
+    joinPath(pathname1: string, pathname2: string): string {
         // console.log(`HTTPJSFSAdapter.joinPath('${pathname1}', '${pathname2}')`)
         return `${pathname1}/${pathname2}`
     }

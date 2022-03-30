@@ -14,6 +14,8 @@ Mesh of a human body, which can be adjusted using pre-defined morph targets.
 * modifiers/modeling_sliders.json 
   defines how modifiers are placed in the UI
 
+(data as text is about 127M, compressed with zlib about 37.7M)
+
 ### Code
 
 #### Control Flow
