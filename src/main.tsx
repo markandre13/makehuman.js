@@ -17,6 +17,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { Fragment, ref } from "toad.jsx"
 import { Text } from 'toad.js/view/Text'
 import { Slider } from 'toad.js/view/Slider'
+import { Tab, Tabs } from 'toad.js/view/Tab'
 
 window.onload = () => { main() }
 
@@ -68,7 +69,14 @@ function run() {
         canvas!: HTMLCanvasElement
     }
     const mainScreen = <>
-        <Table model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
+        <Tabs style={{ position: 'absolute', left: 0, width: '500px', top: 0 }}>
+            <Tab label="Morph">
+                <Table model={tree} style={{width: '100%', position: 'relative', top: 0, bottom: 0}}/>
+            </Tab>
+            <Tab label="Pose">
+                Work In Progress
+            </Tab>
+        </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
             <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
         </div>
