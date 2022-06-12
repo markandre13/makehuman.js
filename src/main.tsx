@@ -10,9 +10,10 @@ import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 import { render } from './render'
 
-import { TableView } from 'toad.js/table/TableView'
-import { TreeNodeModel } from 'toad.js/table/TreeNodeModel'
-import { TreeAdapter } from "toad.js/table/TreeAdapter"
+import { Table } from 'toad.js/table/Table'
+import { TablePos } from 'toad.js/table/TablePos'
+import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
+import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { Fragment, ref } from "toad.jsx"
 import { Text } from 'toad.js/view/Text'
 import { Slider } from 'toad.js/view/Slider'
@@ -44,7 +45,7 @@ function run() {
     const obj = new WavefrontObj()
     obj.load('data/3dobjs/base.obj.z')
     const scene = new HumanMesh(human, obj)
-    human.modified.add( () => scene.updateRequired = true )
+    human.modified.add(() => scene.updateRequired = true)
 
     loadSkeleton('data/rigs/default.mhskel.z')
 
@@ -67,7 +68,7 @@ function run() {
         canvas!: HTMLCanvasElement
     }
     const mainScreen = <>
-        <TableView model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
+        <Table model={tree} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }} />
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
             <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
         </div>
@@ -78,26 +79,36 @@ function run() {
 
 // this tells <toad-table> how to render TreeNodeModel<SliderNode>
 class SliderTreeAdapter extends TreeAdapter<SliderNode> {
+
+    constructor(model: TreeNodeModel<SliderNode>) {
+        super(model)
+        this.config.expandColumn = true
+    }
+
     override get colCount(): number {
         return 2
     }
 
-    override getDisplayCell(col: number, row: number): Element | Element[] | undefined {
-        if (this.model === undefined)
-            return undefined
-        const node = this.model.rows[row].node
-        switch (col) {
-        case 0:
-            return this.treeCell(row, node.label)
-        case 1:
-            if (node.model) {
-                return <span>
-                    <Text model={node.model} style={{width: '50px'}}/>
-                    <Slider model={node.model} />
-                </span>
-            }
+    override showCell(pos: TablePos, cell: HTMLSpanElement) {
+        if (this.model === undefined) {
+            console.log("no model")
+            return
         }
-        return undefined
+        const node = this.model.rows[pos.row].node
+        switch (pos.col) {
+            case 0:
+                this.treeCell(pos, cell, node.label)
+                break
+            case 1:
+                if (node.model) {
+                    const x = <>
+                        <Text model={node.model} style={{ width: '50px' }} />
+                        <Slider model={node.model} style={{width: '200px' }}/>
+                    </> as Fragment
+                    cell.replaceChildren(...x)
+                }
+                break
+        }
     }
 }
 
@@ -111,10 +122,10 @@ function loadMacroTargets() {
     const targetFactory = TargetFactory.getInstance()
     // for target in targets.getTargets().findTargets('macrodetails'):
     for (const target of targetFactory.findTargets('macrodetails')) {
-    //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
-    //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
-    // console.log(target.path)
-    // target.getTarget()
+        //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
+        //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
+        // console.log(target.path)
+        // target.getTarget()
     }
 }
 
