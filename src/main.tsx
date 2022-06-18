@@ -69,9 +69,9 @@ function run() {
         canvas!: HTMLCanvasElement
     }
     const mainScreen = <>
-        <Tabs style={{ position: 'absolute', left: 0, width: '500px', top: 0 }}>
+        <Tabs style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
             <Tab label="Morph">
-                <Table model={tree} style={{width: '100%', position: 'relative', top: 0, bottom: 0}}/>
+                <Table model={tree} style={{width: '100%', height: '100%'}}/>
             </Tab>
             <Tab label="Pose">
                 Work In Progress

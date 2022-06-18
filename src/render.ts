@@ -1,6 +1,8 @@
 import { mat4 } from 'gl-matrix'
 import { calculateNormals } from './lib/calculateNormals'
+import { Mesh } from './Mesh'
 import { HumanMesh } from './mesh/HumanMesh'
+import { Mode } from './Mode'
 
 let cubeRotation = 0.0
 
@@ -62,6 +64,9 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
 }
 
 function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh): void {
+    
+    const mode = Mode.SKIN as Mode
+
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
         canvas.width = canvas.clientWidth
@@ -138,39 +143,38 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix)
     gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
 
+    let skin
+    switch(mode) {
+        case Mode.SKIN:
+            skin = [Mesh.SKIN, [1.0, 0.8, 0.7, 1], gl.TRIANGLES]
+            break
+        case Mode.SKELETON:
+            skin = [Mesh.SKIN, [1.0/5, 0.8/5, 0.7/5, 1], gl.LINES]
+            break
+    }
 
     for(let x of [
-        // [0, [1.0, 0.8, 0.7, 1], gl.LINES],
-        [0, [1.0/5, 0.8/5, 0.7/5, 1], gl.LINES],
-        // [1, [0.5, 0.5, 0.5, 1], gl.TRIANGLES],
-        // [126, [0.5, 0.0, 0, 1], gl.TRIANGLES],
-        [128, [0.0, 0.5, 1, 1], gl.TRIANGLES],
-        [129, [0.0, 0.5, 1, 1], gl.TRIANGLES],
-        [131, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [132, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [169, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [171, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
+        skin,
+        [Mesh.EYEBALL0, [0.0, 0.5, 1, 1], gl.TRIANGLES],
+        [Mesh.EYEBALL1, [0.0, 0.5, 1, 1], gl.TRIANGLES],
+        [Mesh.MOUTH_GUM_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [Mesh.MOUTH_GUM_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [Mesh.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [Mesh.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
         const idx = x[0] as number
-        // 1: pants helper
-        // 126: skirt
-        // 127: hair
-        // 128, 129: eyeball
-        // 130: penis
-        // 131: mouth gum top
-        // 132: mouth gum bottom
-        // 169: tounge
-        // 171: cube
+        const mode = x[2] as number
+
         gl.uniform4fv(programInfo.uniformLocations.color, x[1] as number[])
         const type = gl.UNSIGNED_SHORT
         const offset = scene.groups[idx].startIndex * 2
         const count = scene.groups[idx].length
         // console.log(`draw group '${scene.groups[i].name}, offset=${offset}, length=${count}'`)
-        gl.drawElements(x[2] as number, count, type, offset)
+        gl.drawElements(mode, count, type, offset)
     }
 
     // all joints
-    {
+    if (mode === Mode.SKELETON) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1,1,1,1])
         const type = gl.UNSIGNED_SHORT
         const offset = scene.groups[2].startIndex * 2
