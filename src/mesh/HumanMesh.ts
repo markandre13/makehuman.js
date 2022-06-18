@@ -1,3 +1,4 @@
+import { Mode } from 'Mode'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
 import { Mesh, Group } from './Mesh'
@@ -15,6 +16,7 @@ export class HumanMesh {
     vertex: number[]
     indices: number[]
     groups: Group[]
+    mode!: Mode
 
     updateRequired = false
 

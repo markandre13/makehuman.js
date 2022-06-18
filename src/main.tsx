@@ -5,6 +5,7 @@ import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { WavefrontObj } from './mesh/WavefrontObj'
 import { HumanMesh } from './mesh/HumanMesh'
+import { Mode } from './Mode'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
@@ -14,6 +15,7 @@ import { Table } from 'toad.js/table/Table'
 import { TablePos } from 'toad.js/table/TablePos'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
+import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Text } from 'toad.js/view/Text'
 import { Slider } from 'toad.js/view/Slider'
@@ -64,16 +66,20 @@ function run() {
 
     console.log('everything is loaded...')
 
+    const mode = new EnumModel<Mode>(Mode)
+    mode.modified.add( () => {
+        scene.mode = mode.value
+    })
     const tree = new TreeNodeModel(SliderNode, sliderNodes)
     const references = new class {
         canvas!: HTMLCanvasElement
     }
     const mainScreen = <>
-        <Tabs style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Morph">
+        <Tabs model={mode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
+            <Tab label="Morph" value="MORPH">
                 <Table model={tree} style={{width: '100%', height: '100%'}}/>
             </Tab>
-            <Tab label="Pose">
+            <Tab label="Pose" value="POSE">
                 Work In Progress
             </Tab>
         </Tabs>

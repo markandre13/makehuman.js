@@ -1,4 +1,4 @@
 export enum Mode {
-    SKIN,
-    SKELETON
+    MORPH,
+    POSE
 }

@@ -65,8 +65,6 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
 
 function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh): void {
     
-    const mode = Mode.SKIN as Mode
-
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
         canvas.width = canvas.clientWidth
@@ -144,11 +142,11 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
 
     let skin
-    switch(mode) {
-        case Mode.SKIN:
+    switch(scene.mode) {
+        case Mode.MORPH:
             skin = [Mesh.SKIN, [1.0, 0.8, 0.7, 1], gl.TRIANGLES]
             break
-        case Mode.SKELETON:
+        case Mode.POSE:
             skin = [Mesh.SKIN, [1.0/5, 0.8/5, 0.7/5, 1], gl.LINES]
             break
     }
@@ -174,7 +172,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     }
 
     // all joints
-    if (mode === Mode.SKELETON) {
+    if (scene.mode === Mode.POSE) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1,1,1,1])
         const type = gl.UNSIGNED_SHORT
         const offset = scene.groups[2].startIndex * 2
