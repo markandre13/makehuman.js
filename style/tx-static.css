@@ -1,0 +1,50 @@
+/*
+ * STATIC COLORS
+ *
+ *  "Static colors are persistent across all themes. Other colors in our
+ * system need different values so that they can be used on theme-specific
+ * backgrounds.
+ *   Static colors are used for backgrounds, and they are always paired
+ * with white text.
+ *   In order to meet the minimum contrast ratio required by WCAG 2.0 AA
+ * standards, contrast is based on white text against the static color.
+ * Because of this, static colors retain the same color value across all
+ * themes.
+ *                              -- https://spectrum.adobe.com/page/color/
+ */
+
+:root {
+    --tx-static-white: #ffffff;
+    --tx-static-black: #000000;
+
+    --tx-static-gray-200: #f4f4f4;
+    --tx-static-gray-300: #eaeaea;
+    --tx-static-gray-400: #d3d3d3;
+    --tx-static-gray-500: #bcbcbc;
+    --tx-static-gray-600: #959595;
+    --tx-static-gray-700: #747474;
+    --tx-static-gray-800: #505050;
+    --tx-static-gray-900: #323232;
+
+    --tx-static-blue-400: #378ef0;
+    --tx-static-blue-500: #2680eb;
+    --tx-static-blue-600: #1473e6;
+    --tx-static-blue-700: #0d66d0;
+    --tx-static-blue-800: #095aba;
+
+    --tx-static-red-400: #ec5b62;
+    --tx-static-red-500: #e34850;
+    --tx-static-red-600: #d7373f;
+    --tx-static-red-700: #c9252d;
+    --tx-static-red-800: #bb121a;
+
+    --tx-static-orange-400: #f29423;
+    --tx-static-orange-500: #e68619;
+    --tx-static-orange-600: #da7b11;
+    --tx-static-orange-700: #cb6f10;
+
+    --tx-static-green-400: #33ab84;
+    --tx-static-green-500: #2d9d78;
+    --tx-static-green-600: #268e6c;
+    --tx-static-green-700: #12805c;
+}

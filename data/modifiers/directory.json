@@ -1,0 +1,9 @@
+[
+  {"file": "measurement_modifiers.json", "isDir": false},
+  {"file": "measurement_modifiers_desc.json", "isDir": false},
+  {"file": "measurement_sliders.json", "isDir": false},
+  {"file": "mh_1-0_modifier_mapping.csv", "isDir": false},
+  {"file": "modeling_modifiers.json", "isDir": false},
+  {"file": "modeling_modifiers_desc.json", "isDir": false},
+  {"file": "modeling_sliders.json", "isDir": false}
+]
