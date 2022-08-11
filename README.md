@@ -8,6 +8,7 @@
 
 ## Current Status
 
+* Have a look at [build 2022-08-11](https://markandre13.github.io/makehuman.js/) with toad.js branch table3
 * All modifiers work and update the mesh.
 * Nothing else... 😅
 
