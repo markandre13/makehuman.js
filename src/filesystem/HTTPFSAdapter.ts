@@ -13,11 +13,6 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     static path2info = new Map<string, FileInfo>()
 
     readFile(pathname: string): string {
-        if (HTTPFSAdapter.path2info.has(`${pathname.substring(5)}.z`) || // strip "data/"
-            HTTPFSAdapter.path2info.has(`${pathname.substring(6)}.z`) // // strip "data//"
-        ) {
-            return this.readFile(`${pathname}.z`)
-        }
         if (pathname.endsWith(".z")) {
             // console.log(`load compressed file ${pathname}`)
             const req = new XMLHttpRequest()
@@ -32,18 +27,20 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
             for (let i = 0; i < req.responseText.length; ++i) {
                 ua[i] = req.responseText.charCodeAt(i)
             }
-            var dec = new TextDecoder("utf-8")
+            const dec = new TextDecoder("utf-8")
             return dec.decode(unzlibSync(ua))
         } else {
-            // if (!pathname.endsWith("/directory.json")) {
-            //     console.log(`load uncompressed file ${pathname}`)
-            // }
-            const req = new XMLHttpRequest()
-            req.open('GET', pathname, false)
-            req.send(null)
-            if (req.status < 400)
-                return req.responseText
-            throw new Error(`Request failed for '${pathname}': ${req.statusText}`)
+            if (pathname.endsWith("/directory.json")) {
+                // console.log(`load uncompressed file ${pathname}`)
+                const req = new XMLHttpRequest()
+                req.open('GET', pathname, false)
+                req.send(null)
+                if (req.status < 400)
+                    return req.responseText
+                throw new Error(`Request failed for '${pathname}': ${req.statusText}`)    
+            } else {
+                return this.readFile(`${pathname}.z`)
+            }
         }
     }
     isFile(pathname: string): boolean {
