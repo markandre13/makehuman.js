@@ -28,7 +28,7 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "fflate": "^0.7.3",
+    "fflate": "^0.7.4",
     "gl-matrix": "^3.4.3",
     "toad.js": "0.0.24",
     "toad.jsx": "^0.0.3"
@@ -49,12 +49,12 @@
     "@zoltu/typescript-transformer-append-js-extension": "^1.0.1",
     "chai": "^4.3.6",
     "chai-string": "^1.5.0",
-    "eslint": "^8.21.0",
+    "eslint": "^8.25.0",
     "mocha": "^10.0.0",
     "rollup": "^2.77.3",
     "rollup-plugin-typescript2": "^0.32.1",
     "ts-node": "^10.9.1",
     "ttypescript": "^1.5.13",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.4"
   }
 }
