@@ -73,5 +73,10 @@ Next Goal:
 * there is some incomplete code to load a makehuman skeleton file which needs
   to be extended
 * render the skeleton (shared/skeleton_drawing.py)
+  * meshFromSkeleton(skel, type)
+  * getVertBoneMapping(skel, skeletonMesh)
+  * _shapeFromSkeleton(skel, type)
+  * _shapeFromBone(bone, type)
+  * meshFromJoints(jointPositions, jointNames, scale)
 * pose the skeleton
 * apply the pose to the mesh

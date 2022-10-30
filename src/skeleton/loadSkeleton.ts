@@ -1,3 +1,4 @@
+import { Human } from 'Human'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
 export function loadSkeleton(filename: string) {
@@ -53,7 +54,7 @@ export class Skeleton {
 
     bones = new Map<string, Bone>() // Bone lookup list by name
     boneslist?: Bone[] // Breadth-first ordered list of all bones
-    roots = new Array<Bone>()     // bones with not parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
+    roots: Bone[] = [] // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
 
     joint_pos_idxs = new Map<string, any>()  // Lookup by joint name referencing vertex indices on the human, to determine joint position
     planes = new Map<string, string[]>()    // Named planes defined between joints, used for calculating bone roll angle
@@ -62,6 +63,7 @@ export class Skeleton {
     vertexWeights: any  // Source vertex weights, defined on the basemesh, for this skeleton
     has_custom_weights = false  // True if this skeleton has its own .mhw file
 
+    // makehuman/shared/skeleton.py:88 fromFile()
     constructor(filename: string, data: any) {
         this.info = {
             name: data.name,
@@ -163,6 +165,7 @@ export class Skeleton {
             }
             this.addBone(bone_name, bone_defs.parent, bone_defs.head, bone_defs.tail, rotation_plane, bone_defs.reference, bone_defs.weights_reference)
         }
+
         this.build()
 
         // if "weights_file" in skelData and skelData["weights_file"]:
@@ -174,6 +177,63 @@ export class Skeleton {
         // }
     }
 
+    // line 122: toFile(self, filename, ref_weights=None)
+    // line 192: getVertexWeights(self, referenceWeights=None, force_remap=False)
+    // line 266: hasCustomVertexWeights(self)
+    // line 269: autoBuildWeightReferences(self, referenceSkel)
+    // line 341: addReferencePlanes(self, referenceSkel)
+
+    // line 421: getJointPosition(self, joint_name, human, rest_coord=True)
+    // Calculate the position of specified named joint from the current
+    // state of the human mesh. If this skeleton contains no vertex mapping
+    // for that joint name, it falls back to looking for a vertex group in the
+    // human basemesh with that joint name.
+    getJointPosition(joint_name: string, human: Human, rest_coord=true) {
+        // if joint_name in self.joint_pos_idxs:
+        //     v_idx = self.joint_pos_idxs[joint_name]
+        //     if rest_coord:
+        //         verts = human.getRestposeCoordinates()[v_idx]
+        //     else:
+        //         verts = human.meshData.getCoords(v_idx)
+        //     return verts.mean(axis=0)
+        // else:
+        //     return _getHumanJointPosition(human, joint_name, rest_coord)
+    }
+
+    // makehuman/shared/skeleton.py:518
+    // Rebuild bone rest matrices and determine local bone orientation
+    // (roll or bone normal). Pass a ref_skel to copy the bone orientation from
+    // the reference skeleton to the bones of this skeleton.
+    build(ref_skel?: any) {
+        this.boneslist = undefined
+        for(const bone of this.getBones()) {
+            bone.build(ref_skel)
+        }
+    }
+
+    // line 631
+    // Returns linear list of all bones in breadth-first order.
+    getBones(): Bone[] {
+        if (this.boneslist === undefined) {
+            this.boneslist  = this.buildBoneList()
+        }
+        return this.boneslist
+    }
+
+    // makehuman/shared/skeleton.py:518: __cacheGetBones()
+    private buildBoneList(): Bone[] {
+        const result: Bone[] = []
+        let queue = [...this.roots]
+        while(queue.length > 0) {
+            const bone = queue.shift()!
+            bone.index = result.length
+            result.push(bone)
+            queue = queue.concat(...bone!.children)
+        }
+        return result
+    }
+
+    // line 509
     addBone(
         name: string,
         parentName: string,
@@ -201,6 +261,7 @@ export class Skeleton {
         return bone
     }
 
+    // line 666
     getBone(name: string): Bone {
         const bone = this.bones.get(name)
         if (bone === undefined) {
@@ -210,31 +271,12 @@ export class Skeleton {
         return bone
     }
 
-    // Rebuild bone rest matrices and determine local bone orientation
-    // (roll or bone normal). Pass a ref_skel to copy the bone orientation from
-    // the reference skeleton to the bones of this skeleton.
-    build(ref_skel?: any) {
-        //     self.__cacheGetBones()
-        //     for bone in self.getBones():
-        //         bone.build(ref_skel)
-    }
-
-    // Returns linear list of all bones in breadth-first order.
-    getBones() {
-        if (this.boneslist === undefined) {
-            this.__cacheGetBones()
-        }
-        return this.boneslist!
-    }
-
-    __cacheGetBones() {
-        // ??? didn't we create that one earlier?
-    }
 }
 
-class Bone {
+export class Bone {
     skeleton: Skeleton
     name: string
+    index: number = -1
     headJoint: string
     tailJoint: string
     headPos = [0, 0, 0]
@@ -242,10 +284,21 @@ class Bone {
     roll: number
     length = 0
     yvector4 = undefined // direction vector of this bone
+
     parent?: Bone
     children: Bone[] = []
+
     level: number
     reference_bones = []
+
+    // rest position
+    matRestGlobal?: number[]   // 4x4 rest matrix, relative world (bind pose matrix)
+    matRestRelative?: number[] // 4x4 rest matrix, relative parent
+
+    matPose?: number[]         // 4x4 pose matrix, relative parent and own rest pose
+    matPoseGlobal?: number[]   // 4x4 matrix, relative world
+    matPoseVerts?: number[]    // 4x4 matrix, relative world and own rest pose
+
     // matPose
     constructor(
         skel: Skeleton,
@@ -263,7 +316,7 @@ class Bone {
         this.tailJoint = tailJoint
         this.roll = roll
         
-        // this.updateJointPosition()
+        this.updateJointPositions()
 
         if (parentName !== null) {
             this.parent = this.skeleton.getBone(parentName)
@@ -276,6 +329,45 @@ class Bone {
             this.level = 0
         }
 
-        // ... MORE ...
+        // self.reference_bones = []  # Used for mapping animations and poses
+        // if reference_bones is not None:
+        //     if not isinstance(reference_bones, list):
+        //         reference_bones = [ reference_bones ]
+        //     self.reference_bones.extend( set(reference_bones) )
+
+        // self._weight_reference_bones = None  # For mapping vertex weights (can be automatically set by c
+        // if weight_reference_bones is not None:
+        //     if not isinstance(weight_reference_bones, list):
+        //         weight_reference_bones = [ weight_reference_bones ]
+        //     self._weight_reference_bones = list( set(weight_reference_bones) )
+
+        // self.matPose = np.identity(4, np.float32)  # Set pose matrix to rest pose
+    }
+
+    // line 768
+    // Update the joint positions of this bone based on the current state
+    // of the human mesh.
+    // Remember to call build() after calling this method.
+    updateJointPositions(human?: Human, in_rest: boolean = true) {
+    // if not human:
+    //   from core import G
+    //   human = G.app.selectedHuman
+    // self.headPos[:] = self.skeleton.getJointPosition(self.headJoint, human, in_rest)[:3] * self.skeleton.scale
+    // self.tailPos[:] = self.skeleton.getJointPosition(self.tailJoint, human, in_rest)[:3] * self.skeleton.scale
+    }
+
+    // line 826
+    // called from Skeleton.build(ref_skel), which is called from Skeleton.constructor()
+
+    // Calculate this bone's rest matrices and determine its local axis (roll
+    // or bone normal).
+    // Sets matPoseVerts, matPoseGlobal and matRestRelative.
+    // This method needs to be called everytime the skeleton structure is
+    // changed, the rest pose is changed or joint positions are updated.
+    // Pass a ref_skel to copy the bone normals from a reference skeleton
+    // instead of recalculating them (Recalculating bone normals generally
+    // only works if the skeleton is in rest pose).
+    build(ref_skel?: any) {
+        // needs this.headPos and this.tailPos
     }
 }
