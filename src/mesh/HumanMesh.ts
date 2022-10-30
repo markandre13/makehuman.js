@@ -47,17 +47,5 @@ export class HumanMesh {
             const target = getTarget(targetName)
             target.apply(this.vertex, value)
         })
-
-        // const stomachPregnantIncr = new Target()
-        // stomachPregnantIncr.load('data/targets/stomach/stomach-pregnant-incr.target')
-        // stomachPregnantIncr.apply(scene.vertex, 1)
-    
-        // const breastVolumeVertUp = new Target()
-        // breastVolumeVertUp.load('data/targets/breast/female-young-averagemuscle-averageweight-maxcup-averagefirmness.target')
-        // breastVolumeVertUp.apply(scene.vertex, 1)
-    
-        // const buttocks = new Target()
-        // buttocks.load('data/targets/buttocks/buttocks-volume-incr.target')
-        // buttocks.apply(scene.vertex, 1)
     }
 }

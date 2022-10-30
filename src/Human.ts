@@ -5,6 +5,14 @@ import { Signal } from 'toad.js/Signal'
 
 // apps/human.py class Human
 export class Human {
+    
+    private static instance?: Human
+    static getInstance(): Human {
+        if (Human.instance === undefined)
+        Human.instance = new Human()
+        return Human.instance
+    }
+
     modified = new Signal()
 
     private modifiers: Map<string, Modifier>
@@ -73,13 +81,6 @@ export class Human {
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
         this.targetsDetailStack = new Map()
-    }
-
-    private static instance?: Human
-    static getInstance(): Human {
-        if (Human.instance === undefined)
-        Human.instance = new Human()
-        return Human.instance
     }
 
     getModifier(name: string): Modifier | undefined {
