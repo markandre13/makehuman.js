@@ -2,10 +2,29 @@ import { Modifier } from './modifier/Modifier'
 import { MacroModifier } from './modifier/MacroModifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
+import { WavefrontObj } from 'mesh/WavefrontObj'
+
+// shared/animation.py
+/**
+ * Manages skeletal animation for a mesh or multiple meshes.
+ * Multiple meshes can be added each with their specific bone-to-vertex mapping
+ * to make it possible to play back the same animation on a skeleton attached
+ * to multiple meshes.
+ */
+ class AnimatedMesh {
+    meshData!: WavefrontObj
+    getRestCoordinates(name: string) {
+        // rIdx = self._getBoundMeshIndex(name)
+        // return self.__originalMeshCoords[rIdx][:,:3]
+        if (name != this.meshData.name) {
+            throw Error(`AnimatedMesh.getRestCoordinates('${name}'): no such mesh`)
+        }
+        return this.meshData.vertex
+    }
+}
 
 // apps/human.py class Human
-export class Human {
-    
+export class Human extends AnimatedMesh {    
     private static instance?: Human
     static getInstance(): Human {
         if (Human.instance === undefined)
@@ -64,6 +83,7 @@ export class Human {
     private regularproportionsVal = new NumberModel(0)
 
     constructor() {
+        super()
         this._setDependendValues()
 
         this.gender.modified.add( () => this._setGenderVals() )
@@ -377,4 +397,8 @@ export class Human {
         //     self.__proxyMesh.update()
     }
 
+    // Retrieve human seed mesh vertex coordinates in rest pose.
+    getRestposeCoordinates() {
+        return this.getRestCoordinates(this.meshData.name)
+    }
 }

@@ -9,8 +9,22 @@ export class Group {
     }
 }
 
-export interface Mesh {
-    vertex: number[]
-    indices: number[]
-    groups: Group[]
+export abstract class Mesh {
+    abstract vertex: number[]
+    abstract indices: number[]
+    abstract groups: Group[]
+    abstract getFaceGroup(name: string): Group | undefined
+}
+
+// core/module3d.py
+// line 940: createFaceGroup
+// line 1084: getFaceGroup
+
+// line 47
+export interface FaceGroup {
+    // object
+    name: string
+    idx: number
+    // color
+    // colorID
 }

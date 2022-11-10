@@ -2,6 +2,7 @@ import { Mode } from 'Mode'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
 import { Mesh, Group } from './Mesh'
+import { WavefrontObj } from './WavefrontObj'
 
 let epsilon = 0.000000001
 
@@ -20,12 +21,14 @@ export class HumanMesh {
 
     updateRequired = false
 
-    constructor(human: Human, obj: Mesh) {
+    constructor(human: Human, obj: WavefrontObj) {
         this.human = human
         this.obj = obj
         this.vertex = this.origVertex = obj.vertex
         this.indices = obj.indices
         this.groups = obj.groups
+
+        human.meshData = obj // UGLY
     }
 
     update(): void {

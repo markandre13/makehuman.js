@@ -48,11 +48,12 @@ function run() {
 
     const obj = new WavefrontObj()
     obj.load('data/3dobjs/base.obj.z')
+    human.meshData = obj
     const scene = new HumanMesh(human, obj)
     human.modified.add(() => scene.updateRequired = true)
 
     const skeleton = loadSkeleton('data/rigs/default.mhskel.z')
-    renderSkeleton(skeleton)
+    // renderSkeleton(skeleton)
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
     loadModifiers('data/modifiers/modeling_modifiers.json.z', human)

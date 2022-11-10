@@ -1,5 +1,6 @@
-import { Human } from 'Human'
+import { Human } from '../Human'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
+import { version } from 'os'
 
 export function loadSkeleton(filename: string) {
     const root = parseSkeleton(
@@ -56,7 +57,7 @@ export class Skeleton {
     boneslist?: Bone[] // Breadth-first ordered list of all bones
     roots: Bone[] = [] // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
 
-    joint_pos_idxs = new Map<string, any>()  // Lookup by joint name referencing vertex indices on the human, to determine joint position
+    joint_pos_idxs = new Map<string, Array<number>>()  // Lookup by joint name referencing vertex indices on the human, to determine joint position
     planes = new Map<string, string[]>()    // Named planes defined between joints, used for calculating bone roll angle
     plane_map_strategy?: number = 3  // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
 
@@ -76,25 +77,20 @@ export class Skeleton {
         this.plane_map_strategy = data.plane_map_strategy
 
         //
-        // JOINTS
+        // joint_pos_idxs[name] := vertex index
         //
-
-        // for joint_name, v_idxs in list(skelData.get("joints", dict()).items()):
-        // if isinstance(v_idxs, list) and len(v_idxs) > 0:
-        //     self.joint_pos_idxs[joint_name] = v_idxs
-        for (let joint_name in Object.getOwnPropertyNames(data.joints)) {
+        // console.log(Object.getOwnPropertyNames(data.joints).length)
+        for (let joint_name of Object.getOwnPropertyNames(data.joints)) {
+            // console.log(joint_name)
             const v_idxs = data.joints[joint_name]
             if (v_idxs && v_idxs.length > 0) {
                 this.joint_pos_idxs.set(joint_name, v_idxs)
             }
         }
+        console.log(`Skeleton.construction(): this.joint_pos_idxs.size = ${this.joint_pos_idxs.size}`)
 
-        //
-        // PLANES
-        //
-
-        // self.planes = skelData.get("planes", dict())
-        for(let plane in Object.getOwnPropertyNames(data.planes)) {
+        // planes[name] = ...
+        for(let plane of Object.getOwnPropertyNames(data.planes)) {
             this.planes.set(plane, data.planes[plane])
         }
 
@@ -102,19 +98,11 @@ export class Skeleton {
         const breadthfirst_bones_set = new Set<string>()
         const breadthfirst_bones = new Array<string>()
         let prev_len = -1 // anti-deadlock
-        // while(len(breadthfirst_bones) != len(skelData["bones"]) and prev_len != len(breadthfirst_bones)):
         while (breadthfirst_bones_set.size != data.bones.length && prev_len != breadthfirst_bones_set.size) {
-            //     prev_len = len(breadthfirst_bones)
             prev_len = breadthfirst_bones_set.size
-            //     for bone_name, bone_defs in list(skelData["bones"].items()):
             for (let bone_name of Object.getOwnPropertyNames(data.bones)) {
                 const bone_defs = data.bones[bone_name]
-                //         if bone_name not in breadthfirst_bones:
                 if (!breadthfirst_bones_set.has(bone_name)) {
-                    //             if not bone_defs.get("parent", None):
-                    //                 breadthfirst_bones.append(bone_name)
-                    //             elif bone_defs["parent"] in breadthfirst_bones:
-                    //                 breadthfirst_bones.append(bone_name)
                     const parent = bone_defs["parent"]
                     if (parent !== null && typeof parent !== "string") {
                         console.log(`Bone '${bone_name}' has invalid parent '${parent}'`)
@@ -131,10 +119,6 @@ export class Skeleton {
                 }
             }
         }
-
-        // if len(breadthfirst_bones) != len(skelData["bones"]):
-        //     missing = [bname for bname in list(skelData["bones"].keys()) if bname not in breadthfirst_bones]
-        //     log.warning("Some bones defined in file %s could not be added to skeleton %s, because they have an invalid parent bone (%s)", filepath, self.name, ', '.join(missing))
         if (breadthfirst_bones_set.size !== Object.getOwnPropertyNames(data.bones).length) {
             let missing = []
             for(let bname in data.bones) {
@@ -144,6 +128,8 @@ export class Skeleton {
             }
             console.log(`Some bones defined in file '${filename}' could not be added to skeleton '${this.info.name}', because they have an invalid parent bone (${missing})`)
         }
+
+        console.log(`breadthfirst_bones.length: ${breadthfirst_bones.length}`)
 
         // for bone_name in breadthfirst_bones:
         //     bone_defs = skelData["bones"][bone_name]
@@ -163,18 +149,20 @@ export class Skeleton {
                 console.log(`Invalid rotation plane '${JSON.stringify(rotation_plane)}' specified for bone ${bone_name}. Please make sure that you edited the .mhskel file by hand to include roll plane joints."`)
                 rotation_plane = null
             }
+            // console.log(`${bone_name}, parent=${bone_defs.parent}, head=${bone_defs.head}, tail=${bone_defs.tail}, rotation_plane=${rotation_plane}, reference=${bone_defs.reference}, weights_reference=${bone_defs.reference}`)
             this.addBone(bone_name, bone_defs.parent, bone_defs.head, bone_defs.tail, rotation_plane, bone_defs.reference, bone_defs.weights_reference)
         }
 
         this.build()
 
-        // if "weights_file" in skelData and skelData["weights_file"]:
-        //     weights_file = skelData["weights_file"]
-        //     weights_file = getpath.thoroughFindFile(weights_file, os.path.dirname(getpath.canonicalPath(filepath)), True)
-
-        //     self.vertexWeights = VertexBoneWeights.fromFile(weights_file, mesh.getVertexCount() if mesh else None, rootBone=self.roots[0].name)
-        //     self.has_custom_weights = True
-        // }
+        const weights_file = data["weights_file"]
+        if (weights_file !== undefined) {
+            console.log(`have weights file`)
+            // TODO: load weights file
+            //     weights_file = getpath.thoroughFindFile(weights_file, os.path.dirname(getpath.canonicalPath(filepath)), True)
+            //     self.vertexWeights = VertexBoneWeights.fromFile(weights_file, mesh.getVertexCount() if mesh else None, rootBone=self.roots[0].name)
+            //     self.has_custom_weights = True
+        }
     }
 
     // line 122: toFile(self, filename, ref_weights=None)
@@ -183,21 +171,47 @@ export class Skeleton {
     // line 269: autoBuildWeightReferences(self, referenceSkel)
     // line 341: addReferencePlanes(self, referenceSkel)
 
-    // line 421: getJointPosition(self, joint_name, human, rest_coord=True)
+    // skeleton.py, line 421: getJointPosition(self, joint_name, human, rest_coord=True)
     // Calculate the position of specified named joint from the current
     // state of the human mesh. If this skeleton contains no vertex mapping
     // for that joint name, it falls back to looking for a vertex group in the
     // human basemesh with that joint name.
+
+    // okay, so in the .mhskel file, ["joints"][joint_name]["head"|"tail"] will point to a list of
+    // indices into mesh.coord, whose coords surround the head|tail position
+
     getJointPosition(joint_name: string, human: Human, rest_coord=true) {
-        // if joint_name in self.joint_pos_idxs:
-        //     v_idx = self.joint_pos_idxs[joint_name]
-        //     if rest_coord:
-        //         verts = human.getRestposeCoordinates()[v_idx]
-        //     else:
-        //         verts = human.meshData.getCoords(v_idx)
-        //     return verts.mean(axis=0)
-        // else:
-        //     return _getHumanJointPosition(human, joint_name, rest_coord)
+        if (this.joint_pos_idxs.has(joint_name)) {
+            // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from skeleton`)
+            const v_idx = this.joint_pos_idxs.get(joint_name)!
+            // 
+            let verts
+            if (rest_coord) {
+                const meshCoords = human.getRestposeCoordinates()
+                verts = v_idx.map( i => { 
+                    i = i * 3
+                    return [meshCoords[i], meshCoords[i+1], meshCoords[i+2]]
+                })
+                // console.log(verts.length)
+                // console.log(verts)
+            } else {
+                throw Error(`NOT IMPLEMENTED YET`)
+                // verts = human.meshData.getCoords(v_idx)
+            }
+            // return verts.mean(axis=0)
+            let x=0, y=0, z=0
+            verts.forEach(v => {
+                x += v[0]
+                y += v[1]
+                z += v[2]
+            })
+            x /= verts.length
+            y /= verts.length
+            z /= verts.length
+            return [x,y,z]
+        }
+        console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from base mesh`)
+        return _getHumanJointPosition(human, joint_name, rest_coord)
     }
 
     // makehuman/shared/skeleton.py:518
@@ -299,7 +313,7 @@ export class Bone {
     matPoseGlobal?: number[]   // 4x4 matrix, relative world
     matPoseVerts?: number[]    // 4x4 matrix, relative world and own rest pose
 
-    // matPose
+    // shared/skeleton.py: 709
     constructor(
         skel: Skeleton,
         name: string,
@@ -316,7 +330,7 @@ export class Bone {
         this.tailJoint = tailJoint
         this.roll = roll
         
-        this.updateJointPositions()
+        this.updateJointPositions(Human.getInstance())
 
         if (parentName !== null) {
             this.parent = this.skeleton.getBone(parentName)
@@ -348,12 +362,14 @@ export class Bone {
     // Update the joint positions of this bone based on the current state
     // of the human mesh.
     // Remember to call build() after calling this method.
-    updateJointPositions(human?: Human, in_rest: boolean = true) {
+    updateJointPositions(human: Human, in_rest: boolean = true) {
     // if not human:
     //   from core import G
     //   human = G.app.selectedHuman
     // self.headPos[:] = self.skeleton.getJointPosition(self.headJoint, human, in_rest)[:3] * self.skeleton.scale
     // self.tailPos[:] = self.skeleton.getJointPosition(self.tailJoint, human, in_rest)[:3] * self.skeleton.scale
+        this.headPos = this.skeleton.getJointPosition(this.headJoint, human, in_rest)!
+        this.tailPos = this.skeleton.getJointPosition(this.tailJoint, human, in_rest)!
     }
 
     // line 826
@@ -370,4 +386,34 @@ export class Bone {
     build(ref_skel?: any) {
         // needs this.headPos and this.tailPos
     }
+}
+
+// line 1368
+// Get the position of a joint from the human mesh.
+// This position is determined by the center of the joint helper with the
+// specified name.
+// Note: you probably want to use Skeleton.getJointPosition()
+function _getHumanJointPosition(human: Human, jointName: string, rest_coord = true) {
+    throw Error(`NOT IMPLEMENTED: _getHumanJointPosition(..., jointName='${jointName}', rest_coord=${rest_coord})`)
+    // if (!jointName.startsWith("joint-")) {
+    //     jointName = "joint-" + jointName
+    // }
+    const fg =  human.meshData.getFaceGroup(jointName)
+    if (fg === undefined) {
+        console.warn(`Cannot find position for joint ${jointName}`)
+        console.log(human.meshData)
+        return // [0,0,0]
+    }
+    console.log(`found face group for joint ${jointName}`)
+    // human.obj.group.get()
+    // fg = human.meshData.getFaceGroup(jointName)
+    // if fg is None:
+    //     log.warning('Cannot find position for joint %s', jointName)
+    //     return np.asarray([0,0,0], dtype=np.float32)
+    // v_idx = human.meshData.getVerticesForGroups([fg.name])
+    // if rest_coord:
+    //     verts = human.getRestposeCoordinates()[v_idx]
+    // else:
+    //     verts = human.meshData.getCoords(v_idx)
+    // return verts.mean(axis=0)
 }

@@ -1,7 +1,9 @@
 import { expect } from '@esm-bundle/chai'
-import { loadSkeleton, Skeleton } from 'skeleton/loadSkeleton'
-import { FileSystemAdapter } from 'filesystem/FileSystemAdapter'
-import { HTTPFSAdapter } from 'filesystem/HTTPFSAdapter'
+import { loadSkeleton, Skeleton } from '../src/skeleton/loadSkeleton'
+import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
+import { Human } from '../src/Human'
+import { WavefrontObj } from '../src/mesh/WavefrontObj'
 
 // https://github.com/makehumancommunity/makehuman-utils/blob/master/io_mhrigging_mhskel/export_mh_rigging.py
 
@@ -22,7 +24,25 @@ describe("Skeleton", function() {
     })
 
     it("loads the default.mhskel", function() {
-        loadSkeleton("data/rigs/default.mhskel")
+        // the skeleton references Human.meshData, hence we must load it
+        const human = Human.getInstance()
+        const obj = new WavefrontObj()
+        obj.load('data/3dobjs/base.obj')
+        human.meshData = obj
+
+        const skel = loadSkeleton("data/rigs/default.mhskel")
+        expect(skel.roots).has.lengthOf(1)
+        const bone = skel.roots[0]
+        expect(bone.name).equal("root")
+        // headPos and tailPost as in makehuman
+        expect(bone.headPos).to.deep.equal([0, 0.5639, -0.7609])
+        expect(bone.tailPos).to.deep.equal([0, 0.72685, 0.1445])
+
+        // with that we should have enough data to render the skeleton!
+
+        // further:
+        // length
+        // restPoseMatrix
     })
 
     xit("xxx", function() {

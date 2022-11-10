@@ -1,11 +1,15 @@
 import { StringToLine } from '../lib/StringToLine'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { Mesh, Group } from './Mesh'
+import { Mesh, Group, FaceGroup } from './Mesh'
 
+// makehuman/shared/wavefront.py
 export class WavefrontObj implements Mesh {
+    name = ""
     vertex: number[]
     indices: number[]
-    groups: Group[]
+    groups: Group[] // name, startIndex, length
+
+    faceGroups = new Map<string, FaceGroup>()
 
     constructor() {
         this.vertex = new Array<number>()
@@ -93,12 +97,14 @@ export class WavefrontObj implements Mesh {
             case 'con': break
 
                 // grouping
-            case 'g': // <groupname>+ the following elements belong to that group
+            case 'g': // <groupname>+ the following elements belong to that group    
                 this.groups.push(new Group(tokens[1], indices.length))
                 break
             case 's': break
             case 'mg': break
-            case 'o': break
+            case 'o': // <object name>
+                this.name = tokens[1]
+                break
 
                 // display/render attributes
             case 'bevel': break
@@ -125,6 +131,24 @@ export class WavefrontObj implements Mesh {
         this.groups[this.groups.length-1].length = indices.length - this.groups[this.groups.length-1].startIndex
 
         this.logStatistics(filename)
+    }
+
+    getFaceGroup(name: string): Group | undefined {
+        // the facegroups are not groups
+        // and they might be either stored in one of these:
+        //   makehuman/data/rigs/default_weights.mhw
+        //   makehuman/data/poses/benchmark.bvh
+        //   makehuman/data/poses/tpose.bvh
+        //   makehuman/data/poseunits/face-poseunits.bvh
+        // or maybe the code i have here is correct but the weight must be read as part of the rig?
+
+        // return undefined
+        const x = this.groups
+            .filter( g => g.name === name)
+        if (x.length !== 1) {
+            return undefined
+        }
+        return x[0]
     }
 
     logStatistics(filename: string) {

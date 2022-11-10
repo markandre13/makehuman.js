@@ -1,6 +1,6 @@
 # makehuman.js
 
-<div style="text-align: center">
+<div style="text-align:npm center">
   <img src="data/screenshot.png" />
 
   An **experimental** port of [Makehuman](http://www.makehumancommunity.org) to Typescript/The Web.
@@ -65,6 +65,10 @@ class Human {
 function loadSliders(filename: string)
 ```
 
+## Run single test
+
+npm run dev:test --file=build/test/skeleton.spec.js
+
 ### Pose Rig
 
 * data/rigs/ contains a rig which can be used to pose/animate the mesh
@@ -72,7 +76,22 @@ function loadSliders(filename: string)
 Next Goal:
 * there is some incomplete code to load a makehuman skeleton file which needs
   to be extended
-* render the skeleton (shared/skeleton_drawing.py)
+  laodSkeleton.ts (shared/skeleton.py)
+
+  Skeleton.constructor (fromFile)
+  * load json file
+  * joint_pos_idx[name]
+  * planes[name]
+  * breadthfirst_bones
+  * for bone_name in breadthfirst_bones
+      self.addBone()
+        Bone()
+  * build()
+      for bone of this.getBones()
+         bone.build()
+  * load weights
+
+* renderSkeleton.ts (shared/skeleton_drawing.py)
   * meshFromSkeleton(skel, type)
   * getVertBoneMapping(skel, skeletonMesh)
   * _shapeFromSkeleton(skel, type)
@@ -80,3 +99,122 @@ Next Goal:
   * meshFromJoints(jointPositions, jointNames, scale)
 * pose the skeleton
 * apply the pose to the mesh
+
+<!--
+cd /Users/mark/upstream/makehuman/makehuman
+./makehuman
+
+joe core/mhmain.py
+pip3.9 install --upgrade --force-reinstall PyQt5
+
+WHAT TO DO NOW
+
+===============================
+
+    IWA  Unbenannt (Geändert)                                                           Row 1    Col 1   
+fg = None
+groups = []
+faceGroups = {}
+
+# this seems to just store color/colorID ?
+class FaceGroup
+  name
+  idx
+  object: parent (Object3D)
+  color
+  colorID
+  
+class Object3D
+  _groups_rev[<name>] = FaceGroup // index in _faceGroups
+  _faceGroups = FaceGroup[]
+  createFaceGroup(name)
+  
+  # makehuman.js calculates those when rendering
+  fnorm[]: face normals
+  vnorm[]: vertex normals
+  vtang[]: vertex tangents
+  
+---------------------
+// plugins/3_libraries_skeleton/skeletonlibrary.py
+human.setSkeleton(skel)
+
+// shared/skeleton.py
+class Skeleton {
+  fromFile(path, mesh)
+}
+
+// apps/animation.py
+class AnimatedMesh {
+  __skeleton: Skeleton
+  __meshes: []
+  __vertexToBoneMaps: []
+  ...
+  
+  // this looks like were the animation is done... but
+  // it's only a part within some optimized code...
+  skinMesh(coords, compiledVertWeights, poseData)
+}
+
+class AnimationTrack
+class Pose: AnimationTrack
+class PoseUnit: AnimationTrack
+class VertexBoneWeights
+
+// apps/human.py
+class Human: AnimatedMesh {
+}
+
+
+
+===============================
+I already implemented animating a makehuman generated mesh,
+but based on loading an export to collada.
+
+~/c/human/      ;; loads and animates a collada file exported by makehuman
+
+  collada.cc    ;; load collada file into human: Geometry
+    collada()
+    
+  human.hh      ;; the loaded collada file
+  class Geometry {
+        // mesh
+        vertex: double[]
+        normal: double[]
+        polylist_vcount: unsigned[]     // points per polygon in polylist
+        polylist: unsigned[]: vertex index/normal index
+        
+        // skeleton
+        skeleton: SkeletonNode
+        
+        // mesh-skeleton relation
+        joint: string[];             // a list of joint names within the skeleton
+        node: SkeletonNode*[]        // joint index to skeleton nodea
+        bindShapeMatrix: double[];
+        weight: double[];
+        inversebind: double[];
+        v: unsigned[];
+        vcount: unsigned[]; // should be the save as vertex/3
+  }
+  
+  class SkeletonNode {
+        name: string
+        children: SkeletonNode[]
+        m: Matrix
+        global_m: Matrix
+        x, y, z: double         // additional rotation
+  }
+
+human.cc
+  TViewer::glPaint()  
+    skinning equation
+    
+    v_out = sum_i=0^n ((v*BSM) * IBM_i * JMi) * JW_i
+    
+    n    = number of joints
+    BSM  := bind-shape matrix (identity in makehuman)
+    IBMi := inverse bin-pose matrix of joint i (not read yet)
+    JMi  := transformation matrix of joint j
+    JW   := weight of influence of joint i on vertex v
+
+
+-->
