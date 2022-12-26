@@ -1,9 +1,16 @@
-import { expect } from '@esm-bundle/chai'
+import { expect, use } from '@esm-bundle/chai'
+
 import { loadSkeleton, Skeleton } from '../src/skeleton/loadSkeleton'
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
 import { Human } from '../src/Human'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
+
+import { vec3, mat4, vec4 } from 'gl-matrix'
+
+function almost(left, right) {
+    return Math.abs(left - right) <= 1e-6
+}
 
 // https://github.com/makehumancommunity/makehuman-utils/blob/master/io_mhrigging_mhskel/export_mh_rigging.py
 
@@ -18,13 +25,13 @@ import { WavefrontObj } from '../src/mesh/WavefrontObj'
 //   * rotate bones and re-render the skeleton (maybe start with just one bone and 3 axis)
 //   * try to use the weights to adjust the mesh to the modified skeleton
 
-describe("Skeleton", function() {
-    this.beforeAll(function() {
+describe("Skeleton", function () {
+    this.beforeAll(function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
 
-    it("loads the default.mhskel", function() {
-        // the skeleton references Human.meshData, hence we must load it
+    it("loads the default.mhskel", function () {
+        // the skeleton references Human.meshData, hence we must load the mesh
         const human = Human.getInstance()
         const obj = new WavefrontObj()
         obj.load('data/3dobjs/base.obj')
@@ -38,14 +45,26 @@ describe("Skeleton", function() {
         expect(bone.headPos).to.deep.equal([0, 0.5639, -0.7609])
         expect(bone.tailPos).to.deep.equal([0, 0.72685, 0.1445])
 
-        // with that we should have enough data to render the skeleton!
+        // Bone.build() calculates length, yvector4, matRestGlobal, ...
+        expect(bone.roll).to.equal("root____plane")
+        expect(bone.length).to.equal(0.9199466816932041)
+        expect(bone.yvector4).to.deep.equal(vec4.fromValues(0, 0.9199466816932041, 0, 1))
+
+        // chai-almost isn't esm6 compatible
+        const _ = [
+            1, 0, 0, 0,
+            0, 0.1771298050880432, 0.9841874837875366, 0,
+            0, -0.9841874837875366, 0.1771298050880432, 0,
+            0, 0.5638999938964844, -0.7609000205993652, 1
+        ].forEach((value, index) => {
+            expect(almost(bone.matRestGlobal![index], value), `index: ${index} ${bone.matRestGlobal![index]} !== ${value}`).to.be.true
+        })
 
         // further:
-        // length
         // restPoseMatrix
     })
 
-    xit("xxx", function() {
+    xit("xxx", function () {
         new Skeleton("memory", {
             name: "bones",
             version: "1.0",

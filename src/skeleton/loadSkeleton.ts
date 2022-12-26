@@ -1,6 +1,6 @@
 import { Human } from '../Human'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { version } from 'os'
+import { vec3, mat4, vec4 } from 'gl-matrix'
 
 export function loadSkeleton(filename: string) {
     const root = parseSkeleton(
@@ -64,6 +64,8 @@ export class Skeleton {
     vertexWeights: any  // Source vertex weights, defined on the basemesh, for this skeleton
     has_custom_weights = false  // True if this skeleton has its own .mhw file
 
+    scale: number = 1
+
     // makehuman/shared/skeleton.py:88 fromFile()
     constructor(filename: string, data: any) {
         this.info = {
@@ -90,7 +92,7 @@ export class Skeleton {
         console.log(`Skeleton.construction(): this.joint_pos_idxs.size = ${this.joint_pos_idxs.size}`)
 
         // planes[name] = ...
-        for(let plane of Object.getOwnPropertyNames(data.planes)) {
+        for (let plane of Object.getOwnPropertyNames(data.planes)) {
             this.planes.set(plane, data.planes[plane])
         }
 
@@ -112,16 +114,16 @@ export class Skeleton {
                         breadthfirst_bones_set.add(bone_name)
                         breadthfirst_bones.push(bone_name)
                     } else
-                    if (breadthfirst_bones_set.has(parent)) { // parent has already been added
-                        breadthfirst_bones_set.add(bone_name)
-                        breadthfirst_bones.push(bone_name)
-                    }
+                        if (breadthfirst_bones_set.has(parent)) { // parent has already been added
+                            breadthfirst_bones_set.add(bone_name)
+                            breadthfirst_bones.push(bone_name)
+                        }
                 }
             }
         }
         if (breadthfirst_bones_set.size !== Object.getOwnPropertyNames(data.bones).length) {
             let missing = []
-            for(let bname in data.bones) {
+            for (let bname in data.bones) {
                 if (!breadthfirst_bones_set.has(bname)) {
                     missing.push(bname)
                 }
@@ -180,7 +182,7 @@ export class Skeleton {
     // okay, so in the .mhskel file, ["joints"][joint_name]["head"|"tail"] will point to a list of
     // indices into mesh.coord, whose coords surround the head|tail position
 
-    getJointPosition(joint_name: string, human: Human, rest_coord=true) {
+    getJointPosition(joint_name: string, human: Human, rest_coord = true): number[] {
         if (this.joint_pos_idxs.has(joint_name)) {
             // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from skeleton`)
             const v_idx = this.joint_pos_idxs.get(joint_name)!
@@ -188,9 +190,9 @@ export class Skeleton {
             let verts
             if (rest_coord) {
                 const meshCoords = human.getRestposeCoordinates()
-                verts = v_idx.map( i => { 
+                verts = v_idx.map(i => {
                     i = i * 3
-                    return [meshCoords[i], meshCoords[i+1], meshCoords[i+2]]
+                    return [meshCoords[i], meshCoords[i + 1], meshCoords[i + 2]]
                 })
                 // console.log(verts.length)
                 // console.log(verts)
@@ -199,7 +201,7 @@ export class Skeleton {
                 // verts = human.meshData.getCoords(v_idx)
             }
             // return verts.mean(axis=0)
-            let x=0, y=0, z=0
+            let x = 0, y = 0, z = 0
             verts.forEach(v => {
                 x += v[0]
                 y += v[1]
@@ -208,7 +210,7 @@ export class Skeleton {
             x /= verts.length
             y /= verts.length
             z /= verts.length
-            return [x,y,z]
+            return [x, y, z]
         }
         console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from base mesh`)
         return _getHumanJointPosition(human, joint_name, rest_coord)
@@ -220,7 +222,7 @@ export class Skeleton {
     // the reference skeleton to the bones of this skeleton.
     build(ref_skel?: any) {
         this.boneslist = undefined
-        for(const bone of this.getBones()) {
+        for (const bone of this.getBones()) {
             bone.build(ref_skel)
         }
     }
@@ -229,7 +231,7 @@ export class Skeleton {
     // Returns linear list of all bones in breadth-first order.
     getBones(): Bone[] {
         if (this.boneslist === undefined) {
-            this.boneslist  = this.buildBoneList()
+            this.boneslist = this.buildBoneList()
         }
         return this.boneslist
     }
@@ -238,7 +240,7 @@ export class Skeleton {
     private buildBoneList(): Bone[] {
         const result: Bone[] = []
         let queue = [...this.roots]
-        while(queue.length > 0) {
+        while (queue.length > 0) {
             const bone = queue.shift()!
             bone.index = result.length
             result.push(bone)
@@ -253,10 +255,9 @@ export class Skeleton {
         parentName: string,
         headJoint: string,
         tailJoint: string,
-        roll = 0,
+        roll: string,
         reference_bones?: any,
-        weight_reference_bones?: any)
-    {
+        weight_reference_bones?: any) {
         // if name in list(self.bones.keys()):
         //     raise RuntimeError("The skeleton %s already contains a bone named %s." % (self.__repr__(), name))
         // bone = Bone(self, name, parentName, headJoint, tailJoint, roll, reference_bones, weight_reference_bones)
@@ -295,9 +296,9 @@ export class Bone {
     tailJoint: string
     headPos = [0, 0, 0]
     tailPos = [0, 0, 0]
-    roll: number
+    roll: string | Array<string>
     length = 0
-    yvector4 = undefined // direction vector of this bone
+    yvector4?: vec4 // direction vector of this bone
 
     parent?: Bone
     children: Bone[] = []
@@ -306,12 +307,12 @@ export class Bone {
     reference_bones = []
 
     // rest position
-    matRestGlobal?: number[]   // 4x4 rest matrix, relative world (bind pose matrix)
-    matRestRelative?: number[] // 4x4 rest matrix, relative parent
+    matRestGlobal?: mat4   // 4x4 rest matrix, relative world (bind pose matrix)
+    matRestRelative?: mat4 // 4x4 rest matrix, relative parent
 
-    matPose?: number[]         // 4x4 pose matrix, relative parent and own rest pose
-    matPoseGlobal?: number[]   // 4x4 matrix, relative world
-    matPoseVerts?: number[]    // 4x4 matrix, relative world and own rest pose
+    matPose?: mat4         // 4x4 pose matrix, relative parent and own rest pose
+    matPoseGlobal?: mat4   // 4x4 matrix, relative world
+    matPoseVerts?: mat4    // 4x4 matrix, relative world and own rest pose
 
     // shared/skeleton.py: 709
     constructor(
@@ -320,16 +321,15 @@ export class Bone {
         parentName: string | null,
         headJoint: string,
         tailJoint: string,
-        roll = 0,
+        roll: string,
         reference_bones?: any,
-        weight_reference_bones?: any)
-    {
+        weight_reference_bones?: any) {
         this.skeleton = skel
         this.name = name
         this.headJoint = headJoint
         this.tailJoint = tailJoint
         this.roll = roll
-        
+
         this.updateJointPositions(Human.getInstance())
 
         if (parentName !== null) {
@@ -358,16 +358,20 @@ export class Bone {
         // self.matPose = np.identity(4, np.float32)  # Set pose matrix to rest pose
     }
 
+    get planes(): Map<string, Array<string>> {
+        return this.skeleton.planes
+    }
+
     // line 768
     // Update the joint positions of this bone based on the current state
     // of the human mesh.
     // Remember to call build() after calling this method.
     updateJointPositions(human: Human, in_rest: boolean = true) {
-    // if not human:
-    //   from core import G
-    //   human = G.app.selectedHuman
-    // self.headPos[:] = self.skeleton.getJointPosition(self.headJoint, human, in_rest)[:3] * self.skeleton.scale
-    // self.tailPos[:] = self.skeleton.getJointPosition(self.tailJoint, human, in_rest)[:3] * self.skeleton.scale
+        // if not human:
+        //   from core import G
+        //   human = G.app.selectedHuman
+        // self.headPos[:] = self.skeleton.getJointPosition(self.headJoint, human, in_rest)[:3] * self.skeleton.scale
+        // self.tailPos[:] = self.skeleton.getJointPosition(self.tailJoint, human, in_rest)[:3] * self.skeleton.scale
         this.headPos = this.skeleton.getJointPosition(this.headJoint, human, in_rest)!
         this.tailPos = this.skeleton.getJointPosition(this.tailJoint, human, in_rest)!
     }
@@ -384,8 +388,94 @@ export class Bone {
     // instead of recalculating them (Recalculating bone normals generally
     // only works if the skeleton is in rest pose).
     build(ref_skel?: any) {
-        // needs this.headPos and this.tailPos
+        const head3 = vec3.fromValues(this.headPos[0], this.headPos[1], this.headPos[2])
+        const tail3 = vec3.fromValues(this.tailPos[0], this.tailPos[1], this.tailPos[2])
+
+        let normal
+        if (ref_skel) {
+            throw Error("not implemented yet")
+        } else {
+            normal = this.get_normal()
+        }
+        this.matRestGlobal = getMatrix(head3, tail3, normal)
+        this.length = vec3.distance(head3, tail3)
+        this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
+        this.update()
     }
+
+    update() {
+        // matPoseGlobal := ...
+        // matPoseVerts := ...
+    }
+
+    get_normal(): vec3 {
+        let normal
+        if (this.roll instanceof Array) {
+            throw Error("Not implemented yet")
+            // # Average the normal over multiple planes
+            // count = 0
+            // normal = np.zeros(3, dtype=np.float32)
+            // for plane_name in self.roll:
+            //     norm = get_normal(self.skeleton, plane_name, self.planes)
+            //     if not np.allclose(norm, np.zeros(3), atol=1e-05):
+            //         count += 1
+            //         normal += norm
+            // if count > 0 and not np.allclose(normal, np.zeros(3), atol=1e-05):
+            //     normal /= count
+            // else:
+            //     normal = np.asarray([0.0, 1.0, 0.0], dtype=np.float32)
+        } else
+            if (typeof this.roll === "string") {
+                const plane_name = this.roll  // TODO ugly.. why not call this something else than "roll"?
+                normal = get_normal(this.skeleton, plane_name, this.planes)
+                // if np.allclose(normal, np.zeros(3), atol=1e-05):
+                //     normal = np.asarray([0.0, 1.0, 0.0], dtype=np.float32)
+            } else {
+                normal = vec3.fromValues(0, 1, 0)
+            }
+        return normal
+    }
+}
+
+function a2vec3(a: number[] | undefined) {
+    if (a === undefined) {
+        throw Error()
+    }
+    return vec3.fromValues(a[0], a[1], a[2])
+}
+
+function getMatrix(head: vec3, tail: vec3, normal: vec3): mat4 {
+    let bone_direction = vec3.subtract(vec3.create(), tail, head)
+    vec3.normalize(bone_direction, bone_direction)
+    const norm = vec3.normalize(vec3.create(), normal)
+    const z_axis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), norm, bone_direction))
+    const x_axis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), bone_direction, z_axis))
+    return mat4.fromValues(
+        x_axis[0], x_axis[1], x_axis[2], 0,                         // bone local X axis
+        bone_direction[0], bone_direction[1], bone_direction[2], 0, // bone local Y axis
+        z_axis[0], z_axis[1], z_axis[2], 0,                         // bone local Z axis
+        head[0], head[1], head[2], 1                                // head position as translation
+    )
+}
+
+// Return the normal of a triangle plane defined between three joint positions,
+// using counter-clockwise winding order (right-handed).
+function get_normal(skel: Skeleton, plane_name: string, plane_defs: Map<string, Array<string>>, human: Human | undefined = undefined) {
+    if (!plane_defs.has(plane_name)) {
+        console.warn(`No plane with name ${plane_name} defined for skeleton.`)
+        vec3.fromValues(0, 1, 0)
+    }
+    if (!human) {
+        human = Human.getInstance()
+    }
+    const joint_names = plane_defs.get(plane_name)!
+    const [j1, j2, j3] = joint_names
+    const p1 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j1, human)), skel.scale)
+    const p2 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j2, human)), skel.scale)
+    const p3 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j3, human)), skel.scale)
+    const pvec = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), p2, p1))
+    const yvec = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), p3, p2))
+    return vec3.normalize(vec3.create(), vec3.cross(vec3.create(), yvec, pvec))
 }
 
 // line 1368
@@ -393,16 +483,16 @@ export class Bone {
 // This position is determined by the center of the joint helper with the
 // specified name.
 // Note: you probably want to use Skeleton.getJointPosition()
-function _getHumanJointPosition(human: Human, jointName: string, rest_coord = true) {
+function _getHumanJointPosition(human: Human, jointName: string, rest_coord = true): number[] {
     throw Error(`NOT IMPLEMENTED: _getHumanJointPosition(..., jointName='${jointName}', rest_coord=${rest_coord})`)
     // if (!jointName.startsWith("joint-")) {
     //     jointName = "joint-" + jointName
     // }
-    const fg =  human.meshData.getFaceGroup(jointName)
+    const fg = human.meshData.getFaceGroup(jointName)
     if (fg === undefined) {
         console.warn(`Cannot find position for joint ${jointName}`)
         console.log(human.meshData)
-        return // [0,0,0]
+        return [0, 0, 0]
     }
     console.log(`found face group for joint ${jointName}`)
     // human.obj.group.get()
