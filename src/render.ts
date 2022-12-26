@@ -25,6 +25,8 @@ interface Buffers {
     vertex: WebGLBuffer
     normal: WebGLBuffer
     indices: WebGLBuffer
+
+    skeletonIndex: number
 }
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
@@ -32,6 +34,8 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
     // for(let i=0; i<10; ++i) {
     //     console.log(`draw group '${scene.groups[i].name}, offset=${scene.groups[i].startIndex}, length=${scene.groups[i].length}'`)
     // }
+
+    console.log(`NUMBER OF BONES ${scene.human.__skeleton.bones.size}`)
 
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (!gl) {
@@ -53,7 +57,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
         if (scene.updateRequired) {
             scene.update()
             buffers.vertex = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
-            buffers.normal = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene))
+                buffers.normal = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene.vertex, scene.indices))
         }
 
         drawScene(gl, programInfo, buffers, deltaTime, scene)
@@ -64,7 +68,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
 }
 
 function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh): void {
-    
+
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
         canvas.width = canvas.clientWidth
@@ -142,12 +146,12 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
 
     let skin
-    switch(scene.mode) {
+    switch (scene.mode) {
         case Mode.MORPH:
             skin = [Mesh.SKIN, [1.0, 0.8, 0.7, 1], gl.TRIANGLES]
             break
         case Mode.POSE:
-            skin = [Mesh.SKIN, [1.0/5, 0.8/5, 0.7/5, 1], gl.LINES]
+            skin = [Mesh.SKIN, [1.0 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
             break
     }
 
@@ -171,6 +175,15 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         gl.drawElements(mode, count, type, offset)
     }
 
+    {
+        gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
+        // byte offset into index buffer
+        const offset = buffers.skeletonIndex
+        const mode = gl.TRIANGLES
+        const count = 3 * 2 * 6 // number of vertices
+        gl.drawElements(mode, count, gl.UNSIGNED_SHORT, offset)
+    }
+
     // all joints
     if (scene.mode === Mode.POSE) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1,1,1,1])
@@ -179,7 +192,6 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         const count = scene.groups[2].length * 124
         gl.drawElements(gl.TRIANGLES, count, type, offset)
     }
-
 
     cubeRotation += deltaTime
 }
@@ -274,14 +286,65 @@ function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, n
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
+    const vertexOffset = scene.vertex.length / 3
+    const skeletonIndex = scene.indices.length * 2
+
+    const vx = scene.vertex.concat([
+        // Front face
+        -1.0, -1.0, 1.0,
+        1.0, -1.0, 1.0,
+        1.0, 1.0, 1.0,
+        -1.0, 1.0, 1.0,
+
+        // Back face
+        -1.0, -1.0, -1.0,
+        -1.0, 1.0, -1.0,
+        1.0, 1.0, -1.0,
+        1.0, -1.0, -1.0,
+
+        // Top face
+        -1.0, 1.0, -1.0,
+        -1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0,
+        1.0, 1.0, -1.0,
+
+        // Bottom face
+        -1.0, -1.0, -1.0,
+        1.0, -1.0, -1.0,
+        1.0, -1.0, 1.0,
+        -1.0, -1.0, 1.0,
+
+        // Right face
+        1.0, -1.0, -1.0,
+        1.0, 1.0, -1.0,
+        1.0, 1.0, 1.0,
+        1.0, -1.0, 1.0,
+
+        // Left face
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0, 1.0,
+        -1.0, 1.0, 1.0,
+        -1.0, 1.0, -1.0,
+    ])
+
+    const ix = scene.indices.concat([
+        0, 1, 2, 0, 2, 3,       // front
+        4, 5, 6, 4, 6, 7,       // back
+        8, 9, 10, 8, 10, 11,    // top
+        12, 13, 14, 12, 14, 15, // bottom
+        16, 17, 18, 16, 18, 19, // right
+        20, 21, 22, 20, 22, 23, // left
+    ].map(v => v + vertexOffset))
+
     return {
-        vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, scene.vertex),
-        normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(scene)),
-        indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, scene.indices)
+        vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx),
+        normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vx, ix)),
+        indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, ix),
+        skeletonIndex
     }
 }
 
-function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: Float32ArrayConstructor|Uint16ArrayConstructor, data: number[]): WebGLBuffer {
+function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[]): WebGLBuffer {
     const buffer = gl.createBuffer()
     if (buffer === null)
         throw Error('Failed to create new WebGLBuffer')

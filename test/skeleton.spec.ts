@@ -8,7 +8,7 @@ import { WavefrontObj } from '../src/mesh/WavefrontObj'
 
 import { vec3, mat4, vec4 } from 'gl-matrix'
 
-function almost(left, right) {
+function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6
 }
 

@@ -1,7 +1,7 @@
 import { vec3 } from 'gl-matrix'
 import { HumanMesh } from 'mesh/HumanMesh'
 
-export function calculateNormals(scene: HumanMesh) {
+export function calculateNormals(vertex: number[], indices: number[]): number[] {
 
     function addNormal(index: number, normal: vec3) {
         const n0 = vec3.fromValues(normals[index], normals[index + 1], normals[index + 2])
@@ -13,18 +13,18 @@ export function calculateNormals(scene: HumanMesh) {
         ++counter[index / 3]
     }
 
-    const normals = new Array<number>(scene.vertex.length)
-    const counter = new Array<number>(scene.vertex.length / 3)
+    const normals = new Array<number>(vertex.length)
+    const counter = new Array<number>(vertex.length / 3)
     normals.fill(0)
     counter.fill(0)
-    for (let i = 0; i < scene.indices.length;) {
-        const i1 = scene.indices[i++] * 3
-        const i2 = scene.indices[i++] * 3
-        const i3 = scene.indices[i++] * 3
+    for (let i = 0; i < indices.length;) {
+        const i1 = indices[i++] * 3
+        const i2 = indices[i++] * 3
+        const i3 = indices[i++] * 3
 
-        const p1 = vec3.fromValues(scene.vertex[i1], scene.vertex[i1 + 1], scene.vertex[i1 + 2])
-        const p2 = vec3.fromValues(scene.vertex[i2], scene.vertex[i2 + 1], scene.vertex[i2 + 2])
-        const p3 = vec3.fromValues(scene.vertex[i3], scene.vertex[i3 + 1], scene.vertex[i3 + 2])
+        const p1 = vec3.fromValues(vertex[i1], vertex[i1 + 1], vertex[i1 + 2])
+        const p2 = vec3.fromValues(vertex[i2], vertex[i2 + 1], vertex[i2 + 2])
+        const p3 = vec3.fromValues(vertex[i3], vertex[i3 + 1], vertex[i3 + 2])
 
         const u = vec3.create()
         vec3.subtract(u, p2, p1)

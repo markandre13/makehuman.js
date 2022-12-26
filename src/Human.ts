@@ -3,6 +3,7 @@ import { MacroModifier } from './modifier/MacroModifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 import { WavefrontObj } from 'mesh/WavefrontObj'
+import { Skeleton } from 'skeleton/loadSkeleton'
 
 // shared/animation.py
 /**
@@ -13,6 +14,8 @@ import { WavefrontObj } from 'mesh/WavefrontObj'
  */
  class AnimatedMesh {
     meshData!: WavefrontObj
+    __skeleton!: Skeleton
+
     getRestCoordinates(name: string) {
         // rIdx = self._getBoundMeshIndex(name)
         // return self.__originalMeshCoords[rIdx][:,:3]
@@ -20,6 +23,11 @@ import { WavefrontObj } from 'mesh/WavefrontObj'
             throw Error(`AnimatedMesh.getRestCoordinates('${name}'): no such mesh`)
         }
         return this.meshData.vertex
+    }
+    setBaseSkeleton(skel: Skeleton) {
+        this.__skeleton = skel
+        // self.removeAnimations(update=False)
+        // self.resetCompiledWeights()
     }
 }
 
@@ -400,5 +408,15 @@ export class Human extends AnimatedMesh {
     // Retrieve human seed mesh vertex coordinates in rest pose.
     getRestposeCoordinates() {
         return this.getRestCoordinates(this.meshData.name)
+    }
+
+    override setBaseSkeleton(skel: Skeleton) {
+        // self.callEvent('onChanging', events3d.HumanEvent(self, 'skeleton'))
+        // animation.AnimatedMesh.setBaseSkeleton(self, skel)
+        super.setBaseSkeleton(skel)
+        
+        // self.updateVertexWeights(skel.getVertexWeights() if skel else None)
+        // self.callEvent('onChanged', events3d.HumanEvent(self, 'skeleton'))
+        // self.refreshPose()
     }
 }
