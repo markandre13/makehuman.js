@@ -12,15 +12,13 @@ import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 import { render } from './render'
 
 import { Table } from 'toad.js/table/Table'
-import { TablePos } from 'toad.js/table/TablePos'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
-import { Text } from 'toad.js/view/Text'
-import { Slider } from 'toad.js/view/Slider'
 import { Tab, Tabs } from 'toad.js/view/Tab'
-import { PoseNode } from 'skeleton/poseControls'
+import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
+import { SliderTreeAdapter } from 'modifier/modifierView'
 
 window.onload = () => { main() }
 
@@ -69,6 +67,9 @@ function run() {
 
     console.log('everything is loaded...')
 
+    TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
+    TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
+
     const mode = new EnumModel<Mode>(Mode)
     mode.modified.add( () => { scene.mode = mode.value })
 
@@ -94,80 +95,6 @@ function run() {
     mainScreen.appendTo(document.body)
     render(references.canvas, scene)
 }
-
-// this tells <toad-table> how to render TreeNodeModel<SliderNode>
-class SliderTreeAdapter extends TreeAdapter<SliderNode> {
-
-    constructor(model: TreeNodeModel<SliderNode>) {
-        super(model)
-        this.config.expandColumn = true
-    }
-
-    override get colCount(): number {
-        return 2
-    }
-
-    override showCell(pos: TablePos, cell: HTMLSpanElement) {
-        if (this.model === undefined) {
-            console.log("no model")
-            return
-        }
-        const node = this.model.rows[pos.row].node
-        switch (pos.col) {
-            case 0:
-                this.treeCell(pos, cell, node.label)
-                break
-            case 1:
-                if (node.model) {
-                    const x = <>
-                        <Text model={node.model} style={{ width: '50px' }} />
-                        <Slider model={node.model} style={{width: '200px' }}/>
-                    </> as Fragment
-                    cell.replaceChildren(...x)
-                }
-                break
-        }
-    }
-}
-
-TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
-
-// this tells <toad-table> how to render TreeNodeModel<PoseNode>
-class PoseTreeAdapter extends TreeAdapter<PoseNode> {
-
-    constructor(model: TreeNodeModel<PoseNode>) {
-        super(model)
-        this.config.expandColumn = true
-    }
-
-    override get colCount(): number {
-        return 1
-    }
-
-    override showCell(pos: TablePos, cell: HTMLSpanElement) {
-        if (this.model === undefined) {
-            console.log("no model")
-            return
-        }
-        const node = this.model.rows[pos.row].node
-        // switch (pos.col) {
-        //     case 0:
-                this.treeCell(pos, cell, node.bone.name)
-        //        break
-        //     case 1:
-        //         if (node.model) {
-        //             const x = <>
-        //                 <Text model={node.model} style={{ width: '50px' }} />
-        //                 <Slider model={node.model} style={{width: '200px' }}/>
-        //             </> as Fragment
-        //             cell.replaceChildren(...x)
-        //         }
-        //         break
-        // }
-    }
-}
-
-TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
 //
 // more makehuman stuff i need to figure out:

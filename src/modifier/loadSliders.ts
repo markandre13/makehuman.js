@@ -1,7 +1,11 @@
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { Human } from '../Human'
-import { TreeNode } from 'toad.js'
-import { NumberModel } from 'toad.js'
+import { NumberModel } from 'toad.js/model/NumberModel'
+
+import { TablePos } from 'toad.js/table/TablePos'
+import { TreeNode } from 'toad.js/table/model/TreeNode'
+import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
+import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
 export interface Category {
     sortOrder: number
