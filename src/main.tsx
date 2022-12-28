@@ -10,7 +10,6 @@ import { Mode } from './Mode'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 import { render } from './render'
-import { renderSkeleton } from './skeleton/renderSkeleton'
 
 import { Table } from 'toad.js/table/Table'
 import { TablePos } from 'toad.js/table/TablePos'
@@ -21,6 +20,7 @@ import { Fragment, ref } from "toad.jsx"
 import { Text } from 'toad.js/view/Text'
 import { Slider } from 'toad.js/view/Slider'
 import { Tab, Tabs } from 'toad.js/view/Tab'
+import { PoseNode } from 'skeleton/poseControls'
 
 window.onload = () => { main() }
 
@@ -70,20 +70,21 @@ function run() {
     console.log('everything is loaded...')
 
     const mode = new EnumModel<Mode>(Mode)
-    mode.modified.add( () => {
-        scene.mode = mode.value
-    })
-    const tree = new TreeNodeModel(SliderNode, sliderNodes)
-    const references = new class {
-        canvas!: HTMLCanvasElement
-    }
+    mode.modified.add( () => { scene.mode = mode.value })
+
+    const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
+
+    const poseNodes = new PoseNode(skeleton.roots[0])
+    const poseControls = new TreeNodeModel(PoseNode, poseNodes)
+
+    const references = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={mode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
             <Tab label="Morph" value="MORPH">
-                <Table model={tree} style={{width: '100%', height: '100%'}}/>
+                <Table model={morphControls} style={{width: '100%', height: '100%'}}/>
             </Tab>
             <Tab label="Pose" value="POSE">
-                Work In Progress
+                <Table model={poseControls} style={{width: '100%', height: '100%'}}/>
             </Tab>
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
@@ -130,6 +131,43 @@ class SliderTreeAdapter extends TreeAdapter<SliderNode> {
 }
 
 TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
+
+// this tells <toad-table> how to render TreeNodeModel<PoseNode>
+class PoseTreeAdapter extends TreeAdapter<PoseNode> {
+
+    constructor(model: TreeNodeModel<PoseNode>) {
+        super(model)
+        this.config.expandColumn = true
+    }
+
+    override get colCount(): number {
+        return 1
+    }
+
+    override showCell(pos: TablePos, cell: HTMLSpanElement) {
+        if (this.model === undefined) {
+            console.log("no model")
+            return
+        }
+        const node = this.model.rows[pos.row].node
+        // switch (pos.col) {
+        //     case 0:
+                this.treeCell(pos, cell, node.bone.name)
+        //        break
+        //     case 1:
+        //         if (node.model) {
+        //             const x = <>
+        //                 <Text model={node.model} style={{ width: '50px' }} />
+        //                 <Slider model={node.model} style={{width: '200px' }}/>
+        //             </> as Fragment
+        //             cell.replaceChildren(...x)
+        //         }
+        //         break
+        // }
+    }
+}
+
+TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
 //
 // more makehuman stuff i need to figure out:
