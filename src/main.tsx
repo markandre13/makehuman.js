@@ -18,7 +18,7 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
-import { SliderTreeAdapter } from 'modifier/modifierView'
+import { SliderTreeAdapter } from 'modifier/morphView'
 
 window.onload = () => { main() }
 

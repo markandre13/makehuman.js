@@ -4,17 +4,53 @@ import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
 import { Bone } from "./Bone"
+import { Text } from "toad.js/view/Text"
+import { NumberModel } from 'toad.js/model/NumberModel'
+import { Fragment } from 'toad.jsx/lib/jsx-runtime'
 
 export class PoseNode implements TreeNode {
     static count = 0
     bone!: Bone
     next?: PoseNode
     down?: PoseNode
+
+    x: NumberModel
+    y: NumberModel
+    z: NumberModel
+
     constructor(bone: Bone | undefined = undefined) {
+        this.x = new NumberModel(0, { min: -180, max: 180 })
+        this.y = new NumberModel(0, { min: -180, max: 180 })
+        this.z = new NumberModel(0, { min: -180, max: 180 })
+
         if (bone === undefined) {
             return
         }
         this.bone = bone
+
+        // TODO: reduce nesting
+        // E.g. instead of
+        //     spine05
+        //       spine04
+        //         spine03
+        //           spine02
+        //             spine01
+        //               neck01
+        //               clavicle.R
+        //               clavicle.L
+        //             breast.R
+        //             breast.L
+        // arrange it as
+        //     spine05
+        //       spine04
+        //       spine03
+        //       spine02
+        //         spine01
+        //           neck01
+        //           clavicle.R
+        //           clavicle.L
+        //         breast.R
+        //         breast.L
         bone.children.forEach(childBone => {
             if (this.down === undefined) {
                 this.down = new PoseNode(childBone)
@@ -36,7 +72,7 @@ export class PoseTreeAdapter extends TreeAdapter<PoseNode> {
     }
 
     override get colCount(): number {
-        return 1
+        return 2
     }
 
     override showCell(pos: TablePos, cell: HTMLSpanElement) {
@@ -45,20 +81,19 @@ export class PoseTreeAdapter extends TreeAdapter<PoseNode> {
             return
         }
         const node = this.model.rows[pos.row].node
-        // switch (pos.col) {
-        //     case 0:
-        this.treeCell(pos, cell, node.bone.name)
-        //        break
-        //     case 1:
-        //         if (node.model) {
-        //             const x = <>
-        //                 <Text model={node.model} style={{ width: '50px' }} />
-        //                 <Slider model={node.model} style={{width: '200px' }}/>
-        //             </> as Fragment
-        //             cell.replaceChildren(...x)
-        //         }
-        //         break
-        // }
+        switch (pos.col) {
+            case 0:
+                this.treeCell(pos, cell, node.bone.name)
+                break
+            case 1:
+                const x = <>
+                    <Text model={node.x} style={{ width: '50px' }} />
+                    <Text model={node.y} style={{ width: '50px' }} />
+                    <Text model={node.z} style={{ width: '50px' }} />
+                </> as Fragment
+                cell.replaceChildren(...x)
+                break
+        }
     }
 }
 
