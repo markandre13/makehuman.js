@@ -3,7 +3,7 @@ import { TreeNode } from 'toad.js/table/model/TreeNode'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
-import { Bone } from "./loadSkeleton"
+import { Bone } from "./Bone"
 
 export class PoseNode implements TreeNode {
     static count = 0

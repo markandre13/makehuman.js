@@ -1,12 +1,13 @@
-import { expect, use } from '@esm-bundle/chai'
+import { expect } from '@esm-bundle/chai'
 
-import { loadSkeleton, Skeleton } from '../src/skeleton/loadSkeleton'
+import { loadSkeleton } from '../src/skeleton/loadSkeleton'
+import { Skeleton } from '../src/skeleton/Skeleton'
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
 import { Human } from '../src/Human'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
 
-import { vec3, mat4, vec4 } from 'gl-matrix'
+import { vec4 } from 'gl-matrix'
 
 function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6

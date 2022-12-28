@@ -3,7 +3,7 @@ import { MacroModifier } from './modifier/MacroModifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 import { WavefrontObj } from 'mesh/WavefrontObj'
-import { Skeleton } from 'skeleton/loadSkeleton'
+import { Skeleton } from "skeleton/Skeleton"
 
 // shared/animation.py
 /**

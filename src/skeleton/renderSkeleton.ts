@@ -1,4 +1,5 @@
-import { Skeleton, Bone } from "./loadSkeleton"
+import { Skeleton } from "./Skeleton"
+import { Bone } from "./Bone"
 
 type BoneType = "Prism" | "Box" | "Cube" | "Line"
 

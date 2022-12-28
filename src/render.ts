@@ -3,7 +3,7 @@ import { calculateNormals } from './lib/calculateNormals'
 import { Mesh } from './Mesh'
 import { HumanMesh } from './mesh/HumanMesh'
 import { Mode } from './Mode'
-import { Bone } from './skeleton/loadSkeleton'
+import { Bone } from "./skeleton/Bone"
 
 let cubeRotation = 0.0
 
