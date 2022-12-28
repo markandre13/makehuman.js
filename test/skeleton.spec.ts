@@ -39,25 +39,48 @@ describe("Skeleton", function () {
 
         const skel = loadSkeleton("data/rigs/default.mhskel")
         expect(skel.roots).has.lengthOf(1)
-        const bone = skel.roots[0]
-        expect(bone.name).equal("root")
+
+        const rootBone = skel.roots[0]
+        expect(rootBone.name).equal("root")
         // headPos and tailPost as in makehuman
-        expect(bone.headPos).to.deep.equal([0, 0.5639, -0.7609])
-        expect(bone.tailPos).to.deep.equal([0, 0.72685, 0.1445])
+        expect(rootBone.headPos).to.deep.equal([0, 0.5639, -0.7609])
+        expect(rootBone.tailPos).to.deep.equal([0, 0.72685, 0.1445])
 
         // Bone.build() calculates length, yvector4, matRestGlobal, ...
-        expect(bone.roll).to.equal("root____plane")
-        expect(bone.length).to.equal(0.9199466816932041)
-        expect(bone.yvector4).to.deep.equal(vec4.fromValues(0, 0.9199466816932041, 0, 1))
+        expect(rootBone.roll).to.equal("root____plane")
+        expect(rootBone.length).to.equal(0.9199466816932041)
+        expect(rootBone.yvector4).to.deep.equal(vec4.fromValues(0, 0.9199466816932041, 0, 1))
 
         // chai-almost isn't esm6 compatible
-        const _ = [
+        const _0 = [
             1, 0, 0, 0,
             0, 0.1771298050880432, 0.9841874837875366, 0,
             0, -0.9841874837875366, 0.1771298050880432, 0,
             0, 0.5638999938964844, -0.7609000205993652, 1
         ].forEach((value, index) => {
-            expect(almost(bone.matRestGlobal![index], value), `index: ${index} ${bone.matRestGlobal![index]} !== ${value}`).to.be.true
+            expect(almost(rootBone.matRestGlobal![index], value), `index: ${index} ${rootBone.matRestGlobal![index]} !== ${value}`).to.be.true
+        })
+
+        // matRestRelative
+        // for the root bone matRestGlobal equals matRestRelative
+        const _1 = [
+            1, 0, 0, 0,
+            0, 0.1771298050880432, 0.9841874837875366, 0,
+            0, -0.9841874837875366, 0.1771298050880432, 0,
+            0, 0.5638999938964844, -0.7609000205993652, 1
+        ].forEach((value, index) => {
+            expect(almost(rootBone.matRestRelative![index], value), `index: ${index} ${rootBone.matRestGlobal![index]} !== ${value}`).to.be.true
+        })
+
+        const spineBone = rootBone.children.find((bone) => bone.name === "spine05")!
+        spineBone.matRestRelative?.forEach((a, i) => console.log(`${i}: ${a}`))
+        const _2 = [
+            1, 0, 0, 0,
+            0, -0.29943329095840454, -0.9541172385215759, 0,
+            0, 0.9541172385215759, -0.29943329095840454, 0,
+            0, 0.9199466705322266, 0, 1
+        ].forEach((value, index) => {
+            expect(almost(spineBone.matRestRelative![index], value), `index: ${index} ${rootBone.matRestGlobal![index]} !== ${value}`).to.be.true
         })
 
         // further:

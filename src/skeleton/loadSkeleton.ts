@@ -399,6 +399,16 @@ export class Bone {
         }
         this.matRestGlobal = getMatrix(head3, tail3, normal)
         this.length = vec3.distance(head3, tail3)
+        if (this.parent === undefined) {
+            this.matRestRelative = this.matRestGlobal
+        } else {
+            this.matRestRelative =
+            mat4.mul(
+                mat4.create(),
+                mat4.invert(mat4.create(), this.parent.matRestGlobal!),
+                this.matRestGlobal
+            )
+        }
         this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
         this.update()
     }
