@@ -3,6 +3,7 @@ import { calculateNormals } from './lib/calculateNormals'
 import { Mesh } from './Mesh'
 import { HumanMesh } from './mesh/HumanMesh'
 import { Mode } from './Mode'
+import { Bone } from './skeleton/loadSkeleton'
 
 let cubeRotation = 0.0
 
@@ -285,30 +286,73 @@ function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, n
     return location
 }
 
-function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
+// render the skeleton using matRestGlobal
+function renderSkeletonGlobal(scene: HumanMesh) {
     const skel = scene.human.__skeleton
     const v = vec4.fromValues(0,0,0,1)
-    const vs = new Array<number>(skel.boneslist!.length * 6)
-    const is = new Array<number>(skel.boneslist!.length * 2)
+    const vertex = new Array<number>(skel.boneslist!.length * 6)
+    const indices = new Array<number>(skel.boneslist!.length * 2)
     skel.boneslist!.forEach( (bone, index) => {
         const a = vec4.transformMat4(vec4.create(), v, bone.matRestGlobal!)
         const b = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
         const vi = index * 6
         const ii = index * 2
-        vs[vi] = a[0]
-        vs[vi+1] = a[1]
-        vs[vi+2] = a[2]
-        vs[vi+3] = b[0]
-        vs[vi+4] = b[1]
-        vs[vi+5] = b[2]
-        is[ii] = index * 2
-        is[ii+1] = index * 2 + 1
+        vertex[vi] = a[0]
+        vertex[vi+1] = a[1]
+        vertex[vi+2] = a[2]
+        vertex[vi+3] = b[0]
+        vertex[vi+4] = b[1]
+        vertex[vi+5] = b[2]
+        indices[ii] = index * 2
+        indices[ii+1] = index * 2 + 1
     })
+    return {vertex, indices}
+}
+
+// render the skeleton using matRestRelative
+function renderSkeletonRelative(scene: HumanMesh) {
+    const skel = scene.human.__skeleton
+    const v = vec4.fromValues(0,0,0,1)
+    const vertex: number[] = []
+    const indices: number[] = []
+    const rootBone = skel.roots[0]!
+
+    mat4.identity(mat4.create())
+    renderSkeletonRelativeHelper(
+        mat4.identity(mat4.create()),
+        rootBone,
+        vertex,
+        indices
+    )
+    return {vertex, indices}
+}
+
+function renderSkeletonRelativeHelper(m: mat4, bone: Bone, vertex: number[], indices: number[]) {
+    const v = vec4.fromValues(0,0,0,1)
+
+    const a = vec4.transformMat4(vec4.create(), v, bone.matRestGlobal!)
+    const b = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
+
+    const index = vertex.length / 3
+    vertex.push(a[0], a[1], a[2], b[0], b[1], b[2])
+    indices.push(index, index+1)
+
+    const m0 = m
+    const m1 = mat4.multiply(mat4.create(), m0, bone.matRestRelative!)
+    bone.children.forEach( childBone => {
+        renderSkeletonRelativeHelper(m1, childBone, vertex, indices)
+    })
+}
+
+function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
+
+    // let skeleton = renderSkeletonGlobal(scene)
+    let skeleton = renderSkeletonRelative(scene)
 
     const vertexOffset = scene.vertex.length / 3
     const skeletonIndex = scene.indices.length * 2
-    const vx = scene.vertex.concat(vs)
-    const ix = scene.indices.concat(is.map(v => v + vertexOffset))
+    const vx = scene.vertex.concat(skeleton.vertex)
+    const ix = scene.indices.concat(skeleton.indices.map(v => v + vertexOffset))
 
     return {
         vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx),
