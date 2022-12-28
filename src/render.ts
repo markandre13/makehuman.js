@@ -175,16 +175,16 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         gl.drawElements(mode, count, type, offset)
     }
 
-    {
+    // SKELETON
+    if (scene.mode === Mode.POSE) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
-        // byte offset into index buffer
         const offset = buffers.skeletonIndex
         const mode = gl.LINES
-        const count = 4
+        const count = scene.human.__skeleton.boneslist!.length * 2
         gl.drawElements(mode, count, gl.UNSIGNED_SHORT, offset)
     }
 
-    // all joints
+    // JOINTS
     if (scene.mode === Mode.POSE) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1,1,1,1])
         const type = gl.UNSIGNED_SHORT
@@ -286,37 +286,29 @@ function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, n
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-
     const skel = scene.human.__skeleton
-    const bone0 = skel.boneslist![0]
-    const bone1 = skel.boneslist![1]
-    console.log(bone0.name)
-    console.log(bone1.name)
-
     const v = vec4.fromValues(0,0,0,1)
-    const a = vec4.transformMat4(vec4.create(), v, bone0.matRestGlobal!)
-    const b = vec4.transformMat4(vec4.create(), bone0.yvector4!, bone0.matRestGlobal!)
-    const c = vec4.transformMat4(vec4.create(), v, bone1.matRestGlobal!)
-    const d = vec4.transformMat4(vec4.create(), bone1.yvector4!, bone1.matRestGlobal!)
-
-    console.log(`a=[${a[0]}, ${a[1]}, ${a[2]}]`)
-    console.log(`b=[${b[0]}, ${b[1]}, ${b[2]}]`)
-    console.log(`c=[${c[0]}, ${c[1]}, ${c[2]}]`)
-    console.log(`d=[${d[0]}, ${d[1]}, ${d[2]}]`)
+    const vs = new Array<number>(skel.boneslist!.length * 6)
+    const is = new Array<number>(skel.boneslist!.length * 2)
+    skel.boneslist!.forEach( (bone, index) => {
+        const a = vec4.transformMat4(vec4.create(), v, bone.matRestGlobal!)
+        const b = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
+        const vi = index * 6
+        const ii = index * 2
+        vs[vi] = a[0]
+        vs[vi+1] = a[1]
+        vs[vi+2] = a[2]
+        vs[vi+3] = b[0]
+        vs[vi+4] = b[1]
+        vs[vi+5] = b[2]
+        is[ii] = index * 2
+        is[ii+1] = index * 2 + 1
+    })
 
     const vertexOffset = scene.vertex.length / 3
     const skeletonIndex = scene.indices.length * 2
-
-    const vx = scene.vertex.concat([
-        a[0], a[1], a[2],
-        b[0], b[1], b[2],
-        c[0], c[1], c[2],
-        d[0], d[1], d[2],
-    ])
-
-    const ix = scene.indices.concat([
-        0, 1, 2, 3
-    ].map(v => v + vertexOffset))
+    const vx = scene.vertex.concat(vs)
+    const ix = scene.indices.concat(is.map(v => v + vertexOffset))
 
     return {
         vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx),
