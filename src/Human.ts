@@ -12,7 +12,7 @@ import { Skeleton } from "skeleton/Skeleton"
  * to make it possible to play back the same animation on a skeleton attached
  * to multiple meshes.
  */
- class AnimatedMesh {
+class AnimatedMesh {
     meshData!: WavefrontObj
     __skeleton!: Skeleton
 
@@ -32,11 +32,11 @@ import { Skeleton } from "skeleton/Skeleton"
 }
 
 // apps/human.py class Human
-export class Human extends AnimatedMesh {    
+export class Human extends AnimatedMesh {
     private static instance?: Human
     static getInstance(): Human {
         if (Human.instance === undefined)
-        Human.instance = new Human()
+            Human.instance = new Human()
         return Human.instance
     }
 
@@ -49,19 +49,19 @@ export class Human extends AnimatedMesh {
     public targetsDetailStack: Map<string, number>
 
     // values to be edited by the macro/ethnic modifiers
-    age = new NumberModel(0.5, {min: 0, max: 1})
-    gender = new NumberModel(0.5, {min: 0, max: 1})
-    weight = new NumberModel(0.5, {min: 0, max: 1})
-    muscle = new NumberModel(0.5, {min: 0, max: 1})
-    height = new NumberModel(0.5, {min: 0, max: 1})
-    breastSize = new NumberModel(0.5, {min: 0, max: 1})
-    breastFirmness = new NumberModel(0.5, {min: 0, max: 1})
-    bodyProportions = new NumberModel(0.5, {min: 0, max: 1})
+    age = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    gender = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    weight = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    muscle = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    height = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    breastSize = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    breastFirmness = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
+    bodyProportions = new NumberModel(0.5, { min: 0, max: 1, step: 0.05 })
 
     // all variables suffixed with 'Val' will be read by ManagedTargetModifier.getFactors()
-    caucasianVal = new NumberModel(1/3, {min: 0, max: 1})
-    asianVal = new NumberModel(1/3, {min: 0, max: 1})
-    africanVal = new NumberModel(1/3, {min: 0, max: 1})
+    caucasianVal = new NumberModel(1 / 3, { min: 0, max: 1, step: 0.05 })
+    asianVal = new NumberModel(1 / 3, { min: 0, max: 1, step: 0.05 })
+    africanVal = new NumberModel(1 / 3, { min: 0, max: 1, step: 0.05 })
 
     // the above values are transformed into the values below,
     // which are then used by the modifiers
@@ -94,17 +94,17 @@ export class Human extends AnimatedMesh {
         super()
         this._setDependendValues()
 
-        this.gender.modified.add( () => this._setGenderVals() )
-        this.age.modified.add( () => this._setAgeVals() )
-        this.muscle.modified.add( () => this._setMuscleVals() )
-        this.weight.modified.add( () => this._setWeightVals() )
-        this.height.modified.add( () => this._setHeightVals() )
-        this.breastSize.modified.add( () => this._setBreastSizeVals() )
-        this.breastFirmness.modified.add( () => this._setBreastFirmnessVals() )
-        this.bodyProportions.modified.add( () => this._setBodyProportionVals() )
-        this.africanVal.modified.add( () => this._setEthnicVals("African") )
-        this.asianVal.modified.add( () => this._setEthnicVals("Asian") )
-        this.caucasianVal.modified.add( () => this._setEthnicVals("Caucasian") )
+        this.gender.modified.add(() => this._setGenderVals())
+        this.age.modified.add(() => this._setAgeVals())
+        this.muscle.modified.add(() => this._setMuscleVals())
+        this.weight.modified.add(() => this._setWeightVals())
+        this.height.modified.add(() => this._setHeightVals())
+        this.breastSize.modified.add(() => this._setBreastSizeVals())
+        this.breastFirmness.modified.add(() => this._setBreastFirmnessVals())
+        this.bodyProportions.modified.add(() => this._setBodyProportionVals())
+        this.africanVal.modified.add(() => this._setEthnicVals("African"))
+        this.asianVal.modified.add(() => this._setEthnicVals("Asian"))
+        this.caucasianVal.modified.add(() => this._setEthnicVals("Caucasian"))
 
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
@@ -136,10 +136,10 @@ export class Human extends AnimatedMesh {
         //         self._modifier_type_cache = dict()
         //         self._modifiers[modifier.fullName] = modifier
         this.modifiers.set(modifier.fullName, modifier)
-        
+
         //         if modifier.groupName not in self._modifier_groups:
         if (!this.modifierGroups.has(modifier.groupName)) {
-        //             self._modifier_groups[modifier.groupName] = []
+            //             self._modifier_groups[modifier.groupName] = []
             this.modifierGroups.set(modifier.groupName, new Array<Modifier>())
         }
 
@@ -180,7 +180,7 @@ export class Human extends AnimatedMesh {
         //                 self.updateMacroModifiers()
     }
 
-    setDetail(targetName: string, value: number|undefined) {
+    setDetail(targetName: string, value: number | undefined) {
         // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
         // console.log(`Human.setDetail('${name}', ${value})`)
         if (value !== undefined) { // TODO: check if '&& isZero(value)' is a valid optimization
@@ -208,9 +208,9 @@ export class Human extends AnimatedMesh {
         this.breastSize.value = 0.5
         this.breastFirmness.value = 0.5
         this.bodyProportions.value = 0.5
-        this.caucasianVal.value = 1/3
-        this.asianVal.value = 1/3
-        this.africanVal.value = 1/3
+        this.caucasianVal.value = 1 / 3
+        this.asianVal.value = 1 / 3
+        this.africanVal.value = 1 / 3
         this._setDependendValues()
     }
 
@@ -248,7 +248,7 @@ export class Human extends AnimatedMesh {
         if (this.age.value < 0.5) {
             this.oldVal.value = 0.0
             this.babyVal.value = Math.max(0.0, 1 - this.age.value * 5.333)  // 1/0.1875 = 5.333
-            this.youngVal.value = Math.max(0.0, (this.age.value-0.1875) * 3.2) // 1/(0.5-0.1875) = 3.2
+            this.youngVal.value = Math.max(0.0, (this.age.value - 0.1875) * 3.2) // 1/(0.5-0.1875) = 3.2
             this.childVal.value = Math.max(0.0, Math.min(1.0, 5.333 * this.age.value) - this.youngVal.value)
         } else {
             this.childVal.value = 0.0
@@ -349,9 +349,9 @@ export class Human extends AnimatedMesh {
         if (otherTotal === 0) {
             if (exclude === undefined) {
                 // All values 0, this cannot be. Reset to default values.
-                this.caucasianVal.value = 1/3
-                this.asianVal.value = 1/3
-                this.africanVal.value = 1/3
+                this.caucasianVal.value = 1 / 3
+                this.asianVal.value = 1 / 3
+                this.africanVal.value = 1 / 3
             }
             else if (Math.abs(remaining) < 0.001) {
                 // One ethnicity is 1, the rest is 0
@@ -414,7 +414,7 @@ export class Human extends AnimatedMesh {
         // self.callEvent('onChanging', events3d.HumanEvent(self, 'skeleton'))
         // animation.AnimatedMesh.setBaseSkeleton(self, skel)
         super.setBaseSkeleton(skel)
-        
+
         // self.updateVertexWeights(skel.getVertexWeights() if skel else None)
         // self.callEvent('onChanged', events3d.HumanEvent(self, 'skeleton'))
         // self.refreshPose()

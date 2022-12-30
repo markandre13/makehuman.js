@@ -171,7 +171,7 @@ export abstract class Modifier {
 
     getModel() {
         if (this.model === undefined) {
-            this.model = new NumberModel(this.getDefaultValue(), { min: this.getMin(), max: this.getMax() })
+            this.model = new NumberModel(this.getDefaultValue(), { min: this.getMin(), max: this.getMax(), step: 0.05 })
         }
         return this.model
     }
