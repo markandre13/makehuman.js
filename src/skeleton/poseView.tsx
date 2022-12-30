@@ -7,6 +7,7 @@ import { Bone } from "./Bone"
 import { Text } from "toad.js/view/Text"
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Fragment } from 'toad.jsx/lib/jsx-runtime'
+import { Signal } from 'toad.js/Signal'
 
 export class PoseNode implements TreeNode {
     static count = 0
@@ -18,14 +19,19 @@ export class PoseNode implements TreeNode {
     y: NumberModel
     z: NumberModel
 
-    constructor(bone: Bone | undefined = undefined) {
-        this.x = new NumberModel(0, { min: -180, max: 180 })
-        this.y = new NumberModel(0, { min: -180, max: 180 })
-        this.z = new NumberModel(0, { min: -180, max: 180 })
+    constructor(bone: Bone | undefined = undefined, signal: Signal<PoseNode> | undefined = undefined) {
+        this.x = new NumberModel(0, { min: -180, max: 180, step: 5 })
+        this.y = new NumberModel(0, { min: -180, max: 180, step: 5 })
+        this.z = new NumberModel(0, { min: -180, max: 180, step: 5 })
 
-        if (bone === undefined) {
+        if (bone === undefined || signal === undefined) {
             return
         }
+
+        this.x.modified.add( () => signal.trigger(this))
+        this.y.modified.add( () => signal.trigger(this))
+        this.z.modified.add( () => signal.trigger(this))
+
         this.bone = bone
 
         // TODO: reduce nesting
@@ -53,10 +59,10 @@ export class PoseNode implements TreeNode {
         //         breast.L
         bone.children.forEach(childBone => {
             if (this.down === undefined) {
-                this.down = new PoseNode(childBone)
+                this.down = new PoseNode(childBone, signal)
             } else {
                 const next = this.down
-                this.down = new PoseNode(childBone)
+                this.down = new PoseNode(childBone, signal)
                 this.down.next = next
             }
         })

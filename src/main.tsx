@@ -19,6 +19,7 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
 import { SliderTreeAdapter } from 'modifier/morphView'
+import { Signal } from 'toad.js'
 
 window.onload = () => { main() }
 
@@ -75,7 +76,11 @@ function run() {
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
-    const poseNodes = new PoseNode(skeleton.roots[0])
+    const poseChanged = new Signal<PoseNode>()
+    poseChanged.add( (poseNode) => {
+        console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
+    })
+    const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
 
     const references = new class { canvas!: HTMLCanvasElement }
