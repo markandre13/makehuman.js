@@ -9,17 +9,14 @@
 ## Current Status
 
 * Have a look at [build 2022-08-11](https://markandre13.github.io/makehuman.js/) with toad.js branch table3
-* All modifiers work and update the mesh.
+* Morph mesh
+* Pose skeleton (without affecting the mesh)
 * Nothing else... 😅
 
 ## Why?
 
 * I've been using MakeHuman for more than a decade but often struggled with the UI and the source code.
-* I'm up to [something](https://mark13.org) with [Blender](https://www.blender.org) and [Chordata](https://chordata.cc) and in need for full artistic control of my toolchain. 😎
-
-## Similar Projects
-
-* [makehuman-js](https://github.com/makehuman-js/makehuman-js) Another port of Makehuman to the Web. Close to the original.
+* I'm up to [something](https://mark13.org) with [Blender](https://www.blender.org) and [Chordata](https://chordata.cc) and in need for full artistic control of the toolchain. 😎
 
 ## How does Makehuman work?
 
@@ -65,39 +62,37 @@ class Human {
 function loadSliders(filename: string)
 ```
 
+### Pose Mesh
+
+(This is work in progress.)
+
+#### Data
+
+TBD
+
+#### Code
+
+```js
+// contains the bones
+class Skeleton {
+
+}
+
+class Bone {
+
+}
+```
+
+## Build
+
+Building needs toad.js from the github master branch. See 'npm link' for further details.
+
 ## Run single test
 
 npm run dev:test --file=build/test/skeleton.spec.js
 
-### Pose Rig
-
-* data/rigs/ contains a rig which can be used to pose/animate the mesh
-
 Next Goal:
-* there is some incomplete code to load a makehuman skeleton file which needs
-  to be extended
-  laodSkeleton.ts (shared/skeleton.py)
 
-  Skeleton.constructor (fromFile)
-  * load json file
-  * joint_pos_idx[name]
-  * planes[name]
-  * breadthfirst_bones
-  * for bone_name in breadthfirst_bones
-      self.addBone()
-        Bone()
-  * build()
-      for bone of this.getBones()
-         bone.build()
-  * load weights
-
-* renderSkeleton.ts (shared/skeleton_drawing.py)
-  * meshFromSkeleton(skel, type)
-  * getVertBoneMapping(skel, skeletonMesh)
-  * _shapeFromSkeleton(skel, type)
-  * _shapeFromBone(bone, type)
-  * meshFromJoints(jointPositions, jointNames, scale)
-* pose the skeleton
 * apply the pose to the mesh
 
 <!--
