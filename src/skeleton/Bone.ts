@@ -125,12 +125,19 @@ export class Bone {
                 )
         }
         this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
-        this.update()
     }
 
+    // calculate matPoseGlobal & matPoseVerts
     update() {
-        // matPoseGlobal := ...
-        // matPoseVerts := ...
+        if (this.parent !== undefined) {
+            this.matPoseGlobal =
+                mat4.multiply(mat4.create(), this.parent.matPoseGlobal!,
+                    mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!))
+        } else {
+            this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!)
+        }
+        this.matPoseVerts = mat4.multiply(mat4.create(), this.matPoseGlobal,
+            mat4.invert(mat4.create(), this.matRestGlobal!))
     }
 
     get_normal(): vec3 {

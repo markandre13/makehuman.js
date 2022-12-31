@@ -78,7 +78,8 @@ function run() {
 
     const poseChanged = new Signal<PoseNode>()
     poseChanged.add( (poseNode) => {
-        console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
+        // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
+        scene.updateRequired = true
     })
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)

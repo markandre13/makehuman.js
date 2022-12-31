@@ -8,6 +8,7 @@ import { Text } from "toad.js/view/Text"
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Fragment } from 'toad.jsx/lib/jsx-runtime'
 import { Signal } from 'toad.js/Signal'
+import { mat4 } from 'gl-matrix'
 
 export class PoseNode implements TreeNode {
     static count = 0
@@ -19,6 +20,19 @@ export class PoseNode implements TreeNode {
     y: NumberModel
     z: NumberModel
 
+    updateBone() {
+        let out = mat4.create()
+        let tmp = mat4.create()
+        mat4.fromXRotation(out, this.x.value / 360 * 2 * Math.PI)
+        mat4.fromYRotation(tmp, this.y.value / 360 * 2 * Math.PI)
+        mat4.multiply(out, out, tmp)
+        mat4.fromZRotation(tmp, this.z.value / 360 * 2 * Math.PI)
+        mat4.multiply(out, out, tmp)
+        this.bone.matPose = out
+        // this.bone.update()
+        this.bone.skeleton.boneslist!.forEach(bone => bone.update())
+    }
+
     constructor(bone: Bone | undefined = undefined, signal: Signal<PoseNode> | undefined = undefined) {
         this.x = new NumberModel(0, { min: -180, max: 180, step: 5 })
         this.y = new NumberModel(0, { min: -180, max: 180, step: 5 })
@@ -28,9 +42,14 @@ export class PoseNode implements TreeNode {
             return
         }
 
-        this.x.modified.add( () => signal.trigger(this))
-        this.y.modified.add( () => signal.trigger(this))
-        this.z.modified.add( () => signal.trigger(this))
+        const update = () => {
+            this.updateBone()
+            signal.trigger(this)
+        }
+
+        this.x.modified.add(update)
+        this.y.modified.add(update)
+        this.z.modified.add(update)
 
         this.bone = bone
 
