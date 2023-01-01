@@ -22,6 +22,7 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
 export class VertexBoneWeights {
     info: FileInformation
+    _vertexCount!: number
     constructor(filename: string, data: any) {
         // data.weights = []
         console.log(`VertexBoneWeights: filename='${filename}', data=${data}`)
@@ -58,14 +59,33 @@ export class VertexBoneWeights {
         // else:
         //     vcount = max([vn for vg in list(vertexWeightsDict.values()) for vn,_ in vg])+1
         // self._vertexCount = vcount
+        let vcount = 0
+        for (let bone_name of Object.getOwnPropertyNames(vertexWeightsDict.weights)) {
+            const weight_list = vertexWeightsDict.weights[bone_name]
+            weight_list.forEach( (item: any) => {
+                const vertex_index = item[0]
+                vcount = Math.max(vcount, vertex_index)
+            })
+        }
+        ++vcount
+        this._vertexCount = vcount
 
-        // # Normalize weights and put them in np format
+        // prepare to normalize weights by calculating the total weight for each bone
         // wtot = np.zeros(vcount, np.float32)
         // for vgroup in list(vertexWeightsDict.values()):
         //     for item in vgroup:
         //         vn,w = item
         //         # Calculate total weight per vertex
         //         wtot[vn] += w
+        const wtot = new Array<number>(vcount).fill(0)
+        for (let bone_name of Object.getOwnPropertyNames(vertexWeightsDict.weights)) {
+            const weight_list = vertexWeightsDict.weights[bone_name]
+            weight_list.forEach( (item: any) => {
+                const vertex_index = item[0]
+                const vertex_weight = item[1]
+                wtot[vertex_index] += vertex_weight
+            })
+        }
 
         // from collections import OrderedDict
         // boneWeights = OrderedDict()
@@ -118,11 +138,11 @@ export class VertexBoneWeights {
         //     boneWeights[rootBone] = (np.asarray(vs, dtype=np.uint32), np.asarray(ws, dtype=np.float32))
 
         // return boneWeights
-    }
+}
 
     protected _calculate_num_weights() {
 
-    }
+}
 }
 
 export class Skeleton {
@@ -137,7 +157,7 @@ export class Skeleton {
     plane_map_strategy?: number = 3; // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
 
     vertexWeights?: VertexBoneWeights
-        // Source vertex weights, defined on the basemesh, for this skeleton
+    // Source vertex weights, defined on the basemesh, for this skeleton
     has_custom_weights = false; // True if this skeleton has its own .mhw file
 
     scale: number = 1;

@@ -74,7 +74,7 @@ describe("Skeleton", function () {
         })
 
         const spineBone = rootBone.children.find((bone) => bone.name === "spine05")!
-        spineBone.matRestRelative?.forEach((a, i) => console.log(`${i}: ${a}`))
+        // spineBone.matRestRelative?.forEach((a, i) => console.log(`${i}: ${a}`))
         const _2 = [
             1, 0, 0, 0,
             0, -0.29943329095840454, -0.9541172385215759, 0,
@@ -91,6 +91,8 @@ describe("Skeleton", function () {
         expect(skel.vertexWeights?.info.version).to.equal(110)
         expect(skel.vertexWeights?.info.license).to.equal("CC0")
         expect(skel.vertexWeights?.info.copyright).to.equal("(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier")
+
+        expect(skel.vertexWeights?._vertexCount).to.equal(19158)
 
         // weights
         //   "name": [{idx,weight}, ...]
