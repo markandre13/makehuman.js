@@ -24,7 +24,6 @@ const colour = {
 
     bold: '\x1b[1m',
     underline: '\x1b[4m',
-    underline: '\x1b[4m',
     noUnderline: '\x1b[24m',
     reversed: '\x1b[7m',
 
@@ -62,7 +61,6 @@ function collectSuitesAndTestsHelper(testResults, suiteInfo) {
 }
 
 function reportAllSuitesAndTests(suiteInfo, indent = "") {
-    let totalDuration = 0
     suiteInfo.allTests.forEach((test, name) => {
         if (test.duration !== undefined) {
             totalDuration += test.duration
@@ -85,7 +83,6 @@ function reportAllSuitesAndTests(suiteInfo, indent = "") {
         console.log(`${indent}${colour.boldWhite}${name}${colour.reset}`)
         reportAllSuitesAndTests(childSuiteInfo, `${indent}  `)
     })
-    return totalDuration
 }
 
 function reportFailedTests(suiteInfo, path = "") {
@@ -128,6 +125,7 @@ function getDuration(duration) {
 
 function start() {
     startTime = performance.now()
+    console.log(`${colour.boldWhite}TEST RUN: ${new Date().toISOString()}`)
     console.log()
     console.log(`${colour.boldWhite}${colour.underline}START:${colour.reset}`)
     console.log()
@@ -144,7 +142,7 @@ function duration() {
     return `${seconds}.${millis} secs`
 }
 
-export default function WTRSpecReporter({
+module.exports = function WTRSpecReporter({
     reportResults = true,
     reportProgress = true,
 } = {}) {
@@ -187,11 +185,12 @@ export default function WTRSpecReporter({
                 allSuites: new Map(),
                 allTests: new Map()
             }
+            totalDuration = 0
 
             collectSuitesAndTests(sessions)
 
             console.log()
-            let totalDuration =reportAllSuitesAndTests(allSuitesAndTests)
+            reportAllSuitesAndTests(allSuitesAndTests)
 
             const numTotalTestSuites = allSuitesAndTests.allSuites.size
             const numTotalTests = numPassedTests + numSkippedTests + numFailedTests

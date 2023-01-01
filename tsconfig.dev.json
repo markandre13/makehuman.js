@@ -5,9 +5,8 @@
         "module": "es6",
         "esModuleInterop": true,
         "plugins": [
-            { "transform": "@zerollup/ts-transform-paths" },
             {
-                "transform": "@zoltu/typescript-transformer-append-js-extension",
+                "transform": "./m13-es-transformer.ts",
                 "after": true,
             }
         ],

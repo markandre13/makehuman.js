@@ -4,7 +4,6 @@
   "description": "An experimental Makehuman port to Typescript, aiming for better UX, Clean Code and TDD",
   "author": "Mark-André Hopf <mhopf@mark13.org> based on work of the MakeHuman Team (www.makehumancommunity.org)",
   "license": "AGPL-3.0-or-later",
-  "type": "module",
   "engines": {
     "npm": ">=8.1.2",
     "node": ">=16.10.0"
@@ -45,8 +44,6 @@
     "@typescript-eslint/parser": "^5.47.0",
     "@web/dev-server": "^0.1.35",
     "@web/test-runner": "^0.15.0",
-    "@zerollup/ts-transform-paths": "^1.7.18",
-    "@zoltu/typescript-transformer-append-js-extension": "^1.0.1",
     "chai": "^4.3.7",
     "chai-string": "^1.5.0",
     "eslint": "^8.30.0",
@@ -55,6 +52,7 @@
     "rollup-plugin-typescript2": "^0.34.1",
     "ts-node": "^10.9.1",
     "ttypescript": "^1.5.15",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "wtr": "^1.0.4"
   }
 }
