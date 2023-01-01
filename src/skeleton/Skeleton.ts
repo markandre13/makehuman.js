@@ -1,6 +1,7 @@
 import { Human } from '../Human'
 import { Bone } from './Bone'
 import { FileInformation, _getHumanJointPosition } from './loadSkeleton'
+import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
 // makehuman/shared/skeleton.py
 // General skeleton, rig or armature class.
@@ -19,6 +20,111 @@ import { FileInformation, _getHumanJointPosition } from './loadSkeleton'
 //   data: weights
 //   info: name, version, description, copyright, license
 
+export class VertexBoneWeights {
+    info: FileInformation
+    constructor(filename: string, data: any) {
+        // data.weights = []
+        console.log(`VertexBoneWeights: filename='${filename}', data=${data}`)
+        this.info = {
+            name: data.name,
+            version: data.version,
+            // tags: data.tags,
+            description: data.description,
+            copyright: data.copyright,
+            license: data.license,
+        }
+        this._build_vertex_weights_data(data)
+    }
+
+    protected _build_vertex_weights_data(vertexWeightsDict: any) {
+        const WEIGHT_THRESHOLD = 1e-4  // Threshold for including bone weight
+
+        // first_entry = list(vertexWeightsDict.keys())[0] if len(vertexWeightsDict) > 0 else None
+        // if len(vertexWeightsDict) > 0 and \
+        //    len(vertexWeightsDict[first_entry]) == 2 and \
+        //    isinstance(vertexWeightsDict[first_entry], tuple) and \
+        //    isinstance(vertexWeightsDict[first_entry][1], np.ndarray) and \
+        //    isinstance(vertexWeightsDict[first_entry][2], np.ndarray):
+        //     # Input dict is already in the expected format, presume it does not
+        //     # need to be built again
+        //     if vertexCount is not None:
+        //         self._vertexCount = vertexCount
+        //     else:
+        //         self._vertexCount = max([vn for vg in list(vertexWeightsDict.values()) for vn in vg[0]])+1
+        //     return vertexWeightsDict
+
+        // if vertexCount is not None:
+        //     vcount = vertexCount
+        // else:
+        //     vcount = max([vn for vg in list(vertexWeightsDict.values()) for vn,_ in vg])+1
+        // self._vertexCount = vcount
+
+        // # Normalize weights and put them in np format
+        // wtot = np.zeros(vcount, np.float32)
+        // for vgroup in list(vertexWeightsDict.values()):
+        //     for item in vgroup:
+        //         vn,w = item
+        //         # Calculate total weight per vertex
+        //         wtot[vn] += w
+
+        // from collections import OrderedDict
+        // boneWeights = OrderedDict()
+        // for bname,vgroup in list(vertexWeightsDict.items()):
+        //     if len(vgroup) == 0:
+        //         continue
+        //     weights = []
+        //     verts = []
+        //     v_lookup = {}
+        //     n = 0
+        //     for vn,w in vgroup:
+        //         if vn in v_lookup:
+        //             # Merge doubles
+        //             v_idx = v_lookup[vn]
+        //             weights[v_idx] += w/wtot[vn]
+        //         else:
+        //             v_lookup[vn] = len(verts)
+        //             verts.append(vn)
+        //             weights.append(w/wtot[vn])
+        //     verts = np.asarray(verts, dtype=np.uint32)
+        //     weights = np.asarray(weights, np.float32)
+        //     # Sort by vertex index
+        //     i_s = np.argsort(verts)
+        //     verts = verts[i_s]
+        //     weights = weights[i_s]
+        //     # Filter out weights under the threshold
+        //     i_s = np.argwhere(weights > WEIGHT_THRESHOLD)[:,0]
+        //     verts = verts[i_s]
+        //     weights = weights[i_s]
+        //     boneWeights[bname] = (verts, weights)
+
+        // # Assign unweighted vertices to root bone with weight 1
+        // if rootBone not in list(boneWeights.keys()):
+        //     vs = []
+        //     ws = []
+        // else:
+        //     vs,ws = boneWeights[rootBone]
+        //     vs = list(vs)
+        //     ws = list(ws)
+        // rw_i = np.argwhere(wtot == 0)[:,0]
+        // vs.extend(rw_i)
+        // ws.extend(np.ones(len(rw_i), dtype=np.float32))
+        // if len(rw_i) > 0:
+        //     if len(rw_i) < 100:
+        //         # To avoid spamming the log, only print vertex indices if there's less than 100
+        //         log.debug("Adding trivial bone weights to root bone %s for %s unweighted vertices. [%s]", rootBone, len(rw_i), ', '.join([str(s) for s in rw_i]))
+        //     else:
+        //         log.debug("Adding trivial bone weights to root bone %s for %s unweighted vertices.", rootBone, len(rw_i))
+        // if len(vs) > 0:
+        //     boneWeights[rootBone] = (np.asarray(vs, dtype=np.uint32), np.asarray(ws, dtype=np.float32))
+
+        // return boneWeights
+    }
+
+    protected _calculate_num_weights() {
+
+    }
+}
+
 export class Skeleton {
     info: FileInformation
 
@@ -30,7 +136,8 @@ export class Skeleton {
     planes = new Map<string, string[]>(); // Named planes defined between joints, used for calculating bone roll angle
     plane_map_strategy?: number = 3; // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
 
-    vertexWeights: any // Source vertex weights, defined on the basemesh, for this skeleton
+    vertexWeights?: VertexBoneWeights
+        // Source vertex weights, defined on the basemesh, for this skeleton
     has_custom_weights = false; // True if this skeleton has its own .mhw file
 
     scale: number = 1;
@@ -128,8 +235,19 @@ export class Skeleton {
 
         const weights_file = data["weights_file"]
         if (weights_file !== undefined) {
-            console.log(`have weights file`)
-            // TODO: load weights file
+            const filename = `data/rigs/${weights_file}`
+            const data = FileSystemAdapter.getInstance().readFile(filename)
+            let json
+            try {
+                json = JSON.parse(data)
+            }
+            catch (error) {
+                console.log(`Failed to parse JSON in ${filename}:\n${data.substring(0, 256)}`)
+                throw error
+            }
+            this.vertexWeights = new VertexBoneWeights(filename, json)
+            this.has_custom_weights = true
+            console.log(`loaded weights...`)
             //     weights_file = getpath.thoroughFindFile(weights_file, os.path.dirname(getpath.canonicalPath(filepath)), True)
             //     self.vertexWeights = VertexBoneWeights.fromFile(weights_file, mesh.getVertexCount() if mesh else None, rootBone=self.roots[0].name)
             //     self.has_custom_weights = True

@@ -86,6 +86,15 @@ describe("Skeleton", function () {
 
         // further:
         // restPoseMatrix
+        expect(skel.vertexWeights?.info.name).to.equal("MakeHuman weights")
+        expect(skel.vertexWeights?.info.description).to.equal("Weights for default makehuman mesh")
+        expect(skel.vertexWeights?.info.version).to.equal(110)
+        expect(skel.vertexWeights?.info.license).to.equal("CC0")
+        expect(skel.vertexWeights?.info.copyright).to.equal("(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier")
+
+        // weights
+        //   "name": [{idx,weight}, ...]
+
     })
 
     xit("xxx", function () {
