@@ -23,6 +23,7 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 export class VertexBoneWeights {
     info: FileInformation
     _vertexCount!: number
+    _data: Map<string, Array<Array<number>>>
     constructor(filename: string, data: any) {
         // data.weights = []
         console.log(`VertexBoneWeights: filename='${filename}', data=${data}`)
@@ -34,10 +35,11 @@ export class VertexBoneWeights {
             copyright: data.copyright,
             license: data.license,
         }
-        this._build_vertex_weights_data(data)
+        this._data = this._build_vertex_weights_data(data.weights)
+        this._calculate_num_weights()
     }
 
-    protected _build_vertex_weights_data(vertexWeightsDict: any) {
+    protected _build_vertex_weights_data(vertexWeightsDict: any, vertexCount: number | undefined = undefined, rootBone: string = "root"): Map<string, Array<Array<number>>> {
         const WEIGHT_THRESHOLD = 1e-4  // Threshold for including bone weight
 
         // first_entry = list(vertexWeightsDict.keys())[0] if len(vertexWeightsDict) > 0 else None
@@ -60,9 +62,9 @@ export class VertexBoneWeights {
         //     vcount = max([vn for vg in list(vertexWeightsDict.values()) for vn,_ in vg])+1
         // self._vertexCount = vcount
         let vcount = 0
-        for (let bone_name of Object.getOwnPropertyNames(vertexWeightsDict.weights)) {
-            const weight_list = vertexWeightsDict.weights[bone_name]
-            weight_list.forEach( (item: any) => {
+        for (let bone_name of Object.getOwnPropertyNames(vertexWeightsDict)) {
+            const weight_list = vertexWeightsDict[bone_name]
+            weight_list.forEach((item: any) => {
                 const vertex_index = item[0]
                 vcount = Math.max(vcount, vertex_index)
             })
@@ -78,9 +80,9 @@ export class VertexBoneWeights {
         //         # Calculate total weight per vertex
         //         wtot[vn] += w
         const wtot = new Array<number>(vcount).fill(0)
-        for (let bone_name of Object.getOwnPropertyNames(vertexWeightsDict.weights)) {
-            const weight_list = vertexWeightsDict.weights[bone_name]
-            weight_list.forEach( (item: any) => {
+        for (let bone_name of Object.getOwnPropertyNames(vertexWeightsDict)) {
+            const weight_list = vertexWeightsDict[bone_name]
+            weight_list.forEach((item: any) => {
                 const vertex_index = item[0]
                 const vertex_weight = item[1]
                 wtot[vertex_index] += vertex_weight
@@ -89,35 +91,68 @@ export class VertexBoneWeights {
 
         // from collections import OrderedDict
         // boneWeights = OrderedDict()
+        const boneWeights = new Map<string, any>()
         // for bname,vgroup in list(vertexWeightsDict.items()):
-        //     if len(vgroup) == 0:
-        //         continue
-        //     weights = []
-        //     verts = []
-        //     v_lookup = {}
-        //     n = 0
-        //     for vn,w in vgroup:
-        //         if vn in v_lookup:
-        //             # Merge doubles
-        //             v_idx = v_lookup[vn]
-        //             weights[v_idx] += w/wtot[vn]
-        //         else:
-        //             v_lookup[vn] = len(verts)
-        //             verts.append(vn)
-        //             weights.append(w/wtot[vn])
-        //     verts = np.asarray(verts, dtype=np.uint32)
-        //     weights = np.asarray(weights, np.float32)
-        //     # Sort by vertex index
-        //     i_s = np.argsort(verts)
-        //     verts = verts[i_s]
-        //     weights = weights[i_s]
-        //     # Filter out weights under the threshold
-        //     i_s = np.argwhere(weights > WEIGHT_THRESHOLD)[:,0]
-        //     verts = verts[i_s]
-        //     weights = weights[i_s]
-        //     boneWeights[bname] = (verts, weights)
+        for (let bname of Object.getOwnPropertyNames(vertexWeightsDict)) {
+            const vgroup = vertexWeightsDict[bname]
+            //     if len(vgroup) == 0:
+            //         continue
+            if (vgroup.length === 0) {
+                continue
+            }
+            //     weights = []
+            //     verts = []
+            //     v_lookup = {}
+            //     n = 0
+            let weights: number[] = [],
+                verts: number[] = [],
+                v_lookup = new Map<number, number>(),
+                n = 0
+            //     for vn,w in vgroup:
+            for (let [vn, w] of vgroup) {
+                //         if vn in v_lookup:
+                if (v_lookup.has(vn)) {
+                    // Merge doubles
+                    //             v_idx = v_lookup[vn]
+                    //             weights[v_idx] += w/wtot[vn]
+                    const v_idx = v_lookup.get(vn)!
+                    weights[v_idx] + - w / wtot[vn]
+                    //         else:
+                } else {
+                    //             v_lookup[vn] = len(verts)
+                    v_lookup.set(vn, verts.length)
+                    //             verts.append(vn)
+                    verts.push(vn)
+                    //             weights.append(w/wtot[vn])
+                    weights.push(w / wtot[vn])
+                }
+            }
 
-        // # Assign unweighted vertices to root bone with weight 1
+            //     verts = np.asarray(verts, dtype=np.uint32)
+            //     weights = np.asarray(weights, np.float32)
+
+            // Sort by vertex index
+            //     i_s = np.argsort(verts)
+            //     verts = verts[i_s]
+            //     weights = weights[i_s]
+            // Filter out weights under the threshold
+            //     i_s = np.argwhere(weights > WEIGHT_THRESHOLD)[:,0]
+            //     verts = verts[i_s]
+            //     weights = weights[i_s]
+            const i_s = weights
+                .map((weight, index) => weight > WEIGHT_THRESHOLD ? index : undefined)
+                .filter(index => index !== undefined)
+                .sort((a,b) => verts[a!] - verts[b!])
+            verts = i_s.map(i => verts[i!])
+            weights = i_s.map(i => weights[i!])
+            // if (bname === "spine05") {
+            //     console.log(`i_s.length = ${i_s.length}`)
+            //     console.log(i_s)
+            // }
+            boneWeights.set(bname, [verts, weights])
+        }
+
+        // Assign unweighted vertices to root bone with weight 1
         // if rootBone not in list(boneWeights.keys()):
         //     vs = []
         //     ws = []
@@ -125,24 +160,48 @@ export class VertexBoneWeights {
         //     vs,ws = boneWeights[rootBone]
         //     vs = list(vs)
         //     ws = list(ws)
+        let vs: number[], ws: number[]
+        if (!boneWeights.has(rootBone)) {
+            vs = []
+            ws = []
+        } else {
+            [vs, ws] = boneWeights.get(rootBone)
+        }      
         // rw_i = np.argwhere(wtot == 0)[:,0]
+        console.log(wtot)
+        const rw_i = wtot
+            .map((value, index) => value === 0 ? index : -1 )
+            .filter( index => index >= 0)
         // vs.extend(rw_i)
+        vs = vs.concat(rw_i)
         // ws.extend(np.ones(len(rw_i), dtype=np.float32))
+        ws = ws.concat(new Array<number>(rw_i.length).fill(1))
         // if len(rw_i) > 0:
         //     if len(rw_i) < 100:
         //         # To avoid spamming the log, only print vertex indices if there's less than 100
         //         log.debug("Adding trivial bone weights to root bone %s for %s unweighted vertices. [%s]", rootBone, len(rw_i), ', '.join([str(s) for s in rw_i]))
         //     else:
         //         log.debug("Adding trivial bone weights to root bone %s for %s unweighted vertices.", rootBone, len(rw_i))
+        if (rw_i.length > 0) {
+            if (rw_i.length < 100) {
+                // To avoid spamming the log, only print vertex indices if there's less than 100
+                console.log(`Adding trivial bone weights to root bone ${rootBone} for ${rw_i.length} unweighted vertices. [${rw_i}]`) // ', '.join([str(s) for s in rw_i]))`)
+            } else {
+                console.log(`Adding trivial bone weights to root bone ${rootBone} for ${rw_i.length} unweighted vertices.`)
+            }
+        }
         // if len(vs) > 0:
         //     boneWeights[rootBone] = (np.asarray(vs, dtype=np.uint32), np.asarray(ws, dtype=np.float32))
+        if (vs.length > 0) {
+            boneWeights.set(rootBone, [vs, ws])
+        }
 
-        // return boneWeights
-}
+        return boneWeights
+    }
 
     protected _calculate_num_weights() {
 
-}
+    }
 }
 
 export class Skeleton {
