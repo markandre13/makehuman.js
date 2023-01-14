@@ -199,3 +199,50 @@ describe("Skeleton", function () {
     })
 })
 
+// Skinning (adjust mesh to skeleton pose)
+
+// animation.py, AnimationTrack.bake() some optimization, sets _data_baked
+// animation.py, AnimatedMesh._updateMeshVerts()
+//   mesh.changeCoords()
+//   mesh.calcNormals()
+//   mesh.update()
+
+// * there are two algorithms to skin the mesh, and old and a new one
+// * the new one is faster and needs AnimationTrack.bake() to have been called
+//   it's implemented in animation.py: def skinMesh(...)
+// * this old one goes like this:
+//   from animation.py: AnimatedMesh._pose()
+//     self.getBaseSkeleton().setPose(poseState)
+//     posedCoords = self.getBaseSkeleton().skinMesh(self.__originalMeshCoords[idx], self.__vertexToBoneMaps[idx].data)
+//     self._updateMeshVerts(mesh, posedCoords[:,:3])
+
+// Skeleton.skinMesh(meshCoords, vertBoneMapping): Coords
+//   this.getBone()
+//   bone.matPoseVerts
+
+// okay, how does that fit into the existing code?
+//     render.rs: render(){ ... if (scene.updateRequired) { ... } ... }
+//     main.ts  : human.modified.add(() => scene.updateRequired = true)
+//     Human.ts : Human.updateProxyMesh() { this.modified.trigger() }
+//     SliderNode() { this.model.modified.add( () => human.updateProxyMesh() )}
+//
+// how is the call trace in the original makehuman?
+//
+//     whose calling these after changing a bone? know what? don't care! ;)
+//     AnimatedMesh.update(), resetTime(), setToTime(), setToFrame(), refreshPose()
+//     AnimatedMesh._pose()
+
+// okay, so _pose() has no input...
+//  self.getBaseSkeleton().setPose(poseState)
+//  posedCoords = self.getBaseSkeleton().skinMesh(
+//    self.__originalMeshCoords[idx],       // me thinks this is just vertex from the mesh data
+//    self.__vertexToBoneMaps[idx].data     // VertexBoneWeightd
+//  )
+
+// vertexToBoneMaps:
+//  data
+//  isCompiled()
+//  compileData(...)
+//  compiled(...)
+
+// after we got that working, we could try https://webglfundamentals.org/webgl/lessons/webgl-skinning.html

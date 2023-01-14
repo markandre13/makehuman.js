@@ -37,6 +37,7 @@ export class HumanMesh {
         }
         this.updateRequired = false
         
+        // morph
         this.vertex = [...this.origVertex]
         this.human.targetsDetailStack.forEach( (value, targetName) => {
             if (isNaN(value)) {
@@ -50,5 +51,8 @@ export class HumanMesh {
             const target = getTarget(targetName)
             target.apply(this.vertex, value)
         })
+
+        // skin
+        this.vertex = this.human.__skeleton.skinMesh(this.vertex, this.human.__skeleton.vertexWeights!._data)
     }
 }

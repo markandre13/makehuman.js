@@ -1,5 +1,4 @@
 import { Modifier } from './modifier/Modifier'
-import { MacroModifier } from './modifier/MacroModifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 import { WavefrontObj } from 'mesh/WavefrontObj'
@@ -13,6 +12,7 @@ import { Skeleton } from "skeleton/Skeleton"
  * to multiple meshes.
  */
 class AnimatedMesh {
+    // for now only one mesh, the base mesh
     meshData!: WavefrontObj
     __skeleton!: Skeleton
 
@@ -29,6 +29,28 @@ class AnimatedMesh {
         // self.removeAnimations(update=False)
         // self.resetCompiledWeights()
     }
+    // isPosed() {
+    //     return true
+    // }
+    // _pose() {
+    //     if (this.isPosed()) {
+    //         // this.__skeleton.skinMesh(self.__originalMeshCoords[idx], self.__vertexToBoneMaps[idx].data)
+    //         const mesh = this.meshData
+    //         const posedCoords = this.__skeleton.skinMesh(
+    //             mesh.vertex,
+    //             this.__skeleton.vertexWeights!._data
+    //         )
+    //         this._updateMeshVerts(mesh, posedCoords)
+    //     } else {
+    //         throw Error(`Not implemented yet.`)
+    //     }
+    // }
+    // _updateMeshVerts(mesh: WavefrontObj, verts: number[]) {
+    //     NOTE: we should only send one message to mesh, doing three calls violates information hiding
+    //     mesh.changeCoords(verts)
+    //     mesh.calcNormals()
+    //     mesh.update()
+    // }
 }
 
 // apps/human.py class Human
