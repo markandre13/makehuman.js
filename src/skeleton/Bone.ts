@@ -3,7 +3,6 @@ import { vec3, mat4, vec4 } from 'gl-matrix'
 import { getMatrix, get_normal } from './loadSkeleton'
 import { Skeleton } from "./Skeleton"
 
-
 export class Bone {
     skeleton: Skeleton
     name: string
@@ -22,14 +21,15 @@ export class Bone {
     level: number
     reference_bones = [];
 
-    // rest position
+    // user defined value
+    matPose: mat4
+
+    // calculated rest position
     matRestGlobal?: mat4   // bone relative to world
     matRestRelative?: mat4 // bone relative to parent
-
-    matPose: mat4         // user defined pose relative to parent
-
-    matPoseGlobal?: mat4 // 4x4 matrix, relative to world
-    matPoseVerts?: mat4 // 4x4 matrix, relative world and own rest pose
+    // calculated pose positions
+    matPoseGlobal?: mat4 // relative to world
+    matPoseVerts?: mat4 // relative to world and own rest pose, used for skinning
 
     // shared/skeleton.py: 709
     constructor(

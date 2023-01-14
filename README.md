@@ -10,8 +10,8 @@
 
 * Have a look at [build 2022-08-11](https://markandre13.github.io/makehuman.js/) with toad.js branch table3
 * Morph mesh
-* Pose skeleton (without affecting the mesh)
-* Nothing else... 😅
+* Pose skeleton and adjust mesh
+* Nothing else... besides bugs, not morphing and posing at the same time, etc. 😅
 
 ## Why?
 
@@ -56,6 +56,10 @@ class Human {
 
     // output 
     targetsDetailStack: Map<string, number> // morph targets
+
+    // for posing and skinning (see below)
+    meshData!: WavefrontObj
+    __skeleton!: Skeleton
 }
 
 // creates a list of ui elements (sliders, text fields) to edit the modifier values
@@ -64,22 +68,29 @@ function loadSliders(filename: string)
 
 ### Pose Mesh
 
-(This is work in progress.)
+The skeleton aggregates bones and weights. Bones can be rotated.
 
 #### Data
 
-TBD
+* data/rigs/default.mhskel the bones making up the skeleton
+
+  for the actual bone positions little cubes within the mesh are referenced
+  
+* data/rigs/default_weights.mhw the weights each bone has on each vertex
 
 #### Code
 
 ```js
-// contains the bones
+// aggregates the bone tree and weight list
 class Skeleton {
-
 }
 
+// a single bone
 class Bone {
+}
 
+// weights
+class VertexBoneWeights {
 }
 ```
 
@@ -211,5 +222,12 @@ human.cc
     JMi  := transformation matrix of joint j
     JW   := weight of influence of joint i on vertex v
 
+BUG IN TOAD.JS (REGRESSION TEST FOR NOW)
+o switch to pose tab
+o open root
+o switch to morph tab
+o switch to pose tab
+o close root
+=> two root nodes appear
 
 -->
