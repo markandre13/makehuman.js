@@ -10,6 +10,12 @@ export function isZero(a: number): boolean {
     return Math.abs(a) <= epsilon
 }
 
+export enum Update {
+    NONE,
+    MORPH,
+    POSE
+}
+
 export class HumanMesh {
     human: Human
     obj: Mesh
@@ -19,7 +25,7 @@ export class HumanMesh {
     groups: Group[]
     mode!: Mode
 
-    updateRequired = false
+    updateRequired = Update.NONE
 
     constructor(human: Human, obj: WavefrontObj) {
         this.human = human
@@ -32,27 +38,39 @@ export class HumanMesh {
     }
 
     update(): void {
-        if (!this.updateRequired) {
+        if (this.updateRequired === Update.NONE) {
             return
         }
-        this.updateRequired = false
-        
-        // morph
-        this.vertex = [...this.origVertex]
-        this.human.targetsDetailStack.forEach( (value, targetName) => {
-            if (isNaN(value)) {
-                // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)
-                return
-            }
 
-            if (isZero(value) || isNaN(value))
-                return
-            // console.log(`HumanMesh.update(): apply target ${targetName} with value ${value}`)
-            const target = getTarget(targetName)
-            target.apply(this.vertex, value)
-        })
+        // if (this.updateRequired === Update.MORPH) {
+            // morph
+            this.vertex = [...this.origVertex]
+            this.human.targetsDetailStack.forEach((value, targetName) => {
+                if (isNaN(value)) {
+                    // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)
+                    return
+                }
+
+                if (isZero(value) || isNaN(value))
+                    return
+                // console.log(`HumanMesh.update(): apply target ${targetName} with value ${value}`)
+                const target = getTarget(targetName)
+                target.apply(this.vertex, value)
+            })
+
+            const tmp = this.obj.vertex
+            this.obj.vertex = this.vertex
+
+            this.human.__skeleton.updateJoints(this.human)
+            this.human.__skeleton.build()
+            this.human.__skeleton.update()
+
+            this.obj.vertex = tmp
+        // }
 
         // skin
         this.vertex = this.human.__skeleton.skinMesh(this.vertex, this.human.__skeleton.vertexWeights!._data)
+
+        this.updateRequired = Update.NONE
     }
 }

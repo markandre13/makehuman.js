@@ -11,7 +11,7 @@
 * Have a look at [build 2022-08-11](https://markandre13.github.io/makehuman.js/) with toad.js branch table3
 * Morph mesh
 * Pose skeleton and adjust mesh
-* Nothing else... besides bugs, not morphing and posing at the same time, etc. 😅
+* Nothing else... 😅
 
 ## Why?
 
@@ -104,8 +104,12 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 Next Goal:
 
-* apply the pose to the mesh
-
+* load alternative mesh
+* load alternative rig
+* export collada
+* save/load morph
+* save/load pose
+* ...
 <!--
 cd /Users/mark/upstream/makehuman/makehuman
 ./makehuman
@@ -117,7 +121,6 @@ WHAT TO DO NOW
 
 ===============================
 
-    IWA  Unbenannt (Geändert)                                                           Row 1    Col 1   
 fg = None
 groups = []
 faceGroups = {}

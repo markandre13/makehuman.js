@@ -191,6 +191,18 @@ export class Skeleton {
         }
     }
 
+    update() {
+        for (const bone of this.getBones()) {
+            bone.update()
+        }
+    }
+
+    updateJoints(human: Human) {
+        for (const bone of this.getBones()) {
+            bone.updateJointPositions(human)
+        }
+    }
+
     // line 631
     // Returns linear list of all bones in breadth-first order.
     getBones(): Bone[] {

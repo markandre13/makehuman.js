@@ -4,7 +4,7 @@ import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { WavefrontObj } from './mesh/WavefrontObj'
-import { HumanMesh } from './mesh/HumanMesh'
+import { HumanMesh, Update } from './mesh/HumanMesh'
 import { Mode } from './Mode'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
@@ -49,7 +49,7 @@ function run() {
     obj.load('data/3dobjs/base.obj.z')
     human.meshData = obj
     const scene = new HumanMesh(human, obj)
-    human.modified.add(() => scene.updateRequired = true)
+    human.modified.add(() => scene.updateRequired = Update.MORPH)
 
     const skeleton = loadSkeleton('data/rigs/default.mhskel.z')
     human.setBaseSkeleton(skeleton)
@@ -79,7 +79,9 @@ function run() {
     const poseChanged = new Signal<PoseNode>()
     poseChanged.add( (poseNode) => {
         // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
-        scene.updateRequired = true
+        if (scene.updateRequired === Update.NONE) {
+            scene.updateRequired = Update.POSE
+        }
     })
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)

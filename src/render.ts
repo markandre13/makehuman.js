@@ -1,7 +1,7 @@
 import { mat4, vec4 } from 'gl-matrix'
 import { calculateNormals } from './lib/calculateNormals'
 import { Mesh } from './Mesh'
-import { HumanMesh } from './mesh/HumanMesh'
+import { HumanMesh, Update } from './mesh/HumanMesh'
 import { Mode } from './Mode'
 import { Bone } from "./skeleton/Bone"
 
@@ -55,7 +55,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
         const deltaTime = now - then
         then = now
 
-        if (scene.updateRequired) {
+        if (scene.updateRequired !== Update.NONE) {
             scene.update()
             let skeleton = renderSkeletonGlobal(scene)
             // let skeleton = renderSkeletonRelative(scene)
