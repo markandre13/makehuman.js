@@ -104,8 +104,9 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 Next Goal:
 
-* load alternative mesh
-* load alternative rig
+* proxies
+  * simple proxy mesh: eyes, teeth, tongue
+  * proxy mesh: female generic
 * export collada
 * save/load morph
 * save/load pose
