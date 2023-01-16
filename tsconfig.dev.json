@@ -15,5 +15,6 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         "test/skeleton.spec.ts",
+        "test/proxy.spec.ts",
      ],
 }

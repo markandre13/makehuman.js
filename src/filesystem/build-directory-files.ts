@@ -29,7 +29,12 @@ function build(path: string) {
                 file.endsWith(".obj") ||
                 file.endsWith(".json") ||
                 file.endsWith(".mhskel") ||
-                file.endsWith(".mhw")
+                file.endsWith(".mhw") ||
+                file.endsWith(".proxy") ||
+                file.endsWith(".mhclo") ||
+                file.endsWith(".mhmat") ||
+                file.endsWith(".jsonw") ||
+                file.endsWith(".mhuv")
             ) {
                 const data = fs.readFileSync(`${path}/${file}`)
                 const view = new Uint8Array(data)
