@@ -115,6 +115,7 @@ export class Skeleton {
 
         const weights_file = data["weights_file"]
         if (weights_file !== undefined) {
+            // FIXME: copy'n pasted into Proxy
             const filename = `data/rigs/${weights_file}`
             const data = FileSystemAdapter.getInstance().readFile(filename)
             let json
