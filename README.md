@@ -28,7 +28,6 @@
 * data/target/ contains 1258 [morph targets](https://en.wikipedia.org/wiki/Morph_target_animation),
   which can deform the base mesh's shape, gender, age and ethnicity
 * data/modifiers/ bundles those morph targets into 249 more user friendly **modifiers**
-* not in makehuman.js yet: there is a set of alternative meshes
 
 #### Code
 ```js
@@ -74,7 +73,8 @@ The skeleton aggregates bones and weights. Bones can be rotated.
 
 * data/rigs/default.mhskel the bones making up the skeleton
 
-  for the actual bone positions little cubes within the mesh are referenced
+  for the actual bone positions little cubes within the mesh are referenced,
+  so when the mesh is morphed, the skeleton is morphed along with it.
   
 * data/rigs/default_weights.mhw the weights each bone has on each vertex
 
@@ -87,12 +87,30 @@ class Skeleton {
 
 // a single bone
 class Bone {
+    parent?: Bone
+    children: Bone[] = []
+
+    name: string
+
+    yvector4?: vec4 // direction vector of this bone (along y-axis)
+    matRestGlobal?: mat4 // bone relative to world
+    ...
+
+    // user defined rotation
+    matPose: mat4
 }
 
 // weights
 class VertexBoneWeights {
+    // bone name -> [[vertex numbers, ...], [weight for vertex, ...]]
+    _data: Map<string, Array<Array<number>>>
 }
 ```
+
+### Proxy
+
+Proxies provide additional meshes, e.g. teeth, tounge, eyes, alternative body
+meshes and cloth.
 
 ## Build
 
@@ -102,11 +120,9 @@ Building needs toad.js from the github master branch. See 'npm link' for further
 
 npm run dev:test --file=build/test/skeleton.spec.js
 
-Next Goal:
+Next Goals:
 
-* proxies
-  * simple proxy mesh: eyes, teeth, tongue
-  * proxy mesh: female generic
+* proxy meshes (WIP)
 * export collada
 * save/load morph
 * save/load pose
