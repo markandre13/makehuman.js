@@ -27,7 +27,7 @@ export class Proxy {
     // license
     description: string = ""
     type: ProxyType
-    // object
+    object?: any
     human: Human
     file: string
     // mtime
@@ -36,10 +36,11 @@ export class Proxy {
     tags: string[] = []
     version: number = 110
 
-    ref_vIdxs?: any
-    weights?: Map<string, any>
-    vertWeights = new Map<any, any>()
-    offsets?: any
+    weights?: number[] // Map<string, number[]>
+    offsets?: number[]
+    ref_vIdxs?: number[]
+
+    vertWeights = new Map<number, Array<Array<number>>>()
 
     vertexBoneWeights?: VertexBoneWeights
     tmatrix = new TMatrix()
@@ -63,46 +64,129 @@ export class Proxy {
         this.file = file
         this.type = type
         this.human = human
+        const name = basename(splitext(file))
+        this.name = capitalize(name)
     }
 
     loadMeshAndObject(human: Human) {
     }
+
+    _finalize(refVerts: ProxyRefVert[]) {
+        this.weights = refVerts.map( (v,i) => v._weights[i])
+        this.ref_vIdxs = refVerts.map( (v,i) => v._verts[i])
+        this.offsets = refVerts.map( (v,i) => v._offset[i])
+    }
 }
 
-class TMatrix {
+export class TMatrix {
+    scaleData?: Array<undefined | Array<number>>
+    shearData?: Array<undefined | Array<number>>
+    lShearData?: Array<undefined | Array<number>>
+    rShearData?: Array<undefined | Array<number>>
     getScaleData(words: string[], idx: number) {
+        const vn1 = parseInt(words[0])
+        const vn2 = parseInt(words[1])
+        const den = parseFloat(words[2])
+        if (this.scaleData === undefined) {
+            this.scaleData = [undefined, undefined, undefined]
+        }
+        this.scaleData[idx] = [vn1, vn2, den]
     }
-    getShearData(words: string[], idx: number, side: "Left"|"Right"|undefined) {
+    getShearData(words: string[], idx: number, side: "Left" | "Right" | undefined = undefined)  {
+        const vn1 = parseInt(words[0])
+        const vn2 = parseInt(words[1])
+        const x1 = parseFloat(words[2])
+        const x2 = parseFloat(words[3])
+        const bbdata = [vn1, vn2, x1, x2]
+        if (side === "Left") {
+            if (this.lShearData === undefined) {
+                this.lShearData = [undefined, undefined, undefined]
+            }
+            this.lShearData[idx] = bbdata
+            
+        }
+        if (side === "Right") {
+            if (this.rShearData === undefined) {
+                this.rShearData = [undefined, undefined, undefined]
+            }
+            this.rShearData[idx] = bbdata
+        }
+        if (side === undefined) {
+            if (this.shearData === undefined) {
+                this.shearData = [undefined, undefined, undefined]
+            }
+            this.shearData[idx] = bbdata
+        }
     }
 }
 
-class ProxyRefVert {
+export class ProxyRefVert {
+    _verts!: number[]
+    _weights!: number[]
+    _offset!: number[]
     constructor(human: Human) {
     }
-    fromSingle(words: string[], vnum: number, vertWeights: Map<any, any>) {
+    fromSingle(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
+        const v0 = parseInt(words[0])
+        this._verts = [v0,0,1]
+        this._weights = [1.0,0.0,0.0]
+        this._offset = [0,0,0]
+        this._addProxyVertWeight(vertWeights, v0, vnum, 1)
     }
-    fromTriple(words: string[], vnum: number, vertWeights: Map<any, any>) {
+    fromTriple(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
+        const v0 = parseInt(words[0])
+        const v1 = parseInt(words[1])
+        const v2 = parseInt(words[2])
+        const w0 = parseFloat(words[3])
+        const w1 = parseFloat(words[4])
+        const w2 = parseFloat(words[5])
+        let d0, d1, d2
+        if (words.length > 6) {
+            d0 = parseFloat(words[6])
+            d1 = parseFloat(words[7])
+            d2 = parseFloat(words[8])
+        } else {
+            [d0,d1,d2] = [0,0,0]
+        }
+
+        this._verts = [v0,v1,v2]
+        this._weights = [w0,w1,w2]
+        this._offset = [d0,d1,d2]
+
+        this._addProxyVertWeight(vertWeights, v0, vnum, w0)
+        this._addProxyVertWeight(vertWeights, v1, vnum, w1)
+        this._addProxyVertWeight(vertWeights, v2, vnum, w2)
+    }
+    protected _addProxyVertWeight(vertWeights: Map<number, Array<Array<number>>>, v: number, pv: number, w: number) {
+        if (vertWeights.has(v)) {
+            vertWeights.get(v)!.push([pv, w])
+        } else {
+            vertWeights.set(v, [[pv, w]])
+        }
     }
 }
 
 export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes") {
     // .mhpxy
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
-    loadTextProxy(human, asciipath, type)
+    return loadTextProxy(human, asciipath, type)
 }
 
 const doRefVerts = 1
 const doWeights = 2
 const doDeleteVerts = 3
 
-export function loadTextProxy(human: Human, filepath: string, type: ProxyType = "Clothes") {
+export function loadTextProxy(human: Human, filepath: string, type: ProxyType = "Clothes", data: string | undefined = undefined) {
     let lineNumber = 0
-    const data = FileSystemAdapter.getInstance().readFile(filepath)
+    if (data === undefined) {
+        data = FileSystemAdapter.getInstance().readFile(filepath)
+    }
     const reader = new StringToLine(data)
     const folder = ""
     const proxy = new Proxy(filepath, type, human)
 
     const refVerts: ProxyRefVert[] = []
+    let weights: Array<Array<number>> | undefined = undefined
 
     let status = 0
     let vnum = 0
@@ -161,11 +245,12 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
         }
         if (key === "weights") {
             status = doWeights
-            if (proxy.weights === undefined) {
-                proxy.weights = new Map<string, any>()
-            }
-            const weights: any = []
-            proxy.weights.set(words[0], weights)
+            // TODO: proxy.weights is different and will be overwritten, weights is unused
+            // if (proxy.weights === undefined) {
+            //     proxy.weights = new Map<string, number[]>()
+            // }
+            weights = []
+            // proxy.weights.set(words[0], weights)
             continue
         }
         if (key === "delete_verts") {
@@ -302,9 +387,10 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
         }
 
         if (status == doWeights) {
-            //     v = int(words[0])
-            //     w = float(words[1])
-            //     weights.append((v,w))
+            // TODO: weights isn't actually used
+            // const v = parseInt(words[0])
+            // const w = parseFloat(words[1])
+            // weights!.push([v, w])
             throw Error(`doWeights`)
         }
 
@@ -328,6 +414,18 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
         console.warn(`Unknown keyword ${key} found in proxy file ${filepath}`)
         break
     }
+
+    if (proxy.z_depth === -1) {
+        console.warn(`Proxy file ${filepath} does not specify a Z depth. Using 50.`)
+        proxy.z_depth = 50
+    }
+
+    // since max-pole is used for the calculation of neighboring planes we have to double it initially
+    proxy.max_pole! *= 2
+
+    proxy._finalize(refVerts)
+
+    return proxy
 }
 
 function getAsciiFileExtension(proxyType: string) {
@@ -345,4 +443,14 @@ function _getFileName(folder: string, file: string, suffix: string) {
     // else:
     //     return os.path.join(folder, file+suffix)
     return folder + file + suffix
+}
+
+function basename(path: string) {
+    return path.split('/').reverse()[0]
+}
+function splitext(path: string) {
+    return path.split('.')[0]
+}
+function capitalize(str: string) {
+    return str.charAt(0).toUpperCase() + str.slice(1)
 }
