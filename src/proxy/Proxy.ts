@@ -5,6 +5,7 @@ import { Human } from "Human"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
+import { mat3 } from 'gl-matrix'
 
 // proxy files .proxy, .mhclo
 // mesh    : .obj
@@ -76,9 +77,53 @@ export class Proxy {
     }
 
     _finalize(refVerts: ProxyRefVert[]) {
-        this.weights = refVerts.map( v => v._weights)
-        this.ref_vIdxs = refVerts.map( v => v._verts)
-        this.offsets = refVerts.map( v => v._offset)
+        this.weights = refVerts.map(v => v._weights)
+        this.ref_vIdxs = refVerts.map(v => v._verts)
+        this.offsets = refVerts.map(v => v._offset)
+    }
+
+    // getCoords() methods are in: Object3D, Proxy, Skeleton
+    // is this getCoords() only called by Proxy itself?
+
+    //     self.human.setProxy(pxy)
+    //   File "/Users/mark/upstream/makehuman/makehuman/./apps/human.py", line 158, in setProxy
+    //     super(Human, self).setProxy(proxy)
+    //   File "/Users/mark/upstream/makehuman/makehuman/./core/guicommon.py", line 392, in setProxy
+    //     self.updateProxyMesh()
+    //   File "/Users/mark/upstream/makehuman/makehuman/./core/guicommon.py", line 360, in updateProxyMesh
+    //     self.proxy.update(self.__proxyMesh, fit_to_posed)
+    //   File "/Users/mark/upstream/makehuman/makehuman/./shared/proxy.py", line 237, in update
+    //     coords = self.getCoords(fit_to_posed)
+    //   File "/Users/mark/upstream/makehuman/makehuman/./shared/proxy.py", line 211, in getCoords
+
+    update(/*mesh, fit_to_posed=False*/) {
+        // #log.debug("Updating proxy %s.", self.name)
+        // coords = self.getCoords(fit_to_posed)
+        // mesh.changeCoords(coords)
+        // mesh.calcNormals()
+    }
+
+    getCoords() {
+        // in python: hcoord = [ [x,y,z], ... ]
+        // if fit_to_posed:
+        //     hcoord = self.human.meshData.coord
+        // else:
+        //     hcoord = self.human.getRestposeCoordinates()
+
+        // upsi?
+        // matrix = self.tmatrix.getMatrix(hcoord)
+
+        // ref_vIdxs = self.ref_vIdxs
+        // weights = self.weights
+
+        // coord = (
+        //     hcoord[ref_vIdxs[:,0]] * weights[:,0,None] +
+        //     hcoord[ref_vIdxs[:,1]] * weights[:,1,None] +
+        //     hcoord[ref_vIdxs[:,2]] * weights[:,2,None] +
+        //     np.dot(matrix, self.offsets.transpose()).transpose()
+        // )
+
+        // return coord
     }
 }
 
@@ -88,6 +133,8 @@ export class TMatrix {
     lShearData?: Array<undefined | Array<number>>
     rShearData?: Array<undefined | Array<number>>
     getScaleData(words: string[], idx: number) {
+        // vn1 & nv2 are an index to a coordinate in the base mesh
+        // den will be use to devide the distance between those coordinates
         const vn1 = parseInt(words[0])
         const vn2 = parseInt(words[1])
         const den = parseFloat(words[2])
@@ -96,7 +143,7 @@ export class TMatrix {
         }
         this.scaleData[idx] = [vn1, vn2, den]
     }
-    getShearData(words: string[], idx: number, side: "Left" | "Right" | undefined = undefined)  {
+    getShearData(words: string[], idx: number, side: "Left" | "Right" | undefined = undefined) {
         const vn1 = parseInt(words[0])
         const vn2 = parseInt(words[1])
         const x1 = parseFloat(words[2])
@@ -107,7 +154,7 @@ export class TMatrix {
                 this.lShearData = [undefined, undefined, undefined]
             }
             this.lShearData[idx] = bbdata
-            
+
         }
         if (side === "Right") {
             if (this.rShearData === undefined) {
@@ -122,6 +169,29 @@ export class TMatrix {
             this.shearData[idx] = bbdata
         }
     }
+    getMatrix(hcoord: number[]): mat3 {
+        if (this.scaleData !== undefined) {
+            const matrix = mat3.identity(mat3.create())
+            for (let n = 0; n < 3; ++n) {
+                const [vn1, vn2, den] = this.scaleData[n]!
+                const co1 = vn1 * 3
+                const co2 = vn2 * 3
+                const num = Math.abs(hcoord[co1 + n] - hcoord[co2 + n])
+                matrix[n * 3 + n] = num / den
+            }
+            return matrix
+        }
+        if (this.shearData !== undefined) {
+            throw Error("not implemented")
+        }
+        if (this.lShearData !== undefined) {
+            throw Error("not implemented")
+        }
+        if (this.rShearData !== undefined) {
+            throw Error("not implemented")
+        }
+        return mat3.identity(mat3.create())
+    }
 }
 
 export class ProxyRefVert {
@@ -132,9 +202,9 @@ export class ProxyRefVert {
     }
     fromSingle(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
         const v0 = parseInt(words[0])
-        this._verts = [v0,0,1]
-        this._weights = [1.0,0.0,0.0]
-        this._offset = [0,0,0]
+        this._verts = [v0, 0, 1]
+        this._weights = [1.0, 0.0, 0.0]
+        this._offset = [0, 0, 0]
         this._addProxyVertWeight(vertWeights, v0, vnum, 1)
     }
     fromTriple(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
@@ -150,12 +220,12 @@ export class ProxyRefVert {
             d1 = parseFloat(words[7])
             d2 = parseFloat(words[8])
         } else {
-            [d0,d1,d2] = [0,0,0]
+            [d0, d1, d2] = [0, 0, 0]
         }
 
-        this._verts = [v0,v1,v2]
-        this._weights = [w0,w1,w2]
-        this._offset = [d0,d1,d2]
+        this._verts = [v0, v1, v2]
+        this._weights = [w0, w1, w2]
+        this._offset = [d0, d1, d2]
 
         this._addProxyVertWeight(vertWeights, v0, vnum, w0)
         this._addProxyVertWeight(vertWeights, v1, vnum, w1)

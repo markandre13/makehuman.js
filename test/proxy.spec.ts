@@ -4,6 +4,10 @@ import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
 import { loadProxy, loadTextProxy, Proxy, ProxyRefVert, TMatrix } from "../src/proxy/Proxy"
 
+function almost(left: number, right: number) {
+    return Math.abs(left - right) <= 1e-6
+}
+
 describe("Proxy", function () {
     this.beforeAll(function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
@@ -16,12 +20,12 @@ describe("Proxy", function () {
     it("loads female_generic.proxy", async function () {
         const proxy = loadProxy(human, filepath, type)
         // const mesh = await proxy.loadMeshAndObject(human)
-        console.log(proxy.weights)
-        console.log(proxy.ref_vIdxs)
-        console.log(proxy.offsets)
+        // console.log(proxy.weights)
+        // console.log(proxy.ref_vIdxs)
+        // console.log(proxy.offsets)
     })
 
-    it("constructor", function() {
+    it("constructor", function () {
         const proxy = new Proxy(filepath, type, human)
 
         expect(proxy.file).to.equal(filepath)
@@ -54,7 +58,7 @@ describe("Proxy", function () {
         expect(proxy.cacheSkel).to.be.undefined
     })
 
-    it.only("loadTextProxy", function() {
+    it("loadTextProxy", function () {
         const proxy = loadTextProxy(human, filepath, type, `
             name Jan Hammer
             uuid maybe ed6b7c98-1272-45a5-934a-e2ac0b49af88
@@ -105,15 +109,15 @@ describe("Proxy", function () {
         // verts -> weights, ref_vIdxs, offsets
         expect(proxy.weights).to.deep.equal([
             [0.00839, 0.98499, 0.00661],
-            [1,       0,       0      ]
+            [1, 0, 0]
         ])
         expect(proxy.ref_vIdxs).to.deep.equal([
             [10654, 10641, 10642],
-            [10644,     0,     1]
+            [10644, 0, 1]
         ])
         expect(proxy.offsets).to.deep.equal([
-            [ 9.e-05, -1.e-05, -1.e-05],
-            [ 0.e+00,  0.e+00,  0.e+00]
+            [9.e-05, -1.e-05, -1.e-05],
+            [0.e+00, 0.e+00, 0.e+00]
         ])
 
         // delete_verts
@@ -149,23 +153,23 @@ describe("Proxy", function () {
         ])
         expect(proxy.basemesh).to.equal("alpha")
     })
-    describe("ProxyRefVert", function() {
-        it("fromSingle", function() {
+    describe("ProxyRefVert", function () {
+        it("fromSingle", function () {
             const refVert = new ProxyRefVert(human)
             const vnum = 7
             const vertWeights = new Map<number, Array<Array<number>>>()
             refVert.fromSingle(["13"], vnum, vertWeights)
             expect(refVert._verts).to.deep.equal([13, 0, 1])
             expect(refVert._weights).to.deep.equal([1.0, 0.0, 0.0])
-            expect(refVert._offset).to.deep.equal([0,0,0])
+            expect(refVert._offset).to.deep.equal([0, 0, 0])
             expect(vertWeights).to.be.of.length(1)
-            expect(vertWeights.get(13)).to.deep.equal([[7,1]])
+            expect(vertWeights.get(13)).to.deep.equal([[7, 1]])
         })
-        it("fromTriple", function() {
+        it("fromTriple", function () {
             const refVert = new ProxyRefVert(human)
             const vnum = 7
             const vertWeights = new Map<number, Array<Array<number>>>()
-            refVert.fromTriple(["10654", "10641" , "10642",  "0.00839",  "0.98499",  "0.00661", "0.00009",  "-0.00001",  "-0.00002"], vnum, vertWeights)
+            refVert.fromTriple(["10654", "10641", "10642", "0.00839", "0.98499", "0.00661", "0.00009", "-0.00001", "-0.00002"], vnum, vertWeights)
             expect(refVert._verts).to.deep.equal([10654, 10641, 10642])
             expect(refVert._weights).to.deep.equal([0.00839, 0.98499, 0.00661])
             expect(refVert._offset).to.deep.equal([0.00009, -0.00001, -0.00002])
@@ -173,17 +177,17 @@ describe("Proxy", function () {
             expect(vertWeights.get(10654)).to.deep.equal([[7, 0.00839]])
             expect(vertWeights.get(10641)).to.deep.equal([[7, 0.98499]])
             expect(vertWeights.get(10642)).to.deep.equal([[7, 0.00661]])
-        })    
+        })
     })
-    describe("TMatrix", function() {
-        it("getScaleData", function() {
+    describe("TMatrix", function () {
+        it("getScaleData", function () {
             const tmatrix = new TMatrix()
             tmatrix.getScaleData(["5399", "11998", "1.3980"], 1)
             expect(tmatrix.scaleData).to.deep.equal(
                 [undefined, [5399, 11998, 1.3980], undefined]
             )
         })
-        it("getShearData", function() {
+        it("getShearData", function () {
             const tmatrix = new TMatrix()
             tmatrix.getShearData(["5397", "11996", "1.3980", "0.8372"], 1, "Left")
             tmatrix.getShearData(["5398", "11997", "1.3981", "0.8373"], 1, "Right")
@@ -197,6 +201,31 @@ describe("Proxy", function () {
             expect(tmatrix.shearData).to.deep.equal(
                 [undefined, [5399, 11998, 1.3982, 0.8374], undefined]
             )
+        })
+        describe("getMatrix", function () {
+            it("from scale data", function () {
+                const m = new TMatrix()
+                m.getScaleData(["1", "2", "2.3"], 0)
+                m.getScaleData(["3", "4", "3.5"], 1)
+                m.getScaleData(["5", "6", "4.7"], 2)
+                const a = m.getMatrix([
+                    0, 0, 0,
+                    1, 2, 3,
+                    4, 5, 6,
+                    7, 8, 9,
+                    10, 11, 12,
+                    13, 14, 15,
+                    16, 17, 18,
+                ])
+                // chai-almost isn't esm6 compatible
+                const _0 = [
+                    1.30434783, 0,          0,
+                    0,          0.85714286, 0,
+                    0,          0,          0.63829787
+                ].forEach((value, index) => {
+                    expect(almost(a[index], value), `index: ${index} ${a[index]} !== ${value}`).to.be.true
+                })
+            })
         })
     })
 
