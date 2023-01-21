@@ -125,10 +125,14 @@ export class WavefrontObj implements Mesh {
         }
         this.vertex = vertex
         this.indices = indices
-        for(let i=0; i<this.groups.length-1; ++i) {
-            this.groups[i].length = this.groups[i+1].startIndex - this.groups[i].startIndex
+
+        // set group's lengths
+        if (this.groups.length > 0) {
+            for(let i=0; i<this.groups.length-1; ++i) {
+                this.groups[i].length = this.groups[i+1].startIndex - this.groups[i].startIndex
+            }
+            this.groups[this.groups.length-1].length = indices.length - this.groups[this.groups.length-1].startIndex
         }
-        this.groups[this.groups.length-1].length = indices.length - this.groups[this.groups.length-1].startIndex
 
         this.logStatistics(filename)
     }

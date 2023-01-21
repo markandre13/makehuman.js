@@ -9,12 +9,17 @@ describe("Proxy", function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
 
-    xit("loads female_generic.proxy", function () {
-        loadProxy(undefined as any, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes")
-    })
     const human = {} as any
-    const filepath = "a/path/to/a/female_generic.proxy"
+    const filepath = "data/proxymeshes/female_generic/female_generic.proxy"
     const type = "Proxymeshes"
+
+    it("loads female_generic.proxy", async function () {
+        const proxy = loadProxy(human, filepath, type)
+        // const mesh = await proxy.loadMeshAndObject(human)
+        console.log(proxy.weights)
+        console.log(proxy.ref_vIdxs)
+        console.log(proxy.offsets)
+    })
 
     it("constructor", function() {
         const proxy = new Proxy(filepath, type, human)
@@ -49,7 +54,7 @@ describe("Proxy", function () {
         expect(proxy.cacheSkel).to.be.undefined
     })
 
-    it("loadTextProxy", function() {
+    it.only("loadTextProxy", function() {
         const proxy = loadTextProxy(human, filepath, type, `
             name Jan Hammer
             uuid maybe ed6b7c98-1272-45a5-934a-e2ac0b49af88
@@ -64,7 +69,7 @@ describe("Proxy", function () {
             # verts
             # weights
             # delete_verts
-            obj_file wavefront
+            obj_file wavefront.obj
             # ...
             basemesh alpha 1
             x_scale 5397 11996 1.3980
@@ -98,13 +103,21 @@ describe("Proxy", function () {
         expect(proxy.special_pose.get("tongue")).to.equal("fit-to-food")
 
         // verts -> weights, ref_vIdxs, offsets
-        console.log(proxy.weights)
-        console.log(proxy.ref_vIdxs)
-        console.log(proxy.offsets)
+        expect(proxy.weights).to.deep.equal([
+            [0.00839, 0.98499, 0.00661],
+            [1,       0,       0      ]
+        ])
+        expect(proxy.ref_vIdxs).to.deep.equal([
+            [10654, 10641, 10642],
+            [10644,     0,     1]
+        ])
+        expect(proxy.offsets).to.deep.equal([
+            [ 9.e-05, -1.e-05, -1.e-05],
+            [ 0.e+00,  0.e+00,  0.e+00]
+        ])
 
-        // weights
         // delete_verts
-        console.log(proxy._obj_file)
+        expect(proxy._obj_file).to.equal("data/proxymeshes/female_generic/wavefront.obj")
         // _material_file
         // material
         // _vertexBoneWeights_file

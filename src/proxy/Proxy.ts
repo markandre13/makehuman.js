@@ -4,6 +4,7 @@ import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { Human } from "Human"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
+import { WavefrontObj } from "mesh/WavefrontObj"
 
 // proxy files .proxy, .mhclo
 // mesh    : .obj
@@ -36,9 +37,9 @@ export class Proxy {
     tags: string[] = []
     version: number = 110
 
-    weights?: number[] // Map<string, number[]>
-    offsets?: number[]
-    ref_vIdxs?: number[]
+    weights?: Array<Array<number>>
+    offsets?: Array<Array<number>>
+    ref_vIdxs?: Array<Array<number>>
 
     vertWeights = new Map<number, Array<Array<number>>>()
 
@@ -68,13 +69,16 @@ export class Proxy {
         this.name = capitalize(name)
     }
 
-    loadMeshAndObject(human: Human) {
+    async loadMeshAndObject(human: Human): Promise<WavefrontObj> {
+        const mesh = new WavefrontObj()
+        await mesh.load(this._obj_file!)
+        return mesh
     }
 
     _finalize(refVerts: ProxyRefVert[]) {
-        this.weights = refVerts.map( (v,i) => v._weights[i])
-        this.ref_vIdxs = refVerts.map( (v,i) => v._verts[i])
-        this.offsets = refVerts.map( (v,i) => v._offset[i])
+        this.weights = refVerts.map( v => v._weights)
+        this.ref_vIdxs = refVerts.map( v => v._verts)
+        this.offsets = refVerts.map( v => v._offset)
     }
 }
 
@@ -182,11 +186,11 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
         data = FileSystemAdapter.getInstance().readFile(filepath)
     }
     const reader = new StringToLine(data)
-    const folder = ""
+    const folder = filepath.substring(0, filepath.lastIndexOf("/"))
     const proxy = new Proxy(filepath, type, human)
 
     const refVerts: ProxyRefVert[] = []
-    let weights: Array<Array<number>> | undefined = undefined
+    // let weights: Array<Array<number>> | undefined = undefined
 
     let status = 0
     let vnum = 0
@@ -249,7 +253,7 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
             // if (proxy.weights === undefined) {
             //     proxy.weights = new Map<string, number[]>()
             // }
-            weights = []
+            // weights = []
             // proxy.weights.set(words[0], weights)
             continue
         }
@@ -442,7 +446,7 @@ function _getFileName(folder: string, file: string, suffix: string) {
     //     return os.path.join(folder, file)
     // else:
     //     return os.path.join(folder, file+suffix)
-    return folder + file + suffix
+    return `${folder}/${file.substring(0, file.indexOf("."))}${suffix}`
 }
 
 function basename(path: string) {
