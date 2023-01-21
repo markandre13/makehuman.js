@@ -190,9 +190,114 @@ class VertexBoneWeights
 class Human: AnimatedMesh {
 }
 
+===============================
 
+Proxy
+
+so basically, the proxy meshes must also go through morph and pose,
+which would mean theres a mapping of the morph/pose weights to the proxy mesh somewhere.
+
+but 1st, what exactly is in the Proxy class???
+
+me thinks that i did not implement the 3d object...
+
+what do we do with object.proxy ???
+
+proxy.object
+object.proxy (Object3D does not have a proxy attribute)
+
+Setting a proxy starts here:
+
+/Users/mark/upstream/makehuman/makehuman/plugins/3_libraries_proxy_chooser.py
+    def selectProxy(self, mhclofile):
+        pxy = proxy.loadProxy(self.human,
+                              mhclofile,
+                              type=self.proxyName.capitalize())
+        # Override z_depth and mesh priority to the same as human mesh
+        pxy.z_depth = self.human.getSeedMesh().priority
+        mesh,obj = pxy.loadMeshAndObject(self.human)
+        self.human.setProxy(pxy)
+
+/Users/mark/upstream/makehuman/makehuman/apps/human.py
+
+    def setProxy(self, proxy):
+        oldPxy = self.getProxy()
+        oldPxyMesh = self.getProxyMesh()
+        # Fit to basemesh in rest pose, then pose proxy
+        super(Human, self).setProxy(proxy)              
+
+        if oldPxyMesh:
+            self.removeBoundMesh(oldPxyMesh.name)
+        if self.proxy:
+            # Add new mesh and vertex weight assignments
+            self._updateMeshVertexWeights(self.getProxyMesh())
+            self.refreshPose()
+
+        event = events3d.HumanEvent(self, 'proxyChange')
+        event.proxy = 'human'
+        self.callEvent('onChanged', event)
+
+/Users/mark/upstream/makehuman/makehuman/core/guicommon.py
+    def setProxy(self, proxy):
+        isSubdivided = self.isSubdivided()
+
+        if self.proxy:
+            self.proxy = None
+            self.detachMesh(self.__proxyMesh)
+            self.__proxyMesh.clear()
+            self.__proxyMesh = None
+            if self.__proxySubdivisionMesh:
+                self.detachMesh(self.__proxySubdivisionMesh)
+                self.__proxySubdivisionMesh.clear()
+                self.__proxySubdivisionMesh = None
+            self.mesh = self.__seedMesh
+            self.mesh.setVisibility(1)
+
+        if proxy:
+            import files3d
+            self.proxy = proxy
+
+            self.__proxyMesh = proxy.object.mesh.clone()
+            self.__proxyMesh.object = self
+
+            # Copy attributes from human mesh to proxy mesh
+            for attr in ('visibility', 'pickable', 'cameraMode'):
+                setattr(self.__proxyMesh, attr, getattr(self.mesh, attr))
+
+            self.updateProxyMesh()
+
+            # Attach to GL object if this object is attached to viewport
+            if self.__seedMesh.object3d:
+                self.attachMesh(self.__proxyMesh)
+
+            self.mesh.setVisibility(0)
+            self.mesh = self.__proxyMesh
+            self.mesh.setVisibility(1)
+
+        self.setSubdivided(isSubdivided)
+
+    def updateProxyMesh(self, fit_to_posed=False):
+        if self.proxy and self.__proxyMesh:
+            self.proxy.update(self.__proxyMesh, fit_to_posed)
+            self.__proxyMesh.update()
+
+/Users/mark/upstream/makehuman/makehuman/shared/proxy.py
+
+    def update(self, mesh, fit_to_posed=False):
+        #log.debug("Updating proxy %s.", self.name)
+        coords = self.getCoords(fit_to_posed)
+        mesh.changeCoords(coords)
+        mesh.calcNormals()
+
+Object
+  setProxy()
+
+  detachMesh
+  attachMesh
+  updateProxyMesh()
 
 ===============================
+
 I already implemented animating a makehuman generated mesh,
 but based on loading an export to collada.
 
