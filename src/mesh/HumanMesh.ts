@@ -1,4 +1,5 @@
 import { Mode } from 'Mode'
+import { Proxy, loadProxy } from 'proxy/Proxy'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
 import { Mesh, Group } from './Mesh'
@@ -24,6 +25,8 @@ export class HumanMesh {
     indices: number[]
     groups: Group[]
     mode!: Mode
+    proxy?: Proxy
+    proxyMesh?: WavefrontObj
 
     updateRequired = Update.NONE
 
@@ -35,6 +38,9 @@ export class HumanMesh {
         this.groups = obj.groups
 
         human.meshData = obj // UGLY
+
+        this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
+        this.proxyMesh = this.proxy.loadMeshAndObject(human)
     }
 
     update(): void {
@@ -70,6 +76,14 @@ export class HumanMesh {
 
         // skin
         this.vertex = this.human.__skeleton.skinMesh(this.vertex, this.human.__skeleton.vertexWeights!._data)
+        console.log(`HumanMesh.update(): skinMesh, ${this.vertex.length}`)
+
+        // if (this.proxy !== undefined) {
+            // this.vertex = this.proxy.getCoords(this.vertex)
+            // this.vertex = this.proxyMesh!.vertex
+            // this.indices = this.proxyMesh!.indices
+        //     console.log(`HumanMesh.update(): proxy, ${this.vertex.length}`)
+        // }
 
         this.updateRequired = Update.NONE
     }

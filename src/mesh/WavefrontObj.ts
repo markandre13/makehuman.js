@@ -17,7 +17,7 @@ export class WavefrontObj implements Mesh {
         this.groups = new Array<Group>()
     }
 
-    async load(filename: string) {
+    load(filename: string) {
         const data = FileSystemAdapter.getInstance().readFile(filename)
         const vertex = new Array<number>()
         const indices = new Array<number>()
@@ -32,8 +32,10 @@ export class WavefrontObj implements Mesh {
             line = line.trim()
             if (line.length === 0)
                 continue
-            if (line[0] === '#')
+            if (line[0] === '#') {
+                // TODO: might want to parse # basemesh <name>
                 continue
+            }
             const tokens = line.split(/\s+/)
             switch(tokens[0]) {
             // vertex data

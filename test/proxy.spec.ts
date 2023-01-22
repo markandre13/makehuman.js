@@ -1,9 +1,9 @@
 import { expect } from '@esm-bundle/chai'
-import { mat3, vec3 } from 'gl-matrix'
 
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
 import { loadProxy, loadTextProxy, Proxy, ProxyRefVert, TMatrix } from "../src/proxy/Proxy"
+import { WavefrontObj } from "../src/mesh/WavefrontObj"
 
 function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6
@@ -16,14 +16,16 @@ describe("Proxy", function () {
 
     const human = {} as any
     const filepath = "data/proxymeshes/female_generic/female_generic.proxy"
+    // const filepath = "data/proxymeshes/proxy741/proxy741.proxy"
     const type = "Proxymeshes"
 
-    it("loads female_generic.proxy", async function () {
+    it.only("loads female_generic.proxy", async function () {
+        const obj = new WavefrontObj()
+        obj.load('data/3dobjs/base.obj.z')
+
         const proxy = loadProxy(human, filepath, type)
-        // const mesh = await proxy.loadMeshAndObject(human)
-        // console.log(proxy.weights)
-        // console.log(proxy.ref_vIdxs)
-        // console.log(proxy.offsets)
+        const mesh = await proxy.loadMeshAndObject(human)
+        const mesh2 = proxy.getCoords(obj.vertex)
     })
 
     it("constructor", function () {
@@ -76,7 +78,7 @@ describe("Proxy", function () {
             # delete_verts
             obj_file wavefront.obj
             # ...
-            basemesh alpha 1
+            basemesh hm08 1
             x_scale 5397 11996 1.3980
             y_scale 5398 11997 1.3981
             z_scale 5399 11998 1.3982
@@ -152,7 +154,7 @@ describe("Proxy", function () {
             [1014, 1015, 1001.5, 1001.6],
             [1016, 1017, 1001.7, 1001.8]
         ])
-        expect(proxy.basemesh).to.equal("alpha")
+        expect(proxy.basemesh).to.equal("hm08")
     })
     it("getCoords()", function() {
         const proxy = loadTextProxy(human, filepath, type, `

@@ -34,6 +34,7 @@ export class Proxy {
     file: string
     // mtime
     uuid?: string
+    // the basemesh this proxy is based on
     basemesh!: string
     tags: string[] = []
     version: number = 110
@@ -70,9 +71,9 @@ export class Proxy {
         this.name = capitalize(name)
     }
 
-    async loadMeshAndObject(human: Human): Promise<WavefrontObj> {
+    loadMeshAndObject(human: Human): WavefrontObj {
         const mesh = new WavefrontObj()
-        await mesh.load(this._obj_file!)
+        mesh.load(this._obj_file!)
         return mesh
     }
 
@@ -110,6 +111,8 @@ export class Proxy {
     // looks like we get the base mesh in (morphed and/or posed)
     // what do we do with the proxy mesh?
     // or was the proxy mesh morphed/posed and this then corrects the proxy mesh???
+    // a reasonable assumption might be: this takes the base mesh and output the proxy mesh,
+    // with the faces, weights, etc. taken from the proxy mesh
     getCoords(hcoord: number[]): number[] {
         const matrix = this.tmatrix.getMatrix(hcoord)
 
