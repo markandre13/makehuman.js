@@ -1,4 +1,5 @@
 import { expect } from '@esm-bundle/chai'
+import { mat3, vec3 } from 'gl-matrix'
 
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
@@ -153,6 +154,72 @@ describe("Proxy", function () {
         ])
         expect(proxy.basemesh).to.equal("alpha")
     })
+    it.only("getCoords()", function() {
+        const tmatrix = new TMatrix()
+        tmatrix.getScaleData(["1", "2", "2.3"], 0)
+        tmatrix.getScaleData(["3", "4", "3.5"], 1)
+        tmatrix.getScaleData(["5", "6", "4.7"], 2)
+
+        const hcoord = [
+            0, 0, 0,
+            1.1, 2.1, 3.1,
+            4, 5, 6,
+            7, 8, 9,
+            10, 11, 12,
+            13, 14, 15,
+            16, 17, 18,
+        ]
+
+        const matrix = tmatrix.getMatrix(hcoord)
+        // const matrix = mat3.identity(mat3.create())
+
+        const vnum = 7
+        const vertWeights = new Map<number, Array<Array<number>>>()
+        const refVerts: ProxyRefVert[] = []
+        let refVert = new ProxyRefVert(human)
+        refVert.fromTriple(["1", "2", "3",  "0.1",  "0.2",  "0.3", "0.4",  "0.5",  "0.6"], vnum, vertWeights)
+        refVerts.push(refVert)
+        refVert = new ProxyRefVert(human)
+        refVert.fromTriple(["4", "5", "6",  "0.7",  "0.8",  "0.9", "1.0",  "1.1",  "1.2"], vnum, vertWeights)
+        refVerts.push(refVert)
+
+        const weights = refVerts.map(v => v._weights)
+        const ref_vIdxs = refVerts.map(v => v._verts)
+        const offsets = refVerts.map(v => v._offset)
+
+        const coord: number[] = []
+
+        for(let i=0; i<refVerts.length; ++i) {
+            let x = hcoord[ref_vIdxs[i][0]*3] * weights[i][0]
+            let y = hcoord[ref_vIdxs[i][0]*3+1] * weights[i][0]
+            let z = hcoord[ref_vIdxs[i][0]*3+2] * weights[i][0]
+            x += hcoord[ref_vIdxs[i][1]*3] * weights[i][1]
+            y += hcoord[ref_vIdxs[i][1]*3+1] * weights[i][1]
+            z += hcoord[ref_vIdxs[i][1]*3+2] * weights[i][1]
+            x += hcoord[ref_vIdxs[i][2]*3] * weights[i][2]
+            y += hcoord[ref_vIdxs[i][2]*3+1] * weights[i][2]
+            z += hcoord[ref_vIdxs[i][2]*3+2] * weights[i][2]
+
+            const a = vec3.transformMat3(
+                vec3.create(),
+                vec3.fromValues(offsets[i][0], offsets[i][1], offsets[i][2]),
+                matrix)
+            x += a[0]
+            y += a[1]
+            z += a[2]
+
+            coord.push(x,y,z)
+            // console.log([x,y,z])
+        }
+        // console.log(coord)
+
+        const _0 = [
+            3.514347860813141, 4.038571432828903, 4.5929787373542785,
+            33.06086962223053, 35.142857146263125, 37.36595747470855
+        ].forEach((value, index) => {
+            expect(almost(coord[index], value), `index: ${index} ${coord[index]} !== ${value}`).to.be.true
+        })
+    })
     describe("ProxyRefVert", function () {
         it("fromSingle", function () {
             const refVert = new ProxyRefVert(human)
@@ -228,5 +295,4 @@ describe("Proxy", function () {
             })
         })
     })
-
 })

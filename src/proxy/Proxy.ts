@@ -103,19 +103,19 @@ export class Proxy {
         // mesh.calcNormals()
     }
 
-    getCoords() {
-        // in python: hcoord = [ [x,y,z], ... ]
+    getCoords(hcoord: number[]): number[] {
+        // in python: hcoord = [ [x,y,z], ... ], here: [x,y,z,...]
         // if fit_to_posed:
         //     hcoord = self.human.meshData.coord
         // else:
         //     hcoord = self.human.getRestposeCoordinates()
 
-        // upsi?
-        // matrix = self.tmatrix.getMatrix(hcoord)
+        const matrix = this.tmatrix.getMatrix(hcoord)
 
-        // ref_vIdxs = self.ref_vIdxs
-        // weights = self.weights
+        const ref_vIdxs = this.ref_vIdxs
+        const weights = this.weights
 
+        const coord: number[] = []
         // coord = (
         //     hcoord[ref_vIdxs[:,0]] * weights[:,0,None] +
         //     hcoord[ref_vIdxs[:,1]] * weights[:,1,None] +
@@ -123,7 +123,7 @@ export class Proxy {
         //     np.dot(matrix, self.offsets.transpose()).transpose()
         // )
 
-        // return coord
+        return coord
     }
 }
 
