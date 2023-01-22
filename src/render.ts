@@ -154,8 +154,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
             normalize,
             stride,
             offset)
-        gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexNormal)
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal)
     }
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
@@ -390,11 +389,14 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
     let proxyOffset = 0
     let proxyCount = 0
     if (scene.proxy) {
-        const offset = vx.length / 3
         proxyOffset = ix.length * 2
         proxyCount = scene.proxyMesh!.indices.length
+        const offset = vx.length / 3
         vx = vx.concat(scene.proxy.getCoords(scene.vertex))
         ix = ix.concat(scene.proxyMesh!.indices.map( v => v + offset))
+    }
+    if (vx.length > 0xffff) {
+        console.log(`TWO MANY VERTICES FOR DWORD INDEX (${ix.length})?`)
     }
 
     return {

@@ -39,9 +39,10 @@ export class Proxy {
     tags: string[] = []
     version: number = 110
 
-    weights?: Array<Array<number>>
-    offsets?: Array<Array<number>>
-    ref_vIdxs?: Array<Array<number>>
+    // these describe how the basemesh is mapped to the proxy mesh
+    weights!: Array<Array<number>>
+    offsets!: Array<Array<number>>
+    ref_vIdxs!: Array<Array<number>>
 
     vertWeights = new Map<number, Array<Array<number>>>()
 
@@ -83,36 +84,11 @@ export class Proxy {
         this.offsets = refVerts.map(v => v._offset)
     }
 
-    // getCoords() methods are in: Object3D, Proxy, Skeleton
-    // is this getCoords() only called by Proxy itself?
-
-    //     self.human.setProxy(pxy)
-    //   File "/Users/mark/upstream/makehuman/makehuman/./apps/human.py", line 158, in setProxy
-    //     super(Human, self).setProxy(proxy)
-    //   File "/Users/mark/upstream/makehuman/makehuman/./core/guicommon.py", line 392, in setProxy
-    //     self.updateProxyMesh()
-    //   File "/Users/mark/upstream/makehuman/makehuman/./core/guicommon.py", line 360, in updateProxyMesh
-    //     self.proxy.update(self.__proxyMesh, fit_to_posed)
-    //   File "/Users/mark/upstream/makehuman/makehuman/./shared/proxy.py", line 237, in update
-    //     coords = self.getCoords(fit_to_posed)
-    //   File "/Users/mark/upstream/makehuman/makehuman/./shared/proxy.py", line 211, in getCoords
-
-    update(/*mesh, fit_to_posed=False*/) {
-        // #log.debug("Updating proxy %s.", self.name)
-        // if fit_to_posed:
-        //     hcoord = self.human.meshData.coord
-        // else:
-        //     hcoord = self.human.getRestposeCoordinates()
-        // coords = self.getCoords(hcoord)
-        // mesh.changeCoords(coords)
-        // mesh.calcNormals()
-    }
-
-    // looks like we get the base mesh in (morphed and/or posed)
-    // what do we do with the proxy mesh?
-    // or was the proxy mesh morphed/posed and this then corrects the proxy mesh???
-    // a reasonable assumption might be: this takes the base mesh and output the proxy mesh,
-    // with the faces, weights, etc. taken from the proxy mesh
+    /**
+     * Return proxy meth vertices adjusted to base mesh
+     * @param hcoord base mesh vertices (may be morphed/posed)
+     * @returns proxy mesh vertices
+     */
     getCoords(hcoord: number[]): number[] {
         const matrix = this.tmatrix.getMatrix(hcoord)
 
@@ -328,6 +304,7 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
             continue
         }
         if (key === "verts") {
+            // data to adjust proxy to basemesh
             status = doRefVerts
             continue
         }
@@ -342,6 +319,7 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
             continue
         }
         if (key === "delete_verts") {
+            // vertices to delete (e.g. clothes may remove parts of the body mesh)
             status = doDeleteVerts
             continue
         }

@@ -39,8 +39,9 @@ export class HumanMesh {
 
         human.meshData = obj // UGLY
 
-        this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
-        this.proxyMesh = this.proxy.loadMeshAndObject(human)
+        // this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
+        // this.proxy = loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes")
+        // this.proxyMesh = this.proxy.loadMeshAndObject(human)
     }
 
     update(): void {

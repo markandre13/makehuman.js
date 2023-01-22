@@ -11,6 +11,7 @@
 * Have a look at [build 2022-08-11](https://markandre13.github.io/makehuman.js/) with toad.js branch table3
 * Morph mesh
 * Pose skeleton and adjust mesh
+* Render a proxy mesh instead of the basemesh (normals are wrong for now)
 * Nothing else... 😅
 
 ## Why?
@@ -26,7 +27,11 @@
 
 * data/3dobjs/base.obj contains a 3d model of a human body, called the **base mesh**
 * data/target/ contains 1258 [morph targets](https://en.wikipedia.org/wiki/Morph_target_animation),
-  which can deform the base mesh's shape, gender, age and ethnicity
+  which can deform the base mesh's shape, gender, age and ethnicity.
+
+  The morph targets are handmade by editing the basemesh in a 3d editor and
+  extracting the changes with [MakeTarget](https://github.com/makehumancommunity/maketarget-standalone).
+
 * data/modifiers/ bundles those morph targets into 249 more user friendly **modifiers**
 
 #### Code
@@ -111,6 +116,16 @@ class VertexBoneWeights {
 
 Proxies provide additional meshes, e.g. teeth, tounge, eyes, alternative body
 meshes and cloth.
+
+The proxy files contain data created with [MakeClothes](https://github.com/makehumancommunity/community-plugins-makeclothes) which can transform the
+morphed/posed basemesh into a proxy mesh.
+
+```js
+class Proxy {
+    // return proxy mesh vertices, adjusted to basemesh morph/pose
+    getCoords(baseMeshVertices: number[]): number[]
+}
+```
 
 ## Build
 
