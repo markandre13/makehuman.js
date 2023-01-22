@@ -5,7 +5,9 @@ import { Human } from "Human"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { mat3, vec3 } from 'gl-matrix'
+import { vec3 } from 'gl-matrix'
+import { ProxyRefVert } from "./ProxyRefVert"
+import { TMatrix } from "./TMatrix"
 
 // proxy files .proxy, .mhclo
 // mesh    : .obj
@@ -114,119 +116,6 @@ export class Proxy {
         }
 
         return coord
-    }
-}
-
-export class TMatrix {
-    scaleData?: Array<undefined | Array<number>>
-    shearData?: Array<undefined | Array<number>>
-    lShearData?: Array<undefined | Array<number>>
-    rShearData?: Array<undefined | Array<number>>
-    getScaleData(words: string[], idx: number) {
-        // vn1 & nv2 are an index to a coordinate in the base mesh
-        // den will be use to devide the distance between those coordinates
-        const vn1 = parseInt(words[0])
-        const vn2 = parseInt(words[1])
-        const den = parseFloat(words[2])
-        if (this.scaleData === undefined) {
-            this.scaleData = [undefined, undefined, undefined]
-        }
-        this.scaleData[idx] = [vn1, vn2, den]
-    }
-    getShearData(words: string[], idx: number, side: "Left" | "Right" | undefined = undefined) {
-        const vn1 = parseInt(words[0])
-        const vn2 = parseInt(words[1])
-        const x1 = parseFloat(words[2])
-        const x2 = parseFloat(words[3])
-        const bbdata = [vn1, vn2, x1, x2]
-        if (side === "Left") {
-            if (this.lShearData === undefined) {
-                this.lShearData = [undefined, undefined, undefined]
-            }
-            this.lShearData[idx] = bbdata
-
-        }
-        if (side === "Right") {
-            if (this.rShearData === undefined) {
-                this.rShearData = [undefined, undefined, undefined]
-            }
-            this.rShearData[idx] = bbdata
-        }
-        if (side === undefined) {
-            if (this.shearData === undefined) {
-                this.shearData = [undefined, undefined, undefined]
-            }
-            this.shearData[idx] = bbdata
-        }
-    }
-    getMatrix(hcoord: number[]): mat3 {
-        if (this.scaleData !== undefined) {
-            const matrix = mat3.identity(mat3.create())
-            for (let n = 0; n < 3; ++n) {
-                const [vn1, vn2, den] = this.scaleData[n]!
-                const co1 = vn1 * 3
-                const co2 = vn2 * 3
-                const num = Math.abs(hcoord[co1 + n] - hcoord[co2 + n])
-                matrix[n * 3 + n] = num / den
-            }
-            return matrix
-        }
-        if (this.shearData !== undefined) {
-            throw Error("not implemented")
-        }
-        if (this.lShearData !== undefined) {
-            throw Error("not implemented")
-        }
-        if (this.rShearData !== undefined) {
-            throw Error("not implemented")
-        }
-        return mat3.identity(mat3.create())
-    }
-}
-
-export class ProxyRefVert {
-    _verts!: number[]
-    _weights!: number[]
-    _offset!: number[]
-    constructor(human: Human) {
-    }
-    fromSingle(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
-        const v0 = parseInt(words[0])
-        this._verts = [v0, 0, 1]
-        this._weights = [1.0, 0.0, 0.0]
-        this._offset = [0, 0, 0]
-        this._addProxyVertWeight(vertWeights, v0, vnum, 1)
-    }
-    fromTriple(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
-        const v0 = parseInt(words[0])
-        const v1 = parseInt(words[1])
-        const v2 = parseInt(words[2])
-        const w0 = parseFloat(words[3])
-        const w1 = parseFloat(words[4])
-        const w2 = parseFloat(words[5])
-        let d0, d1, d2
-        if (words.length > 6) {
-            d0 = parseFloat(words[6])
-            d1 = parseFloat(words[7])
-            d2 = parseFloat(words[8])
-        } else {
-            [d0, d1, d2] = [0, 0, 0]
-        }
-
-        this._verts = [v0, v1, v2]
-        this._weights = [w0, w1, w2]
-        this._offset = [d0, d1, d2]
-
-        this._addProxyVertWeight(vertWeights, v0, vnum, w0)
-        this._addProxyVertWeight(vertWeights, v1, vnum, w1)
-        this._addProxyVertWeight(vertWeights, v2, vnum, w2)
-    }
-    protected _addProxyVertWeight(vertWeights: Map<number, Array<Array<number>>>, v: number, pv: number, w: number) {
-        if (vertWeights.has(v)) {
-            vertWeights.get(v)!.push([pv, w])
-        } else {
-            vertWeights.set(v, [[pv, w]])
-        }
     }
 }
 

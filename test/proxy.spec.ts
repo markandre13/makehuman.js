@@ -2,8 +2,10 @@ import { expect } from '@esm-bundle/chai'
 
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
-import { loadProxy, loadTextProxy, Proxy, ProxyRefVert, TMatrix } from "../src/proxy/Proxy"
+import { loadProxy, loadTextProxy, Proxy } from "../src/proxy/Proxy"
 import { WavefrontObj } from "../src/mesh/WavefrontObj"
+import { TMatrix } from '../src/proxy/TMatrix'
+import { ProxyRefVert } from '../src/proxy/ProxyRefVert'
 
 function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6
