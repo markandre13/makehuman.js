@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "npm run build:data && npm run build:once",
-    "build:once": "rollup --bundleConfigAsCjs --config rollup.config.js",
+    "build:once": "rollup --config rollup.config.mjs",
     "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && mv -f dist/filesystem/build-directory-files.js dist/filesystem/build-directory-files.cjs && node dist/filesystem/build-directory-files.cjs ) ",
     "build:watch": "rollup --config rollup.config.js --watch",
     "lint": "eslint src",
@@ -36,6 +36,7 @@
     "@esm-bundle/chai": "^4.3.4-fix.0",
     "@rollup/plugin-commonjs": "^24.0.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-terser": "^0.3.0",
     "@types/chai": "^4.3.4",
     "@types/chai-string": "^1.4.2",
     "@types/mocha": "^10.0.1",
