@@ -8,10 +8,10 @@
 
 ## Current Status
 
-* Have a look at [build 2022-08-11](https://markandre13.github.io/makehuman.js/) with toad.js branch table3
+* Have a look at [build 2023-01-22](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
 * Morph mesh
 * Pose skeleton and adjust mesh
-* Render a proxy mesh instead of the basemesh (normals are wrong for now)
+* Render a proxy mesh instead of the basemesh
 * Nothing else... 😅
 
 ## Why?
@@ -117,8 +117,8 @@ class VertexBoneWeights {
 Proxies provide additional meshes, e.g. teeth, tounge, eyes, alternative body
 meshes and cloth.
 
-The proxy files contain data created with [MakeClothes](https://github.com/makehumancommunity/community-plugins-makeclothes) which can transform the
-morphed/posed basemesh into a proxy mesh.
+The proxy files contain data which is used to transform the morphed/posed basemesh into a proxy mesh.
+These files are created with [MakeClothes](https://github.com/makehumancommunity/community-plugins-makeclothes).
 
 ```js
 class Proxy {
