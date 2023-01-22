@@ -5,7 +5,7 @@ import { Human } from "Human"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { mat3 } from 'gl-matrix'
+import { mat3, vec3 } from 'gl-matrix'
 
 // proxy files .proxy, .mhclo
 // mesh    : .obj
@@ -98,30 +98,41 @@ export class Proxy {
 
     update(/*mesh, fit_to_posed=False*/) {
         // #log.debug("Updating proxy %s.", self.name)
-        // coords = self.getCoords(fit_to_posed)
-        // mesh.changeCoords(coords)
-        // mesh.calcNormals()
-    }
-
-    getCoords(hcoord: number[]): number[] {
-        // in python: hcoord = [ [x,y,z], ... ], here: [x,y,z,...]
         // if fit_to_posed:
         //     hcoord = self.human.meshData.coord
         // else:
         //     hcoord = self.human.getRestposeCoordinates()
+        // coords = self.getCoords(hcoord)
+        // mesh.changeCoords(coords)
+        // mesh.calcNormals()
+    }
 
+    // looks like we get the base mesh in (morphed and/or posed)
+    // what do we do with the proxy mesh?
+    // or was the proxy mesh morphed/posed and this then corrects the proxy mesh???
+    getCoords(hcoord: number[]): number[] {
         const matrix = this.tmatrix.getMatrix(hcoord)
 
-        const ref_vIdxs = this.ref_vIdxs
-        const weights = this.weights
+        const ref_vIdxs = this.ref_vIdxs!
+        const weights = this.weights!
+        const offsets = this.offsets!
 
         const coord: number[] = []
-        // coord = (
-        //     hcoord[ref_vIdxs[:,0]] * weights[:,0,None] +
-        //     hcoord[ref_vIdxs[:,1]] * weights[:,1,None] +
-        //     hcoord[ref_vIdxs[:,2]] * weights[:,2,None] +
-        //     np.dot(matrix, self.offsets.transpose()).transpose()
-        // )
+        for(let i=0; i<ref_vIdxs.length; ++i) {
+            let w0 = weights[i][0], w1 = weights[i][1], w2 = weights[i][2],
+                idx = ref_vIdxs[i],
+                idx0 = idx[0] * 3, idx1 = idx[1] * 3, idx2 = idx[2] * 3,
+                t = vec3.transformMat3(
+                    vec3.create(),
+                    vec3.fromValues(offsets[i][0], offsets[i][1], offsets[i][2]),
+                    matrix)
+
+            let x = hcoord[idx0+0] * w0 + hcoord[idx1+0] * w1 + hcoord[idx2+0] * w2 + t[0]
+            let y = hcoord[idx0+1] * w0 + hcoord[idx1+1] * w1 + hcoord[idx2+1] * w2 + t[1]
+            let z = hcoord[idx0+2] * w0 + hcoord[idx1+2] * w1 + hcoord[idx2+2] * w2 + t[2]
+
+            coord.push(x,y,z)
+        }
 
         return coord
     }
