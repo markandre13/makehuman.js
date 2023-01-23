@@ -117,6 +117,14 @@ export class Proxy {
 
         return coord
     }
+
+    // return the weights for the proxy mesh
+    // o will be at least needed when exporting to wavefront, collada, ...
+    // o for testing without export, we could apply the proxy to the morphed mesh
+    //   and then pose the rig with it's own weights
+    getVertexWeights() {
+
+    }
 }
 
 export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes") {
