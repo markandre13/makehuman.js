@@ -135,15 +135,17 @@ Building needs toad.js from the github master branch. See 'npm link' for further
 
 npm run dev:test --file=build/test/skeleton.spec.js
 
-Next Goals:
+## Next Goals
 
-* posing via mediapipe/chordata
-* multiple proxy meshes
-* texture
+* posing via mediapipe/chordata (WIP)
 * export collada
 * save/load morph
 * save/load pose
+* multiple proxy meshes
+* texture
 * ...
+
+<!--
 
 # Development Notes
 
@@ -157,8 +159,15 @@ pip3.9 install --upgrade --force-reinstall PyQt5
 
 ## Mediapipe
 
-* https://google.github.io/mediapipe/
-* https://google.github.io/mediapipe/getting_started/install.html
+> For all practical purposes (again, at least for beginners), the only way to
+> use MP in your own software project, is to build your project inside the
+>  MediaPipe tree, ...
+
+* [What MediaPipe Really Is: a C++ Mini-Tutorial](https://www.it-jim.com/blog/mini-tutorial-on-mediapipe/)
+* [First steps with Google MediaPipe: An Informal tutorial](https://github.com/agrechnev/first_steps_mediapipe)
+
+* Source: https://google.github.io/mediapipe/
+* Install https://google.github.io/mediapipe/getting_started/install.html
 * build on macOS
   * git clone https://github.com/google/mediapipe.git
   * brew install bazelisk opencv@3
@@ -178,3 +187,5 @@ pip3.9 install --upgrade --force-reinstall PyQt5
     int apiID = cv::CAP_ANY; // 0 = autodetect default API
     capture.open(deviceID, apiID);
     ```
+
+-->
