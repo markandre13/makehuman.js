@@ -137,237 +137,44 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 Next Goals:
 
-* proxy meshes (WIP)
+* posing via mediapipe/chordata
+* multiple proxy meshes
+* texture
 * export collada
 * save/load morph
 * save/load pose
 * ...
-<!--
+
+# Development Notes
+
+## Makehuman
+
+```
 cd /Users/mark/upstream/makehuman/makehuman
 ./makehuman
-
-joe core/mhmain.py
 pip3.9 install --upgrade --force-reinstall PyQt5
+```
 
-WHAT TO DO NOW
+## Mediapipe
 
-===============================
+* https://google.github.io/mediapipe/
+* https://google.github.io/mediapipe/getting_started/install.html
+* build on macOS
+  * git clone https://github.com/google/mediapipe.git
+  * brew install bazelisk opencv@3
 
-fg = None
-groups = []
-faceGroups = {}
+    brew uninstall --ignore-dependencies glog
 
-# this seems to just store color/colorID ?
-class FaceGroup
-  name
-  idx
-  object: parent (Object3D)
-  color
-  colorID
-  
-class Object3D
-  _groups_rev[<name>] = FaceGroup // index in _faceGroups
-  _faceGroups = FaceGroup[]
-  createFaceGroup(name)
-  
-  # makehuman.js calculates those when rendering
-  fnorm[]: face normals
-  vnorm[]: vertex normals
-  vtang[]: vertex tangents
-  
----------------------
-// plugins/3_libraries_skeleton/skeletonlibrary.py
-human.setSkeleton(skel)
+    ./build_desktop_examples.sh -d out_dir [-b|-r]
+  * once the examples have been build, one can also run
+    * ``out_dir/face_mesh_cpu --calculator_graph_config_file=mediapipe/graphs/face_mesh/face_mesh_desktop_live.pbtxt``
+    * ``out_dir/hair_segmentation_cpu --calculator_graph_config_file=mediapipe/graphs/hair_segmentation/hair_segmentation_desktop_live.pbtxt``
+  * in case no video is shown but a picture of a crossed out camera, edit
+    mediapipe/mediapipe/examples/desktop/demo_run_graph_main.cc
+    and replace ``capture.open(0)`` with the code below and tweak deviceID:
 
-// shared/skeleton.py
-class Skeleton {
-  fromFile(path, mesh)
-}
-
-// apps/animation.py
-class AnimatedMesh {
-  __skeleton: Skeleton
-  __meshes: []
-  __vertexToBoneMaps: []
-  ...
-  
-  // this looks like were the animation is done... but
-  // it's only a part within some optimized code...
-  skinMesh(coords, compiledVertWeights, poseData)
-}
-
-class AnimationTrack
-class Pose: AnimationTrack
-class PoseUnit: AnimationTrack
-class VertexBoneWeights
-
-// apps/human.py
-class Human: AnimatedMesh {
-}
-
-===============================
-
-Proxy
-
-so basically, the proxy meshes must also go through morph and pose,
-which would mean theres a mapping of the morph/pose weights to the proxy mesh somewhere.
-
-but 1st, what exactly is in the Proxy class???
-
-me thinks that i did not implement the 3d object...
-
-what do we do with object.proxy ???
-
-proxy.object
-object.proxy (Object3D does not have a proxy attribute)
-
-Setting a proxy starts here:
-
-/Users/mark/upstream/makehuman/makehuman/plugins/3_libraries_proxy_chooser.py
-    def selectProxy(self, mhclofile):
-        pxy = proxy.loadProxy(self.human,
-                              mhclofile,
-                              type=self.proxyName.capitalize())
-        # Override z_depth and mesh priority to the same as human mesh
-        pxy.z_depth = self.human.getSeedMesh().priority
-        mesh,obj = pxy.loadMeshAndObject(self.human)
-        self.human.setProxy(pxy)
-
-/Users/mark/upstream/makehuman/makehuman/apps/human.py
-
-    def setProxy(self, proxy):
-        oldPxy = self.getProxy()
-        oldPxyMesh = self.getProxyMesh()
-        # Fit to basemesh in rest pose, then pose proxy
-        super(Human, self).setProxy(proxy)              
-
-        if oldPxyMesh:
-            self.removeBoundMesh(oldPxyMesh.name)
-        if self.proxy:
-            # Add new mesh and vertex weight assignments
-            self._updateMeshVertexWeights(self.getProxyMesh())
-            self.refreshPose()
-
-        event = events3d.HumanEvent(self, 'proxyChange')
-        event.proxy = 'human'
-        self.callEvent('onChanged', event)
-
-/Users/mark/upstream/makehuman/makehuman/core/guicommon.py
-    def setProxy(self, proxy):
-        isSubdivided = self.isSubdivided()
-
-        if self.proxy:
-            self.proxy = None
-            self.detachMesh(self.__proxyMesh)
-            self.__proxyMesh.clear()
-            self.__proxyMesh = None
-            if self.__proxySubdivisionMesh:
-                self.detachMesh(self.__proxySubdivisionMesh)
-                self.__proxySubdivisionMesh.clear()
-                self.__proxySubdivisionMesh = None
-            self.mesh = self.__seedMesh
-            self.mesh.setVisibility(1)
-
-        if proxy:
-            import files3d
-            self.proxy = proxy
-
-            self.__proxyMesh = proxy.object.mesh.clone()
-            self.__proxyMesh.object = self
-
-            # Copy attributes from human mesh to proxy mesh
-            for attr in ('visibility', 'pickable', 'cameraMode'):
-                setattr(self.__proxyMesh, attr, getattr(self.mesh, attr))
-
-            self.updateProxyMesh()
-
-            # Attach to GL object if this object is attached to viewport
-            if self.__seedMesh.object3d:
-                self.attachMesh(self.__proxyMesh)
-
-            self.mesh.setVisibility(0)
-            self.mesh = self.__proxyMesh
-            self.mesh.setVisibility(1)
-
-        self.setSubdivided(isSubdivided)
-
-    def updateProxyMesh(self, fit_to_posed=False):
-        if self.proxy and self.__proxyMesh:
-            self.proxy.update(self.__proxyMesh, fit_to_posed)
-            self.__proxyMesh.update()
-
-/Users/mark/upstream/makehuman/makehuman/shared/proxy.py
-
-    def update(self, mesh, fit_to_posed=False):
-        #log.debug("Updating proxy %s.", self.name)
-        coords = self.getCoords(fit_to_posed)
-        mesh.changeCoords(coords)
-        mesh.calcNormals()
-
-Object
-  setProxy()
-
-  detachMesh
-  attachMesh
-  updateProxyMesh()
-
-===============================
-
-I already implemented animating a makehuman generated mesh,
-but based on loading an export to collada.
-
-~/c/human/      ;; loads and animates a collada file exported by makehuman
-
-  collada.cc    ;; load collada file into human: Geometry
-    collada()
-    
-  human.hh      ;; the loaded collada file
-  class Geometry {
-        // mesh
-        vertex: double[]
-        normal: double[]
-        polylist_vcount: unsigned[]     // points per polygon in polylist
-        polylist: unsigned[]: vertex index/normal index
-        
-        // skeleton
-        skeleton: SkeletonNode
-        
-        // mesh-skeleton relation
-        joint: string[];             // a list of joint names within the skeleton
-        node: SkeletonNode*[]        // joint index to skeleton nodea
-        bindShapeMatrix: double[];
-        weight: double[];
-        inversebind: double[];
-        v: unsigned[];
-        vcount: unsigned[]; // should be the save as vertex/3
-  }
-  
-  class SkeletonNode {
-        name: string
-        children: SkeletonNode[]
-        m: Matrix
-        global_m: Matrix
-        x, y, z: double         // additional rotation
-  }
-
-human.cc
-  TViewer::glPaint()  
-    skinning equation
-    
-    v_out = sum_i=0^n ((v*BSM) * IBM_i * JMi) * JW_i
-    
-    n    = number of joints
-    BSM  := bind-shape matrix (identity in makehuman)
-    IBMi := inverse bin-pose matrix of joint i (not read yet)
-    JMi  := transformation matrix of joint j
-    JW   := weight of influence of joint i on vertex v
-
-BUG IN TOAD.JS (REGRESSION TEST FOR NOW)
-o switch to pose tab
-o open root
-o switch to morph tab
-o switch to pose tab
-o close root
-=> two root nodes appear
-
--->
+    ```c
+    int deviceID = 0; // 0 = default camera
+    int apiID = cv::CAP_ANY; // 0 = autodetect default API
+    capture.open(deviceID, apiID);
+    ```
