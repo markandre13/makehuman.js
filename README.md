@@ -137,10 +137,11 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 ## Next Goals
 
-* posing via mediapipe/chordata (WIP)
-* export collada
+* export collada (WIP)
 * save/load morph
 * save/load pose
+* posing via mediapipe/chordata (Done: PoC reading data in C++)
+  https://github.com/markandre13/mediapipe_cpp_lib
 * multiple proxy meshes
 * texture
 * ...
@@ -156,36 +157,5 @@ cd /Users/mark/upstream/makehuman/makehuman
 ./makehuman
 pip3.9 install --upgrade --force-reinstall PyQt5
 ```
-
-## Mediapipe
-
-> For all practical purposes (again, at least for beginners), the only way to
-> use MP in your own software project, is to build your project inside the
->  MediaPipe tree, ...
-
-* [What MediaPipe Really Is: a C++ Mini-Tutorial](https://www.it-jim.com/blog/mini-tutorial-on-mediapipe/)
-* [First steps with Google MediaPipe: An Informal tutorial](https://github.com/agrechnev/first_steps_mediapipe)
-
-* Source: https://google.github.io/mediapipe/
-* Install https://google.github.io/mediapipe/getting_started/install.html
-* build on macOS
-  * git clone https://github.com/google/mediapipe.git
-  * brew install bazelisk opencv@3
-
-    brew uninstall --ignore-dependencies glog
-
-    ./build_desktop_examples.sh -d out_dir [-b|-r]
-  * once the examples have been build, one can also run
-    * ``out_dir/face_mesh_cpu --calculator_graph_config_file=mediapipe/graphs/face_mesh/face_mesh_desktop_live.pbtxt``
-    * ``out_dir/hair_segmentation_cpu --calculator_graph_config_file=mediapipe/graphs/hair_segmentation/hair_segmentation_desktop_live.pbtxt``
-  * in case no video is shown but a picture of a crossed out camera, edit
-    mediapipe/mediapipe/examples/desktop/demo_run_graph_main.cc
-    and replace ``capture.open(0)`` with the code below and tweak deviceID:
-
-    ```c
-    int deviceID = 0; // 0 = default camera
-    int apiID = cv::CAP_ANY; // 0 = autodetect default API
-    capture.open(deviceID, apiID);
-    ```
 
 -->
