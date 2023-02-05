@@ -19,7 +19,8 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
 import { SliderTreeAdapter } from 'modifier/morphView'
-import { Signal } from 'toad.js'
+import { Button, Signal } from 'toad.js'
+import { exportCollada } from 'mesh/Collada'
 
 window.onload = () => { main() }
 
@@ -72,12 +73,12 @@ function run() {
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
     const mode = new EnumModel<Mode>(Mode)
-    mode.modified.add( () => { scene.mode = mode.value })
+    mode.modified.add(() => { scene.mode = mode.value })
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
     const poseChanged = new Signal<PoseNode>()
-    poseChanged.add( (poseNode) => {
+    poseChanged.add((poseNode) => {
         // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
         if (scene.updateRequired === Update.NONE) {
             scene.updateRequired = Update.POSE
@@ -86,14 +87,20 @@ function run() {
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
 
+    const download = makeDownloadAnchor()
+
     const references = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={mode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
             <Tab label="Morph" value="MORPH">
-                <Table model={morphControls} style={{width: '100%', height: '100%'}}/>
+                <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
             <Tab label="Pose" value="POSE">
-                <Table model={poseControls} style={{width: '100%', height: '100%'}}/>
+                <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
+            </Tab>
+            <Tab label="Export" value="POSE">
+                WiP: Blender doesn't import it yet.<br/>
+                <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
             </Tab>
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
@@ -102,6 +109,19 @@ function run() {
     </> as Fragment
     mainScreen.appendTo(document.body)
     render(references.canvas, scene)
+}
+
+function makeDownloadAnchor() {
+    const download = document.createElement("a")
+    download.type = "text/plain"
+    download.style.display = "hidden"
+    download.download = "makehuman.dae"
+    return download
+}
+
+function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
+    download.href = URL.createObjectURL(new Blob([exportCollada(scene)], { type: 'text/plain' }))
+    download.dispatchEvent(new MouseEvent("click"))
 }
 
 //
