@@ -150,6 +150,8 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 # Development Notes
 
+have a look at https://www.npmjs.com/package/avro-js to compress the data files some more
+
 ## Makehuman
 
 ```

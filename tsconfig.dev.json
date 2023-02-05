@@ -16,5 +16,6 @@
         "src/**/*.tsx",
         "test/skeleton.spec.ts",
         "test/proxy.spec.ts",
+        "test/mesh/Collada.spec.ts",
      ],
 }

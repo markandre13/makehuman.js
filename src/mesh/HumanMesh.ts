@@ -11,6 +11,7 @@ export function isZero(a: number): boolean {
     return Math.abs(a) <= epsilon
 }
 
+// FIXME: the name doesn't tell enough, alternatives(?): HowMuchToUpdate, WhatsChanged, ChangeType, ModelChangeExtend...
 export enum Update {
     NONE,
     MORPH,
