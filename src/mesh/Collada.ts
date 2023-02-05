@@ -10,8 +10,9 @@ import { calculateNormals } from '../../src/lib/calculateNormals'
 export function exportCollada(scene: HumanMesh) {
 
     // todo:
-    // [ ] export just the skin vertices
-    // [ ] export normals
+    // [X] export just the skin vertices
+    // [X] export normals
+    // [ ] export rig
 
     // a test cube
 
@@ -61,6 +62,9 @@ export function exportCollada(scene: HumanMesh) {
         polygons += `${index} `
     }
     ++maxIndex // TODO: this looks like we're compensating for an error somewhere?
+               //       also, in some cases '1' is the first element. could this be it?
+               //       should minIndex also be incremented?
+               //       we could load our test cube from an obj file to be sure!
     minIndex = minIndex * 3
     maxIndex = maxIndex * 3
 
@@ -126,6 +130,7 @@ export function exportCollada(scene: HumanMesh) {
 
         <triangles count="${scene.groups[Mesh.SKIN].length}">
           <input semantic="VERTEX" source="#skin-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#skin-mesh-normals" offset="0"/>
           <p>${polygons}</p>
         </triangles>
 
@@ -149,8 +154,3 @@ export function exportCollada(scene: HumanMesh) {
     return header
 }
 
-// we could just create json and then dump it as xml?
-
-// mesh     <library_geometries>
-// mesh-skeleton relation <library_controllers>
-// skeleton <library_visual_scenes>
