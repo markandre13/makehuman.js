@@ -24,21 +24,21 @@ export function exportCollada(scene: HumanMesh) {
     //         -1,  1,  1,
     //         -1,  1, -1,
     //         -1, -1,  1,
-    //         -1, -1, -1 
+    //         -1, -1, -1
     //     ],
     //     indices: [
-    //         4, 2, 0,  
-    //         2, 7, 3,   
-    //         6, 5, 7,  
-    //         1, 7, 5,   
-    //         0, 3, 1,  
-    //         4, 1, 5,  
-    //         4, 6, 2,  
-    //         2, 6, 7,  
-    //         6, 4, 5,  
-    //         1, 3, 7,  
-    //         0, 2, 3,  
-    //         4, 0, 1  
+    //         4, 2, 0,
+    //         2, 7, 3,
+    //         6, 5, 7,
+    //         1, 7, 5,
+    //         0, 3, 1,
+    //         4, 1, 5,
+    //         4, 6, 2,
+    //         2, 6, 7,
+    //         6, 4, 5,
+    //         1, 3, 7,
+    //         0, 2, 3,
+    //         4, 0, 1
     //     ],
     //     groups: [{
     //         startIndex: 0,
@@ -48,13 +48,38 @@ export function exportCollada(scene: HumanMesh) {
 
     let e = scene.groups[Mesh.SKIN].startIndex + scene.groups[0].length
     let polygons = " "
+    let maxIndex = Number.MIN_VALUE
+    let minIndex = Number.MAX_VALUE
     for (let i = scene.groups[Mesh.SKIN].startIndex; i < e; ++i) {
-        polygons += `${scene.indices[i]} `
+        const index = scene.indices[i]
+        if (maxIndex < index) {
+            maxIndex = index
+        }
+        if (minIndex > index) {
+            minIndex = index
+        }
+        polygons += `${index} `
+    }
+    ++maxIndex // TODO: this looks like we're compensating for an error somewhere?
+    minIndex = minIndex * 3
+    maxIndex = maxIndex * 3
+
+    function numberRangeToString(array: number[], start: number, end: number) {
+        let result = ""
+        for (let i = start; i <= end; ++i) {
+            result += `${array[i]} `
+        }
+        return result
     }
 
     const normals = calculateNormals(scene.vertex, scene.indices)
     let header = `<?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!---
+    SKIN: startIndex=${scene.groups[Mesh.SKIN].startIndex}, length=${scene.groups[Mesh.SKIN].length}
+    min: ${minIndex}
+    max: ${maxIndex}
+-->
   <asset>
     <contributor>
       <author>makehuman.js user</author>
@@ -71,7 +96,7 @@ export function exportCollada(scene: HumanMesh) {
 
         <source id="skin-mesh-positions">
           <float_array id="skin-mesh-positions-array" count="${scene.vertex.length}">
-            ${scene.vertex.map(v => `${v}`).join(" ")}
+            ${numberRangeToString(scene.vertex, minIndex, maxIndex)}
           </float_array>
           <technique_common>
             <accessor source="#skin-mesh-positions-array" count="${scene.vertex.length / 3}" stride="3">
@@ -84,7 +109,7 @@ export function exportCollada(scene: HumanMesh) {
 
         <source id="skin-mesh-normals">
           <float_array id="skin-mesh-normals-array" count="${normals.length}">
-            ${normals.map(v => `${v}`).join(" ")}
+            ${numberRangeToString(normals, minIndex, maxIndex)}
           </float_array>
           <technique_common>
             <accessor source="#skin-mesh-normals-array" count="${normals.length / 3}" stride="3">
