@@ -2,6 +2,7 @@ import { HumanMesh } from './HumanMesh'
 import { Mesh } from '../Mesh'
 import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
+import { vec4 } from 'gl-matrix'
 
 // COLLAborative Design Activity
 // https://en.wikipedia.org/wiki/COLLADA
@@ -162,17 +163,16 @@ export function exportCollada(scene: HumanMesh) {
     <visual_scene id="Scene" name="Scene">
 
       <!-- if we just wanna display the mesh, then it is this -->
-<!--
+
       <node id="skin" name="skin" type="NODE">
         <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
         <instance_geometry url="#skin-mesh" name="skin">
         </instance_geometry>
       </node>
--->
 
       <!-- if we have an armature, with the mesh as a child, the it is this -->
       <node id="human" name="human" type="NODE">
-        <matrix sid="transform">0.115475 0 0 0 0 0.115475 0 0 0 0 0.115475 0 0 0 0 1</matrix>
+        <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
 ${dumpBone(scene.human.__skeleton.roots[0], 4)}
       </node>
     </visual_scene>
@@ -207,6 +207,23 @@ export function dumpBone(bone: Bone, indent: number = 0) {
     for (let child of bone.children) {
         result += dumpBone(child, indent + 1)
     }
+
+    // console.log(bone.roll)
+
+    const boneMat = bone.matRestGlobal!
+    const boneHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), boneMat)
+    const boneTail = vec4.transformMat4(vec4.create(), bone.yvector4!, boneMat)
+    const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
+
+    result += `<extra>
+  <technique profile="blender">
+  <layer sid="layer" type="string">0</layer>
+    <roll sid="roll" type="float">0</roll>
+    <tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
+    <tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
+    <tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>
+  </technique>
+</extra>\n`
     result += `${indentStr}</node>\n`
     return result
 }
