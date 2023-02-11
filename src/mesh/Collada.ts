@@ -18,6 +18,7 @@ import { vec4, mat4 } from 'gl-matrix'
 export function exportCollada(scene: HumanMesh) {
     return colladaHead() +
         colladaGeometries(scene) + // mesh
+        colladaControllers(scene) + // weights
         colladaVisualScenes(scene) + // skeleton
         colladaScene() +
         colladaTail()
@@ -111,7 +112,67 @@ function colladaGeometries(scene: HumanMesh): string {
   </library_geometries>`
 }
 
-function colladaVisualScenes(scene: HumanMesh) {
+function colladaControllers(scene: HumanMesh): string {
+    return `
+    <library_controllers>
+      <controller id="human_human_body-skin" name="human">
+        <skin source="#skin-mesh">
+          <bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>
+  
+          <!-- JOINTS: list all 124 joints in the skeleton by name -->
+          <source id="dariya_dariya_body-skin-joints">
+            <Name_array id="dariya_dariya_body-skin-joints-array" count="124">...</Name_array>
+            <technique_common>
+              <accessor source="#dariya_dariya_body-skin-joints-array" count="124" stride="1">
+                <param name="JOINT" type="name"/>
+              </accessor>
+            </technique_common>
+          </source>
+          
+          <!-- BIND MATRIX: one bind pose 4x4 matrix for each of the 124 joints (124 x 16 = 1984 floats) -->
+          <!-- inverse of rest matrix? -->
+          <!-- 'bind matrix': convert global coordinate to a joint's local coordinate? -->
+          <source id="dariya_dariya_body-skin-bind_poses">
+            <float_array id="dariya_dariya_body-skin-bind_poses-array" count="1984">...</float_array>
+            <technique_common>
+              <accessor source="#dariya_dariya_body-skin-bind_poses-array" count="124" stride="16">
+                  <param name="TRANSFORM" type="float4x4"/>
+              </accessor>
+            </technique_common>
+          </source>
+  
+          <!-- JOINT + BIND MATRIX -->
+          <joints>
+            <input semantic="JOINT" source="#dariya_dariya_body-skin-joints"/>
+            <input semantic="INV_BIND_MATRIX" source="#dariya_dariya_body-skin-bind_poses"/>
+          </joints>
+  
+          <!-- WEIGHTS -->
+          <source id="dariya_dariya_body-skin-weights">
+            <float_array id="dariya_dariya_body-skin-weights-array" count="40912">...</float_array>
+            <technique_common>
+              <accessor source="#dariya_dariya_body-skin-weights-array" count="40912" stride="1">
+                <param name="WEIGHT" type="float"/>
+              </accessor>
+            </technique_common>
+          </source>
+  
+          <!-- associate a set of joint-weight pairs with each vertex in the base mesh -->
+          <vertex_weights count="13380">
+            <input semantic="JOINT" source="#dariya_dariya_body-skin-joints" offset="0"/>
+            <input semantic="WEIGHT" source="#dariya_dariya_body-skin-weights" offset="1"/>
+            <!-- number of joint-weight pairs per vertex in the base mesh -->
+            <vcount>...</vcount>
+            <!-- list of joint-index weight-index pairs -->
+            <v>...</v>
+          </vertex_weights>
+  
+        </skin>
+      </controller>
+    </library_controllers>`
+}
+
+function colladaVisualScenes(scene: HumanMesh): string {
     return `
     <library_visual_scenes>
      <visual_scene id="Scene" name="Scene">
@@ -130,7 +191,27 @@ function colladaVisualScenes(scene: HumanMesh) {
    </library_visual_scenes>`
 }
 
-function colladaScene() {
+function colladaVisualScenes2(scene: HumanMesh): string {
+    const rootBone = scene.human.__skeleton.roots[0]
+    return `
+    <library_visual_scenes>
+      <visual_scene id="Scene" name="Scene">
+  
+        <!-- if we have an armature, with the mesh as a child, the it is this -->
+        <node id="human" name="human" type="NODE">
+          <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+  ${dumpBone(rootBone, 4)}
+          <node id="skin" name="skin" type="NODE">
+            <matrix sid="transform">1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+            <!-- #dariya_dariya_body-skin references a controller -->
+            <instance_controller url="#human_human_body-skin">
+            <skeleton>#human_${rootBone.name}</skeleton>
+        </node>
+      </visual_scene>
+    </library_visual_scenes>`
+}
+
+function colladaScene(): string {
     return `
   <scene>
     <instance_visual_scene url="#Scene"/>
