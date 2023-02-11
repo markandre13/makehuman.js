@@ -2,7 +2,7 @@ import { HumanMesh } from './HumanMesh'
 import { Mesh } from '../Mesh'
 import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
-import { vec4 } from 'gl-matrix'
+import { vec4, mat4 } from 'gl-matrix'
 
 // COLLAborative Design Activity
 // https://en.wikipedia.org/wiki/COLLADA
@@ -16,56 +16,33 @@ import { vec4 } from 'gl-matrix'
 // the <extra>...</extra> will allow blender to render the bone as a viewport shape
 
 export function exportCollada(scene: HumanMesh) {
+    return colladaHead() +
+        colladaGeometries(scene) + // mesh
+        colladaVisualScenes(scene) + // skeleton
+        colladaScene() +
+        colladaTail()
+}
 
-    // todo:
-    // [X] export just the skin vertices
-    // [X] export normals
-    // [ ] export rig
+function colladaHead(): string {
+    return `<?xml version="1.0" encoding="utf-8"?>
+    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <asset>
+        <contributor>
+          <author>makehuman.js user</author>
+          <authoring_tool>https://github.com/markandre13/makehuman.js</authoring_tool>
+        </contributor>
+        <created>${new Date().toISOString()}</created>
+        <modified>${new Date().toISOString()}</modified>
+        <unit name="meter" meter="1"/>
+        <up_axis>Z_UP</up_axis>
+      </asset>`
+}
 
-    // skeleton:
-    // <library_visual_scenes>
-    //   <visual_scene>
-    //    <node name=...>
-    //      matrix,translate,rotate
-    // mesh-skeleton relation
-    // <library_controllers>
-    //   <controller>
-    //     <skin>
-    //       <bind_shape_matrix>
+function colladaTail(): string {
+    return `\n</COLLADA>\n`
+}
 
-    // a test cube
-
-    // const scene = {
-    //     vertex: [
-    //          1,  1,  1,
-    //          1,  1, -1,
-    //          1, -1,  1,
-    //          1, -1, -1,
-    //         -1,  1,  1,
-    //         -1,  1, -1,
-    //         -1, -1,  1,
-    //         -1, -1, -1
-    //     ],
-    //     indices: [
-    //         4, 2, 0,
-    //         2, 7, 3,
-    //         6, 5, 7,
-    //         1, 7, 5,
-    //         0, 3, 1,
-    //         4, 1, 5,
-    //         4, 6, 2,
-    //         2, 6, 7,
-    //         6, 4, 5,
-    //         1, 3, 7,
-    //         0, 2, 3,
-    //         4, 0, 1
-    //     ],
-    //     groups: [{
-    //         startIndex: 0,
-    //         length: 3 * 12
-    //     }]
-    // }
-
+function colladaGeometries(scene: HumanMesh): string {
     let e = scene.groups[Mesh.SKIN].startIndex + scene.groups[0].length
     let polygons = " "
     let maxIndex = Number.MIN_VALUE
@@ -87,36 +64,9 @@ export function exportCollada(scene: HumanMesh) {
     minIndex = minIndex * 3
     maxIndex = maxIndex * 3
 
-    function numberRangeToString(array: number[], start: number, end: number) {
-        let result = ""
-        for (let i = start; i <= end; ++i) {
-            result += `${array[i]} `
-        }
-        return result
-    }
-
     const normals = calculateNormals(scene.vertex, scene.indices)
-    let header = `<?xml version="1.0" encoding="utf-8"?>
-<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<!---
-    SKIN: startIndex=${scene.groups[Mesh.SKIN].startIndex}, length=${scene.groups[Mesh.SKIN].length}
-    min: ${minIndex}
-    max: ${maxIndex}
--->
-  <asset>
-    <contributor>
-      <author>makehuman.js user</author>
-      <authoring_tool>https://github.com/markandre13/makehuman.js</authoring_tool>
-    </contributor>
-    <created>${new Date().toISOString()}</created>
-    <modified>${new Date().toISOString()}</modified>
-    <unit name="meter" meter="1"/>
-    <up_axis>Z_UP</up_axis>
-  </asset>
 
-  <!-- MESH -->
-
-  <library_geometries>
+    return `<library_geometries>
     <geometry id="skin-mesh" name="skin">
       <mesh>
 
@@ -158,72 +108,88 @@ export function exportCollada(scene: HumanMesh) {
 
         </mesh>
     </geometry>
-  </library_geometries>
-  <library_visual_scenes>
-    <visual_scene id="Scene" name="Scene">
-
-      <!-- if we just wanna display the mesh, then it is this -->
-
-      <node id="skin" name="skin" type="NODE">
-        <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
-        <instance_geometry url="#skin-mesh" name="skin">
-        </instance_geometry>
-      </node>
-
-      <!-- if we have an armature, with the mesh as a child, the it is this -->
-      <node id="human" name="human" type="NODE">
-        <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
-${dumpBone(scene.human.__skeleton.roots[0], 4)}
-      </node>
-    </visual_scene>
-  </library_visual_scenes>
-  <scene>
-    <instance_visual_scene url="#Scene"/>
-  </scene>
-</COLLADA>
-`
-    return header
+  </library_geometries>`
 }
 
-export function dumpBone(bone: Bone, indent: number = 0) {
+function colladaVisualScenes(scene: HumanMesh) {
+    return `
+    <library_visual_scenes>
+     <visual_scene id="Scene" name="Scene">
+ 
+       <node id="skin" name="skin" type="NODE">
+         <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+         <instance_geometry url="#skin-mesh" name="skin">
+         </instance_geometry>
+       </node>
+ 
+       <node id="human" name="human" type="NODE">
+         <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+ ${dumpBone(scene.human.__skeleton.roots[0], 4)}
+       </node>
+     </visual_scene>
+   </library_visual_scenes>`
+}
+
+function colladaScene() {
+    return `
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>`
+}
+
+export function dumpBone(bone: Bone, indent: number = 0): string {
     const name = bone.name
     const name0 = name.replace(".", "_")
-
-    const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
-    let matrix = ""
-    for (let i = 0; i < 16; ++i) {
-        const x = bone.matRestRelative![map[i]]
-        matrix = `${matrix}${x} `
-    }
-    matrix = matrix.trimEnd()
-
-    let indentStr = ""
-    for (let i = 0; i < indent; ++i) {
-        indentStr += "  "
-    }
-
-    let result = `${indentStr}<node id="dariya_${name0}" name="${name}" sid="${name0}" type="JOINT">\n`
-        + `  ${indentStr}<matrix sid="transform">${matrix}</matrix>\n`
+    const indentStr = indentToString(indent)
+    let result = `${indentStr}<node id="human_${name0}" name="${name}" sid="${name0}" type="JOINT">\n`
+        + `  ${indentStr}<matrix sid="transform">${matrixToString(bone.matRestRelative!)}</matrix>\n`
     for (let child of bone.children) {
         result += dumpBone(child, indent + 1)
     }
 
-    // console.log(bone.roll)
-
+    // the extra section allows the Blender Collada importer to get the bones right
+    // without the Armature options Fix Leaf Bones, Find Bone CHains and Auto Connect being enabled.
+    // (not sure if it replaces all those options...)
     const boneMat = bone.matRestGlobal!
     const boneHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), boneMat)
     const boneTail = vec4.transformMat4(vec4.create(), bone.yvector4!, boneMat)
     const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
+    result += `${indentStr}<extra>
+  ${indentStr}<technique profile="blender">
+    ${indentStr}<layer sid="layer" type="string">0</layer>
+    ${indentStr}<roll sid="roll" type="float">0</roll>
+    ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
+    ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
+    ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>
+  ${indentStr}</technique>
+${indentStr}</extra>\n`
 
-    result += `<extra>
-  <technique profile="blender">
-  <layer sid="layer" type="string">0</layer>
-    <roll sid="roll" type="float">0</roll>
-    <tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
-    <tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
-    <tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>
-  </technique>
-</extra>\n`
     result += `${indentStr}</node>\n`
+    return result
+}
+
+function indentToString(indent: number): string {
+    let indentStr = ""
+    for (let i = 0; i < indent; ++i) {
+        indentStr += "  "
+    }
+    return indentStr
+}
+
+function matrixToString(matrix: mat4): string {
+    const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
+    let out = ""
+    for (let i = 0; i < 16; ++i) {
+        const x = matrix[map[i]]
+        out += `${x} `
+    }
+    return out.trimEnd()
+}
+
+function numberRangeToString(array: number[], start: number, end: number): String {
+    let result = ""
+    for (let i = start; i <= end; ++i) {
+        result += `${array[i]} `
+    }
     return result
 }
