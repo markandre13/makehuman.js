@@ -19,7 +19,7 @@ export function exportCollada(scene: HumanMesh) {
     return colladaHead() +
         colladaGeometries(scene) + // mesh
         colladaControllers(scene) + // weights
-        colladaVisualScenes(scene) + // skeleton
+        colladaVisualScenes2(scene) + // skeleton
         colladaScene() +
         colladaTail()
 }
@@ -112,36 +112,77 @@ function colladaGeometries(scene: HumanMesh): string {
   </library_geometries>`
 }
 
+interface JointData {
+    bone: number[]
+    weight: number[]
+}
+
 function colladaControllers(scene: HumanMesh): string {
+    const vbw = scene.human.__skeleton.vertexWeights!._data
+    let boneNames = ""
+    let bindMatrices = ""
+    let allWeights: number[] = []
+    let bar = new Map<number, JointData>()
+    let boneCounter = 0
+    for(let [name, [vertex, weight]] of vbw) {
+        boneNames += `${name.replace(".", "_")} `
+        const bone = scene.human.__skeleton.bones.get(name)!
+        bindMatrices += matrixToString(mat4.invert(mat4.create(), bone.matRestGlobal!)) + " "
+        for(let i=0; i<vertex.length; ++i) {
+            let vertexInfo = bar.get(vertex[i])
+            if (vertexInfo === undefined) {
+                vertexInfo = {
+                    bone: [],
+                    weight: []
+                }
+                bar.set(vertex[i], vertexInfo)
+            }
+            vertexInfo.bone.push(boneCounter)
+            vertexInfo.weight.push(allWeights.length)
+            allWeights.push(weight[i])
+        }
+        ++boneCounter
+    }
+    let vcount: number[] = []
+    let foo: number[] = []
+    for(let [vertex,b] of bar) {
+        vcount.push(b.bone.length)
+        for(let i=0; i<b.bone.length; ++i) {
+            foo.push(b.bone[i])
+            foo.push(b.weight[i])
+        }
+    }
+
+    boneNames = boneNames.trimEnd()
+    bindMatrices = bindMatrices.trimEnd()
+
     return `
     <library_controllers>
       <controller id="human_human_body-skin" name="human">
         <skin source="#skin-mesh">
           <bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>
   
-          <!-- JOINTS: list all 124 joints in the skeleton by name -->
+          <!-- JOINTS: list all joints in the skeleton by name -->
           <source id="dariya_dariya_body-skin-joints">
-            <Name_array id="dariya_dariya_body-skin-joints-array" count="124">...</Name_array>
+            <Name_array id="dariya_dariya_body-skin-joints-array" count="${vbw.size}">${boneNames}</Name_array>
             <technique_common>
-              <accessor source="#dariya_dariya_body-skin-joints-array" count="124" stride="1">
+              <accessor source="#dariya_dariya_body-skin-joints-array" count="${vbw.size}" stride="1">
                 <param name="JOINT" type="name"/>
               </accessor>
             </technique_common>
           </source>
           
-          <!-- BIND MATRIX: one bind pose 4x4 matrix for each of the 124 joints (124 x 16 = 1984 floats) -->
-          <!-- inverse of rest matrix? -->
-          <!-- 'bind matrix': convert global coordinate to a joint's local coordinate? -->
+          <!-- INVERSE BIND MATRIX: one inverse 4x4 rest matrix for each of the joints (?) -->
           <source id="dariya_dariya_body-skin-bind_poses">
-            <float_array id="dariya_dariya_body-skin-bind_poses-array" count="1984">...</float_array>
+            <float_array id="dariya_dariya_body-skin-bind_poses-array" count="${vbw.size * 16}">${bindMatrices}</float_array>
             <technique_common>
-              <accessor source="#dariya_dariya_body-skin-bind_poses-array" count="124" stride="16">
+              <accessor source="#dariya_dariya_body-skin-bind_poses-array" count="${vbw.size}" stride="16">
                   <param name="TRANSFORM" type="float4x4"/>
               </accessor>
             </technique_common>
           </source>
   
-          <!-- JOINT + BIND MATRIX -->
+          <!-- JOINT + INVERSE BIND MATRIX -->
           <joints>
             <input semantic="JOINT" source="#dariya_dariya_body-skin-joints"/>
             <input semantic="INV_BIND_MATRIX" source="#dariya_dariya_body-skin-bind_poses"/>
@@ -149,22 +190,22 @@ function colladaControllers(scene: HumanMesh): string {
   
           <!-- WEIGHTS -->
           <source id="dariya_dariya_body-skin-weights">
-            <float_array id="dariya_dariya_body-skin-weights-array" count="40912">...</float_array>
+            <float_array id="dariya_dariya_body-skin-weights-array" count="${allWeights.length}">${numbersToString(allWeights)}</float_array>
             <technique_common>
-              <accessor source="#dariya_dariya_body-skin-weights-array" count="40912" stride="1">
+              <accessor source="#dariya_dariya_body-skin-weights-array" count="${allWeights.length}" stride="1">
                 <param name="WEIGHT" type="float"/>
               </accessor>
             </technique_common>
           </source>
   
           <!-- associate a set of joint-weight pairs with each vertex in the base mesh -->
-          <vertex_weights count="13380">
+          <vertex_weights count="${foo.length}">
             <input semantic="JOINT" source="#dariya_dariya_body-skin-joints" offset="0"/>
             <input semantic="WEIGHT" source="#dariya_dariya_body-skin-weights" offset="1"/>
             <!-- number of joint-weight pairs per vertex in the base mesh -->
-            <vcount>...</vcount>
+            <vcount>${numbersToString(vcount)}</vcount>
             <!-- list of joint-index weight-index pairs -->
-            <v>...</v>
+            <v>${numbersToString(foo)}</v>
           </vertex_weights>
   
         </skin>
@@ -197,15 +238,15 @@ function colladaVisualScenes2(scene: HumanMesh): string {
     <library_visual_scenes>
       <visual_scene id="Scene" name="Scene">
   
-        <!-- if we have an armature, with the mesh as a child, the it is this -->
         <node id="human" name="human" type="NODE">
           <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
   ${dumpBone(rootBone, 4)}
           <node id="skin" name="skin" type="NODE">
             <matrix sid="transform">1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
-            <!-- #dariya_dariya_body-skin references a controller -->
             <instance_controller url="#human_human_body-skin">
-            <skeleton>#human_${rootBone.name}</skeleton>
+              <skeleton>#human_${rootBone.name}</skeleton>
+            </instance_controller>
+          </node>
         </node>
       </visual_scene>
     </library_visual_scenes>`
@@ -267,7 +308,11 @@ function matrixToString(matrix: mat4): string {
     return out.trimEnd()
 }
 
-function numberRangeToString(array: number[], start: number, end: number): String {
+function numbersToString(array: number[]): string {
+    return numberRangeToString(array, 0, array.length-1)
+}
+
+function numberRangeToString(array: number[], start: number, end: number): string {
     let result = ""
     for (let i = start; i <= end; ++i) {
         result += `${array[i]} `
