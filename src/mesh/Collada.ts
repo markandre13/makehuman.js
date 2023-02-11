@@ -1,11 +1,18 @@
-import { HumanMesh } from '../../src/mesh/HumanMesh'
-import { Mesh } from '../../src/Mesh'
-import { calculateNormals } from '../../src/lib/calculateNormals'
+import { HumanMesh } from './HumanMesh'
+import { Mesh } from '../Mesh'
+import { Bone } from '../skeleton/Bone'
+import { calculateNormals } from '../lib/calculateNormals'
 
 // COLLAborative Design Activity
 // https://en.wikipedia.org/wiki/COLLADA
 // https://docs.fileformat.com/3d/dae/
 // https://github.com/blender/blender/blob/master/source/blender/io/collada/MeshImporter.cpp
+
+// not all dae files i have, have a good skeleton when imported into blender
+// this ones good: (exported with blender from a makehuman import)
+// /Users/mark/Documents/Blender/objects/people/dariya/dariya.dae
+
+// the <extra>...</extra> will allow blender to render the bone as a viewport shape
 
 export function exportCollada(scene: HumanMesh) {
 
@@ -13,6 +20,17 @@ export function exportCollada(scene: HumanMesh) {
     // [X] export just the skin vertices
     // [X] export normals
     // [ ] export rig
+
+    // skeleton:
+    // <library_visual_scenes>
+    //   <visual_scene>
+    //    <node name=...>
+    //      matrix,translate,rotate
+    // mesh-skeleton relation
+    // <library_controllers>
+    //   <controller>
+    //     <skin>
+    //       <bind_shape_matrix>
 
     // a test cube
 
@@ -62,9 +80,9 @@ export function exportCollada(scene: HumanMesh) {
         polygons += `${index} `
     }
     ++maxIndex // TODO: this looks like we're compensating for an error somewhere?
-               //       also, in some cases '1' is the first element. could this be it?
-               //       should minIndex also be incremented?
-               //       we could load our test cube from an obj file to be sure!
+    //       also, in some cases '1' is the first element. could this be it?
+    //       should minIndex also be incremented?
+    //       we could load our test cube from an obj file to be sure!
     minIndex = minIndex * 3
     maxIndex = maxIndex * 3
 
@@ -94,6 +112,9 @@ export function exportCollada(scene: HumanMesh) {
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
+
+  <!-- MESH -->
+
   <library_geometries>
     <geometry id="skin-mesh" name="skin">
       <mesh>
@@ -139,10 +160,20 @@ export function exportCollada(scene: HumanMesh) {
   </library_geometries>
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
+
+      <!-- if we just wanna display the mesh, then it is this -->
+<!--
       <node id="skin" name="skin" type="NODE">
         <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
         <instance_geometry url="#skin-mesh" name="skin">
         </instance_geometry>
+      </node>
+-->
+
+      <!-- if we have an armature, with the mesh as a child, the it is this -->
+      <node id="human" name="human" type="NODE">
+        <matrix sid="transform">0.115475 0 0 0 0 0.115475 0 0 0 0 0.115475 0 0 0 0 1</matrix>
+${dumpBone(scene.human.__skeleton.roots[0], 4)}
       </node>
     </visual_scene>
   </library_visual_scenes>
@@ -154,3 +185,28 @@ export function exportCollada(scene: HumanMesh) {
     return header
 }
 
+export function dumpBone(bone: Bone, indent: number = 0) {
+    const name = bone.name
+    const name0 = name.replace(".", "_")
+
+    const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
+    let matrix = ""
+    for (let i = 0; i < 16; ++i) {
+        const x = bone.matRestRelative![map[i]]
+        matrix = `${matrix}${x} `
+    }
+    matrix = matrix.trimEnd()
+
+    let indentStr = ""
+    for (let i = 0; i < indent; ++i) {
+        indentStr += "  "
+    }
+
+    let result = `${indentStr}<node id="dariya_${name0}" name="${name}" sid="${name0}" type="JOINT">\n`
+        + `  ${indentStr}<matrix sid="transform">${matrix}</matrix>\n`
+    for (let child of bone.children) {
+        result += dumpBone(child, indent + 1)
+    }
+    result += `${indentStr}</node>\n`
+    return result
+}
