@@ -2,7 +2,7 @@ import { Human } from '../Human'
 import { Bone } from './Bone'
 import { FileInformation, _getHumanJointPosition } from './loadSkeleton'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { VertexBoneWeights } from './VertexBoneWeights'
+import { VertexBoneWeights, VertexBoneMapping } from './VertexBoneWeights'
 import { vec3, mat4, vec4 } from 'gl-matrix'
 
 export class Skeleton {
@@ -263,7 +263,7 @@ export class Skeleton {
         return bone
     }
 
-    skinMesh(meshCoords: number[], vertBoneMapping: Map<string, Array<Array<number>>>): number[] {
+    skinMesh(meshCoords: number[], vertBoneMapping: VertexBoneMapping): number[] {
         const coords = new Array<number>(meshCoords.length).fill(0)
         for (let [bname, mapping] of vertBoneMapping.entries()) {
             const [verts, weights] = mapping

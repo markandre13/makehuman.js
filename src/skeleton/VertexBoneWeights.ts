@@ -17,10 +17,16 @@ import { FileInformation } from './loadSkeleton'
 //   data: weights
 //   info: name, version, description, copyright, license
 
+// Map<boneName, [vertexIndex[], vertexWeight[]]
+//                ^              ^
+//                |              how much the vertex is influenced by the bone
+//                index of vertex influenced by the bone
+export type VertexBoneMapping = Map<string, Array<Array<number>>>
+
 export class VertexBoneWeights {
     info: FileInformation
     _vertexCount!: number
-    _data: Map<string, Array<Array<number>>>
+    _data: VertexBoneMapping
     constructor(filename: string, data: any) {
         // data.weights = []
         console.log(`VertexBoneWeights: filename='${filename}', data=${data}`)
@@ -36,7 +42,7 @@ export class VertexBoneWeights {
         this._calculate_num_weights()
     }
 
-    protected _build_vertex_weights_data(vertexWeightsDict: any, vertexCount: number | undefined = undefined, rootBone: string = "root"): Map<string, Array<Array<number>>> {
+    protected _build_vertex_weights_data(vertexWeightsDict: any, vertexCount: number | undefined = undefined, rootBone: string = "root"): VertexBoneMapping {
         const WEIGHT_THRESHOLD = 1e-4 // Threshold for including bone weight
 
         // first_entry = list(vertexWeightsDict.keys())[0] if len(vertexWeightsDict) > 0 else None
@@ -81,7 +87,7 @@ export class VertexBoneWeights {
             })
         }
 
-        const boneWeights = new Map<string, any>()
+        const boneWeights: VertexBoneMapping = new Map<string, any>()
         for (let bname of Object.getOwnPropertyNames(vertexWeightsDict)) {
             const vgroup = vertexWeightsDict[bname]
             if (vgroup.length === 0) {
@@ -114,7 +120,7 @@ export class VertexBoneWeights {
             vs = []
             ws = []
         } else {
-            [vs, ws] = boneWeights.get(rootBone)
+            [vs, ws] = boneWeights.get(rootBone)!
         }
         const rw_i = totalWeightPerVertex
             .map((value, index) => value === 0 ? index : -1)
