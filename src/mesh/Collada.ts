@@ -9,17 +9,122 @@ import { vec4, mat4 } from 'gl-matrix'
 // https://docs.fileformat.com/3d/dae/
 // https://github.com/blender/blender/blob/master/source/blender/io/collada/MeshImporter.cpp
 
-// not all dae files i have, have a good skeleton when imported into blender
-// this ones good: (exported with blender from a makehuman import)
-// /Users/mark/Documents/Blender/objects/people/dariya/dariya.dae
+const bone001 = {
+    name: "Bone.001",
+    children: [],
+    yvector4: vec4.fromValues(0, 0, 1, 0),
+    matRestGlobal: mat4.fromValues(
+        1, 0, 0, 0,
+        0, 0, 1, 0,
+        0, -1, 0, 0,
+        0, 0, 0, 1
+    ),
+    matRestRelative: mat4.fromValues(
+        1, 0, 0, 0,
+        0, 1, 0, 1,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ),
+}
+const bone000 = {
+    name: "Bone",
+    children: [bone001],
+    yvector4: vec4.fromValues(0, 0, 1, 0),
+    matRestGlobal: mat4.fromValues(
+        1, 0, 0, 0,
+        0, 0, 1, 1,
+        0, -1, 0, 0,
+        0, 0, 0, 1
+    ),
+    matRestRelative: mat4.fromValues(
+        1, 0, 0, 0,
+        0, 0, -1, 0,
+        0, 1, 0, 0,
+        0, 0, 0, 1
+    ),
+}
 
-// the <extra>...</extra> will allow blender to render the bone as a viewport shape
+//
+//         4____________ 0
+//        /            /|
+//       /            / |
+//     6/___________2/  |
+//      |   11       | /|8 
+//     9|__________10|/ |
+//      |  5         | / 1
+//      |____________|/
+//     7             3 
+//  z  y
+//  ^ /
+//  |/
+//  +-->x
+
+export const testCube = ({
+    vertex: [
+        1, 1, 1,
+        1, 1, -1,
+        1, -1, 1,
+        1, -1, -1,
+        -1, 1, 1,
+        -1, 1, -1,
+        -1, -1, 1,
+        -1, -1, -1,
+        1, 1, 0,
+        -1, -1, 0,
+        1, -1, 0,
+        -1, 1, 0
+    ],
+    groups: [{ startIndex: 0, length: 3 * 20 }],
+    indices: [
+        4, 2, 0,  // top    1/2
+        2, 9, 10, // front  2/4
+        6, 11, 9, // left   2/4
+        1, 7, 5,  // bottom 1/2 
+        0, 10, 8, // right  2/4
+        4, 8, 11, // back   2/4
+        11, 1, 5, // back   4/4
+        8, 3, 1,  // right  4/4
+        9, 5, 7,  // left   4/4
+        10, 7, 3, // front  4/4
+        4, 6, 2,  // top    2/2
+        2, 6, 9,  // front  1/4
+        6, 4, 11, // left   1/4
+        1, 3, 7,  // bottom 2/2
+        0, 2, 10, // right  1/4
+        4, 0, 8,  // back   1/4
+        11, 8, 1, // back   3/4
+        8, 10, 3, // right  3/4
+        9, 11, 5, // left   3/4
+        10, 9, 7  // front  3/4
+    ],
+    human: {
+        __skeleton: {
+            roots: [bone000],
+            bones: new Map([
+                ["Bone", bone000],
+                ["Bone.001", bone001]
+            ]),
+            vertexWeights: {
+                _data: new Map([
+                    ["Bone", [
+                        [1, 3, 5, 7, 8, 9, 19, 11],
+                        [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5]
+                    ]],
+                    ["Bone.001", [
+                        [0, 2, 4, 6, 8, 9, 19, 11],
+                        [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5]
+                    ]]
+                ])
+            }
+        }
+    }
+} as any) as HumanMesh
 
 export function exportCollada(scene: HumanMesh) {
     return colladaHead() +
-        colladaGeometries(scene) + // mesh
-        colladaControllers(scene) + // weights
-        colladaVisualScenes2(scene) + // skeleton
+        colladaGeometries(testCube) + // mesh
+        colladaControllers(testCube) + // weights
+        colladaVisualScenes2(testCube) + // skeleton
         colladaScene() +
         colladaTail()
 }
@@ -44,11 +149,13 @@ function colladaTail(): string {
 }
 
 function colladaGeometries(scene: HumanMesh): string {
-    let e = scene.groups[Mesh.SKIN].startIndex + scene.groups[0].length
+    const meshId = Mesh.SKIN
     let polygons = " "
     let maxIndex = Number.MIN_VALUE
     let minIndex = Number.MAX_VALUE
-    for (let i = scene.groups[Mesh.SKIN].startIndex; i < e; ++i) {
+    const startIndex = scene.groups[meshId].startIndex
+    const endIndex = startIndex + scene.groups[meshId].length
+    for (let i = startIndex; i < endIndex; ++i) {
         const index = scene.indices[i]
         if (maxIndex < index) {
             maxIndex = index
@@ -58,21 +165,20 @@ function colladaGeometries(scene: HumanMesh): string {
         }
         polygons += `${index} `
     }
-    ++maxIndex // TODO: this looks like we're compensating for an error somewhere?
-    //       also, in some cases '1' is the first element. could this be it?
-    //       should minIndex also be incremented?
-    //       we could load our test cube from an obj file to be sure!
+    polygons = polygons.trim()
+    ++maxIndex // range of [minIndex, maxIndex[
     minIndex = minIndex * 3
     maxIndex = maxIndex * 3
 
     const normals = calculateNormals(scene.vertex, scene.indices)
 
-    return `<library_geometries>
+    return `
+  <library_geometries>
     <geometry id="skin-mesh" name="skin">
       <mesh>
 
         <source id="skin-mesh-positions">
-          <float_array id="skin-mesh-positions-array" count="${scene.vertex.length}">
+          <float_array id="skin-mesh-positions-array" count="${maxIndex - minIndex}">
             ${numberRangeToString(scene.vertex, minIndex, maxIndex)}
           </float_array>
           <technique_common>
@@ -101,7 +207,7 @@ function colladaGeometries(scene: HumanMesh): string {
           <input semantic="POSITION" source="#skin-mesh-positions"/>
         </vertices>
 
-        <triangles count="${scene.groups[Mesh.SKIN].length}">
+        <triangles count="${scene.groups[meshId].length / 3}">
           <input semantic="VERTEX" source="#skin-mesh-vertices" offset="0"/>
           <input semantic="NORMAL" source="#skin-mesh-normals" offset="0"/>
           <p>${polygons}</p>
@@ -124,11 +230,11 @@ function colladaControllers(scene: HumanMesh): string {
     let allWeights: number[] = []
     let bar = new Map<number, JointData>()
     let boneCounter = 0
-    for(let [name, [vertex, weight]] of vbw) {
+    for (let [name, [vertex, weight]] of vbw) {
         boneNames += `${name.replace(".", "_")} `
         const bone = scene.human.__skeleton.bones.get(name)!
         bindMatrices += matrixToString(mat4.invert(mat4.create(), bone.matRestGlobal!)) + " "
-        for(let i=0; i<vertex.length; ++i) {
+        for (let i = 0; i < vertex.length; ++i) {
             let vertexInfo = bar.get(vertex[i])
             if (vertexInfo === undefined) {
                 vertexInfo = {
@@ -145,9 +251,9 @@ function colladaControllers(scene: HumanMesh): string {
     }
     let vcount: number[] = []
     let foo: number[] = []
-    for(let [vertex,b] of bar) {
+    for (let [vertex, b] of bar) {
         vcount.push(b.bone.length)
-        for(let i=0; i<b.bone.length; ++i) {
+        for (let i = 0; i < b.bone.length; ++i) {
             foo.push(b.bone[i])
             foo.push(b.weight[i])
         }
@@ -276,15 +382,15 @@ export function dumpBone(bone: Bone, indent: number = 0): string {
     const boneHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), boneMat)
     const boneTail = vec4.transformMat4(vec4.create(), bone.yvector4!, boneMat)
     const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
-    result += `${indentStr}<extra>
-  ${indentStr}<technique profile="blender">
-    ${indentStr}<layer sid="layer" type="string">0</layer>
-    ${indentStr}<roll sid="roll" type="float">0</roll>
-    ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
-    ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
-    ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>
-  ${indentStr}</technique>
-${indentStr}</extra>\n`
+    result += `    ${indentStr}<extra>
+      ${indentStr}<technique profile="blender">
+        ${indentStr}<layer sid="layer" type="string">0</layer>
+        ${indentStr}<roll sid="roll" type="float">0</roll>
+        ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
+        ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
+        ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>
+      ${indentStr}</technique>
+    ${indentStr}</extra>\n`
 
     result += `${indentStr}</node>\n`
     return result
@@ -309,13 +415,13 @@ function matrixToString(matrix: mat4): string {
 }
 
 function numbersToString(array: number[]): string {
-    return numberRangeToString(array, 0, array.length-1)
+    return numberRangeToString(array, 0, array.length - 1)
 }
 
 function numberRangeToString(array: number[], start: number, end: number): string {
     let result = ""
-    for (let i = start; i <= end; ++i) {
+    for (let i = start; i < end; ++i) {
         result += `${array[i]} `
     }
-    return result
+    return result.trimEnd()
 }

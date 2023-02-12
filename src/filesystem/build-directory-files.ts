@@ -34,7 +34,8 @@ function build(path: string) {
                 file.endsWith(".mhclo") ||
                 file.endsWith(".mhmat") ||
                 file.endsWith(".jsonw") ||
-                file.endsWith(".mhuv")
+                file.endsWith(".mhuv") ||
+                file.endsWith(".dae")
             ) {
                 const data = fs.readFileSync(`${path}/${file}`)
                 const view = new Uint8Array(data)
