@@ -1,14 +1,12 @@
 import { expect, use } from '@esm-bundle/chai'
 // @ts-ignore
 import { chaiString } from '../chaiString'
+use(chaiString)
 
 import { Human } from '../../src//Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
-import { Skeleton } from '../../src/skeleton/Skeleton'
-import { Bone } from '../../src/skeleton/Bone'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
-import { vec4, mat4 } from 'gl-matrix'
 
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
@@ -17,7 +15,32 @@ import { exportCollada, testCube } from "../../src/mesh/Collada"
 
 import { parseXML, Tag, Text } from "./xml"
 
-use(chaiString)
+// what to do today:
+// [ ] skeleton and mesh don't overlap
+//   [X] find a collada file which i can use as reference
+//       ~/Documents/Blender/objects/people/dariya/dariya.dae
+//       but it is big and also contains a dress and empties for shoes
+//       ~/Documents/Blender/experiments/rigged\ cube.dae
+//       this one i've created just for writing this exporter
+//   [X] export when mesh and skeleton are NOT CONNECTED
+//       => OKAY body is upwards along z-axis, looking -y-axis towards the camera
+//   [ ] export when mesh and skeleton are CONNECTED
+//       => not okay
+//       skeleton is correct but mesh with body upwards - y-axis
+//   [ ] how does the test cube do right now which i can also export as collada?
+//   [ ] find out how/where some mesh vertices and bones are placed in my and the reference file
+
+/*
+
+    okay, let's find out where 
+      ~/Documents/Blender/objects/people/dariya/dariya.dae
+    and what i currently export differ
+
+    * both have <up_axis>Z_UP</up_axis>
+    * to compare <library_geometries> i'll use dariya-separate.dae where the mesh
+      is not a child of the skeleton
+
+*/
 
 describe("Collada", function () {
 
@@ -120,7 +143,7 @@ describe("Collada", function () {
         const triangleP = findTag(triangles, "p")
         expect(text(triangleP)).to.equal("4 2 0 2 9 10 6 11 9 1 7 5 0 10 8 4 8 11 11 1 5 8 3 1 9 5 7 10 7 3 4 6 2 2 6 9 6 4 11 1 3 7 0 2 10 4 0 8 11 8 1 8 10 3 9 11 5 10 9 7")
 
-        console.log(xml)
+        // console.log(xml)
     })
 
     it("exportCollada() does not crash", function () {

@@ -9,10 +9,10 @@ import { vec3, vec4, mat4 } from 'gl-matrix'
 // https://docs.fileformat.com/3d/dae/
 // https://github.com/blender/blender/blob/master/source/blender/io/collada/MeshImporter.cpp
 
-const parentGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0,0,-1))
-const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0,0,0))
+const parentGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, -1))
+const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, 0))
 
-const parentRelative = parentGlobal 
+const parentRelative = parentGlobal
 const childRelative = mat4.mul(
     mat4.create(),
     mat4.invert(mat4.create(), parentGlobal),
@@ -318,13 +318,23 @@ function colladaVisualScenes(scene: HumanMesh): string {
      <visual_scene id="Scene" name="Scene">
  
        <node id="skin" name="skin" type="NODE">
-         <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+         <matrix sid="transform">
+           -1 0 0 0
+            0 0 1 0
+            0 1 0 0
+            0 0 0 1
+         </matrix>
          <instance_geometry url="#skin-mesh" name="skin">
          </instance_geometry>
        </node>
  
        <node id="human" name="human" type="NODE">
-         <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+         <matrix sid="transform">
+           -1 0 0 0
+            0 0 1 0
+            0 1 0 0
+            0 0 0 1
+         </matrix>
  ${dumpBone(rootBone, 4)}
        </node>
      </visual_scene>
@@ -339,10 +349,20 @@ function colladaVisualScenes2(scene: HumanMesh): string {
       <visual_scene id="Scene" name="Scene">
   
         <node id="human" name="human" type="NODE">
-          <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+          <matrix sid="transform">
+            -1 0 0 0
+             0 0 1 0
+             0 1 0 0
+             0 0 0 1
+          </matrix>
   ${dumpBone(rootBone, 4)}
           <node id="skin" name="skin" type="NODE">
-            <matrix sid="transform">1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
+            <matrix sid="transform">
+              1 0 0 0
+              0 1 0 0
+              0 0 1 0
+              0 0 0 1
+            </matrix>
             <instance_controller url="#human_human_body-skin">
               <skeleton>#human_${rootBone.name}</skeleton>
             </instance_controller>
@@ -379,13 +399,24 @@ export function dumpBone(bone: Bone, indent: number = 0): string {
     result += `    ${indentStr}<extra>
       ${indentStr}<technique profile="blender">
         ${indentStr}<layer sid="layer" type="string">0</layer>`
-    if (bone.children.length !== 0)
-        result += `
+
+    result += `
         ${indentStr}<roll sid="roll" type="float">0</roll>
-        ${indentStr}<connect sid="connect" type="bool">1</connect>
         ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
         ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
         ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>`
+
+    // if (bone.children.length !== 0) {
+    //     result += `
+    //     ${indentStr}<roll sid="roll" type="float">0</roll>
+    //     ${indentStr}<connect sid="connect" type="bool">1</connect>`
+    // } else {
+    //     result += `
+    //     ${indentStr}<roll sid="roll" type="float">0</roll>
+    //     ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
+    //     ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
+    //     ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>`
+    // }
     result += `
       ${indentStr}</technique>
     ${indentStr}</extra>\n`
@@ -407,6 +438,7 @@ function matrixToString(matrix: mat4): string {
     let out = ""
     for (let i = 0; i < 16; ++i) {
         const x = matrix[map[i]]
+        // const x = map[i]
         out += `${x} `
     }
     return out.trimEnd()
