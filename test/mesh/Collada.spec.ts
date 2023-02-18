@@ -32,7 +32,7 @@ describe("Collada", function () {
 
     it.only("test cube", function () {
         const xml = exportCollada(testCube)
-        // console.log(xml)
+        
         const document = parseXML("exportCollada()", xml)
 
         const collada = findTag(document, "COLLADA")
@@ -119,6 +119,8 @@ describe("Collada", function () {
 
         const triangleP = findTag(triangles, "p")
         expect(text(triangleP)).to.equal("4 2 0 2 9 10 6 11 9 1 7 5 0 10 8 4 8 11 11 1 5 8 3 1 9 5 7 10 7 3 4 6 2 2 6 9 6 4 11 1 3 7 0 2 10 4 0 8 11 8 1 8 10 3 9 11 5 10 9 7")
+
+        console.log(xml)
     })
 
     it("exportCollada() does not crash", function () {

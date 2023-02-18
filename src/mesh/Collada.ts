@@ -2,46 +2,37 @@ import { HumanMesh } from './HumanMesh'
 import { Mesh } from '../Mesh'
 import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
-import { vec4, mat4 } from 'gl-matrix'
+import { vec3, vec4, mat4 } from 'gl-matrix'
 
 // COLLAborative Design Activity
 // https://en.wikipedia.org/wiki/COLLADA
 // https://docs.fileformat.com/3d/dae/
 // https://github.com/blender/blender/blob/master/source/blender/io/collada/MeshImporter.cpp
 
+const parentGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0,0,-1))
+const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0,0,0))
+
+const parentRelative = parentGlobal 
+const childRelative = mat4.mul(
+    mat4.create(),
+    mat4.invert(mat4.create(), parentGlobal),
+    childGlobal
+)
+
 const bone001 = {
     name: "Bone.001",
     children: [],
     yvector4: vec4.fromValues(0, 0, 1, 0),
-    matRestGlobal: mat4.fromValues(
-        1, 0, 0, 0,
-        0, 0, 1, 0,
-        0, -1, 0, 0,
-        0, 0, 0, 1
-    ),
-    matRestRelative: mat4.fromValues(
-        1, 0, 0, 0,
-        0, 1, 0, 1,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ),
+    matRestGlobal: childGlobal,
+    matRestRelative: childRelative,
 }
+
 const bone000 = {
     name: "Bone",
     children: [bone001],
     yvector4: vec4.fromValues(0, 0, 1, 0),
-    matRestGlobal: mat4.fromValues(
-        1, 0, 0, 0,
-        0, 0, 1, 1,
-        0, -1, 0, 0,
-        0, 0, 0, 1
-    ),
-    matRestRelative: mat4.fromValues(
-        1, 0, 0, 0,
-        0, 0, -1, 0,
-        0, 1, 0, 0,
-        0, 0, 0, 1
-    ),
+    matRestGlobal: parentGlobal,
+    matRestRelative: parentRelative,
 }
 
 //
@@ -122,9 +113,9 @@ export const testCube = ({
 
 export function exportCollada(scene: HumanMesh) {
     return colladaHead() +
-        colladaGeometries(testCube) + // mesh
-        colladaControllers(testCube) + // weights
-        colladaVisualScenes2(testCube) + // skeleton
+        colladaGeometries(scene) + // mesh
+        colladaControllers(scene) + // weights
+        colladaVisualScenes2(scene) + // skeleton
         colladaScene() +
         colladaTail()
 }
@@ -319,7 +310,9 @@ function colladaControllers(scene: HumanMesh): string {
     </library_controllers>`
 }
 
+// visual scene in which mesh and skeleton are NOT CONNECTED
 function colladaVisualScenes(scene: HumanMesh): string {
+    const rootBone = scene.human.__skeleton.roots[0]
     return `
     <library_visual_scenes>
      <visual_scene id="Scene" name="Scene">
@@ -332,12 +325,13 @@ function colladaVisualScenes(scene: HumanMesh): string {
  
        <node id="human" name="human" type="NODE">
          <matrix sid="transform">-1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1</matrix>
- ${dumpBone(scene.human.__skeleton.roots[0], 4)}
+ ${dumpBone(rootBone, 4)}
        </node>
      </visual_scene>
    </library_visual_scenes>`
 }
 
+// visual scene in which mesh and skeleton are CONNECTED
 function colladaVisualScenes2(scene: HumanMesh): string {
     const rootBone = scene.human.__skeleton.roots[0]
     return `
@@ -384,11 +378,15 @@ export function dumpBone(bone: Bone, indent: number = 0): string {
     const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
     result += `    ${indentStr}<extra>
       ${indentStr}<technique profile="blender">
-        ${indentStr}<layer sid="layer" type="string">0</layer>
+        ${indentStr}<layer sid="layer" type="string">0</layer>`
+    if (bone.children.length !== 0)
+        result += `
         ${indentStr}<roll sid="roll" type="float">0</roll>
+        ${indentStr}<connect sid="connect" type="bool">1</connect>
         ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
         ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
-        ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>
+        ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>`
+    result += `
       ${indentStr}</technique>
     ${indentStr}</extra>\n`
 
