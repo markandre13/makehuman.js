@@ -350,8 +350,8 @@ function colladaVisualScenes2(scene: HumanMesh): string {
   
         <node id="human" name="human" type="NODE">
           <matrix sid="transform">
-            -1 0 0 0
-             0 0 1 0
+             1 0 0 0
+             0 0 -1 0
              0 1 0 0
              0 0 0 1
           </matrix>
