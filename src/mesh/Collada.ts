@@ -112,27 +112,30 @@ export const testCube = ({
 } as any) as HumanMesh
 
 export function exportCollada(scene: HumanMesh) {
+    let s = scene
+    // s = testCube
+
     return colladaHead() +
-        colladaGeometries(scene) + // mesh
-        colladaControllers(scene) + // weights
-        colladaVisualScenes2(scene) + // skeleton
+        colladaGeometries(s) + // mesh
+        colladaControllers(s) + // weights
+        colladaVisualScenes2(s) + // skeleton
         colladaScene() +
         colladaTail()
 }
 
 function colladaHead(): string {
     return `<?xml version="1.0" encoding="utf-8"?>
-    <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <asset>
-        <contributor>
-          <author>makehuman.js user</author>
-          <authoring_tool>https://github.com/markandre13/makehuman.js</authoring_tool>
-        </contributor>
-        <created>${new Date().toISOString()}</created>
-        <modified>${new Date().toISOString()}</modified>
-        <unit name="meter" meter="1"/>
-        <up_axis>Z_UP</up_axis>
-      </asset>`
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>makehuman.js user</author>
+      <authoring_tool>https://github.com/markandre13/makehuman.js</authoring_tool>
+    </contributor>
+    <created>${new Date().toISOString()}</created>
+    <modified>${new Date().toISOString()}</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>`
 }
 
 function colladaTail(): string {
@@ -167,7 +170,6 @@ function colladaGeometries(scene: HumanMesh): string {
   <library_geometries>
     <geometry id="skin-mesh" name="skin">
       <mesh>
-
         <source id="skin-mesh-positions">
           <float_array id="skin-mesh-positions-array" count="${maxIndex - minIndex}">
             ${numberRangeToString(scene.vertex, minIndex, maxIndex)}
@@ -180,7 +182,6 @@ function colladaGeometries(scene: HumanMesh): string {
             </accessor>
           </technique_common>
         </source>
-
         <source id="skin-mesh-normals">
           <float_array id="skin-mesh-normals-array" count="${normals.length}">
             ${numberRangeToString(normals, minIndex, maxIndex)}
@@ -296,7 +297,7 @@ function colladaControllers(scene: HumanMesh): string {
           </source>
   
           <!-- associate a set of joint-weight pairs with each vertex in the base mesh -->
-          <vertex_weights count="${foo.length}">
+          <vertex_weights count="${vcount.length}">
             <input semantic="JOINT" source="#dariya_dariya_body-skin-joints" offset="0"/>
             <input semantic="WEIGHT" source="#dariya_dariya_body-skin-weights" offset="1"/>
             <!-- number of joint-weight pairs per vertex in the base mesh -->
@@ -445,7 +446,7 @@ function matrixToString(matrix: mat4): string {
 }
 
 function numbersToString(array: number[]): string {
-    return numberRangeToString(array, 0, array.length - 1)
+    return numberRangeToString(array, 0, array.length)
 }
 
 function numberRangeToString(array: number[], start: number, end: number): string {

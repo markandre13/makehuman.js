@@ -123,14 +123,17 @@ describe("Collada", function () {
         const jointsInvBindMatrixId = reference(jointInputs[1].attributes.get("source"))
 
         const vertexWeights = findTag(skin, "vertex_weights")
+        expect(vertexWeights.getAttribute("count")).to.equal("12")
         const vertexWeightInputs = findTags(vertexWeights, "input")
         expect(vertexWeightInputs).to.have.lengthOf(2)
         expect(vertexWeightInputs[0].attributes.get("semantic")).to.equal("JOINT")
         const vertexWeightsJointsId = reference(vertexWeightInputs[0].attributes.get("source"))
         expect(vertexWeightInputs[1].attributes.get("semantic")).to.equal("WEIGHT")
         const vertexWeightsWeightId = reference(vertexWeightInputs[1].attributes.get("source"))
-        // vcount
-        // v
+        const vertexWeightVCount = findTag(vertexWeights, "vcount")
+        expect(parseNumbers(vertexWeightVCount)).to.have.lengthOf(12)
+        const vertexWeightV = findTag(vertexWeights, "v")
+        expect(parseNumbers(vertexWeightV)).to.have.lengthOf(32)
 
         const skinSources = findTags(skin, "source")
         expect(skinSources).to.have.lengthOf(3)
@@ -143,10 +146,13 @@ describe("Collada", function () {
         const skinSourcesBindPoses = skinSources[1]
         expect(skinSourcesBindPoses.getAttribute("id")).to.equal(jointsInvBindMatrixId)
         const invBindMatrix = findTag(skinSourcesBindPoses, "float_array")
+        expect(parseNumbers(invBindMatrix)).to.have.lengthOf(2 * 16)
 
         const skinSourcesWeights = skinSources[2]
         expect(skinSourcesWeights.getAttribute("id")).to.equal(vertexWeightsWeightId)
-        const weight = findTag(skinSourcesBindPoses, "float_array")
+        const weights = findTag(skinSourcesWeights, "float_array")
+        expect(weights.getAttribute("count")).to.equal("16")
+        expect(parseNumbers(weights)).to.be.lengthOf(16)
 
         // library_geometries
         //     geometry
