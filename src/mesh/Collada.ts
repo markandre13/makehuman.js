@@ -352,16 +352,16 @@ function colladaVisualScenes2(scene: HumanMesh): string {
         <node id="human" name="human" type="NODE">
           <matrix sid="transform">
              1 0 0 0
-             0 0 -1 0
              0 1 0 0
+             0 0 1 0
              0 0 0 1
           </matrix>
   ${dumpBone(rootBone, 4)}
           <node id="skin" name="skin" type="NODE">
             <matrix sid="transform">
-              1 0 0 0
-              0 1 0 0
+              -1 0 0 0
               0 0 1 0
+              0 1 0 0
               0 0 0 1
             </matrix>
             <instance_controller url="#human_human_body-skin">
