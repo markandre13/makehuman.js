@@ -51,7 +51,50 @@ describe("Collada", function () {
         checkCollada("data/test.dae", data)
     })
 
-    it.only("test cube", function () {
+    it.only("create weights", function() {
+        const scene = testCube
+        const out = new Array<Array<Array<number>>>(scene.vertex.length/3)
+        for(let i=0; i<out.length; ++i) {
+            out[i] = new Array()
+        }
+
+        const allBoneNames: string[] = []
+        const allWeights: number[] = []
+
+        scene.human.__skeleton.vertexWeights!._data.forEach((data, boneName) => {
+            const boneIndex = allBoneNames.length
+            allBoneNames.push(boneName)
+            const indices = data[0] as number[]
+            const weights = data[1] as number[]
+            for(let i=0; i<indices.length; ++i) {
+                const index = indices[i]
+                const weight = weights[i]
+                const weightIndex = allWeights.length
+                allWeights.push(weight)
+                out[index].push([boneIndex, weightIndex])
+            }
+        })
+
+        // boneNames
+        console.log(allBoneNames.join(" "))
+        // allWeights
+        console.log(allWeights.join(" "))
+        // vcount
+        console.log(out.map(e => e.length).join(" "))
+        // v
+        const o: number[] = []
+        out.forEach( x => {
+            x.forEach( y =>
+                y.forEach( z => 
+                    o.push(z)
+                )
+            )
+        })
+        console.log(o.join(" "))
+
+    })
+
+    it("test cube", function () {
         const xml = exportCollada(testCube)
         
         const document = parseXML("exportCollada()", xml)
@@ -92,6 +135,14 @@ describe("Collada", function () {
         const skeletonNode = nodes[0]
         expect(skeletonNode.attributes.get("type")).to.equal("JOINT")
         expect(skeletonNode.attributes.get("id")).to.equal(skeletonId)
+
+        // COLLADA 1.4.1 p. 4-7
+        // A skinning <controller> associates a geometry with a skeleton.
+        // The skeleton is considered to be in it's resting position. or bind pose.
+        // The bind pose is the world-space position and orientation of each joint
+        // when the skeleton was bound to the geometry.
+        // This world space is also called the bind-pose space to distinguish it
+        // from other world-space coordinates systems.
 
         // library_controllers
         //     controller id={controllerId}

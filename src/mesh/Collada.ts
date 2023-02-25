@@ -92,19 +92,82 @@ export const testCube = ({
         __skeleton: {
             roots: [bone000],
             bones: new Map([
-                ["Bone", bone000],
-                ["Bone.001", bone001]
+                [bone000.name, bone000],
+                [bone001.name, bone001]
             ]),
             vertexWeights: {
                 _data: new Map([
-                    ["Bone", [
-                        [1, 3, 5, 7, 8, 9, 19, 11],
+                    [bone000.name, [
+                        [1, 3, 5, 7, 8, 9, 10, 11],
                         [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5]
                     ]],
-                    ["Bone.001", [
-                        [0, 2, 4, 6, 8, 9, 19, 11],
+                    [bone001.name, [
+                        [0, 2, 4, 6, 8, 9, 10, 11],
                         [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5]
                     ]]
+                ])
+            }
+        }
+    }
+} as any) as HumanMesh
+
+const boneRectM0 = mat4.translate(
+    mat4.create(),
+    mat4.identity(mat4.create()),
+    vec3.fromValues(0, 0, 0)
+)
+
+const boneRectM1 = mat4.translate(
+    mat4.create(),
+    mat4.identity(mat4.create()),
+    vec3.fromValues(0, 1, 0)
+)
+
+const boneRect1 = {
+    name: "Bone.001",
+    children: [],
+    yvector4: vec4.fromValues(0, 1, 0, 0),
+    matRestGlobal: boneRectM0,
+    matRestRelative: boneRectM0,
+}
+
+const boneRect0 = {
+    name: "Bone.000",
+    children: [],
+    yvector4: vec4.fromValues(0, 1, 0, 0),
+    matRestGlobal: boneRectM1,
+    matRestRelative: boneRectM1,
+}
+
+export const testRect = ({
+    vertex: [
+        0, 1, 1,
+        0, 1, -1,
+        0, -1, -1,
+        0, -1, 1,
+    ],
+    groups: [{ startIndex: 0, length: 3 * 2 }],
+    indices: [
+        0, 1, 2,
+        2, 3, 0
+    ],
+    human: {
+        __skeleton: {
+            roots: [boneRect0],
+            bones: new Map([
+                [boneRect0.name, boneRect0],
+                // [boneRect1.name, boneRect1],
+            ]),
+            vertexWeights: {
+                _data: new Map([
+                    [boneRect0.name, [
+                        [0, 1, 2, 3],
+                        [1, 1, 1, 1]
+                    ]],
+                    // [boneRect1.name, [
+                    //     [],
+                    //     []
+                    // ]],
                 ])
             }
         }
@@ -114,16 +177,34 @@ export const testCube = ({
 export function exportCollada(scene: HumanMesh) {
     let s = scene
     // s = testCube
+    // s = testRect
 
     return colladaHead() +
         colladaGeometries(s) + // mesh
         colladaControllers(s) + // weights
-        colladaVisualScenes2(s) + // skeleton
+        colladaVisualScenes(s) + // skeleton
         colladaScene() +
         colladaTail()
 }
 
-function colladaHead(): string {
+const sceneName = `Scene`
+const objectName = `Human`
+const meshName = `${objectName}-mesh`
+const meshPositionsName = `${meshName}-positions`
+const meshPositionsArrayName = `${meshPositionsName}-array`
+const meshVerticesName = `${meshName}-vertices`
+
+const armatureName = `Armature`
+const armatureLongName = `${armatureName}_${objectName}`
+const skinName = `${armatureLongName}-skin`
+const skinJointsName = `${skinName}-joints`
+const skinJointsArrayName = `${skinJointsName}-array`
+const skinWeightsName = `${skinName}-weights`
+const skinWeightsArrayName = `${skinWeightsName}-array`
+const skinIbmName = `${skinName}-bind_poses`
+const skinIbmArrayName = `${skinIbmName}-array`
+
+function colladaHead() {
     return `<?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <asset>
@@ -134,15 +215,23 @@ function colladaHead(): string {
     <created>${new Date().toISOString()}</created>
     <modified>${new Date().toISOString()}</modified>
     <unit name="meter" meter="1"/>
-    <up_axis>Z_UP</up_axis>
-  </asset>`
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_images/>
+`
 }
 
-function colladaTail(): string {
-    return `\n</COLLADA>\n`
-}
+function colladaTail() { return `</COLLADA>` }
 
-function colladaGeometries(scene: HumanMesh): string {
+function colladaGeometries(scene: HumanMesh) {
+    // TODO: this only works for meshId 0 because
+    // first index is 0
+    // first vertex is 0
+    // TODO: normals
+    // TODO: UV
+    // TODO: add support for some inner bones, eg. foot, which are not connected to their children
+    // TODO: the other meshes
+    // TODO: does it work for morphed humans?
     const meshId = Mesh.SKIN
     let polygons = " "
     let maxIndex = Number.MIN_VALUE
@@ -164,266 +253,187 @@ function colladaGeometries(scene: HumanMesh): string {
     minIndex = minIndex * 3
     maxIndex = maxIndex * 3
 
-    const normals = calculateNormals(scene.vertex, scene.indices)
+    const indices = scene.indices.slice(startIndex, endIndex)
+    const vertex = scene.vertex.slice(minIndex, maxIndex)
 
-    return `
-  <library_geometries>
-    <geometry id="skin-mesh" name="skin">
+    return `  <library_geometries>
+    <geometry id="${meshName}" name="${objectName}">
       <mesh>
-        <source id="skin-mesh-positions">
-          <float_array id="skin-mesh-positions-array" count="${maxIndex - minIndex}">
-            ${numberRangeToString(scene.vertex, minIndex, maxIndex)}
-          </float_array>
+        <source id="${meshPositionsName}">
+          <float_array id="${meshPositionsArrayName}" count="${vertex.length}">${vertex.join(" ")}</float_array>
           <technique_common>
-            <accessor source="#skin-mesh-positions-array" count="${scene.vertex.length / 3}" stride="3">
+            <accessor source="#${meshPositionsArrayName}" count="${vertex.length / 3}" stride="3">
               <param name="X" type="float"/>
               <param name="Y" type="float"/>
               <param name="Z" type="float"/>
             </accessor>
           </technique_common>
         </source>
-        <source id="skin-mesh-normals">
-          <float_array id="skin-mesh-normals-array" count="${normals.length}">
-            ${numberRangeToString(normals, minIndex, maxIndex)}
-          </float_array>
-          <technique_common>
-            <accessor source="#skin-mesh-normals-array" count="${normals.length / 3}" stride="3">
-              <param name="X" type="float"/>
-              <param name="Y" type="float"/>
-              <param name="Z" type="float"/>
-            </accessor>
-          </technique_common>
-        </source>
-
-        <vertices id="skin-mesh-vertices">
-          <input semantic="POSITION" source="#skin-mesh-positions"/>
+        <vertices id="${meshVerticesName}">
+          <input semantic="POSITION" source="#${meshPositionsName}"/>
         </vertices>
-
-        <triangles count="${scene.groups[meshId].length / 3}">
-          <input semantic="VERTEX" source="#skin-mesh-vertices" offset="0"/>
-          <input semantic="NORMAL" source="#skin-mesh-normals" offset="0"/>
-          <p>${polygons}</p>
+        <triangles count="${indices.length / 3}">
+          <input semantic="VERTEX" source="#${meshVerticesName}" offset="0"/>
+          <p>${indices.join(" ")}</p>
         </triangles>
-
-        </mesh>
+      </mesh>
     </geometry>
-  </library_geometries>`
-}
+  </library_geometries>
+`}
 
-interface JointData {
-    bone: number[]
-    weight: number[]
-}
-
-function colladaControllers(scene: HumanMesh): string {
-    const vbw = scene.human.__skeleton.vertexWeights!._data
-    let boneNames = ""
-    let bindMatrices = ""
-    let allWeights: number[] = []
-    let bar = new Map<number, JointData>()
-    let boneCounter = 0
-    for (let [name, [vertex, weight]] of vbw) {
-        boneNames += `${name.replace(".", "_")} `
-        const bone = scene.human.__skeleton.bones.get(name)!
-        bindMatrices += matrixToString(mat4.invert(mat4.create(), bone.matRestGlobal!)) + " "
-        for (let i = 0; i < vertex.length; ++i) {
-            let vertexInfo = bar.get(vertex[i])
-            if (vertexInfo === undefined) {
-                vertexInfo = {
-                    bone: [],
-                    weight: []
-                }
-                bar.set(vertex[i], vertexInfo)
-            }
-            vertexInfo.bone.push(boneCounter)
-            vertexInfo.weight.push(allWeights.length)
-            allWeights.push(weight[i])
-        }
-        ++boneCounter
+function colladaControllers(scene: HumanMesh) {
+    const out = new Array<Array<Array<number>>>(scene.vertex.length / 3)
+    for (let i = 0; i < out.length; ++i) {
+        out[i] = new Array()
     }
-    let vcount: number[] = []
-    let foo: number[] = []
-    for (let [vertex, b] of bar) {
-        vcount.push(b.bone.length)
-        for (let i = 0; i < b.bone.length; ++i) {
-            foo.push(b.bone[i])
-            foo.push(b.weight[i])
+    
+    const allBoneNames: string[] = []
+    const allWeights: number[] = []
+    let ibmAll = ""
+    
+    scene.human.__skeleton.vertexWeights!._data.forEach((data, boneName) => {
+        const boneIndex = allBoneNames.length
+        allBoneNames.push(boneName)
+    
+        const bone = scene.human.__skeleton.bones.get(boneName)!
+        ibmAll += ibm(bone) + " "
+    
+        const indices = data[0] as number[]
+        const weights = data[1] as number[]
+        for (let i = 0; i < indices.length; ++i) {
+            const index = indices[i]
+            const weight = weights[i]
+            const weightIndex = allWeights.length
+            allWeights.push(weight)
+            out[index].push([boneIndex, weightIndex])
         }
-    }
+    })
+    ibmAll = ibmAll.trimEnd()
+    
+    const outFlat: number[] = []
+    out.forEach(x => {
+        x.forEach(y =>
+            y.forEach(z =>
+                outFlat.push(z)
+            )
+        )
+    })
 
-    boneNames = boneNames.trimEnd()
-    bindMatrices = bindMatrices.trimEnd()
+    return `  <library_controllers>
+    <controller id="${skinName}" name="${armatureName}">
+      <skin source="#${meshName}">
+        <bind_shape_matrix>${mat2txt(identity)}</bind_shape_matrix>
+        <source id="${skinJointsName}">
+          <Name_array id="${skinJointsArrayName}" count="3">${allBoneNames.join(" ").replace(/\./g, "_")}</Name_array>
+          <technique_common>
+            <accessor source="#${skinJointsArrayName}" count="${allBoneNames.length}" stride="1">
+              <param name="JOINT" type="name"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="${skinIbmName}">
+          <float_array id="${skinIbmArrayName}" count="${allBoneNames.length * 16}">${ibmAll}</float_array>
+          <technique_common>
+            <accessor source="#${skinIbmArrayName}" count="${allBoneNames.length}" stride="16">
+              <param name="TRANSFORM" type="float4x4"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="${skinWeightsName}">
+          <float_array id="${skinWeightsArrayName}" count="${allWeights.length}">${allWeights.join(" ")}</float_array>
+          <technique_common>
+            <accessor source="#${skinWeightsArrayName}" count="${allWeights.length}" stride="1">
+              <param name="WEIGHT" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <joints>
+          <input semantic="JOINT" source="#${skinJointsName}"/>
+          <input semantic="INV_BIND_MATRIX" source="#${skinIbmName}"/>
+        </joints>
+        <vertex_weights count="${out.length}">
+          <input semantic="JOINT" source="#${skinJointsName}" offset="0"/>
+          <input semantic="WEIGHT" source="#${skinWeightsName}" offset="1"/>
+          <vcount>${out.map(e => e.length).join(" ")}</vcount>
+          <v>${outFlat.join(" ")}</v>
+        </vertex_weights>
+      </skin>
+    </controller>
+  </library_controllers>
+`}
 
-    return `
-    <library_controllers>
-      <controller id="human_human_body-skin" name="human">
-        <skin source="#skin-mesh">
-          <bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>
-  
-          <!-- JOINTS: list all joints in the skeleton by name -->
-          <source id="dariya_dariya_body-skin-joints">
-            <Name_array id="dariya_dariya_body-skin-joints-array" count="${vbw.size}">${boneNames}</Name_array>
-            <technique_common>
-              <accessor source="#dariya_dariya_body-skin-joints-array" count="${vbw.size}" stride="1">
-                <param name="JOINT" type="name"/>
-              </accessor>
-            </technique_common>
-          </source>
-          
-          <!-- INVERSE BIND MATRIX: one inverse 4x4 rest matrix for each of the joints (?) -->
-          <source id="dariya_dariya_body-skin-bind_poses">
-            <float_array id="dariya_dariya_body-skin-bind_poses-array" count="${vbw.size * 16}">${bindMatrices}</float_array>
-            <technique_common>
-              <accessor source="#dariya_dariya_body-skin-bind_poses-array" count="${vbw.size}" stride="16">
-                  <param name="TRANSFORM" type="float4x4"/>
-              </accessor>
-            </technique_common>
-          </source>
-  
-          <!-- JOINT + INVERSE BIND MATRIX -->
-          <joints>
-            <input semantic="JOINT" source="#dariya_dariya_body-skin-joints"/>
-            <input semantic="INV_BIND_MATRIX" source="#dariya_dariya_body-skin-bind_poses"/>
-          </joints>
-  
-          <!-- WEIGHTS -->
-          <source id="dariya_dariya_body-skin-weights">
-            <float_array id="dariya_dariya_body-skin-weights-array" count="${allWeights.length}">${numbersToString(allWeights)}</float_array>
-            <technique_common>
-              <accessor source="#dariya_dariya_body-skin-weights-array" count="${allWeights.length}" stride="1">
-                <param name="WEIGHT" type="float"/>
-              </accessor>
-            </technique_common>
-          </source>
-  
-          <!-- associate a set of joint-weight pairs with each vertex in the base mesh -->
-          <vertex_weights count="${vcount.length}">
-            <input semantic="JOINT" source="#dariya_dariya_body-skin-joints" offset="0"/>
-            <input semantic="WEIGHT" source="#dariya_dariya_body-skin-weights" offset="1"/>
-            <!-- number of joint-weight pairs per vertex in the base mesh -->
-            <vcount>${numbersToString(vcount)}</vcount>
-            <!-- list of joint-index weight-index pairs -->
-            <v>${numbersToString(foo)}</v>
-          </vertex_weights>
-  
-        </skin>
-      </controller>
-    </library_controllers>`
-}
-
-// visual scene in which mesh and skeleton are NOT CONNECTED
-function colladaVisualScenes(scene: HumanMesh): string {
-    const rootBone = scene.human.__skeleton.roots[0]
-    return `
-    <library_visual_scenes>
-     <visual_scene id="Scene" name="Scene">
- 
-       <node id="skin" name="skin" type="NODE">
-         <matrix sid="transform">
-           -1 0 0 0
-            0 0 1 0
-            0 1 0 0
-            0 0 0 1
-         </matrix>
-         <instance_geometry url="#skin-mesh" name="skin">
-         </instance_geometry>
-       </node>
- 
-       <node id="human" name="human" type="NODE">
-         <matrix sid="transform">
-           -1 0 0 0
-            0 0 1 0
-            0 1 0 0
-            0 0 0 1
-         </matrix>
- ${dumpBone(rootBone, 4)}
-       </node>
-     </visual_scene>
-   </library_visual_scenes>`
-}
-
-// visual scene in which mesh and skeleton are CONNECTED
-function colladaVisualScenes2(scene: HumanMesh): string {
-    const rootBone = scene.human.__skeleton.roots[0]
-    return `
-    <library_visual_scenes>
-      <visual_scene id="Scene" name="Scene">
-  
-        <node id="human" name="human" type="NODE">
-          <matrix sid="transform">
-             1 0 0 0
-             0 1 0 0
-             0 0 1 0
-             0 0 0 1
-          </matrix>
-  ${dumpBone(rootBone, 4)}
-          <node id="skin" name="skin" type="NODE">
-            <matrix sid="transform">
-              -1 0 0 0
-              0 0 1 0
-              0 1 0 0
-              0 0 0 1
-            </matrix>
-            <instance_controller url="#human_human_body-skin">
-              <skeleton>#human_${rootBone.name}</skeleton>
-            </instance_controller>
-          </node>
+function colladaVisualScenes(scene: HumanMesh) {
+    return `  <library_visual_scenes>
+    <visual_scene id="${sceneName}" name="${sceneName}">
+      <node id="${armatureName}" name="${armatureName}" type="NODE">
+        <matrix sid="transform">${mat2txt(identity)}</matrix>
+${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
+        <node id="${objectName}" name="${objectName}" type="NODE">
+          <matrix sid="transform">${mat2txt(identity)}</matrix>
+          <instance_controller url="#${skinName}">
+            <skeleton>#${armatureName}_${scene.human.__skeleton.roots[0].name}</skeleton>
+          </instance_controller>
         </node>
-      </visual_scene>
-    </library_visual_scenes>`
-}
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+`}
 
-function colladaScene(): string {
-    return `
-  <scene>
-    <instance_visual_scene url="#Scene"/>
-  </scene>`
-}
+function colladaScene() {
+    return `  <scene>
+    <instance_visual_scene url="#${sceneName}"/>
+  </scene>
+`}
 
-export function dumpBone(bone: Bone, indent: number = 0): string {
-    const name = bone.name
-    const name0 = name.replace(".", "_")
-    const indentStr = indentToString(indent)
-    let result = `${indentStr}<node id="human_${name0}" name="${name}" sid="${name0}" type="JOINT">\n`
-        + `  ${indentStr}<matrix sid="transform">${matrixToString(bone.matRestRelative!)}</matrix>\n`
-    for (let child of bone.children) {
-        result += dumpBone(child, indent + 1)
+const identity = mat4.identity(mat4.create())
+
+function mat2txt(m: mat4) {
+    const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
+    let out = ""
+    for (let i = 0; i < 16; ++i) {
+        const x = m[map[i]]
+        out += `${x} `
     }
+    return out.trimEnd()
+}
 
-    // the extra section allows the Blender Collada importer to get the bones right
-    // without the Armature options Fix Leaf Bones, Find Bone CHains and Auto Connect being enabled.
-    // (not sure if it replaces all those options...)
-    const boneMat = bone.matRestGlobal!
-    const boneHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), boneMat)
-    const boneTail = vec4.transformMat4(vec4.create(), bone.yvector4!, boneMat)
-    const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
-    result += `    ${indentStr}<extra>
-      ${indentStr}<technique profile="blender">
-        ${indentStr}<layer sid="layer" type="string">0</layer>`
+// bind shape matrix
+function bsm(bone: Bone) {
+    return mat2txt(bone.matRestRelative!)
+}
 
-    result += `
-        ${indentStr}<roll sid="roll" type="float">0</roll>
-        ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
-        ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
-        ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>`
+// inverse bind pose matrix
+function ibm(bone: Bone) {
+    return mat2txt(mat4.invert(mat4.create(), bone.matRestGlobal!))
+}
 
-    // if (bone.children.length !== 0) {
-    //     result += `
-    //     ${indentStr}<roll sid="roll" type="float">0</roll>
-    //     ${indentStr}<connect sid="connect" type="bool">1</connect>`
-    // } else {
-    //     result += `
-    //     ${indentStr}<roll sid="roll" type="float">0</roll>
-    //     ${indentStr}<tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>
-    //     ${indentStr}<tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>
-    //     ${indentStr}<tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>`
-    // }
-    result += `
-      ${indentStr}</technique>
-    ${indentStr}</extra>\n`
-
-    result += `${indentStr}</node>\n`
-    return result
+function dumpBone(armatureName: string, bone: Bone, indent: number = 4) {
+    const is = indentToString(indent)
+    let out = ``
+    out += `${is}<node id="${armatureName}_${bone.name.replace(/\./g, "_")}" name="${bone.name}" sid="${bone.name.replace(/\./g, "_")}" type="JOINT">\n`
+    out += `${is}  <matrix sid="transform">${bsm(bone)}</matrix>\n`
+    out += `${is}  <extra>\n`
+    out += `${is}    <technique profile="blender">\n`
+    if (bone.parent !== undefined) {
+        out += `${is}      <connect sid="connect" type="bool">1</connect>\n`
+    }
+    out += `${is}      <layer sid="layer" type="string">0</layer>\n`
+    if (bone.children.length === 0) {
+        const boneMat = bone.matRestGlobal!
+        const boneHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), boneMat)
+        const boneTail = vec4.transformMat4(vec4.create(), bone.yvector4!, boneMat)
+        const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
+        out += `${is}      <tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>\n`
+        out += `${is}      <tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>\n`
+        out += `${is}      <tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>\n`
+    }
+    out += `${is}    </technique>\n`
+    out += `${is}  </extra>\n`
+    for (let child of bone.children) {
+        out += dumpBone(armatureName, child, indent + 1)
+    }
+    out += `${is}</node>\n`
+    return out
 }
 
 function indentToString(indent: number): string {
@@ -432,27 +442,4 @@ function indentToString(indent: number): string {
         indentStr += "  "
     }
     return indentStr
-}
-
-function matrixToString(matrix: mat4): string {
-    const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
-    let out = ""
-    for (let i = 0; i < 16; ++i) {
-        const x = matrix[map[i]]
-        // const x = map[i]
-        out += `${x} `
-    }
-    return out.trimEnd()
-}
-
-function numbersToString(array: number[]): string {
-    return numberRangeToString(array, 0, array.length)
-}
-
-function numberRangeToString(array: number[], start: number, end: number): string {
-    let result = ""
-    for (let i = start; i < end; ++i) {
-        result += `${array[i]} `
-    }
-    return result.trimEnd()
 }
