@@ -12,6 +12,7 @@
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Render a proxy mesh instead of the basemesh
+* Export the basemesh and rig as Collada for Blender
 * Nothing else... 😅
 
 ## Why?

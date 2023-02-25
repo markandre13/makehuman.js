@@ -15,15 +15,13 @@ import { exportCollada, testCube } from "../../src/mesh/Collada"
 
 import { parseXML, Tag, Text } from "./xml"
 
-// TODO: export polygons
 // TODO: this only works for meshId 0 because
 //   first index is 0
 //   first vertex is 0
 // TODO: the the other meshes/proxy meshes
+// TODO: export material
 // TODO: export normals
 // TODO: export UV
-// TODO: does it work for morphed humans?
-// TODO: export material
 
 describe("Collada", function () {
 

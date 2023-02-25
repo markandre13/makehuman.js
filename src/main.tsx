@@ -99,7 +99,7 @@ function run() {
                 <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
             <Tab label="Export" value="POSE">
-                WiP: Blender doesn't import it yet.<br/>
+                WiP: Only the base mesh is exported.<br/>
                 <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
             </Tab>
         </Tabs>

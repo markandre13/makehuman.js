@@ -249,11 +249,11 @@ function colladaGeometries(scene: HumanMesh) {
 
     // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
     const indices: number[] = []
-    for(let i=startIndex; i<endIndex; i+=3) {
+    for(let i=startIndex; i<endIndex; i+=6) {
         indices.push(scene.indices[i])
         indices.push(scene.indices[i+1])
         indices.push(scene.indices[i+2])
-        // indices.push(scene.indices[i+4])
+        indices.push(scene.indices[i+3])
     }
 
     return `  <library_geometries>
@@ -272,9 +272,9 @@ function colladaGeometries(scene: HumanMesh) {
         <vertices id="${meshVerticesName}">
           <input semantic="POSITION" source="#${meshPositionsName}"/>
         </vertices>
-        <polylist count="${indices.length / 3}">
+        <polylist count="${indices.length / 4}">
           <input semantic="VERTEX" source="#${meshVerticesName}" offset="0"/>
-          <vcount>${"3 ".repeat(indices.length / 3)}</vcount>
+          <vcount>${"4 ".repeat(indices.length / 4)}</vcount>
           <p>${indices.join(" ")}</p>
         </polylist>
       </mesh>
