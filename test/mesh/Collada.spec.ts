@@ -15,6 +15,7 @@ import { exportCollada, testCube } from "../../src/mesh/Collada"
 
 import { parseXML, Tag, Text } from "./xml"
 
+// TODO: export polygons
 // TODO: this only works for meshId 0 because
 //   first index is 0
 //   first vertex is 0
