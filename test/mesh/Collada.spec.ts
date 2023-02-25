@@ -15,30 +15,15 @@ import { exportCollada, testCube } from "../../src/mesh/Collada"
 
 import { parseXML, Tag, Text } from "./xml"
 
-// what to do today:
-// [ ] skeleton and mesh don't overlap
-//   [X] find a collada file which i can use as reference
-//       ~/Documents/Blender/objects/people/dariya/dariya.dae
-//       but it is big and also contains a dress and empties for shoes
-//       ~/Documents/Blender/experiments/rigged\ cube.dae
-//       this one i've created just for writing this exporter
-//   [X] export when mesh and skeleton are NOT CONNECTED
-//       => OKAY body is upwards along z-axis, looking -y-axis towards the camera
-//   [ ] export when mesh and skeleton are CONNECTED
-//       => not okay
-//       skeleton is correct but mesh with body upwards - y-axis
-//   [ ] how does the test cube do right now which i can also export as collada?
-//   [ ] find out how/where some mesh vertices and bones are placed in my and the reference file
-
-/*
-    okay, let's find out where 
-      ~/Documents/Blender/objects/people/dariya/dariya.dae
-    and what i currently export differ
-
-    * both have <up_axis>Z_UP</up_axis>
-    * to compare <library_geometries> i'll use dariya-separate.dae where the mesh
-      is not a child of the skeleton
-*/
+// WIP : add support for some inner bones, eg. foot, which are not connected to their children
+// TODO: this only works for meshId 0 because
+//   first index is 0
+//   first vertex is 0
+// TODO: the the other meshes/proxy meshes
+// TODO: export normals
+// TODO: export UV
+// TODO: does it work for morphed humans?
+// TODO: export material
 
 describe("Collada", function () {
 
@@ -51,7 +36,7 @@ describe("Collada", function () {
         checkCollada("data/test.dae", data)
     })
 
-    it.only("create weights", function() {
+    it("create weights", function() {
         const scene = testCube
         const out = new Array<Array<Array<number>>>(scene.vertex.length/3)
         for(let i=0; i<out.length; ++i) {
@@ -254,7 +239,7 @@ describe("Collada", function () {
         // console.log(xml)
     })
 
-    it("exportCollada() does not crash", function () {
+    it.only("exportCollada() with real world data", function () {
         const human = Human.getInstance()
         const obj = new WavefrontObj()
         obj.load('data/3dobjs/base.obj.z')
@@ -262,6 +247,8 @@ describe("Collada", function () {
         const scene = new HumanMesh(human, obj)
         const skeleton = loadSkeleton('data/rigs/default.mhskel.z')
         human.setBaseSkeleton(skeleton)
+
+        exportCollada(scene)
 
         // console.log(dumpBone(skeleton.roots[0])
 

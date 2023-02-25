@@ -4,10 +4,8 @@ import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
 import { vec3, vec4, mat4 } from 'gl-matrix'
 
-// COLLAborative Design Activity
+// Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
-// https://docs.fileformat.com/3d/dae/
-// https://github.com/blender/blender/blob/master/source/blender/io/collada/MeshImporter.cpp
 
 const parentGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, -1))
 const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, 0))
@@ -204,6 +202,8 @@ const skinWeightsArrayName = `${skinWeightsName}-array`
 const skinIbmName = `${skinName}-bind_poses`
 const skinIbmArrayName = `${skinIbmName}-array`
 
+// TODO: try to export with meter="1" and Z_UP so that blender doesn't scale and rotate
+//       the human. this will simplify the workflow in blender after the import
 function colladaHead() {
     return `<?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -214,7 +214,7 @@ function colladaHead() {
     </contributor>
     <created>${new Date().toISOString()}</created>
     <modified>${new Date().toISOString()}</modified>
-    <unit name="meter" meter="1"/>
+    <unit name="meter" meter="0.1"/>
     <up_axis>Y_UP</up_axis>
   </asset>
   <library_images/>
@@ -224,14 +224,6 @@ function colladaHead() {
 function colladaTail() { return `</COLLADA>` }
 
 function colladaGeometries(scene: HumanMesh) {
-    // TODO: this only works for meshId 0 because
-    // first index is 0
-    // first vertex is 0
-    // TODO: normals
-    // TODO: UV
-    // TODO: add support for some inner bones, eg. foot, which are not connected to their children
-    // TODO: the other meshes
-    // TODO: does it work for morphed humans?
     const meshId = Mesh.SKIN
     let polygons = " "
     let maxIndex = Number.MIN_VALUE
@@ -387,6 +379,17 @@ function colladaScene() {
 
 const identity = mat4.identity(mat4.create())
 
+// create the "bind shape matrix" from the collada spec
+function bsm(bone: Bone) {
+    return mat2txt(bone.matRestRelative!)
+}
+
+// create the "inverse bind pose matrix" from the collada spec
+function ibm(bone: Bone) {
+    return mat2txt(mat4.invert(mat4.create(), bone.matRestGlobal!))
+}
+
+// output mat4 in collada format (translation on the right instead of bottom)
 function mat2txt(m: mat4) {
     const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
     let out = ""
@@ -397,16 +400,6 @@ function mat2txt(m: mat4) {
     return out.trimEnd()
 }
 
-// bind shape matrix
-function bsm(bone: Bone) {
-    return mat2txt(bone.matRestRelative!)
-}
-
-// inverse bind pose matrix
-function ibm(bone: Bone) {
-    return mat2txt(mat4.invert(mat4.create(), bone.matRestGlobal!))
-}
-
 function dumpBone(armatureName: string, bone: Bone, indent: number = 4) {
     const is = indentToString(indent)
     let out = ``
@@ -414,6 +407,16 @@ function dumpBone(armatureName: string, bone: Bone, indent: number = 4) {
     out += `${is}  <matrix sid="transform">${bsm(bone)}</matrix>\n`
     out += `${is}  <extra>\n`
     out += `${is}    <technique profile="blender">\n`
+
+    // the trouble with the left foot is this: it is connected to the small toe
+    // * check if the tail overlaps with the head of all children
+    // * if not
+    //   * children must not use <connect>
+    //   * tip must be set
+    if (bone.name === "foot.L") {
+        console.log("I AM AT THE LEFT FOOT")
+    }
+
     if (bone.parent !== undefined) {
         out += `${is}      <connect sid="connect" type="bool">1</connect>\n`
     }
