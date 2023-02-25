@@ -15,7 +15,6 @@ import { exportCollada, testCube } from "../../src/mesh/Collada"
 
 import { parseXML, Tag, Text } from "./xml"
 
-// WIP : add support for some inner bones, eg. foot, which are not connected to their children
 // TODO: this only works for meshId 0 because
 //   first index is 0
 //   first vertex is 0

@@ -400,7 +400,7 @@ function mat2txt(m: mat4) {
     return out.trimEnd()
 }
 
-function dumpBone(armatureName: string, bone: Bone, indent: number = 4) {
+function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectWithParent: boolean = false) {
     const is = indentToString(indent)
     let out = ``
     out += `${is}<node id="${armatureName}_${bone.name.replace(/\./g, "_")}" name="${bone.name}" sid="${bone.name.replace(/\./g, "_")}" type="JOINT">\n`
@@ -408,32 +408,30 @@ function dumpBone(armatureName: string, bone: Bone, indent: number = 4) {
     out += `${is}  <extra>\n`
     out += `${is}    <technique profile="blender">\n`
 
-    // the trouble with the left foot is this: it is connected to the small toe
-    // * check if the tail overlaps with the head of all children
-    // * if not
-    //   * children must not use <connect>
-    //   * tip must be set
-    if (bone.name === "foot.L") {
-        console.log("I AM AT THE LEFT FOOT")
+    const childrenToConnectWith = new Set<Bone>()
+    const tail = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
+    for(let child of bone.children) {
+        const childHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), child.matRestGlobal!)
+        if (vec4.equals(tail, childHead)) {
+            childrenToConnectWith.add(child)
+        }
     }
 
-    if (bone.parent !== undefined) {
+    if (connectWithParent) {
         out += `${is}      <connect sid="connect" type="bool">1</connect>\n`
     }
     out += `${is}      <layer sid="layer" type="string">0</layer>\n`
-    if (bone.children.length === 0) {
-        const boneMat = bone.matRestGlobal!
-        const boneHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), boneMat)
-        const boneTail = vec4.transformMat4(vec4.create(), bone.yvector4!, boneMat)
-        const boneVec = vec4.sub(vec4.create(), boneTail, boneHead)
-        out += `${is}      <tip_x sid="tip_x" type="float">${boneVec[0]}</tip_x>\n`
-        out += `${is}      <tip_y sid="tip_y" type="float">${boneVec[1]}</tip_y>\n`
-        out += `${is}      <tip_z sid="tip_z" type="float">${boneVec[2]}</tip_z>\n`
+    if (childrenToConnectWith.size === 0) {
+        const head = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1),  bone.matRestGlobal!)
+        const boneGlobalVec = vec4.sub(vec4.create(), tail, head)
+        out += `${is}      <tip_x sid="tip_x" type="float">${boneGlobalVec[0]}</tip_x>\n`
+        out += `${is}      <tip_y sid="tip_y" type="float">${boneGlobalVec[1]}</tip_y>\n`
+        out += `${is}      <tip_z sid="tip_z" type="float">${boneGlobalVec[2]}</tip_z>\n`
     }
     out += `${is}    </technique>\n`
     out += `${is}  </extra>\n`
     for (let child of bone.children) {
-        out += dumpBone(armatureName, child, indent + 1)
+        out += dumpBone(armatureName, child, indent + 1, childrenToConnectWith.has(child))
     }
     out += `${is}</node>\n`
     return out
