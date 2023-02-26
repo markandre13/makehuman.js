@@ -17,12 +17,8 @@ import { testCube } from "../../src/mesh/testCube"
 
 import { parseXML, Tag, Text } from "./xml"
 
-// TODO: have a look at BVH files (blender can export them, try that 1st)
-// TODO: this only works for meshId 0 because
-//   first index is 0
-//   first vertex is 0
+// TODO: export material (also to easier visually check different meshes were exported/imported)
 // TODO: the the other meshes/proxy meshes
-// TODO: export material
 // TODO: export normals
 // TODO: export UV
 

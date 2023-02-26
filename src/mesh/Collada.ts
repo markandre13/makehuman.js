@@ -12,6 +12,8 @@ export function exportCollada(scene: HumanMesh) {
     // s = testCube
 
     return colladaHead() +
+        colladaEffects() +
+        colladaMaterials() +
         colladaGeometries(s) + // mesh
         colladaControllers(s) + // weights
         colladaVisualScenes(s) + // skeleton
@@ -56,6 +58,53 @@ function colladaHead() {
 }
 
 function colladaTail() { return `</COLLADA>` }
+
+interface Material {
+    name: string
+    r: number
+    g: number
+    b: number
+}
+
+const materials: Material[] = [
+    { name: "skin", r: 1, g: 0.5, b: 0.5 }
+]
+
+function colladaEffects() {
+    let out = `  <library_effects>\n`
+    materials.forEach(m => {
+        out += `    <effect id="${m.name}-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">${m.r} ${m.g} ${m.b} 1</color>
+            </diffuse>
+            <reflectivity>
+              <float sid="specular">0.0</float>
+            </reflectivity>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+`})
+    out += `  </library_effects>\n`
+    return out
+}
+
+function colladaMaterials() {
+    let out = `  <library_materials>\n`
+    materials.forEach(m => {
+        out += `    <material id="${m.name}-material" name="${m.name}">
+      <instance_effect url="#${m.name}-effect"/>
+    </material>
+`})
+    out += `  </library_materials>\n`
+    return out
+}
 
 function colladaGeometries(scene: HumanMesh) {
     const meshId = Mesh.SKIN
@@ -102,7 +151,7 @@ function colladaGeometries(scene: HumanMesh) {
         <vertices id="${meshVerticesName}">
           <input semantic="POSITION" source="#${meshPositionsName}"/>
         </vertices>
-        <polylist count="${indices.length / 4}">
+        <polylist material="${materials[0].name}-material" count="${indices.length / 4}">
           <input semantic="VERTEX" source="#${meshVerticesName}" offset="0"/>
           <vcount>${"4 ".repeat(indices.length / 4)}</vcount>
           <p>${indices.join(" ")}</p>
@@ -203,6 +252,11 @@ ${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
           <matrix sid="transform">${mat2txt(identity)}</matrix>
           <instance_controller url="#${skinName}">
             <skeleton>#${armatureName}_${scene.human.__skeleton.roots[0].name}</skeleton>
+            <bind_material>
+              <technique_common>
+                <instance_material symbol="${materials[0].name}-material" target="#${materials[0].name}-material"/>
+              </technique_common>
+            </bind_material>
           </instance_controller>
         </node>
       </node>
