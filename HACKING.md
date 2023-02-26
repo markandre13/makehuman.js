@@ -63,3 +63,67 @@ Alternative meshes.
   I disabled the call to redirect_standard_streams() in
   ~/Downloads/MakeHuman.app/Contents/Resources/makehuman.py
 
+# Other
+
+## Animation
+
+* Blender has a build in pose library (https://docs.blender.org/manual/en/latest/animation/armatures/posing/editing/pose_library.html)
+* importing bhv imports an animated skeleton, whose animation then needs to be copied
+  (but the animation does not preserve the curves...)
+
+## makehuman-0.9.1-rc1a
+
+this old C++ version of MakeHuman has many interesting features:
+
+* rig constraints
+* key shapes for muscles
+* weights were of higher quality
+* a human skeleton mesh
+
+the sources though are a bit hard to find these days.
+
+I've found [MyHumanoid](https://github.com/MyHumanoid/MyHumanoid) and was able to compile it but couldn't get it to run because of OpenGL issues:
+
+```
+   # need to put src/MhUiMorph.cpp: put applier and nopApplier into namespace { ... }
+   apt-get install cmake
+   cmake -S MyHumanoid -B humanoid
+   cd humanoid
+   make
+   ./MyHumanoid
+```
+
+I've been able to find and build the original source, but the exported Collada file
+does not contain weights
+
+* [makehuman-0.9.1-rc1a.tar.gz](https://src.fedoraproject.org/repo/pkgs/makehuman/makehuman-0.9.1-rc1a.tar.gz/c28c24a5e430f471f9687e26db94a64b/makehuman-0.9.1-rc1a.tar.gz)
+* [animorph-0.3.tar.gz](https://src.fedoraproject.org/repo/pkgs/animorph/animorph-0.3.tar.gz/md5/e75fd295d95bcf4b1d95b86db7866c18/animorph-0.3.tar.gz)
+* [mhgui-0.2.tar.gz](https://src.fedoraproject.org/repo/pkgs/mhgui/mhgui-0.2.tar.gz/0794987c3a0f505a836e73bf629df64d/mhgui-0.2.tar.gz)
+
+```
+    # Building on Debian (make install & ldconfig run as root, rest as local user)
+
+    apt install build-essential
+    apt-get install libpng-dev libgl-dev libglu-dev freeglut3-dev libxmu-dev libxi-dev
+
+    # some files will need an extra: #include <cstring>
+    cd animorph-0.3
+    ./configure
+    make
+    make install
+
+    # include/mhgui/ImageData.h: png_uint_32 width, height;
+    cd mhgui-0.2
+    ./configure
+    make
+    make install
+
+    ldconfig /usr/local/lib
+
+    # some files need an extra: #include <algorithm>
+    cd makehuman-0.9.1-rc1a
+    ./configure
+    make
+    cd src
+    ./makehuman
+```
