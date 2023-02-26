@@ -7,175 +7,9 @@ import { vec3, vec4, mat4 } from 'gl-matrix'
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
 
-const parentGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, -1))
-const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, 0))
-
-const parentRelative = parentGlobal
-const childRelative = mat4.mul(
-    mat4.create(),
-    mat4.invert(mat4.create(), parentGlobal),
-    childGlobal
-)
-
-const bone001 = {
-    name: "Bone.001",
-    children: [],
-    yvector4: vec4.fromValues(0, 0, 1, 0),
-    matRestGlobal: childGlobal,
-    matRestRelative: childRelative,
-}
-
-const bone000 = {
-    name: "Bone",
-    children: [bone001],
-    yvector4: vec4.fromValues(0, 0, 1, 0),
-    matRestGlobal: parentGlobal,
-    matRestRelative: parentRelative,
-}
-
-//
-//         4____________ 0
-//        /            /|
-//       /            / |
-//     6/___________2/  |
-//      |   11       | /|8 
-//     9|__________10|/ |
-//      |  5         | / 1
-//      |____________|/
-//     7             3 
-//  z  y
-//  ^ /
-//  |/
-//  +-->x
-
-export const testCube = ({
-    vertex: [
-        1, 1, 1,
-        1, 1, -1,
-        1, -1, 1,
-        1, -1, -1,
-        -1, 1, 1,
-        -1, 1, -1,
-        -1, -1, 1,
-        -1, -1, -1,
-        1, 1, 0,
-        -1, -1, 0,
-        1, -1, 0,
-        -1, 1, 0
-    ],
-    groups: [{ startIndex: 0, length: 3 * 20 }],
-    indices: [
-        4, 2, 0,  // top    1/2
-        2, 9, 10, // front  2/4
-        6, 11, 9, // left   2/4
-        1, 7, 5,  // bottom 1/2 
-        0, 10, 8, // right  2/4
-        4, 8, 11, // back   2/4
-        11, 1, 5, // back   4/4
-        8, 3, 1,  // right  4/4
-        9, 5, 7,  // left   4/4
-        10, 7, 3, // front  4/4
-        4, 6, 2,  // top    2/2
-        2, 6, 9,  // front  1/4
-        6, 4, 11, // left   1/4
-        1, 3, 7,  // bottom 2/2
-        0, 2, 10, // right  1/4
-        4, 0, 8,  // back   1/4
-        11, 8, 1, // back   3/4
-        8, 10, 3, // right  3/4
-        9, 11, 5, // left   3/4
-        10, 9, 7  // front  3/4
-    ],
-    human: {
-        __skeleton: {
-            roots: [bone000],
-            bones: new Map([
-                [bone000.name, bone000],
-                [bone001.name, bone001]
-            ]),
-            vertexWeights: {
-                _data: new Map([
-                    [bone000.name, [
-                        [1, 3, 5, 7, 8, 9, 10, 11],
-                        [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5]
-                    ]],
-                    [bone001.name, [
-                        [0, 2, 4, 6, 8, 9, 10, 11],
-                        [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5]
-                    ]]
-                ])
-            }
-        }
-    }
-} as any) as HumanMesh
-
-const boneRectM0 = mat4.translate(
-    mat4.create(),
-    mat4.identity(mat4.create()),
-    vec3.fromValues(0, 0, 0)
-)
-
-const boneRectM1 = mat4.translate(
-    mat4.create(),
-    mat4.identity(mat4.create()),
-    vec3.fromValues(0, 1, 0)
-)
-
-const boneRect1 = {
-    name: "Bone.001",
-    children: [],
-    yvector4: vec4.fromValues(0, 1, 0, 0),
-    matRestGlobal: boneRectM0,
-    matRestRelative: boneRectM0,
-}
-
-const boneRect0 = {
-    name: "Bone.000",
-    children: [],
-    yvector4: vec4.fromValues(0, 1, 0, 0),
-    matRestGlobal: boneRectM1,
-    matRestRelative: boneRectM1,
-}
-
-export const testRect = ({
-    vertex: [
-        0, 1, 1,
-        0, 1, -1,
-        0, -1, -1,
-        0, -1, 1,
-    ],
-    groups: [{ startIndex: 0, length: 3 * 2 }],
-    indices: [
-        0, 1, 2,
-        2, 3, 0
-    ],
-    human: {
-        __skeleton: {
-            roots: [boneRect0],
-            bones: new Map([
-                [boneRect0.name, boneRect0],
-                // [boneRect1.name, boneRect1],
-            ]),
-            vertexWeights: {
-                _data: new Map([
-                    [boneRect0.name, [
-                        [0, 1, 2, 3],
-                        [1, 1, 1, 1]
-                    ]],
-                    // [boneRect1.name, [
-                    //     [],
-                    //     []
-                    // ]],
-                ])
-            }
-        }
-    }
-} as any) as HumanMesh
-
 export function exportCollada(scene: HumanMesh) {
     let s = scene
     // s = testCube
-    // s = testRect
 
     return colladaHead() +
         colladaGeometries(s) + // mesh
@@ -225,35 +59,31 @@ function colladaTail() { return `</COLLADA>` }
 
 function colladaGeometries(scene: HumanMesh) {
     const meshId = Mesh.SKIN
-    let polygons = " "
-    let maxIndex = Number.MIN_VALUE
-    let minIndex = Number.MAX_VALUE
-    const startIndex = scene.groups[meshId].startIndex
-    const endIndex = startIndex + scene.groups[meshId].length
-    for (let i = startIndex; i < endIndex; ++i) {
+    let vertexStart = Number.MAX_VALUE, vertexEnd = Number.MIN_VALUE
+    const indexStart = scene.groups[meshId].startIndex
+    const indexEnd = indexStart + scene.groups[meshId].length
+    for (let i = indexStart; i < indexEnd; ++i) {
         const index = scene.indices[i]
-        if (maxIndex < index) {
-            maxIndex = index
+        if (vertexStart > index) {
+            vertexStart = index
         }
-        if (minIndex > index) {
-            minIndex = index
+        if (vertexEnd < index) {
+            vertexEnd = index
         }
-        polygons += `${index} `
     }
-    polygons = polygons.trim()
-    ++maxIndex // range of [minIndex, maxIndex[
-    minIndex = minIndex * 3
-    maxIndex = maxIndex * 3
+    ++vertexEnd // range of [vertexStart, vertexEnd[
+    vertexStart = vertexStart * 3
+    vertexEnd = vertexEnd * 3
 
-    const vertex = scene.vertex.slice(minIndex, maxIndex)
+    const vertex = scene.vertex.slice(vertexStart, vertexEnd)
 
     // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
     const indices: number[] = []
-    for(let i=startIndex; i<endIndex; i+=6) {
+    for (let i = indexStart; i < indexEnd; i += 6) {
         indices.push(scene.indices[i])
-        indices.push(scene.indices[i+1])
-        indices.push(scene.indices[i+2])
-        indices.push(scene.indices[i+3])
+        indices.push(scene.indices[i + 1])
+        indices.push(scene.indices[i + 2])
+        indices.push(scene.indices[i + 3])
     }
 
     return `  <library_geometries>
@@ -287,18 +117,18 @@ function colladaControllers(scene: HumanMesh) {
     for (let i = 0; i < out.length; ++i) {
         out[i] = new Array()
     }
-    
+
     const allBoneNames: string[] = []
     const allWeights: number[] = []
     let ibmAll = ""
-    
+
     scene.human.__skeleton.vertexWeights!._data.forEach((data, boneName) => {
         const boneIndex = allBoneNames.length
         allBoneNames.push(boneName)
-    
+
         const bone = scene.human.__skeleton.bones.get(boneName)!
         ibmAll += ibm(bone) + " "
-    
+
         const indices = data[0] as number[]
         const weights = data[1] as number[]
         for (let i = 0; i < indices.length; ++i) {
@@ -310,7 +140,7 @@ function colladaControllers(scene: HumanMesh) {
         }
     })
     ibmAll = ibmAll.trimEnd()
-    
+
     const outFlat: number[] = []
     out.forEach(x => {
         x.forEach(y =>
@@ -419,7 +249,7 @@ function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectW
 
     const childrenToConnectWith = new Set<Bone>()
     const tail = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
-    for(let child of bone.children) {
+    for (let child of bone.children) {
         const childHead = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), child.matRestGlobal!)
         if (vec4.equals(tail, childHead)) {
             childrenToConnectWith.add(child)
@@ -431,7 +261,7 @@ function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectW
     }
     out += `${is}      <layer sid="layer" type="string">0</layer>\n`
     if (childrenToConnectWith.size === 0) {
-        const head = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1),  bone.matRestGlobal!)
+        const head = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), bone.matRestGlobal!)
         const boneGlobalVec = vec4.sub(vec4.create(), tail, head)
         out += `${is}      <tip_x sid="tip_x" type="float">${boneGlobalVec[0]}</tip_x>\n`
         out += `${is}      <tip_y sid="tip_y" type="float">${boneGlobalVec[1]}</tip_y>\n`
