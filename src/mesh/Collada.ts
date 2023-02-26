@@ -60,6 +60,7 @@ function colladaHead() {
 function colladaTail() { return `</COLLADA>` }
 
 interface Material {
+    meshId: Mesh
     name: string
     r: number
     g: number
@@ -67,7 +68,9 @@ interface Material {
 }
 
 const materials: Material[] = [
-    { name: "skin", r: 1, g: 0.5, b: 0.5 }
+    { meshId: Mesh.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
+    { meshId: Mesh.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
+    { meshId: Mesh.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
 ]
 
 function colladaEffects() {
@@ -243,12 +246,19 @@ function colladaControllers(scene: HumanMesh) {
 `}
 
 function colladaVisualScenes(scene: HumanMesh) {
-    return `  <library_visual_scenes>
+    let out = `  <library_visual_scenes>
     <visual_scene id="${sceneName}" name="${sceneName}">
       <node id="${armatureName}" name="${armatureName}" type="NODE">
         <matrix sid="transform">${mat2txt(identity)}</matrix>
 ${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
-        <node id="${objectName}" name="${objectName}" type="NODE">
+`
+    // what varies...
+    // node: id, name
+    // instance_controller: url
+    //   ouch: this means each controller as a complete list of bone names and IBMs...
+    //   (yeah, checked even with a collada export from blender)
+    // instance_material: symbol, target
+    out += `        <node id="${objectName}" name="${objectName}" type="NODE">
           <matrix sid="transform">${mat2txt(identity)}</matrix>
           <instance_controller url="#${skinName}">
             <skeleton>#${armatureName}_${scene.human.__skeleton.roots[0].name}</skeleton>
@@ -259,10 +269,13 @@ ${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
             </bind_material>
           </instance_controller>
         </node>
-      </node>
+`
+    out += `      </node>
     </visual_scene>
   </library_visual_scenes>
-`}
+`
+    return out
+}
 
 function colladaScene() {
     return `  <scene>
