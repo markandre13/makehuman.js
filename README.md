@@ -8,7 +8,7 @@
 
 ## Current Status
 
-* Have a look at [build 2023-01-22](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
+* Have a look at [build 2023-02-26](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Render a proxy mesh instead of the basemesh
