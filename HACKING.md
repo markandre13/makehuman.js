@@ -67,9 +67,18 @@ Alternative meshes.
 
 ## Animation
 
-* Blender has a build in pose library (https://docs.blender.org/manual/en/latest/animation/armatures/posing/editing/pose_library.html)
-* importing bhv imports an animated skeleton, whose animation then needs to be copied
-  (but the animation does not preserve the curves...)
+* importing an animation (bhv, collada) will create a new object wose animation needs to be copied onto the object to be animated:
+  * select destination
+  * shift select source
+  * Ctrl + L
+  * Link Animation Data
+  * (optional: Object > Relations > Make Single User > Object Animation)
+* export/import an animation with blender
+  * bhv will loose the curves and use samples instead
+  * collada needs to be configured properly but will retain the curves
+    (and for three bones with two keyed rotations, Blender generates about 1100 lines of
+    XML with super long ids... 🫢)
+* Blender has a built in [pose library](https://docs.blender.org/manual/en/latest/animation/armatures/posing/editing/pose_library.html)
 
 ## makehuman-0.9.1-rc1a
 
