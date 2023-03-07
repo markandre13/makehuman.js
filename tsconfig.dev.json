@@ -14,6 +14,7 @@
     "include": [
         "src/**/*.ts",
         "src/**/*.tsx",
+        "test/lib/OrderedMap.spec.ts",
         "test/skeleton.spec.ts",
         "test/proxy.spec.ts",
         "test/mesh/Collada.spec.ts",

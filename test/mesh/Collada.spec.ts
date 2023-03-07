@@ -33,49 +33,6 @@ describe("Collada", function () {
         checkCollada("data/test.dae", data)
     })
 
-    it("create weights", function() {
-        const scene = testCube
-        const out = new Array<Array<Array<number>>>(scene.vertex.length/3)
-        for(let i=0; i<out.length; ++i) {
-            out[i] = new Array()
-        }
-
-        const allBoneNames: string[] = []
-        const allWeights: number[] = []
-
-        scene.human.__skeleton.vertexWeights!._data.forEach((data, boneName) => {
-            const boneIndex = allBoneNames.length
-            allBoneNames.push(boneName)
-            const indices = data[0] as number[]
-            const weights = data[1] as number[]
-            for(let i=0; i<indices.length; ++i) {
-                const index = indices[i]
-                const weight = weights[i]
-                const weightIndex = allWeights.length
-                allWeights.push(weight)
-                out[index].push([boneIndex, weightIndex])
-            }
-        })
-
-        // boneNames
-        console.log(allBoneNames.join(" "))
-        // allWeights
-        console.log(allWeights.join(" "))
-        // vcount
-        console.log(out.map(e => e.length).join(" "))
-        // v
-        const o: number[] = []
-        out.forEach( x => {
-            x.forEach( y =>
-                y.forEach( z => 
-                    o.push(z)
-                )
-            )
-        })
-        console.log(o.join(" "))
-
-    })
-
     it("test cube", function () {
         const xml = exportCollada(testCube)
         

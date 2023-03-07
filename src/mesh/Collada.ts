@@ -7,6 +7,7 @@ import { vec3, vec4, mat4 } from 'gl-matrix'
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
 
+
 export function exportCollada(scene: HumanMesh) {
     let s = scene
     // s = testCube
@@ -256,7 +257,10 @@ ${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
     // node: id, name
     // instance_controller: url
     //   ouch: this means each controller as a complete list of bone names and IBMs...
-    //   (yeah, checked even with a collada export from blender)
+    //   (yeah, checked even with a collada export from blender...
+    //   WRONG! we can just have a separate polylist per material within <mesh> and that's it!
+    //   see ~/Documents/Blender/experiments/colored-2-bone-cube.dae
+    //   real treat will be to grab all the meshes, including proxy meshes, and merge them)
     // instance_material: symbol, target
     out += `        <node id="${objectName}" name="${objectName}" type="NODE">
           <matrix sid="transform">${mat2txt(identity)}</matrix>

@@ -60,6 +60,12 @@ const b0 = makeBone("Bone", [0, 0, 0], [0, 0, 1])
 const b1 = makeBone("Bone.001", [0, 0, 1], [0, 0, 2], b0)
 const b2 = makeBone("Bone.002", [0, 0, 2], [0, 0, 3], b1)
 
+//   3             1   │   0
+//   2         2       │       3
+//   1     6           │           4
+//   0──7──────────────┼───────────────5──
+//     -1 -.8 -.6 -.5  0   .5  .6  .8  1 Y
+
 export const testBones = {
     vertex: [
         0, 0.5, 3,
@@ -73,12 +79,12 @@ export const testBones = {
     ],
     groups: [{ startIndex: 0, length: 3 * 6 }],
     indices: [
-        6, 3, 4,
-        6, 5, 7,
-        2, 0, 3,
-        6, 2, 3,
+        1, 0, 3,
+        2, 1, 3,
+        2, 3, 4,
+        6, 2, 4,
         6, 4, 5,
-        2, 1, 0,
+        7, 6, 4,
     ],
     human: {
         __skeleton: {
