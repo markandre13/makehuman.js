@@ -229,8 +229,8 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         skin,
         [Mesh.EYEBALL0, [0.0, 0.5, 1, 1], gl.TRIANGLES],
         [Mesh.EYEBALL1, [0.0, 0.5, 1, 1], gl.TRIANGLES],
-        [Mesh.MOUTH_GUM_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [Mesh.MOUTH_GUM_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [Mesh.TEETH_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [Mesh.TEETH_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         [Mesh.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         [Mesh.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {

@@ -12,12 +12,13 @@ import { vec3, vec4, mat4 } from 'gl-matrix'
 export function exportCollada(scene: HumanMesh) {
     let s = scene
     // s = testCube
+    const geometry = new Geometry()
 
     return colladaHead() +
         colladaEffects() +
         colladaMaterials() +
-        colladaGeometries(s) + // mesh
-        colladaControllers(s) + // weights
+        colladaGeometries(s, geometry) + // mesh
+        colladaControllers(s, geometry) + // weights
         colladaVisualScenes(s) + // skeleton
         colladaScene() +
         colladaTail()
@@ -73,8 +74,8 @@ const materials: Material[] = [
     { meshId: Mesh.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
     { meshId: Mesh.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
     { meshId: Mesh.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
-    { meshId: Mesh.MOUTH_GUM_TOP, name: "mouthGumTop", r: 1, g: 0, b: 0},
-    { meshId: Mesh.MOUTH_GUM_BOTTOM, name: "mouthGumBottom", r: 1, g: 0, b: 0},
+    { meshId: Mesh.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1},
+    { meshId: Mesh.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1},
     { meshId: Mesh.TOUNGE, name: "tounge", r: 1, g: 0, b: 0}
 ]
 
@@ -120,42 +121,22 @@ const epsilon = 0.000000001
 class Geometry {
     vertex: number[] = []
     indices: number[][] = []
+    indexMap = new Map<number, number>()
 
-    map = new OrderedMap<number[], number>((a: number[], b: number[]) =>
-        !(Math.abs(a[0] - b[0]) < epsilon &&
-            Math.abs(a[1] - b[1]) < epsilon &&
-            Math.abs(a[2] - b[2]) < epsilon
-        ) && (a[0] < b[0] || a[1] < b[1] || a[2] < b[2]))
-
-    // TODO: there is a problem with addPoint() what if we have two overlapping
-    //       point which must not be merged, e.g. the skeleton will move them to
-    //       different locations?
-    //       * also include the bone information and sort it out automatically
-    //       * instead of using points, use vertex and index provided to addPoint
-    //         as key in the map, because the source will have the points already
-    //         separate when there's a need to do so
-    //       * assume all is good most of the time and clear the map when another
-    //         bunch of points may overlap (e.g. cloth and skin)
-
-    /**
-     * Add a point (x,y,z) to the geometry and return it's index.
-     * If the vertex already exists, do not add it to the geometry
-     * and return the existing vertex's index instead.
-     * 
-     * @param vertex array of x,y,z coordinates
-     * @param index  index to vertex within vertex
-     * @returns index within Geomerty.vertex
-     */
-    addPoint(vertex: number[], index: number): number {
-        const p = [vertex[index * 3], vertex[index * 3 + 1], vertex[index * 3 + 2]]
-        let idx = this.map.get(p)
-        if (idx !== undefined) {
-            return idx
+    addPoint(vertex: number[], origIndex: number): number {
+        let newIndex = this.indexMap.get(origIndex)
+        if (newIndex !== undefined) {
+            return newIndex
         }
-        idx = this.vertex.length / 3
+
+        newIndex = this.vertex.length / 3
+        this.indexMap.set(origIndex, newIndex)
+
+        const ptr = origIndex * 3
+        const p = [vertex[ptr], vertex[ptr + 1], vertex[ptr + 2]]
         this.vertex.push(...p)
-        this.map.set(p, idx)
-        return idx
+        
+        return newIndex
     }
     addMesh() {
         this.indices.push([])
@@ -163,33 +144,18 @@ class Geometry {
     addQuad(vertex: number[], indices: number[], startIndex: number) {
         const currentMesh = this.indices[this.indices.length - 1]
         currentMesh.push(this.addPoint(vertex, indices[startIndex]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex+1]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex+2]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex+3]))
     }
 }
 
-function colladaGeometries(scene: HumanMesh) {
-    const geometry = new Geometry()
+function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
         const meshId = materials[m].meshId
-        let vertexStart = Number.MAX_VALUE, vertexEnd = Number.MIN_VALUE
         const indexStart = scene.groups[meshId].startIndex
         const indexEnd = indexStart + scene.groups[meshId].length
-        for (let i = indexStart; i < indexEnd; ++i) {
-            const index = scene.indices[i]
-            if (vertexStart > index) {
-                vertexStart = index
-            }
-            if (vertexEnd < index) {
-                vertexEnd = index
-            }
-        }
-        ++vertexEnd // range of [vertexStart, vertexEnd[
-        vertexStart = vertexStart * 3
-        vertexEnd = vertexEnd * 3
 
-        // const vertex = scene.vertex.slice(vertexStart, vertexEnd)
         geometry.addMesh()
 
         // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
@@ -230,28 +196,36 @@ function colladaGeometries(scene: HumanMesh) {
     return out
 }
 
-function colladaControllers(scene: HumanMesh) {
-    const out = new Array<Array<Array<number>>>(scene.vertex.length / 3)
+function colladaControllers(scene: HumanMesh, geometry: Geometry) {
+    const out = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
     for (let i = 0; i < out.length; ++i) {
-        out[i] = new Array()
+        out[i] = []
     }
 
     const allBoneNames: string[] = []
     const allWeights: number[] = []
     let ibmAll = ""
 
-    scene.human.__skeleton.vertexWeights!._data.forEach((data, boneName) => {
+    scene.human.__skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
         const boneIndex = allBoneNames.length
         allBoneNames.push(boneName)
 
         const bone = scene.human.__skeleton.bones.get(boneName)!
         ibmAll += ibm(bone) + " "
 
-        const indices = data[0] as number[]
-        const weights = data[1] as number[]
-        for (let i = 0; i < indices.length; ++i) {
-            const index = indices[i]
-            const weight = weights[i]
+        const boneIndices = boneData[0] as number[]
+        const boneWeights = boneData[1] as number[]
+        for (let i = 0; i < boneIndices.length; ++i) {
+            const index = geometry.indexMap.get(boneIndices[i])
+            if (boneIndices[i] < 10) {
+                console.log(`colladaControllers: ${boneIndices[i]} -> ${index}`)
+            }
+            if (index === undefined) {
+                // vertex is not used
+                // console.log(`no index found for ${indices[i]}`)
+                continue
+            }
+            const weight = boneWeights[i]
             const weightIndex = allWeights.length
             allWeights.push(weight)
             out[index].push([boneIndex, weightIndex])
@@ -260,8 +234,8 @@ function colladaControllers(scene: HumanMesh) {
     ibmAll = ibmAll.trimEnd()
 
     const outFlat: number[] = []
-    out.forEach(x => {
-        x.forEach(y =>
+    out.forEach(vertexData => {
+        vertexData.forEach(y =>
             y.forEach(z =>
                 outFlat.push(z)
             )

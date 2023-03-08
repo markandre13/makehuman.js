@@ -14,13 +14,7 @@ import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 import { exportCollada } from "../../src/mesh/Collada"
 import { testCube } from "../../src/mesh/testCube"
 
-
 import { parseXML, Tag, Text } from "./xml"
-
-// TODO: export material (also to easier visually check different meshes were exported/imported)
-// TODO: the the other meshes/proxy meshes
-// TODO: export normals
-// TODO: export UV
 
 describe("Collada", function () {
 

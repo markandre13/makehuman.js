@@ -149,6 +149,13 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 <!--
 
+TODO
+[ ] the the other meshes/proxy meshes
+[ ] export normals
+[ ] export UV
+[ ] ...
+[ ] export animation
+
 # Development Notes
 
 have a look at https://www.npmjs.com/package/avro-js to compress the data files some more
