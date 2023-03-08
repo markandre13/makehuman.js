@@ -2,6 +2,7 @@ import { HumanMesh } from './HumanMesh'
 import { Mesh } from '../Mesh'
 import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
+import { OrderedMap } from '../lib/OrderedMap'
 import { vec3, vec4, mat4 } from 'gl-matrix'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
@@ -72,6 +73,9 @@ const materials: Material[] = [
     { meshId: Mesh.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
     { meshId: Mesh.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
     { meshId: Mesh.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
+    { meshId: Mesh.MOUTH_GUM_TOP, name: "mouthGumTop", r: 1, g: 0, b: 0},
+    { meshId: Mesh.MOUTH_GUM_BOTTOM, name: "mouthGumBottom", r: 1, g: 0, b: 0},
+    { meshId: Mesh.TOUNGE, name: "tounge", r: 1, g: 0, b: 0}
 ]
 
 function colladaEffects() {
@@ -110,42 +114,97 @@ function colladaMaterials() {
     return out
 }
 
+// const epsilon = Number.EPSILON * 2.0
+const epsilon = 0.000000001
+
+class Geometry {
+    vertex: number[] = []
+    indices: number[][] = []
+
+    map = new OrderedMap<number[], number>((a: number[], b: number[]) =>
+        !(Math.abs(a[0] - b[0]) < epsilon &&
+            Math.abs(a[1] - b[1]) < epsilon &&
+            Math.abs(a[2] - b[2]) < epsilon
+        ) && (a[0] < b[0] || a[1] < b[1] || a[2] < b[2]))
+
+    // TODO: there is a problem with addPoint() what if we have two overlapping
+    //       point which must not be merged, e.g. the skeleton will move them to
+    //       different locations?
+    //       * also include the bone information and sort it out automatically
+    //       * instead of using points, use vertex and index provided to addPoint
+    //         as key in the map, because the source will have the points already
+    //         separate when there's a need to do so
+    //       * assume all is good most of the time and clear the map when another
+    //         bunch of points may overlap (e.g. cloth and skin)
+
+    /**
+     * Add a point (x,y,z) to the geometry and return it's index.
+     * If the vertex already exists, do not add it to the geometry
+     * and return the existing vertex's index instead.
+     * 
+     * @param vertex array of x,y,z coordinates
+     * @param index  index to vertex within vertex
+     * @returns index within Geomerty.vertex
+     */
+    addPoint(vertex: number[], index: number): number {
+        const p = [vertex[index * 3], vertex[index * 3 + 1], vertex[index * 3 + 2]]
+        let idx = this.map.get(p)
+        if (idx !== undefined) {
+            return idx
+        }
+        idx = this.vertex.length / 3
+        this.vertex.push(...p)
+        this.map.set(p, idx)
+        return idx
+    }
+    addMesh() {
+        this.indices.push([])
+    }
+    addQuad(vertex: number[], indices: number[], startIndex: number) {
+        const currentMesh = this.indices[this.indices.length - 1]
+        currentMesh.push(this.addPoint(vertex, indices[startIndex]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
+    }
+}
+
 function colladaGeometries(scene: HumanMesh) {
-    const meshId = Mesh.SKIN
-    let vertexStart = Number.MAX_VALUE, vertexEnd = Number.MIN_VALUE
-    const indexStart = scene.groups[meshId].startIndex
-    const indexEnd = indexStart + scene.groups[meshId].length
-    for (let i = indexStart; i < indexEnd; ++i) {
-        const index = scene.indices[i]
-        if (vertexStart > index) {
-            vertexStart = index
+    const geometry = new Geometry()
+    for (let m = 0; m < materials.length; ++m) {
+        const meshId = materials[m].meshId
+        let vertexStart = Number.MAX_VALUE, vertexEnd = Number.MIN_VALUE
+        const indexStart = scene.groups[meshId].startIndex
+        const indexEnd = indexStart + scene.groups[meshId].length
+        for (let i = indexStart; i < indexEnd; ++i) {
+            const index = scene.indices[i]
+            if (vertexStart > index) {
+                vertexStart = index
+            }
+            if (vertexEnd < index) {
+                vertexEnd = index
+            }
         }
-        if (vertexEnd < index) {
-            vertexEnd = index
+        ++vertexEnd // range of [vertexStart, vertexEnd[
+        vertexStart = vertexStart * 3
+        vertexEnd = vertexEnd * 3
+
+        // const vertex = scene.vertex.slice(vertexStart, vertexEnd)
+        geometry.addMesh()
+
+        // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
+        for (let i = indexStart; i < indexEnd; i += 6) {
+            geometry.addQuad(scene.vertex, scene.indices, i)
         }
     }
-    ++vertexEnd // range of [vertexStart, vertexEnd[
-    vertexStart = vertexStart * 3
-    vertexEnd = vertexEnd * 3
 
-    const vertex = scene.vertex.slice(vertexStart, vertexEnd)
-
-    // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
-    const indices: number[] = []
-    for (let i = indexStart; i < indexEnd; i += 6) {
-        indices.push(scene.indices[i])
-        indices.push(scene.indices[i + 1])
-        indices.push(scene.indices[i + 2])
-        indices.push(scene.indices[i + 3])
-    }
-
-    return `  <library_geometries>
+    let out = `  <library_geometries>
     <geometry id="${meshName}" name="${objectName}">
       <mesh>
         <source id="${meshPositionsName}">
-          <float_array id="${meshPositionsArrayName}" count="${vertex.length}">${vertex.join(" ")}</float_array>
+          <float_array id="${meshPositionsArrayName}" count="${geometry.vertex.length}">${geometry.vertex.join(" ")}</float_array>
           <technique_common>
-            <accessor source="#${meshPositionsArrayName}" count="${vertex.length / 3}" stride="3">
+            <accessor source="#${meshPositionsArrayName}" count="${geometry.vertex.length / 3}" stride="3">
               <param name="X" type="float"/>
               <param name="Y" type="float"/>
               <param name="Z" type="float"/>
@@ -155,15 +214,21 @@ function colladaGeometries(scene: HumanMesh) {
         <vertices id="${meshVerticesName}">
           <input semantic="POSITION" source="#${meshPositionsName}"/>
         </vertices>
-        <polylist material="${materials[0].name}-material" count="${indices.length / 4}">
+`
+    for (let m = 0; m < materials.length; ++m) {
+        out += `        <polylist material="${materials[m].name}-material" count="${geometry.indices[m].length / 4}">
           <input semantic="VERTEX" source="#${meshVerticesName}" offset="0"/>
-          <vcount>${"4 ".repeat(indices.length / 4)}</vcount>
-          <p>${indices.join(" ")}</p>
+          <vcount>${"4 ".repeat(geometry.indices[m].length / 4)}</vcount>
+          <p>${geometry.indices[m].join(" ")}</p>
         </polylist>
-      </mesh>
+`
+    }
+    out += `      </mesh>
     </geometry>
   </library_geometries>
-`}
+`
+    return out
+}
 
 function colladaControllers(scene: HumanMesh) {
     const out = new Array<Array<Array<number>>>(scene.vertex.length / 3)
@@ -268,8 +333,12 @@ ${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
             <skeleton>#${armatureName}_${scene.human.__skeleton.roots[0].name}</skeleton>
             <bind_material>
               <technique_common>
-                <instance_material symbol="${materials[0].name}-material" target="#${materials[0].name}-material"/>
-              </technique_common>
+`
+    for (let m = 0; m < materials.length; ++m) {
+        out += `                <instance_material symbol="${materials[m].name}-material" target="#${materials[m].name}-material"/>\n`
+    }
+
+    out += `              </technique_common>
             </bind_material>
           </instance_controller>
         </node>
