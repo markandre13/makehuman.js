@@ -1,5 +1,5 @@
 import { Mode } from 'Mode'
-import { Proxy, loadProxy } from 'proxy/Proxy'
+import { Proxy } from 'proxy/Proxy'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
 import { Mesh, Group } from './Mesh'
@@ -39,10 +39,6 @@ export class HumanMesh {
         this.groups = obj.groups
 
         human.meshData = obj // UGLY
-
-        // this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
-        // this.proxy = loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes")
-        // this.proxyMesh = this.proxy.loadMeshAndObject(human)
     }
 
     update(): void {

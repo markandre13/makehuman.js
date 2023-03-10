@@ -4,6 +4,7 @@ import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { WavefrontObj } from './mesh/WavefrontObj'
+import { loadProxy } from 'proxy/Proxy'
 import { HumanMesh, Update } from './mesh/HumanMesh'
 import { Mode } from './Mode'
 
@@ -19,7 +20,7 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
 import { SliderTreeAdapter } from 'modifier/morphView'
-import { Button, Signal } from 'toad.js'
+import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
 import { exportCollada } from 'mesh/Collada'
 
 window.onload = () => { main() }
@@ -50,6 +51,16 @@ function run() {
     obj.load('data/3dobjs/base.obj.z')
     human.meshData = obj
     const scene = new HumanMesh(human, obj)
+
+    // data/teeth/teeth_base/teeth_base.mhclo
+    // data/eyes/high-poly/high-poly.mhclo
+    // data/tongue/tongue01/tongue01.mhclo
+
+    // this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
+    // scene.proxy = loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes")
+    scene.proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+    scene.proxyMesh = scene.proxy!.loadMeshAndObject(human)
+
     human.modified.add(() => scene.updateRequired = Update.MORPH)
 
     const skeleton = loadSkeleton('data/rigs/default.mhskel.z')
@@ -87,8 +98,16 @@ function run() {
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
 
-    const download = makeDownloadAnchor()
+    const teethProxy = new BooleanModel(true)
+    const toungeProxy = new BooleanModel(false)
+    const eyesProxy = new BooleanModel(true)
+    const skinProxy = new BooleanModel(true)
 
+    teethProxy.modified.add(() => {
+        console.log(`teeth proxy changed to ${teethProxy.value}`)
+    })
+
+    const download = makeDownloadAnchor()
     const references = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={mode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
@@ -99,8 +118,25 @@ function run() {
                 <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
             <Tab label="Export" value="POSE">
-                WiP: Only the base mesh is exported.<br/>
-                <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
+                <div style={{padding:"10px"}}>
+                    WiP: Only the base mesh is exported.<br />
+                    Upcoming: Proxy meshes:
+                    <table>
+                        <tr>
+                            <td><Checkbox model={teethProxy}/></td><td>Teeth</td>
+                        </tr>
+                        <tr>
+                            <td><Checkbox model={toungeProxy}/></td><td>Tounge</td>
+                        </tr>
+                        <tr>
+                            <td><Checkbox model={eyesProxy}/></td><td>Eyes</td>
+                        </tr>
+                        <tr>
+                            <td><Checkbox model={skinProxy}/></td><td>Skin</td>
+                        </tr>
+                    </table>
+                    <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
+                </div>
             </Tab>
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>

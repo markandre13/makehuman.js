@@ -156,6 +156,76 @@ TODO
 [ ] ...
 [ ] export animation
 
+FLOW OF MESH DATA, MORPH, SKINNING & PROXY
+
+* original mesh
+* mesh with morphs except current morp
+* mesh with current morp
+* posed mesh
+
+and for the rest... me thinks i can come up with something on my own
+
+class Group {
+    name: string
+    startIndex: number  // in points
+    length: number      // in points
+}
+
+WavefrontObj {
+    vertex: number[]    // x0,y0,z0,x1,y1,z1,...
+    indices: number[]   // quads in points
+    groups: Group[]
+}
+
+-----
+
+// the morphed base mesh
+HumanMesh {
+    human: Human
+
+    obj: Mesh // aka WavefrontObj
+    origVertex: number[]
+    vertex: number[]
+    indices: number[]
+    groups: Group[]
+
+    proxy?: Proxy
+    proxyMesh?: WavefrontObj
+
+    update() {
+        this.vertex = [...this.origVertex]
+        // morph this.vertex
+        // update skeleton to new morph (temporarily set this.obj.vertex = this.vertex)
+        // skin this.vertex (this.human.__skeleton.skinMesh(...))
+    }
+}
+
+render() will use the proxy mesh
+
+// aggregates all the modifiers and creates a list of morph targets
+Human: AnimatedMesh {
+    meshData: WavefrontObj // Object3D(name)
+
+    def addBoundMesh(self, mesh, vertexToBoneMapping):
+
+    getRestCoordinates(name) {
+        rIdx = self._getBoundMeshIndex(name)
+        self.__originalMeshCoords[rIdx][:,:3]
+    }
+
+    setProxy()
+    setHairProxy()
+    setEyesProxy()
+    setEyebrowsProxy()
+    setEyelashesProxy()
+    setTeethProxy()
+    setToungeProxy()
+    addClothesProxy()
+    removeClothesProxy()
+}
+
+how upstream Makehuman does it...
+
 # Development Notes
 
 have a look at https://www.npmjs.com/package/avro-js to compress the data files some more
