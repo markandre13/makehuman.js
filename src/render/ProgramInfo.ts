@@ -46,7 +46,7 @@ export class ProgramInfo {
     color(rgba: number[]) {
         this.gl.uniform4fv(this.uniformLocations.color, rgba)
     }
-    init(cubeRotation: number) {
+    init(modelViewMatrix: mat4) {
         const gl = this.gl
         const canvas = gl.canvas as HTMLCanvasElement
         if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
@@ -71,12 +71,7 @@ export class ProgramInfo {
         const zFar = 100.0
         const projectionMatrix = mat4.create()
         mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
-    
-        const modelViewMatrix = mat4.create()
-        mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
-        // mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
-        mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
-    
+        
         const normalMatrix = mat4.create()
         mat4.invert(normalMatrix, modelViewMatrix)
         mat4.transpose(normalMatrix, normalMatrix)

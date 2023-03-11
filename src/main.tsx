@@ -16,6 +16,8 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
+import { Text } from "toad.js/view/Text"
+import { Slider } from "toad.js/view/Slider"
 import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
 import { SliderTreeAdapter } from 'modifier/morphView'
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
@@ -52,7 +54,7 @@ function run() {
     scene.proxies.set("Eyes", loadProxy(human, "data/eyes/high-poly/high-poly.mhclo", "Eyes"))
     scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth"))
     scene.proxies.set("Tongue", loadProxy(human, "data/tongue/tongue01/tongue01.mhclo", "Tongue"))
-    
+
     human.modified.add(() => scene.updateRequired = Update.MORPH)
 
     const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
@@ -98,10 +100,15 @@ function run() {
         console.log(`teeth proxy changed to ${teethProxy.value}`)
     })
 
+    const jaw = poseNodes.find("jaw")!
+
     const download = makeDownloadAnchor()
     const references = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
+            <Tab label="Debug" value="DEBUG">
+                jaw <Text model={jaw.x} style={{ width: '50px'}}/><Slider model={jaw.x} style={{ width: '200px' }}/>
+            </Tab>
             <Tab label="Morph" value="POLYGON">
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
@@ -109,21 +116,21 @@ function run() {
                 <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
             <Tab label="Export" value="WIREFRAME">
-                <div style={{padding:"10px"}}>
+                <div style={{ padding: "10px" }}>
                     WiP: Only the base mesh is exported.<br />
                     Upcoming: Proxy meshes:
                     <table>
                         <tr>
-                            <td><Checkbox model={teethProxy}/></td><td>Teeth</td>
+                            <td><Checkbox model={teethProxy} /></td><td>Teeth</td>
                         </tr>
                         <tr>
-                            <td><Checkbox model={toungeProxy}/></td><td>Tounge</td>
+                            <td><Checkbox model={toungeProxy} /></td><td>Tounge</td>
                         </tr>
                         <tr>
-                            <td><Checkbox model={eyesProxy}/></td><td>Eyes</td>
+                            <td><Checkbox model={eyesProxy} /></td><td>Eyes</td>
                         </tr>
                         <tr>
-                            <td><Checkbox model={skinProxy}/></td><td>Skin</td>
+                            <td><Checkbox model={skinProxy} /></td><td>Skin</td>
                         </tr>
                     </table>
                     <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>

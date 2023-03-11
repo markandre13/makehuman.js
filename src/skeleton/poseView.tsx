@@ -33,6 +33,21 @@ export class PoseNode implements TreeNode {
         this.bone.skeleton.boneslist!.forEach(bone => bone.update())
     }
 
+    find(boneName: string): PoseNode | undefined {
+        if (this.bone.name === boneName) {
+            return this
+        }
+        const next = this.next?.find(boneName)
+        if (next) {
+            return next
+        }
+        const down = this.down?.find(boneName)
+        if (down) {
+            return down
+        }
+        return undefined
+    }
+
     constructor(bone: Bone | undefined = undefined, signal: Signal<PoseNode> | undefined = undefined) {
         this.x = new NumberModel(0, { min: -180, max: 180, step: 5 })
         this.y = new NumberModel(0, { min: -180, max: 180, step: 5 })

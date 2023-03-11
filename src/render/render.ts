@@ -41,7 +41,17 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 
 function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
 
-    programInfo.init(cubeRotation)
+    const modelViewMatrix = mat4.create()
+    if (renderMode === RenderMode.DEBUG) {
+        mat4.translate(modelViewMatrix, modelViewMatrix, [1.0, -7.0, -5.0])
+        mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 2, [0, 1, 0])
+    } else {
+        mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
+        // mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
+        mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
+    }
+
+    programInfo.init(modelViewMatrix)
     buffers.base.bind(programInfo)
 
     let skin
@@ -49,6 +59,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         case RenderMode.POLYGON:
             skin = [BaseMeshGroup.SKIN, [1.0, 0.8, 0.7, 1], gl.TRIANGLES]
             break
+        case RenderMode.DEBUG:
         case RenderMode.WIREFRAME:
             skin = [BaseMeshGroup.SKIN, [1.0 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
             break
@@ -90,7 +101,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     }
 
     // SKELETON
-    if (renderMode === RenderMode.WIREFRAME) {
+    if (renderMode !== RenderMode.POLYGON) {
         programInfo.color([1, 1, 1, 1])
         const offset = buffers.skeletonIndex
         const count = scene.skeleton.boneslist!.length * 2
@@ -98,7 +109,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     }
 
     // JOINTS
-    if (renderMode === RenderMode.WIREFRAME) {
+    if (renderMode !== RenderMode.POLYGON) {
         programInfo.color([1, 1, 1, 1])
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
@@ -111,6 +122,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
             glMode = gl.TRIANGLES
             break
         case RenderMode.WIREFRAME:
+            case RenderMode.DEBUG:
             glMode = gl.LINES
             break
     }
@@ -201,7 +213,7 @@ function renderSkeletonRelativeHelper(m: mat4, bone: Bone, vertex: number[], ind
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-    const {vx, ix, skeletonIndex} = buildBase(scene)
+    const { vx, ix, skeletonIndex } = buildBase(scene)
     const base = new RenderMesh(gl, vx, ix)
 
     let proxies = new Map<string, RenderMesh>()
@@ -218,8 +230,8 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
 
 function updateBuffers(scene: HumanMesh, buffers: Buffers) {
     scene.update()
-    
-    const {vx, ix} = buildBase(scene)
+
+    const { vx, ix } = buildBase(scene)
     buffers.base.update(vx, ix)
 
     buffers.proxies.forEach((renderMesh, name) => {
@@ -239,5 +251,5 @@ function buildBase(scene: HumanMesh) {
     const vertexOffset = scene.vertexRigged.length / 3
     vx = vx.concat(skeleton.vertex)
     ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
-    return {vx, ix, skeletonIndex}
+    return { vx, ix, skeletonIndex }
 }
