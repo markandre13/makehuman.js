@@ -1,6 +1,5 @@
 import { mat4, vec4 } from 'gl-matrix'
 import { EnumModel } from 'toad.js'
-import { calculateNormals } from '../lib/calculateNormals'
 import { BaseMeshGroup } from '../BaseMeshGroup'
 import { HumanMesh, Update } from '../mesh/HumanMesh'
 import { RenderMode } from '../RenderMode'
@@ -12,10 +11,6 @@ import { RenderMesh } from './RenderMesh'
 let cubeRotation = 0.0
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
-
-    // for(let i=0; i<10; ++i) {
-    //     console.log(`draw group '${scene.groups[i].name}, offset=${scene.groups[i].startIndex}, length=${scene.groups[i].length}'`)
-    // }
 
     console.log(`NUMBER OF BONES ${scene.skeleton.bones.size}`)
 
@@ -36,7 +31,6 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
         if (scene.updateRequired !== Update.NONE) {
             scene.update()
             let skeleton = renderSkeletonGlobal(scene)
-            // let skeleton = renderSkeletonRelative(scene)
 
             let vx = scene.vertexRigged
             let ix = scene.baseMesh.indices
@@ -45,8 +39,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
             vx = vx.concat(skeleton.vertex)
             ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
 
-            buffers.vertex = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx)
-            buffers.normal = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vx, ix))
+            buffers.base.update(vx, ix)
 
             // update proxy meshes
             buffers.proxies.forEach((renderMesh, name) => {
@@ -65,42 +58,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
 
     programInfo.init(cubeRotation)
-
-    {
-        const numComponents = 3
-        const type = gl.FLOAT
-        const normalize = false
-        const stride = 0
-        const offset = 0
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.vertex)
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset)
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
-    }
-
-    {
-        const numComponents = 3
-        const type = gl.FLOAT
-        const normalize = false
-        const stride = 0
-        const offset = 0
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal)
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexNormal,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset)
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal)
-    }
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
+    buffers.base.bind(programInfo)
 
     let skin
     switch (renderMode) {
@@ -121,15 +79,14 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         [BaseMeshGroup.TEETH_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         [BaseMeshGroup.TEETH_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         [BaseMeshGroup.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        // [Mesh.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
+        [BaseMeshGroup.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
         const idx = x[0] as number
         const mode = x[2] as number
 
         programInfo.color(x[1] as number[])
-        const type = gl.UNSIGNED_SHORT
         let offset = scene.baseMesh.groups[idx].startIndex * 2
-        let count = scene.baseMesh.groups[idx].length
+        let length = scene.baseMesh.groups[idx].length
 
         if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
             continue
@@ -144,8 +101,9 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
             continue
         }
 
-        console.log(`draw group '${scene.baseMesh.groups[idx].name}, offset=${offset}, length=${count}'`)
-        gl.drawElements(mode, count, type, offset)
+        console.log(`draw group '${scene.baseMesh.groups[idx].name}, offset=${offset}, length=${length}'`)
+
+        buffers.base.drawSubset(mode, offset, length)
     }
 
     // SKELETON
@@ -275,15 +233,18 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
     vx = vx.concat(skeleton.vertex)
     ix = ix.concat(skeleton.indices.map(v => v + skeletonOffset))
 
+    const base = new RenderMesh(gl, vx, ix)
+
     let proxies = new Map<string, RenderMesh>()
     scene.proxies.forEach((proxy, name) => {
         proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
     })
 
     return {
-        vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx),
-        normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vx, ix)),
-        indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, ix),
+        // vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx),
+        // normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vx, ix)),
+        // indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, ix),
+        base,
         skeletonIndex,
         proxies
     }

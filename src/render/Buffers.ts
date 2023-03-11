@@ -1,11 +1,7 @@
 import { RenderMesh } from "./RenderMesh"
 
 export interface Buffers {
-    vertex: WebGLBuffer
-    normal: WebGLBuffer
-    indices: WebGLBuffer
-
+    base: RenderMesh
     skeletonIndex: number
-
     proxies: Map<string, RenderMesh>
 }
