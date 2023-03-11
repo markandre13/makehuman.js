@@ -206,11 +206,11 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     const allWeights: number[] = []
     let ibmAll = ""
 
-    scene.human.__skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
+    scene.human.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
         const boneIndex = allBoneNames.length
         allBoneNames.push(boneName)
 
-        const bone = scene.human.__skeleton.bones.get(boneName)!
+        const bone = scene.human.skeleton.bones.get(boneName)!
         ibmAll += ibm(bone) + " "
 
         const boneIndices = boneData[0] as number[]
@@ -290,7 +290,7 @@ function colladaVisualScenes(scene: HumanMesh) {
     <visual_scene id="${sceneName}" name="${sceneName}">
       <node id="${armatureName}" name="${armatureName}" type="NODE">
         <matrix sid="transform">${mat2txt(identity)}</matrix>
-${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
+${dumpBone(armatureName, scene.human.skeleton.roots[0])}
 `
     // what varies...
     // node: id, name
@@ -304,7 +304,7 @@ ${dumpBone(armatureName, scene.human.__skeleton.roots[0])}
     out += `        <node id="${objectName}" name="${objectName}" type="NODE">
           <matrix sid="transform">${mat2txt(identity)}</matrix>
           <instance_controller url="#${skinName}">
-            <skeleton>#${armatureName}_${scene.human.__skeleton.roots[0].name}</skeleton>
+            <skeleton>#${armatureName}_${scene.human.skeleton.roots[0].name}</skeleton>
             <bind_material>
               <technique_common>
 `

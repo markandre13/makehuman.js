@@ -4,17 +4,12 @@ import { Signal } from 'toad.js/Signal'
 import { WavefrontObj } from 'mesh/WavefrontObj'
 import { Skeleton } from "skeleton/Skeleton"
 
-// shared/animation.py
-/**
- * Manages skeletal animation for a mesh or multiple meshes.
- * Multiple meshes can be added each with their specific bone-to-vertex mapping
- * to make it possible to play back the same animation on a skeleton attached
- * to multiple meshes.
- */
-class AnimatedMesh {
+// apps/human.py class Human
+export class Human {
+
     // for now only one mesh, the base mesh
     meshData!: WavefrontObj
-    __skeleton!: Skeleton
+    skeleton!: Skeleton
 
     getRestCoordinates(name: string) {
         // rIdx = self._getBoundMeshIndex(name)
@@ -24,37 +19,7 @@ class AnimatedMesh {
         }
         return this.meshData.vertex
     }
-    setBaseSkeleton(skel: Skeleton) {
-        this.__skeleton = skel
-        // self.removeAnimations(update=False)
-        // self.resetCompiledWeights()
-    }
-    // isPosed() {
-    //     return true
-    // }
-    // _pose() {
-    //     if (this.isPosed()) {
-    //         // this.__skeleton.skinMesh(self.__originalMeshCoords[idx], self.__vertexToBoneMaps[idx].data)
-    //         const mesh = this.meshData
-    //         const posedCoords = this.__skeleton.skinMesh(
-    //             mesh.vertex,
-    //             this.__skeleton.vertexWeights!._data
-    //         )
-    //         this._updateMeshVerts(mesh, posedCoords)
-    //     } else {
-    //         throw Error(`Not implemented yet.`)
-    //     }
-    // }
-    // _updateMeshVerts(mesh: WavefrontObj, verts: number[]) {
-    //     NOTE: we should only send one message to mesh, doing three calls violates information hiding
-    //     mesh.changeCoords(verts)
-    //     mesh.calcNormals()
-    //     mesh.update()
-    // }
-}
 
-// apps/human.py class Human
-export class Human extends AnimatedMesh {
     private static instance?: Human
     static getInstance(): Human {
         if (Human.instance === undefined)
@@ -113,7 +78,6 @@ export class Human extends AnimatedMesh {
     private regularproportionsVal = new NumberModel(0)
 
     constructor() {
-        super()
         this._setDependendValues()
 
         this.gender.modified.add(() => this._setGenderVals())
@@ -432,10 +396,11 @@ export class Human extends AnimatedMesh {
         return this.getRestCoordinates(this.meshData.name)
     }
 
-    override setBaseSkeleton(skel: Skeleton) {
+    setBaseSkeleton(skel: Skeleton) {
+        this.skeleton = skel
         // self.callEvent('onChanging', events3d.HumanEvent(self, 'skeleton'))
         // animation.AnimatedMesh.setBaseSkeleton(self, skel)
-        super.setBaseSkeleton(skel)
+        // super.setBaseSkeleton(skel)
 
         // self.updateVertexWeights(skel.getVertexWeights() if skel else None)
         // self.callEvent('onChanged', events3d.HumanEvent(self, 'skeleton'))

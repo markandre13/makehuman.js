@@ -91,7 +91,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
     //     console.log(`draw group '${scene.groups[i].name}, offset=${scene.groups[i].startIndex}, length=${scene.groups[i].length}'`)
     // }
 
-    console.log(`NUMBER OF BONES ${scene.human.__skeleton.bones.size}`)
+    console.log(`NUMBER OF BONES ${scene.human.skeleton.bones.size}`)
 
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (!gl) {
@@ -255,7 +255,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
         const offset = buffers.skeletonIndex
         const mode = gl.LINES
-        const count = scene.human.__skeleton.boneslist!.length * 2
+        const count = scene.human.skeleton.boneslist!.length * 2
         gl.drawElements(mode, count, gl.UNSIGNED_SHORT, offset)
     }
 
@@ -380,7 +380,7 @@ function getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, n
 
 // render the skeleton using matRestGlobal
 function renderSkeletonGlobal(scene: HumanMesh) {
-    const skel = scene.human.__skeleton
+    const skel = scene.human.skeleton
     const v = vec4.fromValues(0, 0, 0, 1)
     const vertex = new Array<number>(skel.boneslist!.length * 6)
     const indices = new Array<number>(skel.boneslist!.length * 2)
@@ -404,7 +404,7 @@ function renderSkeletonGlobal(scene: HumanMesh) {
 
 // render the skeleton using matRestRelative
 function renderSkeletonRelative(scene: HumanMesh) {
-    const skel = scene.human.__skeleton
+    const skel = scene.human.skeleton
     const v = vec4.fromValues(0, 0, 0, 1)
     const vertex: number[] = []
     const indices: number[] = []

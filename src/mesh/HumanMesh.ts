@@ -69,15 +69,15 @@ export class HumanMesh {
             const tmp = this.obj.vertex
             this.obj.vertex = this.vertex
 
-            this.human.__skeleton.updateJoints(this.human)
-            this.human.__skeleton.build()
-            this.human.__skeleton.update()
+            this.human.skeleton.updateJoints(this.human)
+            this.human.skeleton.build()
+            this.human.skeleton.update()
 
             this.obj.vertex = tmp
         // }
 
         // skin
-        this.vertex = this.human.__skeleton.skinMesh(this.vertex, this.human.__skeleton.vertexWeights!._data)
+        this.vertex = this.human.skeleton.skinMesh(this.vertex, this.human.skeleton.vertexWeights!._data)
         console.log(`HumanMesh.update(): skinMesh, ${this.vertex.length}`)
 
         // if (this.proxy !== undefined) {
