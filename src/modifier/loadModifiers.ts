@@ -16,14 +16,14 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 // }, ...
 
 // from apps/humanmodifier.py
-export function loadModifiers(filename: string, human?: Human): Modifier[] {
+export function loadModifiers(human: Human, filename: string): Modifier[] {
     return parseModifiers(
-        FileSystemAdapter.getInstance().readFile(filename),
         human,
+        FileSystemAdapter.getInstance().readFile(filename),
         filename)
 }
 
-export function parseModifiers(data: string, human?: Human, filename = 'memory'): Modifier[] {
+export function parseModifiers(human: Human, data: string, filename = 'memory'): Modifier[] {
     const classesMapping = new Map<string, any>([
         // ['Modifier', Modifier],
         // ['SimpleModifier', SimpleModifier],
@@ -40,7 +40,7 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
         const groupName = modifierGroup.group
 
         for (const modifierDef of modifierGroup.modifiers) {
-            let modifierClass: new(...args: any[]) => Modifier
+            let modifierClass: new (...args: any[]) => Modifier
             let modifier: Modifier
             if ('modifierType' in modifierDef) {
                 modifierClass = classesMapping.get(modifierDef.modifierType)
@@ -79,10 +79,9 @@ export function parseModifiers(data: string, human?: Human, filename = 'memory')
         }
     }
 
-    if (human !== undefined) {
-        for(const modifier of modifiers) {
-            modifier.setHuman(human)
-        }
+
+    for (const modifier of modifiers) {
+        modifier.setHuman(human)
     }
 
     console.log(`Loaded ${modifiers.length} modifiers from file ${filename}`)

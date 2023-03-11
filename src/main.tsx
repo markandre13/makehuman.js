@@ -64,8 +64,8 @@ function run() {
     scene.skeleton = skeleton
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
-    loadModifiers('data/modifiers/modeling_modifiers.json.z', human)
-    loadModifiers('data/modifiers/measurement_modifiers.json.z', human)
+    loadModifiers(human, 'data/modifiers/modeling_modifiers.json.z')
+    loadModifiers(human, 'data/modifiers/measurement_modifiers.json.z')
 
     // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
     const sliderNodes = loadSliders(human, 'data/modifiers/modeling_sliders.json.z')
