@@ -1,87 +1,15 @@
 import { mat4, vec4 } from 'gl-matrix'
 import { EnumModel } from 'toad.js'
-import { calculateNormals } from './lib/calculateNormals'
-import { BaseMeshGroup } from './BaseMeshGroup'
-import { HumanMesh, Update } from './mesh/HumanMesh'
-import { RenderMode } from './RenderMode'
-import { Bone } from "./skeleton/Bone"
+import { calculateNormals } from '../lib/calculateNormals'
+import { BaseMeshGroup } from '../BaseMeshGroup'
+import { HumanMesh, Update } from '../mesh/HumanMesh'
+import { RenderMode } from '../RenderMode'
+import { Bone } from "../skeleton/Bone"
+import { ProgramInfo } from './ProgramInfo'
+import { Buffers } from './Buffers'
+import { RenderMesh } from './RenderMesh'
 
 let cubeRotation = 0.0
-
-interface ProgramInfo {
-    program: WebGLProgram
-    attribLocations: {
-        vertexPosition: number
-        vertexNormal: number
-        // vertexColor: number
-    }
-    uniformLocations: {
-        projectionMatrix: WebGLUniformLocation
-        modelViewMatrix: WebGLUniformLocation
-        normalMatrix: WebGLUniformLocation
-        color: WebGLUniformLocation
-    }
-}
-
-interface Buffers {
-    vertex: WebGLBuffer
-    normal: WebGLBuffer
-    indices: WebGLBuffer
-
-    skeletonIndex: number
-
-    proxies: Map<string, RenderMesh>
-}
-
-class RenderMesh {
-    gl: WebGL2RenderingContext
-    vertex: WebGLBuffer
-    normal: WebGLBuffer
-    indices: WebGLBuffer
-    length: number
-
-    constructor(gl: WebGL2RenderingContext, vertex: number[], index: number[]) {
-        this.gl = gl
-        this.vertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
-        this.indices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, index)
-        this.normal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
-        this.length = index.length
-    }
-
-    update(vertex: number[], index: number[]) {
-        this.updateBuffer(this.vertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, vertex)
-        this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
-    }
-
-    draw(programInfo: ProgramInfo, mode: number) {
-        const numComponents = 3, type = this.gl.FLOAT, normalize = false, stride = 0, offset = 0
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex)
-        this.gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, numComponents, type, normalize, stride, offset)
-        this.gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normal)
-        this.gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, numComponents, type, normalize, stride, offset)
-        this.gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal)
-
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indices)
-
-        this.gl.drawElements(mode, this.length, this.gl.UNSIGNED_SHORT, 0)
-    }
-
-    protected createBuffer(target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[]): WebGLBuffer {
-        const buffer = this.gl.createBuffer()
-        if (buffer === null)
-            throw Error('Failed to create new WebGLBuffer')
-        this.updateBuffer(buffer, target, usage, type, data)
-        return buffer
-    }
-
-    protected updateBuffer(buffer: WebGLBuffer, target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[]): WebGLBuffer {
-        this.gl.bindBuffer(target, buffer)
-        this.gl.bufferData(target, new type(data), usage)
-        return buffer
-    }
-}
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
 
@@ -98,7 +26,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 
     const buffers = createAllBuffers(gl, scene)
 
-    const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSharderSrc)
+    const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexShaderSrc)
     const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc)
     const programInfo = linkProgram(gl, vertexShader, fragmentShader)
 
@@ -314,7 +242,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     cubeRotation += deltaTime
 }
 
-const vertexSharderSrc = `
+const vertexShaderSrc = `
 // this is our input per vertex
 attribute vec4 aVertexPosition;
 attribute vec3 aVertexNormal;
@@ -345,7 +273,6 @@ void main(void) {
   vColor = uColor;
 }`
 
-// skin color
 const fragmentShaderSrc = `
 varying lowp vec4 vColor;
 varying highp vec3 vLighting;

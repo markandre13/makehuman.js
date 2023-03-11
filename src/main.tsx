@@ -8,7 +8,7 @@ import { RenderMode } from './RenderMode'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
-import { render } from './render'
+import { render } from './render/render'
 
 import { Table } from 'toad.js/table/Table'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
