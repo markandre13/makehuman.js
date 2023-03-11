@@ -1,24 +1,13 @@
 import { Modifier } from './modifier/Modifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
-import { WavefrontObj } from 'mesh/WavefrontObj'
-import { Skeleton } from "skeleton/Skeleton"
 
 // apps/human.py class Human
+/**
+ * Aggregate the morph modifiers
+ */
 export class Human {
     modified = new Signal()
-
-    // for now only one mesh, the base mesh
-    meshData!: WavefrontObj
-
-    getRestCoordinates(name: string) {
-        // rIdx = self._getBoundMeshIndex(name)
-        // return self.__originalMeshCoords[rIdx][:,:3]
-        if (name != this.meshData.name) {
-            throw Error(`AnimatedMesh.getRestCoordinates('${name}'): no such mesh`)
-        }
-        return this.meshData.vertex
-    }
 
     private modifiers: Map<string, Modifier>
     private modifierGroups: Map<string, Modifier[]>
@@ -380,10 +369,5 @@ export class Human {
         // if self.proxy and self.__proxyMesh:
         //     self.proxy.update(self.__proxyMesh, fit_to_posed)
         //     self.__proxyMesh.update()
-    }
-
-    // Retrieve human seed mesh vertex coordinates in rest pose.
-    getRestposeCoordinates() {
-        return this.getRestCoordinates(this.meshData.name)
     }
 }

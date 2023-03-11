@@ -3,8 +3,6 @@ import { TargetFactory } from './target/TargetFactory'
 import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
-import { WavefrontObj } from './mesh/WavefrontObj'
-import { loadProxy } from 'proxy/Proxy'
 import { HumanMesh, Update } from './mesh/HumanMesh'
 import { Mode } from './Mode'
 
@@ -47,7 +45,6 @@ function run() {
 
     const human = new Human()
     const scene = new HumanMesh(human)
-    human.meshData = scene.obj
 
     // data/teeth/teeth_base/teeth_base.mhclo
     // data/eyes/high-poly/high-poly.mhclo

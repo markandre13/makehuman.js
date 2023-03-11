@@ -43,12 +43,10 @@ export class HumanMesh {
         this.vertex = this.origVertex = obj.vertex
         this.indices = obj.indices
         this.groups = obj.groups
-
-        human.meshData = obj // UGLY
     }
 
     getRestposeCoordinates() {
-        return this.human.getRestposeCoordinates()
+        return this.origVertex
     }
 
     update(): void {

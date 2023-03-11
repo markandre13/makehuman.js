@@ -37,7 +37,6 @@ describe("Skeleton", function () {
         const human = new Human()
         const obj = new WavefrontObj()
         obj.load('data/3dobjs/base.obj')
-        human.meshData = obj
         const scene = new HumanMesh(human)
 
         const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
