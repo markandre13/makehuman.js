@@ -8,6 +8,7 @@ import { Human } from '../src/Human'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
 
 import { vec4 } from 'gl-matrix'
+import { HumanMesh } from '../src/mesh/HumanMesh'
 
 function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6
@@ -37,8 +38,9 @@ describe("Skeleton", function () {
         const obj = new WavefrontObj()
         obj.load('data/3dobjs/base.obj')
         human.meshData = obj
+        const scene = new HumanMesh(human)
 
-        const skel = loadSkeleton("data/rigs/default.mhskel")
+        const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
         expect(skel.roots).has.lengthOf(1)
 
         const rootBone = skel.roots[0]
@@ -116,7 +118,8 @@ describe("Skeleton", function () {
     })
 
     xit("xxx", function () {
-        new Skeleton("memory", {
+        const scene = new HumanMesh(new Human())
+        new Skeleton(scene, "memory", {
             name: "bones",
             version: "1.0",
             tags: ["t1"],

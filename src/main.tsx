@@ -60,7 +60,7 @@ function run() {
 
     human.modified.add(() => scene.updateRequired = Update.MORPH)
 
-    const skeleton = loadSkeleton('data/rigs/default.mhskel.z')
+    const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
     scene.skeleton = skeleton
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)

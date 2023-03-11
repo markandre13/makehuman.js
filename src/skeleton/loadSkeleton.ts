@@ -2,16 +2,18 @@ import { Human } from '../Human'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { vec3, mat4 } from 'gl-matrix'
 import { Skeleton } from './Skeleton'
+import { HumanMesh } from '../mesh/HumanMesh'
 
-export function loadSkeleton(filename: string) {
+export function loadSkeleton(scene: HumanMesh, filename: string) {
     const root = parseSkeleton(
+        scene,
         FileSystemAdapter.getInstance().readFile(filename),
         filename)
     console.log(`Loaded skeleton with ${root.bones.size} bones from file ${filename}`)
     return root
 }
 
-export function parseSkeleton(data: string, filename = 'memory') {
+export function parseSkeleton(scene: HumanMesh, data: string, filename = 'memory') {
     let json
     try {
         json = JSON.parse(data)
@@ -20,7 +22,7 @@ export function parseSkeleton(data: string, filename = 'memory') {
         console.log(`Failed to parse JSON in ${filename}:\n${data.substring(0, 256)}`)
         throw error
     }
-    return new Skeleton(filename, json)
+    return new Skeleton(scene, filename, json)
 }
 
 export interface FileInformation {

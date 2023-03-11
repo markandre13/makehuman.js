@@ -33,7 +33,7 @@ export class Bone {
 
     // shared/skeleton.py: 709
     constructor(
-        skel: Skeleton,
+        skeleton: Skeleton,
         name: string,
         parentName: string | null,
         headJoint: string,
@@ -41,7 +41,7 @@ export class Bone {
         roll: string,
         reference_bones?: any,
         weight_reference_bones?: any) {
-        this.skeleton = skel
+        this.skeleton = skeleton
         this.name = name
         this.headJoint = headJoint
         this.tailJoint = tailJoint

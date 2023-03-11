@@ -4,8 +4,11 @@ import { FileInformation } from './loadSkeleton'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { VertexBoneWeights, VertexBoneMapping } from './VertexBoneWeights'
 import { vec3 } from 'gl-matrix'
+import { HumanMesh } from '../mesh/HumanMesh'
 
 export class Skeleton {
+    scene: HumanMesh
+
     info: FileInformation
 
     bones = new Map<string, Bone>(); // Bone lookup list by name
@@ -23,7 +26,8 @@ export class Skeleton {
     scale: number = 1;
 
     // makehuman/shared/skeleton.py:88 fromFile()
-    constructor(filename: string, data: any) {
+    constructor(scene: HumanMesh, filename: string, data: any) {
+        this.scene = scene
         this.info = {
             name: data.name,
             version: data.version,
