@@ -29,7 +29,7 @@ export class HumanMesh {
     groups: Group[]
     mode!: Mode
 
-    proxy?: Proxy
+    proxies = new Map<string, Proxy>
 
     updateRequired = Update.NONE
 
