@@ -192,7 +192,7 @@ describe("Collada", function () {
         const scene = new HumanMesh(human)
         human.meshData = scene.obj
         const skeleton = loadSkeleton('data/rigs/default.mhskel.z')
-        human.setBaseSkeleton(skeleton)
+        scene.skeleton = skeleton
 
         exportCollada(scene)
 

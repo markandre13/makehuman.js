@@ -3,6 +3,7 @@ import { Proxy } from 'proxy/Proxy'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
 import { Mesh, Group } from './Mesh'
+import { Skeleton } from '../skeleton/Skeleton'
 import { WavefrontObj } from './WavefrontObj'
 
 let epsilon = 0.000000001
@@ -21,6 +22,7 @@ export enum Update {
 export class HumanMesh {
     human: Human
     obj: WavefrontObj
+    skeleton!: Skeleton
     origVertex: number[]
     vertex: number[]
     indices: number[]
@@ -69,15 +71,15 @@ export class HumanMesh {
             const tmp = this.obj.vertex
             this.obj.vertex = this.vertex
 
-            this.human.skeleton.updateJoints(this.human)
-            this.human.skeleton.build()
-            this.human.skeleton.update()
+            this.skeleton.updateJoints(this.human)
+            this.skeleton.build()
+            this.skeleton.update()
 
             this.obj.vertex = tmp
         // }
 
         // skin
-        this.vertex = this.human.skeleton.skinMesh(this.vertex, this.human.skeleton.vertexWeights!._data)
+        this.vertex = this.skeleton.skinMesh(this.vertex, this.skeleton.vertexWeights!._data)
         console.log(`HumanMesh.update(): skinMesh, ${this.vertex.length}`)
 
         // if (this.proxy !== undefined) {

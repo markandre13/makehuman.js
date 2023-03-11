@@ -6,10 +6,11 @@ import { Skeleton } from "skeleton/Skeleton"
 
 // apps/human.py class Human
 export class Human {
+    modified = new Signal()
 
     // for now only one mesh, the base mesh
     meshData!: WavefrontObj
-    skeleton!: Skeleton
+
 
     getRestCoordinates(name: string) {
         // rIdx = self._getBoundMeshIndex(name)
@@ -26,8 +27,6 @@ export class Human {
             Human.instance = new Human()
         return Human.instance
     }
-
-    modified = new Signal()
 
     private modifiers: Map<string, Modifier>
     private modifierGroups: Map<string, Modifier[]>
@@ -394,16 +393,5 @@ export class Human {
     // Retrieve human seed mesh vertex coordinates in rest pose.
     getRestposeCoordinates() {
         return this.getRestCoordinates(this.meshData.name)
-    }
-
-    setBaseSkeleton(skel: Skeleton) {
-        this.skeleton = skel
-        // self.callEvent('onChanging', events3d.HumanEvent(self, 'skeleton'))
-        // animation.AnimatedMesh.setBaseSkeleton(self, skel)
-        // super.setBaseSkeleton(skel)
-
-        // self.updateVertexWeights(skel.getVertexWeights() if skel else None)
-        // self.callEvent('onChanged', events3d.HumanEvent(self, 'skeleton'))
-        // self.refreshPose()
     }
 }
