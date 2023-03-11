@@ -21,15 +21,15 @@ export enum Update {
 
 export class HumanMesh {
     human: Human
-    obj: WavefrontObj
+    baseMesh: WavefrontObj
     skeleton!: Skeleton
     origVertex: number[]
     vertex: number[]
     indices: number[]
     groups: Group[]
     mode!: Mode
+
     proxy?: Proxy
-    proxyMesh?: WavefrontObj
 
     updateRequired = Update.NONE
 
@@ -39,7 +39,7 @@ export class HumanMesh {
         const obj = new WavefrontObj()
         obj.load('data/3dobjs/base.obj.z')
 
-        this.obj = obj
+        this.baseMesh = obj
         this.vertex = this.origVertex = obj.vertex
         this.indices = obj.indices
         this.groups = obj.groups
@@ -70,14 +70,14 @@ export class HumanMesh {
                 target.apply(this.vertex, value)
             })
 
-            const tmp = this.obj.vertex
-            this.obj.vertex = this.vertex
+            const tmp = this.baseMesh.vertex
+            this.baseMesh.vertex = this.vertex
 
             this.skeleton.updateJoints()
             this.skeleton.build()
             this.skeleton.update()
 
-            this.obj.vertex = tmp
+            this.baseMesh.vertex = tmp
         // }
 
         // skin/pose

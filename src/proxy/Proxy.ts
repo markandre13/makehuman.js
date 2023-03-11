@@ -31,12 +31,12 @@ export class Proxy {
     // license
     description: string = ""
     type: ProxyType
-    object?: any
+    mesh!: WavefrontObj
     human: Human
     file: string
     // mtime
     uuid?: string
-    // the basemesh this proxy is based on
+    // the name of the basemesh this proxy is based on
     basemesh!: string
     tags: string[] = []
     version: number = 110
@@ -130,7 +130,9 @@ export class Proxy {
 export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes") {
     // .mhpxy
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
-    return loadTextProxy(human, asciipath, type)
+    const proxy = loadTextProxy(human, asciipath, type)
+    proxy.mesh = proxy.loadMeshAndObject(human)
+    return proxy
 }
 
 const doRefVerts = 1

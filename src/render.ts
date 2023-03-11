@@ -124,7 +124,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
         
             // append proxy
             if (buffers.proxy) {
-                buffers.proxy.update(scene.proxy!.getCoords(scene.vertex), scene.proxyMesh!.indices)
+                buffers.proxy.update(scene.proxy!.getCoords(scene.vertex), scene.proxy!.mesh.indices)
             }
 
             buffers.vertex = createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx)
@@ -453,7 +453,7 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
 
     let proxy: RenderMesh | undefined
     if (scene.proxy) {
-        proxy = new RenderMesh(gl, scene.proxy.getCoords(scene.vertex), scene.proxyMesh!.indices)
+        proxy = new RenderMesh(gl, scene.proxy.getCoords(scene.vertex), scene.proxy.mesh.indices)
     }
 
     return {

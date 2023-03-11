@@ -6,6 +6,8 @@ import { NumberModel } from 'toad.js'
 
 // from apps/humanmodifier.py
 export abstract class Modifier {
+    human?: Human
+
     groupName: string
     name: string
     description: string
@@ -22,8 +24,6 @@ export abstract class Modifier {
 
     macroVariable?: string
     macroDependencies?: Set<String>
-
-    human?: Human
 
     constructor(groupName: string, name: string) {
         this.groupName = groupName.replace('/', '-')

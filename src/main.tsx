@@ -20,6 +20,7 @@ import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
 import { SliderTreeAdapter } from 'modifier/morphView'
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
 import { exportCollada } from 'mesh/Collada'
+import { loadProxy } from 'proxy/Proxy'
 
 window.onload = () => { main() }
 
@@ -52,9 +53,8 @@ function run() {
 
     // this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
     // scene.proxy = loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes")
-    // scene.proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
-    // scene.proxyMesh = scene.proxy!.loadMeshAndObject(human)
-
+    scene.proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+    
     human.modified.add(() => scene.updateRequired = Update.MORPH)
 
     const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
