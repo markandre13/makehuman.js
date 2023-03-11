@@ -29,23 +29,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
         then = now
 
         if (scene.updateRequired !== Update.NONE) {
-            scene.update()
-            let skeleton = renderSkeletonGlobal(scene)
-
-            let vx = scene.vertexRigged
-            let ix = scene.baseMesh.indices
-
-            const vertexOffset = scene.vertexRigged.length / 3
-            vx = vx.concat(skeleton.vertex)
-            ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
-
-            buffers.base.update(vx, ix)
-
-            // update proxy meshes
-            buffers.proxies.forEach((renderMesh, name) => {
-                const proxy = scene.proxies.get(name)!
-                renderMesh.update(proxy.getCoords(scene.vertexRigged), proxy.mesh.indices)
-            })
+            updateBuffers(scene, buffers)
         }
 
         drawScene(gl, programInfo, buffers, deltaTime, scene, mode.value)
@@ -82,11 +66,8 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         [BaseMeshGroup.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
         const idx = x[0] as number
+        const rgba = x[1] as number[]
         const mode = x[2] as number
-
-        programInfo.color(x[1] as number[])
-        let offset = scene.baseMesh.groups[idx].startIndex * 2
-        let length = scene.baseMesh.groups[idx].length
 
         if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
             continue
@@ -101,7 +82,9 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
             continue
         }
 
-        console.log(`draw group '${scene.baseMesh.groups[idx].name}, offset=${offset}, length=${length}'`)
+        programInfo.color(rgba)
+        let offset = scene.baseMesh.groups[idx].startIndex * 2 // index is a word, hence 2 bytes
+        let length = scene.baseMesh.groups[idx].length
 
         buffers.base.drawSubset(mode, offset, length)
     }
@@ -110,18 +93,16 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     if (renderMode === RenderMode.WIREFRAME) {
         programInfo.color([1, 1, 1, 1])
         const offset = buffers.skeletonIndex
-        const mode = gl.LINES
         const count = scene.skeleton.boneslist!.length * 2
-        gl.drawElements(mode, count, gl.UNSIGNED_SHORT, offset)
+        buffers.base.drawSubset(gl.LINES, offset, count)
     }
 
     // JOINTS
     if (renderMode === RenderMode.WIREFRAME) {
         programInfo.color([1, 1, 1, 1])
-        const type = gl.UNSIGNED_SHORT
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
-        gl.drawElements(gl.TRIANGLES, count, type, offset)
+        buffers.base.drawSubset(gl.TRIANGLES, offset, count)
     }
 
     let glMode: number
@@ -220,19 +201,7 @@ function renderSkeletonRelativeHelper(m: mat4, bone: Bone, vertex: number[], ind
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-
-    let skeleton = renderSkeletonGlobal(scene)
-    // let skeleton = renderSkeletonRelative(scene)
-
-    let vx = scene.vertexRigged
-    let ix = scene.baseMesh.indices
-
-    // append skeleton
-    const skeletonOffset = vx.length / 3
-    const skeletonIndex = ix.length * 2
-    vx = vx.concat(skeleton.vertex)
-    ix = ix.concat(skeleton.indices.map(v => v + skeletonOffset))
-
+    const {vx, ix, skeletonIndex} = buildBase(scene)
     const base = new RenderMesh(gl, vx, ix)
 
     let proxies = new Map<string, RenderMesh>()
@@ -241,20 +210,34 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
     })
 
     return {
-        // vertex: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vx),
-        // normal: createBuffer(gl, gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vx, ix)),
-        // indices: createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, ix),
         base,
         skeletonIndex,
         proxies
     }
 }
 
-function createBuffer(gl: WebGL2RenderingContext, target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[]): WebGLBuffer {
-    const buffer = gl.createBuffer()
-    if (buffer === null)
-        throw Error('Failed to create new WebGLBuffer')
-    gl.bindBuffer(target, buffer)
-    gl.bufferData(target, new type(data), usage)
-    return buffer
+function updateBuffers(scene: HumanMesh, buffers: Buffers) {
+    scene.update()
+    
+    const {vx, ix} = buildBase(scene)
+    buffers.base.update(vx, ix)
+
+    buffers.proxies.forEach((renderMesh, name) => {
+        const proxy = scene.proxies.get(name)!
+        renderMesh.update(proxy.getCoords(scene.vertexRigged), proxy.mesh.indices)
+    })
+}
+
+function buildBase(scene: HumanMesh) {
+    let skeleton = renderSkeletonGlobal(scene)
+
+    let vx = scene.vertexRigged
+    let ix = scene.baseMesh.indices
+
+    const skeletonIndex = ix.length * 2
+
+    const vertexOffset = scene.vertexRigged.length / 3
+    vx = vx.concat(skeleton.vertex)
+    ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
+    return {vx, ix, skeletonIndex}
 }
