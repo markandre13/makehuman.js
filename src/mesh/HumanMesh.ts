@@ -20,7 +20,7 @@ export enum Update {
 
 export class HumanMesh {
     human: Human
-    obj: Mesh
+    obj: WavefrontObj
     origVertex: number[]
     vertex: number[]
     indices: number[]
@@ -31,8 +31,12 @@ export class HumanMesh {
 
     updateRequired = Update.NONE
 
-    constructor(human: Human, obj: WavefrontObj) {
+    constructor(human: Human) {
         this.human = human
+
+        const obj = new WavefrontObj()
+        obj.load('data/3dobjs/base.obj.z')
+
         this.obj = obj
         this.vertex = this.origVertex = obj.vertex
         this.indices = obj.indices

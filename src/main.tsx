@@ -46,11 +46,8 @@ function run() {
     FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
     const human = Human.getInstance()
-
-    const obj = new WavefrontObj()
-    obj.load('data/3dobjs/base.obj.z')
-    human.meshData = obj
-    const scene = new HumanMesh(human, obj)
+    const scene = new HumanMesh(human)
+    human.meshData = scene.obj
 
     // data/teeth/teeth_base/teeth_base.mhclo
     // data/eyes/high-poly/high-poly.mhclo
@@ -58,8 +55,8 @@ function run() {
 
     // this.proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes")
     // scene.proxy = loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes")
-    scene.proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
-    scene.proxyMesh = scene.proxy!.loadMeshAndObject(human)
+    // scene.proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+    // scene.proxyMesh = scene.proxy!.loadMeshAndObject(human)
 
     human.modified.add(() => scene.updateRequired = Update.MORPH)
 
