@@ -29,19 +29,17 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
             }
             const dec = new TextDecoder("utf-8")
             return dec.decode(unzlibSync(ua))
-        } else {
-            if (pathname.endsWith("/directory.json")) {
-                // console.log(`load uncompressed file ${pathname}`)
-                const req = new XMLHttpRequest()
-                req.open('GET', pathname, false)
-                req.send(null)
-                if (req.status < 400)
-                    return req.responseText
-                throw new Error(`Request failed for '${pathname}': ${req.statusText}`)    
-            } else {
-                return this.readFile(`${pathname}.z`)
-            }
         }
+        if (pathname.endsWith("/directory.json")) {
+            // console.log(`load uncompressed file ${pathname}`)
+            const req = new XMLHttpRequest()
+            req.open('GET', pathname, false)
+            req.send(null)
+            if (req.status < 400)
+                return req.responseText
+            throw new Error(`Request failed for '${pathname}': ${req.statusText}`)
+        }
+        return this.readFile(`${pathname}.z`)
     }
     isFile(pathname: string): boolean {
         // console.log(`HTTPJSFSAdapter.isFile('${pathname}')`)

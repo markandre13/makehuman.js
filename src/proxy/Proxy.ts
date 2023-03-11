@@ -32,7 +32,6 @@ export class Proxy {
     description: string = ""
     type: ProxyType
     mesh!: WavefrontObj
-    human: Human
     file: string
     // mtime
     uuid?: string
@@ -69,12 +68,11 @@ export class Proxy {
     constructor(file: string, type: ProxyType, human: Human) {
         this.file = file
         this.type = type
-        this.human = human
         const name = basename(splitext(file))
         this.name = capitalize(name)
     }
 
-    loadMeshAndObject(human: Human): WavefrontObj {
+    loadMeshAndObject(): WavefrontObj {
         const mesh = new WavefrontObj()
         mesh.load(this._obj_file!)
         return mesh
@@ -131,7 +129,7 @@ export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes
     // .mhpxy
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
-    proxy.mesh = proxy.loadMeshAndObject(human)
+    proxy.mesh = proxy.loadMeshAndObject()
     return proxy
 }
 

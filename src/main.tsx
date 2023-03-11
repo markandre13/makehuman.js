@@ -55,15 +55,15 @@ function run() {
     
     human.modified.add(() => scene.updateRequired = Update.MORPH)
 
-    const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
+    const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
     scene.skeleton = skeleton
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
-    loadModifiers(human, 'data/modifiers/modeling_modifiers.json.z')
-    loadModifiers(human, 'data/modifiers/measurement_modifiers.json.z')
+    loadModifiers(human, 'data/modifiers/modeling_modifiers.json')
+    loadModifiers(human, 'data/modifiers/measurement_modifiers.json')
 
     // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
-    const sliderNodes = loadSliders(human, 'data/modifiers/modeling_sliders.json.z')
+    const sliderNodes = loadSliders(human, 'data/modifiers/modeling_sliders.json')
 
     loadMacroTargets()
 

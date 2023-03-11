@@ -26,7 +26,7 @@ describe("Proxy", function () {
         obj.load('data/3dobjs/base.obj.z')
 
         const proxy = loadProxy(human, filepath, type)
-        const mesh = await proxy.loadMeshAndObject(human)
+        const mesh = await proxy.loadMeshAndObject()
         const mesh2 = proxy.getCoords(obj.vertex)
     })
 
@@ -35,7 +35,7 @@ describe("Proxy", function () {
 
         expect(proxy.file).to.equal(filepath)
         expect(proxy.type).to.equal(type)
-        expect(proxy.human).to.equal(human)
+        // expect(proxy.human).to.equal(human)
         expect(proxy.name).to.equal("Female_generic")
         expect(proxy.description).to.equal("")
         // expect(proxy.object).to.be.undefined

@@ -36,8 +36,8 @@ export class HumanMesh {
     constructor(human: Human) {
         this.human = human
 
-        const obj = new WavefrontObj()
-        obj.load('data/3dobjs/base.obj.z')
+        const obj = new WavefrontObj() // TODO: provide as argument
+        obj.load('data/3dobjs/base.obj')
 
         this.baseMesh = obj
         this.vertex = this.origVertex = obj.vertex
