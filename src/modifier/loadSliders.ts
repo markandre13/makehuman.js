@@ -26,7 +26,7 @@ export class SliderNode implements TreeNode {
     model?: NumberModel
     next?: SliderNode
     down?: SliderNode
-    constructor(label?: string, modifierSpec?: ModifierSpec) {
+    constructor(human?: Human, label?: string, modifierSpec?: ModifierSpec) {
         SliderNode.count++
         this.label = label || ''
         this.modifierSpec = modifierSpec
@@ -41,18 +41,17 @@ export class SliderNode implements TreeNode {
             // in apps/gui/guimodifier.py loadModifierTaskViews
 
             // class Modifier has getMin() & getMax() to get the range
-            const human = Human.getInstance()
-            const modifier = human.getModifier(modifierSpec.mod)
+            const modifier = human!.getModifier(modifierSpec.mod)
             if (modifier !== undefined) {
                 this.model = modifier.getModel()
                 this.model.modified.add(() => {
                     // modifier.setValue(this.model!.value)
                     modifier.updateValue(this.model!.value)
                     // self.modifier.updateValue(value, G.app.getSetting('realtimeNormalUpdates'))
-                    human.updateProxyMesh(true)
+                    human!.updateProxyMesh(true)
                 })
-            // } else {
-            //     console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)
+                // } else {
+                //     console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)
             }
         }
     }
@@ -83,15 +82,16 @@ export function labelFromModifier(groupName: string, name: string): string {
  *
  * (the original is located in apps/gui/guimodifier.py)
  */
-export function loadSliders(filename: string): SliderNode {
+export function loadSliders(human: Human, filename: string): SliderNode {
     const root = parseSliders(
+        human,
         FileSystemAdapter.getInstance().readFile(filename),
         filename)
     console.log(`Loaded ${SliderNode.count} slider nodes from file ${filename}`)
     return root
 }
 
-export function parseSliders(data: string, filename = 'memory'): SliderNode {
+export function parseSliders(human: Human, data: string, filename = 'memory'): SliderNode {
     const json = JSON.parse(data)
     let rootNode: SliderNode | undefined
     let lastTabNode: SliderNode | undefined
@@ -104,7 +104,7 @@ export function parseSliders(data: string, filename = 'memory'): SliderNode {
         if (tab.label !== undefined)
             label = tab.label
 
-        const tabNode = new SliderNode(label)
+        const tabNode = new SliderNode(human, label)
         tabNode.category = tab
         if (lastTabNode)
             lastTabNode.next = tabNode
@@ -114,7 +114,7 @@ export function parseSliders(data: string, filename = 'memory'): SliderNode {
 
         let lastCategoryNode: SliderNode | undefined
         for (const [categoryKey, categoryValue] of Object.entries(tab.modifiers)) {
-            const categoryNode = new SliderNode(capitalize(categoryKey))
+            const categoryNode = new SliderNode(human, capitalize(categoryKey))
             if (lastCategoryNode)
                 lastCategoryNode.next = categoryNode
             else
@@ -127,7 +127,7 @@ export function parseSliders(data: string, filename = 'memory'): SliderNode {
                     const name = modifier.mod.split('/')
                     label = labelFromModifier(name[0], name[1])
                 }
-                const sliderNode = new SliderNode(label, modifier)
+                const sliderNode = new SliderNode(human, label, modifier)
                 if (lastSliderNode)
                     lastSliderNode.next = sliderNode
                 else

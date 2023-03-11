@@ -45,7 +45,7 @@ function run() {
     console.log('loading assets...')
     FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
-    const human = Human.getInstance()
+    const human = new Human()
     const scene = new HumanMesh(human)
     human.meshData = scene.obj
 
@@ -68,7 +68,7 @@ function run() {
     loadModifiers('data/modifiers/measurement_modifiers.json.z', human)
 
     // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
-    const sliderNodes = loadSliders('data/modifiers/modeling_sliders.json.z')
+    const sliderNodes = loadSliders(human, 'data/modifiers/modeling_sliders.json.z')
 
     loadMacroTargets()
 

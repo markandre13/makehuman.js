@@ -11,7 +11,6 @@ export class Human {
     // for now only one mesh, the base mesh
     meshData!: WavefrontObj
 
-
     getRestCoordinates(name: string) {
         // rIdx = self._getBoundMeshIndex(name)
         // return self.__originalMeshCoords[rIdx][:,:3]
@@ -19,13 +18,6 @@ export class Human {
             throw Error(`AnimatedMesh.getRestCoordinates('${name}'): no such mesh`)
         }
         return this.meshData.vertex
-    }
-
-    private static instance?: Human
-    static getInstance(): Human {
-        if (Human.instance === undefined)
-            Human.instance = new Human()
-        return Human.instance
     }
 
     private modifiers: Map<string, Modifier>
