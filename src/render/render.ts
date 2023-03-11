@@ -64,38 +64,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 
 function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
 
-    const canvas = gl.canvas as HTMLCanvasElement
-    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-        canvas.width = canvas.clientWidth
-        canvas.height = canvas.clientHeight
-    }
-
-    gl.viewport(0, 0, canvas.width, canvas.height)
-    gl.clearColor(0.0, 0.0, 0.0, 1.0)
-    gl.clearDepth(1.0)
-    gl.enable(gl.DEPTH_TEST)
-    gl.depthFunc(gl.LEQUAL)
-
-    // gl.enable(gl.BLEND)
-    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-    const fieldOfView = 45 * Math.PI / 180    // in radians
-    const aspect = canvas.width / canvas.height
-    const zNear = 0.1
-    const zFar = 100.0
-    const projectionMatrix = mat4.create()
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
-
-    const modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
-    // mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
-    mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
-
-    const normalMatrix = mat4.create()
-    mat4.invert(normalMatrix, modelViewMatrix)
-    mat4.transpose(normalMatrix, normalMatrix)
+    programInfo.init(cubeRotation)
 
     {
         const numComponents = 3
@@ -133,12 +102,6 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
 
-    gl.useProgram(programInfo.program)
-
-    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix)
-    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix)
-    gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
-
     let skin
     switch (renderMode) {
         case RenderMode.POLYGON:
@@ -163,7 +126,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         const idx = x[0] as number
         const mode = x[2] as number
 
-        gl.uniform4fv(programInfo.uniformLocations.color, x[1] as number[])
+        programInfo.color(x[1] as number[])
         const type = gl.UNSIGNED_SHORT
         let offset = scene.baseMesh.groups[idx].startIndex * 2
         let count = scene.baseMesh.groups[idx].length
@@ -187,7 +150,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
 
     // SKELETON
     if (renderMode === RenderMode.WIREFRAME) {
-        gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
+        programInfo.color([1, 1, 1, 1])
         const offset = buffers.skeletonIndex
         const mode = gl.LINES
         const count = scene.skeleton.boneslist!.length * 2
@@ -196,7 +159,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
 
     // JOINTS
     if (renderMode === RenderMode.WIREFRAME) {
-        gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
+        programInfo.color([1, 1, 1, 1])
         const type = gl.UNSIGNED_SHORT
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
@@ -232,7 +195,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
                 rgba = [1.0, 0.0, 0, 1]
                 break
         }
-        gl.uniform4fv(programInfo.uniformLocations.color, rgba)
+        programInfo.color(rgba)
 
         renderMesh.draw(programInfo, glMode)
     })
