@@ -57,13 +57,10 @@ export function getMatrix(head: vec3, tail: vec3, normal: vec3): mat4 {
 
 // Return the normal of a triangle plane defined between three joint positions,
 // using counter-clockwise winding order (right-handed).
-export function get_normal(skel: Skeleton, plane_name: string, plane_defs: Map<string, Array<string>>, human: Human | undefined = undefined) {
+export function get_normal(skel: Skeleton, plane_name: string, plane_defs: Map<string, Array<string>>) {
     if (!plane_defs.has(plane_name)) {
         console.warn(`No plane with name ${plane_name} defined for skeleton.`)
         vec3.fromValues(0, 1, 0)
-    }
-    if (!human) {
-        human = Human.getInstance()
     }
     const joint_names = plane_defs.get(plane_name)!
     const [j1, j2, j3] = joint_names
