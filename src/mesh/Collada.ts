@@ -1,5 +1,5 @@
 import { HumanMesh } from './HumanMesh'
-import { Mesh } from '../Mesh'
+import { BaseMeshGroup } from '../BaseMeshGroup'
 import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
 import { OrderedMap } from '../lib/OrderedMap'
@@ -63,7 +63,7 @@ function colladaHead() {
 function colladaTail() { return `</COLLADA>` }
 
 interface Material {
-    meshId: Mesh
+    meshId: BaseMeshGroup
     name: string
     r: number
     g: number
@@ -71,12 +71,12 @@ interface Material {
 }
 
 const materials: Material[] = [
-    { meshId: Mesh.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
-    { meshId: Mesh.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
-    { meshId: Mesh.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
-    { meshId: Mesh.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1},
-    { meshId: Mesh.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1},
-    { meshId: Mesh.TOUNGE, name: "tounge", r: 1, g: 0, b: 0}
+    { meshId: BaseMeshGroup.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
+    { meshId: BaseMeshGroup.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
+    { meshId: BaseMeshGroup.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
+    { meshId: BaseMeshGroup.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1},
+    { meshId: BaseMeshGroup.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1},
+    { meshId: BaseMeshGroup.TOUNGE, name: "tounge", r: 1, g: 0, b: 0}
 ]
 
 function colladaEffects() {
@@ -153,14 +153,14 @@ class Geometry {
 function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
         const meshId = materials[m].meshId
-        const indexStart = scene.groups[meshId].startIndex
-        const indexEnd = indexStart + scene.groups[meshId].length
+        const indexStart = scene.baseMesh.groups[meshId].startIndex
+        const indexEnd = indexStart + scene.baseMesh.groups[meshId].length
 
         geometry.addMesh()
 
         // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
         for (let i = indexStart; i < indexEnd; i += 6) {
-            geometry.addQuad(scene.vertex, scene.indices, i)
+            geometry.addQuad(scene.vertexRigged, scene.baseMesh.indices, i)
         }
     }
 

@@ -1,4 +1,4 @@
-import { Mode } from 'Mode'
+import { RenderMode } from 'RenderMode'
 import { Proxy } from 'proxy/Proxy'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
@@ -22,12 +22,9 @@ export enum Update {
 export class HumanMesh {
     human: Human
     baseMesh: WavefrontObj
+    vertexMorphed: number[]
+    vertexRigged: number[]
     skeleton!: Skeleton
-    origVertex: number[]
-    vertex: number[]
-    indices: number[]
-    groups: Group[]
-    mode!: Mode
 
     proxies = new Map<string, Proxy>
 
@@ -40,13 +37,11 @@ export class HumanMesh {
         obj.load('data/3dobjs/base.obj')
 
         this.baseMesh = obj
-        this.vertex = this.origVertex = obj.vertex
-        this.indices = obj.indices
-        this.groups = obj.groups
+        this.vertexRigged = this.vertexMorphed = obj.vertex
     }
 
     getRestposeCoordinates() {
-        return this.origVertex
+        return this.vertexMorphed
     }
 
     update(): void {
@@ -54,9 +49,9 @@ export class HumanMesh {
             return
         }
 
-        // if (this.updateRequired === Update.MORPH) {
+        if (this.updateRequired === Update.MORPH) {
             // morph
-            this.vertex = [...this.origVertex]
+            this.vertexMorphed = [...this.baseMesh.vertex]
             this.human.targetsDetailStack.forEach((value, targetName) => {
                 if (isNaN(value)) {
                     // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)
@@ -67,29 +62,15 @@ export class HumanMesh {
                     return
                 // console.log(`HumanMesh.update(): apply target ${targetName} with value ${value}`)
                 const target = getTarget(targetName)
-                target.apply(this.vertex, value)
+                target.apply(this.vertexMorphed, value)
             })
-
-            const tmp = this.baseMesh.vertex
-            this.baseMesh.vertex = this.vertex
-
             this.skeleton.updateJoints()
             this.skeleton.build()
             this.skeleton.update()
-
-            this.baseMesh.vertex = tmp
-        // }
+        }
 
         // skin/pose
-        this.vertex = this.skeleton.skinMesh(this.vertex, this.skeleton.vertexWeights!._data)
-        console.log(`HumanMesh.update(): skinMesh, ${this.vertex.length}`)
-
-        // if (this.proxy !== undefined) {
-            // this.vertex = this.proxy.getCoords(this.vertex)
-            // this.vertex = this.proxyMesh!.vertex
-            // this.indices = this.proxyMesh!.indices
-        //     console.log(`HumanMesh.update(): proxy, ${this.vertex.length}`)
-        // }
+        this.vertexRigged = this.skeleton.skinMesh(this.vertexMorphed, this.skeleton.vertexWeights!._data)
 
         this.updateRequired = Update.NONE
     }

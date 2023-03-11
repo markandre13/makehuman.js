@@ -1,4 +1,4 @@
-export enum Mesh {
+export enum BaseMeshGroup {
     SKIN = 0,
     PANTS_HELPER = 1,
     // 2 to 124 are the joints

@@ -4,7 +4,7 @@ import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { HumanMesh, Update } from './mesh/HumanMesh'
-import { Mode } from './Mode'
+import { RenderMode } from './RenderMode'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
@@ -75,8 +75,7 @@ function run() {
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
-    const mode = new EnumModel<Mode>(Mode)
-    mode.modified.add(() => { scene.mode = mode.value })
+    const renderMode = new EnumModel<RenderMode>(RenderMode, RenderMode.POLYGON)
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
@@ -102,14 +101,14 @@ function run() {
     const download = makeDownloadAnchor()
     const references = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
-        <Tabs model={mode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Morph" value="MORPH">
+        <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
+            <Tab label="Morph" value="POLYGON">
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
-            <Tab label="Pose" value="POSE">
+            <Tab label="Pose" value="WIREFRAME">
                 <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
-            <Tab label="Export" value="POSE">
+            <Tab label="Export" value="WIREFRAME">
                 <div style={{padding:"10px"}}>
                     WiP: Only the base mesh is exported.<br />
                     Upcoming: Proxy meshes:
@@ -136,7 +135,7 @@ function run() {
         </div>
     </> as Fragment
     mainScreen.appendTo(document.body)
-    render(references.canvas, scene)
+    render(references.canvas, scene, renderMode)
 }
 
 function makeDownloadAnchor() {

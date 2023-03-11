@@ -1,8 +1,9 @@
 import { mat4, vec4 } from 'gl-matrix'
+import { EnumModel } from 'toad.js'
 import { calculateNormals } from './lib/calculateNormals'
-import { Mesh } from './Mesh'
+import { BaseMeshGroup } from './BaseMeshGroup'
 import { HumanMesh, Update } from './mesh/HumanMesh'
-import { Mode } from './Mode'
+import { RenderMode } from './RenderMode'
 import { Bone } from "./skeleton/Bone"
 
 let cubeRotation = 0.0
@@ -82,7 +83,7 @@ class RenderMesh {
     }
 }
 
-export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
+export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
 
     // for(let i=0; i<10; ++i) {
     //     console.log(`draw group '${scene.groups[i].name}, offset=${scene.groups[i].startIndex}, length=${scene.groups[i].length}'`)
@@ -112,10 +113,10 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
             let skeleton = renderSkeletonGlobal(scene)
             // let skeleton = renderSkeletonRelative(scene)
 
-            let vx = scene.vertex
-            let ix = scene.indices
+            let vx = scene.vertexRigged
+            let ix = scene.baseMesh.indices
 
-            const vertexOffset = scene.vertex.length / 3
+            const vertexOffset = scene.vertexRigged.length / 3
             vx = vx.concat(skeleton.vertex)
             ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
 
@@ -125,18 +126,18 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh): void {
             // update proxy meshes
             buffers.proxies.forEach((renderMesh, name) => {
                 const proxy = scene.proxies.get(name)!
-                renderMesh.update(proxy.getCoords(scene.vertex), proxy.mesh.indices)
+                renderMesh.update(proxy.getCoords(scene.vertexRigged), proxy.mesh.indices)
             })
         }
 
-        drawScene(gl, programInfo, buffers, deltaTime, scene)
+        drawScene(gl, programInfo, buffers, deltaTime, scene, mode.value)
 
         requestAnimationFrame(render)
     }
     requestAnimationFrame(render)
 }
 
-function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh): void {
+function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
 
     const canvas = gl.canvas as HTMLCanvasElement
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
@@ -214,22 +215,24 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, normalMatrix)
 
     let skin
-    switch (scene.mode) {
-        case Mode.MORPH:
-            skin = [Mesh.SKIN, [1.0, 0.8, 0.7, 1], gl.TRIANGLES]
+    switch (renderMode) {
+        case RenderMode.POLYGON:
+            skin = [BaseMeshGroup.SKIN, [1.0, 0.8, 0.7, 1], gl.TRIANGLES]
             break
-        case Mode.POSE:
-            skin = [Mesh.SKIN, [1.0 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
+        case RenderMode.WIREFRAME:
+            skin = [BaseMeshGroup.SKIN, [1.0 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
             break
+        default:
+            throw Error(`Illegal render mode ${renderMode}`)
     }
 
     for (let x of [
         skin,
-        [Mesh.EYEBALL0, [0.0, 0.5, 1, 1], gl.TRIANGLES],
-        [Mesh.EYEBALL1, [0.0, 0.5, 1, 1], gl.TRIANGLES],
-        [Mesh.TEETH_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [Mesh.TEETH_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [Mesh.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [BaseMeshGroup.EYEBALL0, [0.0, 0.5, 1, 1], gl.TRIANGLES],
+        [BaseMeshGroup.EYEBALL1, [0.0, 0.5, 1, 1], gl.TRIANGLES],
+        [BaseMeshGroup.TEETH_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [BaseMeshGroup.TEETH_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [BaseMeshGroup.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         // [Mesh.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
         const idx = x[0] as number
@@ -237,28 +240,28 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
 
         gl.uniform4fv(programInfo.uniformLocations.color, x[1] as number[])
         const type = gl.UNSIGNED_SHORT
-        let offset = scene.groups[idx].startIndex * 2
-        let count = scene.groups[idx].length
+        let offset = scene.baseMesh.groups[idx].startIndex * 2
+        let count = scene.baseMesh.groups[idx].length
 
-        if (idx === Mesh.SKIN && buffers.proxies.has("Proxymeshes")) {
+        if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
             continue
         }
-        if ((idx === Mesh.EYEBALL0 || idx === Mesh.EYEBALL1) && buffers.proxies.has("Eyes")) {
+        if ((idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1) && buffers.proxies.has("Eyes")) {
             continue
         }
-        if ((idx === Mesh.TEETH_TOP || idx === Mesh.TEETH_BOTTOM) && buffers.proxies.has("Teeth")) {
+        if ((idx === BaseMeshGroup.TEETH_TOP || idx === BaseMeshGroup.TEETH_BOTTOM) && buffers.proxies.has("Teeth")) {
             continue
         }
-        if (idx === Mesh.TOUNGE && buffers.proxies.has("Tongue")) {
+        if (idx === BaseMeshGroup.TOUNGE && buffers.proxies.has("Tongue")) {
             continue
         }
 
-        console.log(`draw group '${scene.groups[idx].name}, offset=${offset}, length=${count}'`)
+        console.log(`draw group '${scene.baseMesh.groups[idx].name}, offset=${offset}, length=${count}'`)
         gl.drawElements(mode, count, type, offset)
     }
 
     // SKELETON
-    if (scene.mode === Mode.POSE) {
+    if (renderMode === RenderMode.WIREFRAME) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
         const offset = buffers.skeletonIndex
         const mode = gl.LINES
@@ -267,21 +270,21 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
     }
 
     // JOINTS
-    if (scene.mode === Mode.POSE) {
+    if (renderMode === RenderMode.WIREFRAME) {
         gl.uniform4fv(programInfo.uniformLocations.color, [1, 1, 1, 1])
         const type = gl.UNSIGNED_SHORT
-        const offset = scene.groups[2].startIndex * 2
-        const count = scene.groups[2].length * 124
+        const offset = scene.baseMesh.groups[2].startIndex * 2
+        const count = scene.baseMesh.groups[2].length * 124
         gl.drawElements(gl.TRIANGLES, count, type, offset)
     }
 
-    let mode: number
-    switch (scene.mode) {
-        case Mode.MORPH:
-            mode = gl.TRIANGLES
+    let glMode: number
+    switch (renderMode) {
+        case RenderMode.POLYGON:
+            glMode = gl.TRIANGLES
             break
-        case Mode.POSE:
-            mode = gl.LINES
+        case RenderMode.WIREFRAME:
+            glMode = gl.LINES
             break
     }
 
@@ -290,7 +293,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         switch (name) {
             case "Proxymeshes":
                 rgba = [1.0, 0.8, 0.7, 1]
-                if (scene.mode === Mode.POSE) {
+                if (renderMode === RenderMode.WIREFRAME) {
                     rgba = [rgba[0] / 5, rgba[1] / 5, rgba[2] / 5, 1]
                 }
                 break
@@ -306,7 +309,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         }
         gl.uniform4fv(programInfo.uniformLocations.color, rgba)
 
-        renderMesh.draw(programInfo, mode)
+        renderMesh.draw(programInfo, glMode)
     })
     cubeRotation += deltaTime
 }
@@ -464,8 +467,8 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
     let skeleton = renderSkeletonGlobal(scene)
     // let skeleton = renderSkeletonRelative(scene)
 
-    let vx = scene.vertex
-    let ix = scene.indices
+    let vx = scene.vertexRigged
+    let ix = scene.baseMesh.indices
 
     // append skeleton
     const skeletonOffset = vx.length / 3
@@ -475,7 +478,7 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
 
     let proxies = new Map<string, RenderMesh>()
     scene.proxies.forEach((proxy, name) => {
-        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertex), proxy.mesh.indices))
+        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
     })
 
     return {
