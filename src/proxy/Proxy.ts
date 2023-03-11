@@ -3,11 +3,12 @@
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { Human } from "Human"
 import { StringToLine } from "lib/StringToLine"
-import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
+import { VertexBoneWeights, VertexBoneMapping } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { vec3 } from 'gl-matrix'
 import { ProxyRefVert } from "./ProxyRefVert"
 import { TMatrix } from "./TMatrix"
+import { Skeleton } from "skeleton/Skeleton"
 
 // proxy files .proxy, .mhclo
 // mesh    : .obj
@@ -41,19 +42,21 @@ export class Proxy {
     version: number = 110
 
     // these describe how the basemesh is mapped to the proxy mesh
-    weights!: Array<Array<number>>
-    offsets!: Array<Array<number>>
-    ref_vIdxs!: Array<Array<number>>
+    weights!: Array<Array<number>>   // (w1,w2,w3) list, with weights per human vertex (mapped by ref_vIdxs), indexed by proxy vert
+    offsets!: Array<Array<number>>   // (x,y,z) list of vertex offsets, indexed by proxy vert
+    ref_vIdxs!: Array<Array<number>> // (Vidx1,Vidx2,Vidx3) list with references to human vertex indices, indexed by proxy vert
 
-    vertWeights = new Map<number, Array<Array<number>>>()
+    vertWeights = new Map<number, Array<Array<number>>>() // (proxy-vert, weight) list for each parent vert (reverse mapping of self.weights, indexed by human vertex)
 
-    vertexBoneWeights?: VertexBoneWeights
-    tmatrix = new TMatrix()
+    // Explicitly defined custom vertex-to-bone weights, connecting the proxy mesh to the reference skeleton (optional)
+    // Not to be confused with the vertex weights assigned for mapping the proxy mesh geometry to the base mesh
+    vertexBoneWeights?: VertexBoneWeights // 
+    tmatrix = new TMatrix() // Offset transformation matrix. Replaces scale
 
-    z_depth: number = -1
-    max_pole?: number
+    z_depth: number = -1 // Render order depth for the proxy object. Also used to determine which proxy object should mask others (delete faces)
+    max_pole?: number // Signifies the maximum number of faces per vertex on the mesh topology. undefined per default.
 
-    special_pose = new Map<string, string>()
+    special_pose = new Map<string, string>() // Special poses that should be set on the human when this proxy is active to make it look good
 
     uvLayers = new Map<number, string>()
     // material
@@ -120,8 +123,38 @@ export class Proxy {
     // o will be at least needed when exporting to wavefront, collada, ...
     // o for testing without export, we could apply the proxy to the morphed mesh
     //   and then pose the rig with it's own weights
-    getVertexWeights() {
-
+    getVertexWeights(humanWeights: VertexBoneWeights, skel: Skeleton | undefined = undefined, allowCache=false) {
+        if (this.vertexBoneWeights) {
+            throw Error(`not implemented`)
+        }
+        // Remap weights through proxy mapping
+        const WEIGHT_THRESHOLD = 1e-4  // Threshold for including bone weight
+        const weights: VertexBoneMapping = new Map()
+        humanWeights._data.forEach( ([indxs, wghts], bname) => {
+            const vgroup = []
+            let empty = true
+            for(let i=0; i<indxs.length; ++i) {
+                const v = indxs[i]
+                const wt = wghts[i]
+                let vlist = this.vertWeights.get(v)
+                if (vlist === undefined) {
+                    vlist = []
+                } else {
+                    for(let [pv, w] of vlist) {
+                        const pw = w * wt
+                        if (pw > WEIGHT_THRESHOLD) {
+                            vgroup.push([pv,pw])
+                            empty = false
+                        }
+                    }
+                }
+                if (!empty) {
+                    weights.set(bname, vgroup)
+                }
+            }
+            const hw = new VertexBoneWeights("", {data: weights})
+            return hw
+        })
     }
 }
 

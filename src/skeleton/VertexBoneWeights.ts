@@ -24,19 +24,21 @@ import { FileInformation } from './loadSkeleton'
 export type VertexBoneMapping = Map<string, Array<Array<number>>>
 
 export class VertexBoneWeights {
-    info: FileInformation
+    info!: FileInformation
     _vertexCount!: number
     _data: VertexBoneMapping
     constructor(filename: string, data: any) {
         // data.weights = []
         console.log(`VertexBoneWeights: filename='${filename}', data=${data}`)
-        this.info = {
-            name: data.name,
-            version: data.version,
-            // tags: data.tags,
-            description: data.description,
-            copyright: data.copyright,
-            license: data.license,
+        if (data.name) {
+            this.info = {
+                name: data.name,
+                version: data.version,
+                // tags: data.tags,
+                description: data.description,
+                copyright: data.copyright,
+                license: data.license,
+            }
         }
         this._data = this._build_vertex_weights_data(data.weights)
         this._calculate_num_weights()
@@ -108,7 +110,7 @@ export class VertexBoneWeights {
             const i_s = weights
                 .map((weight, index) => weight > WEIGHT_THRESHOLD ? index : undefined)
                 .filter(index => index !== undefined)
-                .sort((a, b) => verts[a!] - verts[b!]) 
+                .sort((a, b) => verts[a!] - verts[b!])
             verts = i_s.map(i => verts[i!])
             weights = i_s.map(i => weights[i!])
             boneWeights.set(bname, [verts, weights])
