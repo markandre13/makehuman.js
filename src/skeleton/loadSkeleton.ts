@@ -67,9 +67,9 @@ export function get_normal(skel: Skeleton, plane_name: string, plane_defs: Map<s
     }
     const joint_names = plane_defs.get(plane_name)!
     const [j1, j2, j3] = joint_names
-    const p1 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j1, human)), skel.scale)
-    const p2 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j2, human)), skel.scale)
-    const p3 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j3, human)), skel.scale)
+    const p1 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j1)), skel.scale)
+    const p2 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j2)), skel.scale)
+    const p3 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j3)), skel.scale)
     const pvec = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), p2, p1))
     const yvec = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), p3, p2))
     return vec3.normalize(vec3.create(), vec3.cross(vec3.create(), yvec, pvec))

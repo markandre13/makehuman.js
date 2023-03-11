@@ -47,7 +47,7 @@ export class Bone {
         this.tailJoint = tailJoint
         this.roll = roll
 
-        this.updateJointPositions(Human.getInstance())
+        this.updateJointPositions()
 
         if (parentName !== null) {
             this.parent = this.skeleton.getBone(parentName)
@@ -82,14 +82,14 @@ export class Bone {
     // Update the joint positions of this bone based on the current state
     // of the human mesh.
     // Remember to call build() after calling this method.
-    updateJointPositions(human: Human, in_rest: boolean = true) {
+    updateJointPositions(in_rest: boolean = true) {
         // if not human:
         //   from core import G
         //   human = G.app.selectedHuman
         // self.headPos[:] = self.skeleton.getJointPosition(self.headJoint, human, in_rest)[:3] * self.skeleton.scale
         // self.tailPos[:] = self.skeleton.getJointPosition(self.tailJoint, human, in_rest)[:3] * self.skeleton.scale
-        this.headPos = this.skeleton.getJointPosition(this.headJoint, human, in_rest)!
-        this.tailPos = this.skeleton.getJointPosition(this.tailJoint, human, in_rest)!
+        this.headPos = this.skeleton.getJointPosition(this.headJoint, in_rest)!
+        this.tailPos = this.skeleton.getJointPosition(this.tailJoint, in_rest)!
     }
 
     // line 826

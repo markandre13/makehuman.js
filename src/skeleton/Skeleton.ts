@@ -151,14 +151,14 @@ export class Skeleton {
     // human basemesh with that joint name.
     // okay, so in the .mhskel file, ["joints"][joint_name]["head"|"tail"] will point to a list of
     // indices into mesh.coord, whose coords surround the head|tail position
-    getJointPosition(joint_name: string, human: Human, rest_coord = true): number[] {
+    getJointPosition(joint_name: string, rest_coord = true): number[] {
         if (this.joint_pos_idxs.has(joint_name)) {
             // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from skeleton`)
             const v_idx = this.joint_pos_idxs.get(joint_name)!
             // 
             let verts
             if (rest_coord) {
-                const meshCoords = human.getRestposeCoordinates()
+                const meshCoords = this.scene.getRestposeCoordinates()
                 verts = v_idx.map(i => {
                     i = i * 3
                     return [meshCoords[i], meshCoords[i + 1], meshCoords[i + 2]]
@@ -203,9 +203,9 @@ export class Skeleton {
         }
     }
 
-    updateJoints(human: Human) {
+    updateJoints() {
         for (const bone of this.getBones()) {
-            bone.updateJointPositions(human)
+            bone.updateJointPositions()
         }
     }
 

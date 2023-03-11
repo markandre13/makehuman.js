@@ -2,7 +2,7 @@ import { Mode } from 'Mode'
 import { Proxy } from 'proxy/Proxy'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'
-import { Mesh, Group } from './Mesh'
+import { Group } from './Mesh'
 import { Skeleton } from '../skeleton/Skeleton'
 import { WavefrontObj } from './WavefrontObj'
 
@@ -47,6 +47,10 @@ export class HumanMesh {
         human.meshData = obj // UGLY
     }
 
+    getRestposeCoordinates() {
+        return this.human.getRestposeCoordinates()
+    }
+
     update(): void {
         if (this.updateRequired === Update.NONE) {
             return
@@ -71,7 +75,7 @@ export class HumanMesh {
             const tmp = this.obj.vertex
             this.obj.vertex = this.vertex
 
-            this.skeleton.updateJoints(this.human)
+            this.skeleton.updateJoints()
             this.skeleton.build()
             this.skeleton.update()
 
