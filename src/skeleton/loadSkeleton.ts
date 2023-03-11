@@ -73,32 +73,32 @@ export function get_normal(skel: Skeleton, plane_name: string, plane_defs: Map<s
     return vec3.normalize(vec3.create(), vec3.cross(vec3.create(), yvec, pvec))
 }
 
-// line 1368
-// Get the position of a joint from the human mesh.
-// This position is determined by the center of the joint helper with the
-// specified name.
-// Note: you probably want to use Skeleton.getJointPosition()
-export function _getHumanJointPosition(human: Human, jointName: string, rest_coord = true): number[] {
-    throw Error(`NOT IMPLEMENTED: _getHumanJointPosition(..., jointName='${jointName}', rest_coord=${rest_coord})`)
-    // if (!jointName.startsWith("joint-")) {
-    //     jointName = "joint-" + jointName
-    // }
-    const fg = human.meshData.getFaceGroup(jointName)
-    if (fg === undefined) {
-        console.warn(`Cannot find position for joint ${jointName}`)
-        console.log(human.meshData)
-        return [0, 0, 0]
-    }
-    console.log(`found face group for joint ${jointName}`)
-    // human.obj.group.get()
-    // fg = human.meshData.getFaceGroup(jointName)
-    // if fg is None:
-    //     log.warning('Cannot find position for joint %s', jointName)
-    //     return np.asarray([0,0,0], dtype=np.float32)
-    // v_idx = human.meshData.getVerticesForGroups([fg.name])
-    // if rest_coord:
-    //     verts = human.getRestposeCoordinates()[v_idx]
-    // else:
-    //     verts = human.meshData.getCoords(v_idx)
-    // return verts.mean(axis=0)
-}
+// // line 1368
+// // Get the position of a joint from the human mesh.
+// // This position is determined by the center of the joint helper with the
+// // specified name.
+// // Note: you probably want to use Skeleton.getJointPosition()
+// export function _getHumanJointPosition(human: Human, jointName: string, rest_coord = true): number[] {
+//     throw Error(`NOT IMPLEMENTED: _getHumanJointPosition(..., jointName='${jointName}', rest_coord=${rest_coord})`)
+//     // if (!jointName.startsWith("joint-")) {
+//     //     jointName = "joint-" + jointName
+//     // }
+//     const fg = human.meshData.getFaceGroup(jointName)
+//     if (fg === undefined) {
+//         console.warn(`Cannot find position for joint ${jointName}`)
+//         console.log(human.meshData)
+//         return [0, 0, 0]
+//     }
+//     console.log(`found face group for joint ${jointName}`)
+//     // human.obj.group.get()
+//     // fg = human.meshData.getFaceGroup(jointName)
+//     // if fg is None:
+//     //     log.warning('Cannot find position for joint %s', jointName)
+//     //     return np.asarray([0,0,0], dtype=np.float32)
+//     // v_idx = human.meshData.getVerticesForGroups([fg.name])
+//     // if rest_coord:
+//     //     verts = human.getRestposeCoordinates()[v_idx]
+//     // else:
+//     //     verts = human.meshData.getCoords(v_idx)
+//     // return verts.mean(axis=0)
+// }

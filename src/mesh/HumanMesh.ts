@@ -78,7 +78,7 @@ export class HumanMesh {
             this.obj.vertex = tmp
         // }
 
-        // skin
+        // skin/pose
         this.vertex = this.skeleton.skinMesh(this.vertex, this.skeleton.vertexWeights!._data)
         console.log(`HumanMesh.update(): skinMesh, ${this.vertex.length}`)
 

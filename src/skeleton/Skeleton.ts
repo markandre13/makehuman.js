@@ -1,9 +1,9 @@
 import { Human } from '../Human'
 import { Bone } from './Bone'
-import { FileInformation, _getHumanJointPosition } from './loadSkeleton'
+import { FileInformation } from './loadSkeleton'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { VertexBoneWeights, VertexBoneMapping } from './VertexBoneWeights'
-import { vec3, mat4, vec4 } from 'gl-matrix'
+import { vec3 } from 'gl-matrix'
 
 export class Skeleton {
     info: FileInformation
@@ -177,8 +177,9 @@ export class Skeleton {
             z /= verts.length
             return [x, y, z]
         }
-        console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from base mesh`)
-        return _getHumanJointPosition(human, joint_name, rest_coord)
+        throw Error(`not implemented`)
+        // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from base mesh`)
+        // return _getHumanJointPosition(human, joint_name, rest_coord)
     }
 
     // makehuman/shared/skeleton.py:518
