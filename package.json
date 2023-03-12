@@ -14,14 +14,15 @@
     "url": "git+https://github.com/markandre13/makehuman.js.git"
   },
   "scripts": {
-    "build": "npm run build:data && npm run build:once",
+    "build": "npm run build:data && npm run build:once && npm run build:chai",
     "build:once": "rollup --config rollup.config.mjs",
+    "build:chai": "mkdir -p build/test/chai && cp test/chai/*\\.js test/chai/*\\.d\\.ts build/test/chai",
     "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && mv -f dist/filesystem/build-directory-files.js dist/filesystem/build-directory-files.cjs && node dist/filesystem/build-directory-files.cjs ) ",
     "build:watch": "rollup --config rollup.config.js --watch",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "build:client": "rollup --bundleConfigAsCjs --config rollup-client.config.js",
-    "dev:build": "ttsc -w -p tsconfig.dev.json",
+    "dev:build": "npm run build:chai && ttsc -w -p tsconfig.dev.json",
     "dev:test": "if test -z \"$npm_config_file\" ; then wtr --watch 'build/test/**/*.spec.js' ; else wtr --watch \"$npm_config_file\" ; fi",
     "dev:serve": "wds --node-resolve --watch --open --app-index index.dev.html",
     "update": "npx npm-check-updates -u && npm install"
@@ -38,7 +39,9 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-terser": "^0.4.0",
     "@types/chai": "^4.3.4",
+    "@types/chai-almost": "^1.0.1",
     "@types/chai-string": "^1.4.2",
+    "@types/gl-matrix": "^3.2.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.14.0",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
