@@ -1,12 +1,15 @@
 import { Modifier } from './modifier/Modifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
+import { HumanMesh } from 'mesh/HumanMesh'
 
 // apps/human.py class Human
 /**
  * Aggregate the morph modifiers
  */
 export class Human {
+    scene!: HumanMesh
+
     modified = new Signal()
 
     private modifiers: Map<string, Modifier>

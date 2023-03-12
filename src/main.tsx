@@ -48,6 +48,7 @@ function run() {
 
     const human = new Human()
     const scene = new HumanMesh(human)
+    human.scene = scene
 
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes"))
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes"))

@@ -72,12 +72,15 @@ export class Proxy {
     deleteVerts?: any
     weightsCache?: any
     cacheSkel?: any
+    human: Human
 
     constructor(file: string, type: ProxyType, human: Human) {
         this.file = file
         this.type = type
         const name = basename(splitext(file))
         this.name = capitalize(name)
+
+        this.human = human
     }
 
     loadMeshAndObject(): WavefrontObj {
@@ -98,7 +101,7 @@ export class Proxy {
      * @returns proxy mesh vertices
      */
     getCoords(hcoord: number[]): number[] {
-        const matrix = this.tmatrix.getMatrix(hcoord)
+        const matrix = this.tmatrix.getMatrix(this.human.scene.vertexMorphed)
 
         const ref_vIdxs = this.ref_vIdxs! // three vertices in the base mesh
         const weights = this.weights!     // three weights for each of those vertices
