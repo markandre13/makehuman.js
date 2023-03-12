@@ -1,4 +1,8 @@
-import { expect } from '@esm-bundle/chai'
+import { expect, use } from '@esm-bundle/chai'
+import { chaiString } from './chai/chaiString'
+use(chaiString)
+import { chaiAlmost } from "./chai/chaiAlmost"
+use(chaiAlmost())
 
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
@@ -6,10 +10,7 @@ import { loadProxy, loadTextProxy, Proxy } from "../src/proxy/Proxy"
 import { WavefrontObj } from "../src/mesh/WavefrontObj"
 import { TMatrix } from '../src/proxy/TMatrix'
 import { ProxyRefVert } from '../src/proxy/ProxyRefVert'
-
-function almost(left: number, right: number) {
-    return Math.abs(left - right) <= 1e-6
-}
+import { proxy741 } from "./proxy741"
 
 describe("Proxy", function () {
     this.beforeAll(function () {
@@ -17,17 +18,24 @@ describe("Proxy", function () {
     })
 
     const human = {} as any
-    const filepath = "data/proxymeshes/female_generic/female_generic.proxy"
-    // const filepath = "data/proxymeshes/proxy741/proxy741.proxy"
+    // const filepath = "data/proxymeshes/female_generic/female_generic.proxy"
+    const filepath = "data/proxymeshes/proxy741/proxy741.proxy"
     const type = "Proxymeshes"
 
-    it.only("loads female_generic.proxy", async function () {
-        const obj = new WavefrontObj()
-        obj.load('data/3dobjs/base.obj.z')
-
+    it("loading proxy741.proxy yields the same data as the python code from upstream", async function () {
         const proxy = loadProxy(human, filepath, type)
-        const mesh = await proxy.loadMeshAndObject()
-        const mesh2 = proxy.getCoords(obj.vertex)
+
+        expect(proxy.weights.length).to.equal(proxy741.weights.length)
+        expect(proxy.ref_vIdxs.length).to.equal(proxy741.ref_vIdxs.length)
+        expect(proxy.offsets.length).to.equal(proxy741.offsets.length)
+
+        expect(proxy.weights).to.deep.almost.equal(proxy741.weights)
+        expect(proxy.ref_vIdxs).to.deep.almost.equal(proxy741.ref_vIdxs)
+        expect(proxy.offsets).to.deep.almost.equal(proxy741.offsets)
+        expect(proxy.tmatrix.scaleData).to.deep.almost.equal([[5399, 11998, 1.398], [791, 881, 2.2048], [962, 5320, 1.8461]])
+        expect(proxy.tmatrix.shearData).to.be.undefined
+        expect(proxy.tmatrix.lShearData).to.be.undefined
+        expect(proxy.tmatrix.rShearData).to.be.undefined
     })
 
     it("constructor", function () {
@@ -36,7 +44,7 @@ describe("Proxy", function () {
         expect(proxy.file).to.equal(filepath)
         expect(proxy.type).to.equal(type)
         // expect(proxy.human).to.equal(human)
-        expect(proxy.name).to.equal("Female_generic")
+        expect(proxy.name).to.equal("Proxy741")
         expect(proxy.description).to.equal("")
         // expect(proxy.object).to.be.undefined
         // mtime
@@ -126,7 +134,7 @@ describe("Proxy", function () {
         ])
 
         // delete_verts
-        expect(proxy._obj_file).to.equal("data/proxymeshes/female_generic/wavefront.obj")
+        expect(proxy._obj_file).to.equal("data/proxymeshes/proxy741/wavefront.obj")
         // _material_file
         // material
         // _vertexBoneWeights_file
@@ -180,13 +188,11 @@ describe("Proxy", function () {
         ]
 
         const coord = proxy.getCoords(hcoord)
-
-        const _0 = [
+        
+        expect(coord.slice(0,6)).to.deep.almost.equal([
             3.514347860813141, 4.038571432828903, 4.5929787373542785,
             33.06086962223053, 35.142857146263125, 37.36595747470855
-        ].forEach((value, index) => {
-            expect(almost(coord[index], value), `index: ${index} ${coord[index]} !== ${value}`).to.be.true
-        })
+        ])
     })
     describe("ProxyRefVert", function () {
         it("fromSingle", function () {
@@ -252,14 +258,11 @@ describe("Proxy", function () {
                     13, 14, 15,
                     16, 17, 18,
                 ])
-                // chai-almost isn't esm6 compatible
-                const _0 = [
+                expect(new Array(...a)).to.deep.almost.equal([
                     1.30434783, 0,          0,
                     0,          0.85714286, 0,
                     0,          0,          0.63829787
-                ].forEach((value, index) => {
-                    expect(almost(a[index], value), `index: ${index} ${a[index]} !== ${value}`).to.be.true
-                })
+                ])
             })
         })
     })

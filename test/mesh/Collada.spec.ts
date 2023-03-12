@@ -1,6 +1,5 @@
 import { expect, use } from '@esm-bundle/chai'
-// @ts-ignore
-import { chaiString } from '../chaiString'
+import { chaiString } from '../chai/chaiString'
 use(chaiString)
 
 import { Human } from '../../src//Human'

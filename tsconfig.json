@@ -1,34 +1,39 @@
 {
-  "compilerOptions": {
-    "outDir": "build",
-    "target": "es6",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "traceResolution": false,
-    "lib": ["ESNext", "DOM"],
-    "baseUrl": "src",
-    "paths": {
-      "src/*": ["src/*"],
+    "compilerOptions": {
+        "outDir": "build",
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "traceResolution": false,
+        "lib": [
+            "ESNext",
+            "DOM"
+        ],
+        "baseUrl": "src",
+        "paths": {
+            "src/*": [
+                "src/*"
+            ],
+        },
+        "incremental": false,
+        "jsx": "react-jsx",
+        "jsxImportSource": "toad.jsx/lib",
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "downlevelIteration": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "allowJs": false,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "sourceMap": true,
     },
-    "incremental": false,
-    "jsx": "react-jsx",
-    "jsxImportSource": "toad.jsx/lib",
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "downlevelIteration": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "allowJs": false,
-    "noImplicitAny": true,
-    "noImplicitOverride": true,
-    "sourceMap": true,
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
- ],
-  "exclude": [
-      "data",
-      "node_modules"
-  ]
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ],
+    "exclude": [
+        "data",
+        "node_modules"
+    ]
 }

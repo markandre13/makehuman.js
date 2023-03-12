@@ -158,7 +158,7 @@ export class Proxy {
     }
 }
 
-export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes") {
+export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes"): Proxy {
     // .mhpxy
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
@@ -170,7 +170,7 @@ const doRefVerts = 1
 const doWeights = 2
 const doDeleteVerts = 3
 
-export function loadTextProxy(human: Human, filepath: string, type: ProxyType = "Clothes", data: string | undefined = undefined) {
+export function loadTextProxy(human: Human, filepath: string, type: ProxyType = "Clothes", data: string | undefined = undefined): Proxy {
     let lineNumber = 0
     if (data === undefined) {
         data = FileSystemAdapter.getInstance().readFile(filepath)
