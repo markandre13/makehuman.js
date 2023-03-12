@@ -11,6 +11,14 @@ import { WavefrontObj } from "../src/mesh/WavefrontObj"
 import { TMatrix } from '../src/proxy/TMatrix'
 import { ProxyRefVert } from '../src/proxy/ProxyRefVert'
 import { proxy741 } from "./proxy741"
+import { proxy_teeth_base } from "./proxy_teeth_base"
+
+// I am not quite sure how Proxy works, so the tests mostly compare the results of
+// this implementation with the results from Makehuman 1.2.0.
+//
+// In theory, the proxy data might contain an entry for each point in the proxies
+// Wavefront mesh, referencing three points in the base mesh, and then use those
+// to adjust the point in the proxy mesh?
 
 describe("Proxy", function () {
     this.beforeAll(function () {
@@ -23,7 +31,7 @@ describe("Proxy", function () {
     const type = "Proxymeshes"
 
     it("loading proxy741.proxy yields the same data as the python code from upstream", async function () {
-        const proxy = loadProxy(human, filepath, type)
+        const proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", type)
 
         expect(proxy.weights.length).to.equal(proxy741.weights.length)
         expect(proxy.ref_vIdxs.length).to.equal(proxy741.ref_vIdxs.length)
@@ -33,6 +41,22 @@ describe("Proxy", function () {
         expect(proxy.ref_vIdxs).to.deep.almost.equal(proxy741.ref_vIdxs)
         expect(proxy.offsets).to.deep.almost.equal(proxy741.offsets)
         expect(proxy.tmatrix.scaleData).to.deep.almost.equal([[5399, 11998, 1.398], [791, 881, 2.2048], [962, 5320, 1.8461]])
+        expect(proxy.tmatrix.shearData).to.be.undefined
+        expect(proxy.tmatrix.lShearData).to.be.undefined
+        expect(proxy.tmatrix.rShearData).to.be.undefined
+    })
+
+    it("loading teeth_base.mhclo yields the same data as the python code from upstream", async function () {
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
+
+        expect(proxy.weights.length).to.equal(proxy_teeth_base.weights.length)
+        expect(proxy.ref_vIdxs.length).to.equal(proxy_teeth_base.ref_vIdxs.length)
+        expect(proxy.offsets.length).to.equal(proxy_teeth_base.offsets.length)
+
+        expect(proxy.weights).to.deep.almost.equal(proxy_teeth_base.weights)
+        expect(proxy.ref_vIdxs).to.deep.almost.equal(proxy_teeth_base.ref_vIdxs)
+        expect(proxy.offsets).to.deep.almost.equal(proxy_teeth_base.offsets)
+        expect(proxy.tmatrix.scaleData).to.deep.almost.equal([[15077, 15111, 0.5002], [14993, 15061, 0.3132], [15061, 15068, 0.4465]])
         expect(proxy.tmatrix.shearData).to.be.undefined
         expect(proxy.tmatrix.lShearData).to.be.undefined
         expect(proxy.tmatrix.rShearData).to.be.undefined
