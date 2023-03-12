@@ -4,7 +4,7 @@ import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { HumanMesh, Update } from './mesh/HumanMesh'
-import { RenderMode } from './RenderMode'
+import { RenderMode } from './render/RenderMode'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'

@@ -1,4 +1,4 @@
-import { RenderMode } from 'RenderMode'
+import { RenderMode } from 'render/RenderMode'
 import { Proxy } from 'proxy/Proxy'
 import { Human } from '../Human'
 import { getTarget } from '../target/TargetFactory'

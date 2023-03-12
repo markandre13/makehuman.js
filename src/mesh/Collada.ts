@@ -1,5 +1,5 @@
 import { HumanMesh } from './HumanMesh'
-import { BaseMeshGroup } from '../BaseMeshGroup'
+import { BaseMeshGroup } from './BaseMeshGroup'
 import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
 import { OrderedMap } from '../lib/OrderedMap'

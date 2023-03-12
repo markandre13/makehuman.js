@@ -1,8 +1,8 @@
 import { mat4, vec4 } from 'gl-matrix'
 import { EnumModel } from 'toad.js'
-import { BaseMeshGroup } from '../BaseMeshGroup'
+import { BaseMeshGroup } from '../mesh/BaseMeshGroup'
 import { HumanMesh, Update } from '../mesh/HumanMesh'
-import { RenderMode } from '../RenderMode'
+import { RenderMode } from './RenderMode'
 import { Bone } from "../skeleton/Bone"
 import { ProgramInfo } from './ProgramInfo'
 import { Buffers } from './Buffers'
