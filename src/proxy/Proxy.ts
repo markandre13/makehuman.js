@@ -42,16 +42,21 @@ export class Proxy {
     version: number = 110
 
     // these describe how the basemesh is mapped to the proxy mesh
-    weights!: Array<Array<number>>   // (w1,w2,w3) list, with weights per human vertex (mapped by ref_vIdxs), indexed by proxy vert
-    offsets!: Array<Array<number>>   // (x,y,z) list of vertex offsets, indexed by proxy vert
+    // * the outer arrays have one entry for each proxy mesh entry
+    //   * 'ref_vIdxs' references 3 vertices in the base mesh
+    //   * 'weights' has 3 weights for each of those 3 vertices in the base mesh
+    //   * 'offsets' contains an additional translation which is adjusted by tmatrix
+    //   * all is added together and we have a vertex in the proxy mesh
     ref_vIdxs!: Array<Array<number>> // (Vidx1,Vidx2,Vidx3) list with references to human vertex indices, indexed by proxy vert
+    weights!: Array<Array<number>>   // (w1,w2,w3) list, with weights per human vertex (mapped by ref_vIdxs), indexed by proxy vert
+    tmatrix = new TMatrix()          // Offset transformation matrix. Replaces scale
+    offsets!: Array<Array<number>>   // (x,y,z) list of vertex offsets, indexed by proxy vert
 
     vertWeights = new Map<number, Array<Array<number>>>() // (proxy-vert, weight) list for each parent vert (reverse mapping of self.weights, indexed by human vertex)
 
     // Explicitly defined custom vertex-to-bone weights, connecting the proxy mesh to the reference skeleton (optional)
     // Not to be confused with the vertex weights assigned for mapping the proxy mesh geometry to the base mesh
     vertexBoneWeights?: VertexBoneWeights // 
-    tmatrix = new TMatrix() // Offset transformation matrix. Replaces scale
 
     z_depth: number = -1 // Render order depth for the proxy object. Also used to determine which proxy object should mask others (delete faces)
     max_pole?: number // Signifies the maximum number of faces per vertex on the mesh topology. undefined per default.
@@ -95,9 +100,9 @@ export class Proxy {
     getCoords(hcoord: number[]): number[] {
         const matrix = this.tmatrix.getMatrix(hcoord)
 
-        const ref_vIdxs = this.ref_vIdxs!
-        const weights = this.weights!
-        const offsets = this.offsets!
+        const ref_vIdxs = this.ref_vIdxs! // three vertices in the base mesh
+        const weights = this.weights!     // three weights for each of those vertices
+        const offsets = this.offsets!     // an additional translation
 
         const coord: number[] = []
         for(let i=0; i<ref_vIdxs.length; ++i) {

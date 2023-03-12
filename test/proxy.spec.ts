@@ -2,23 +2,20 @@ import { expect, use } from '@esm-bundle/chai'
 import { chaiString } from './chai/chaiString'
 use(chaiString)
 import { chaiAlmost } from "./chai/chaiAlmost"
-use(chaiAlmost())
+use(chaiAlmost(0.00001))
 
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
 import { loadProxy, loadTextProxy, Proxy } from "../src/proxy/Proxy"
-import { WavefrontObj } from "../src/mesh/WavefrontObj"
 import { TMatrix } from '../src/proxy/TMatrix'
 import { ProxyRefVert } from '../src/proxy/ProxyRefVert'
 import { proxy741 } from "./proxy741"
 import { proxy_teeth_base } from "./proxy_teeth_base"
+import { jaw_open_base_mesh } from "./jaw_open_base_mesh"
+import { jaw_open_proxy_teeth_base } from "./jaw_open_proxy_teeth_base"
 
 // I am not quite sure how Proxy works, so the tests mostly compare the results of
 // this implementation with the results from Makehuman 1.2.0.
-//
-// In theory, the proxy data might contain an entry for each point in the proxies
-// Wavefront mesh, referencing three points in the base mesh, and then use those
-// to adjust the point in the proxy mesh?
 
 describe("Proxy", function () {
     this.beforeAll(function () {
@@ -30,7 +27,7 @@ describe("Proxy", function () {
     const filepath = "data/proxymeshes/proxy741/proxy741.proxy"
     const type = "Proxymeshes"
 
-    it("loading proxy741.proxy yields the same data as the python code from upstream", async function () {
+    it("loading proxy741.proxy yields the same data as the python code from upstream", function () {
         const proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", type)
 
         expect(proxy.weights.length).to.equal(proxy741.weights.length)
@@ -46,7 +43,7 @@ describe("Proxy", function () {
         expect(proxy.tmatrix.rShearData).to.be.undefined
     })
 
-    it("loading teeth_base.mhclo yields the same data as the python code from upstream", async function () {
+    it("loading teeth_base.mhclo yields the same data as the python code from upstream", function () {
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
 
         expect(proxy.weights.length).to.equal(proxy_teeth_base.weights.length)
@@ -60,6 +57,17 @@ describe("Proxy", function () {
         expect(proxy.tmatrix.shearData).to.be.undefined
         expect(proxy.tmatrix.lShearData).to.be.undefined
         expect(proxy.tmatrix.rShearData).to.be.undefined
+    })
+
+    // okay, since this gives the same result, maybe either 
+    it.only("i feed feed makehuman.js basemesh into the teeth python proxy, check if makehuman.js gives the same result", function(){
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
+        const coords = proxy.getCoords(jaw_open_base_mesh)
+        expect(coords).to.have.lengthOf(jaw_open_proxy_teeth_base.length)
+        expect(coords).to.deep.almost.equal(jaw_open_proxy_teeth_base)
+
+        console.log(`${jaw_open_proxy_teeth_base[0]}, ${jaw_open_proxy_teeth_base[1]}, ${jaw_open_proxy_teeth_base[2]}`)
+        console.log(`${coords[0]}, ${coords[1]}, ${coords[2]}`)
     })
 
     it("constructor", function () {
