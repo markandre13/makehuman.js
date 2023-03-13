@@ -5,6 +5,7 @@ import { calculateNormals } from '../lib/calculateNormals'
 import { OrderedMap } from '../lib/OrderedMap'
 import { vec3, vec4, mat4 } from 'gl-matrix'
 import { zipForEach } from 'lib/zipForEach'
+import { Group } from './Mesh'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
@@ -62,7 +63,7 @@ function colladaHead() {
 function colladaTail() { return `</COLLADA>` }
 
 interface Material {
-    meshId: BaseMeshGroup
+    group: number
     name: string
     r: number
     g: number
@@ -70,12 +71,12 @@ interface Material {
 }
 
 const materials: Material[] = [
-    { meshId: BaseMeshGroup.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
-    { meshId: BaseMeshGroup.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
-    { meshId: BaseMeshGroup.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
-    { meshId: BaseMeshGroup.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1 },
-    { meshId: BaseMeshGroup.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1 },
-    { meshId: BaseMeshGroup.TOUNGE, name: "tounge", r: 1, g: 0, b: 0 }
+    { group: BaseMeshGroup.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
+    { group: BaseMeshGroup.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
+    { group: BaseMeshGroup.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
+    { group: BaseMeshGroup.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1 },
+    { group: BaseMeshGroup.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1 },
+    { group: BaseMeshGroup.TOUNGE, name: "tounge", r: 1, g: 0, b: 0 }
 ]
 
 function colladaEffects() {
@@ -150,19 +151,21 @@ class Geometry {
     }
 }
 
-function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
+function prepareGeometry(vertex: number[], indices: number[], groups: Group[], materials: Material[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
-        const meshId = materials[m].meshId
-        const indexStart = scene.baseMesh.groups[meshId].startIndex
-        const indexEnd = indexStart + scene.baseMesh.groups[meshId].length
-
+        const meshId = materials[m].group
+        const indexStart = groups[meshId].startIndex
+        const indexEnd = indexStart + groups[meshId].length
         geometry.addMesh()
-
         // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
         for (let i = indexStart; i < indexEnd; i += 6) {
-            geometry.addQuad(scene.vertexRigged, scene.baseMesh.indices, i)
+            geometry.addQuad(vertex, indices, i)
         }
     }
+}
+
+function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
+    prepareGeometry(scene.vertexRigged, scene.baseMesh.indices, scene.baseMesh.groups, materials, geometry)
 
     let out = `  <library_geometries>
     <geometry id="${meshName}" name="${objectName}">
@@ -191,6 +194,10 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
     </geometry>
   </library_geometries>\n`
     return out
+}
+
+function prepareControllers() {
+
 }
 
 function colladaControllers(scene: HumanMesh, geometry: Geometry) {
@@ -224,7 +231,6 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
         out[i] = []
     }
     scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
-        const bone = scene.skeleton.bones.get(boneName)!
         const boneIndices = boneData[0] as number[] 
         const boneWeights = boneData[1] as number[]
         zipForEach(boneIndices, boneWeights, (_index, weight) => {

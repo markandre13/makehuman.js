@@ -4,7 +4,6 @@ use(chaiString)
 
 import { Human } from '../../src//Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
-import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
@@ -19,6 +18,10 @@ describe("Collada", function () {
 
     this.beforeAll(function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
+    })
+
+    it.only("", function() {
+        
     })
 
     it("load a valid collada and check it", function () {
@@ -186,7 +189,7 @@ describe("Collada", function () {
         // console.log(xml)
     })
 
-    it.only("exportCollada() with real world data", function () {
+    it("exportCollada() with real world data", function () {
         const human = new Human()
         const scene = new HumanMesh(human)
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
