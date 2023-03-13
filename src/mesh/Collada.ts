@@ -120,6 +120,7 @@ const epsilon = 0.000000001
 class Geometry {
     vertex: number[] = []
     indices: number[][] = []
+    weights: number[] = []
     indexMap = new Map<number, number>()
 
     addPoint(vertex: number[], origIndex: number): number {
@@ -193,22 +194,37 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
 }
 
 function colladaControllers(scene: HumanMesh, geometry: Geometry) {
+    const boneNameToBoneIndex = new Map<string, number>()
+    const allBoneNames: string[] = []
+    const allWeights: number[] = [] // this could also be a map to reuse weight values
+    let ibmAll = ""
+    scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
+        const bone = scene.skeleton.bones.get(boneName)!
+        ibmAll += ibm(bone) + " "
+        boneNameToBoneIndex.set(boneName, allBoneNames.length)
+        allBoneNames.push(boneName)
+    })
+
+    // IT'S TIME TO MOVE THIS INTO A UNIT TEST...
+    // AND GEOMETRY SHOULD HAVE AND INDEX MAP PER VERTEX LIST
+
+    // vertexWeights = {
+    //   <boneName>: [
+    //     [vertexIndex, ...],
+    //     [weight, ...]
+    //   ], ...
+    // }
+    // out = [
+    //   <vertexIndex>: [
+    //     [boneIndex, weight], ...
+    //   ]
+    // ]
     const out = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
     for (let i = 0; i < out.length; ++i) {
         out[i] = []
     }
-
-    const allBoneNames: string[] = []
-    const allWeights: number[] = []
-    let ibmAll = ""
-
     scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
-        const boneIndex = allBoneNames.length
-        allBoneNames.push(boneName)
-
         const bone = scene.skeleton.bones.get(boneName)!
-        ibmAll += ibm(bone) + " "
-
         const boneIndices = boneData[0] as number[] 
         const boneWeights = boneData[1] as number[]
         zipForEach(boneIndices, boneWeights, (_index, weight) => {
@@ -217,7 +233,7 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
                 // vertex is not used
                 return
             }           
-            out[index].push([boneIndex, allWeights.length])
+            out[index].push([boneNameToBoneIndex.get(boneName)!, allWeights.length])
             allWeights.push(weight)
         })
     })

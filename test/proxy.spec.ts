@@ -91,16 +91,16 @@ describe("Proxy", function () {
         scene.skeleton = skeleton
         expect(skeleton.vertexWeights).not.to.be.undefined
 
-        const weights = proxy.getVertexWeights(skeleton.vertexWeights)
+        const weights = proxy.getVertexWeights(skeleton.vertexWeights!)
         expect(weights._vertexCount).to.equal(jaw_open_proxy_teeth_base_weights._vertexCount)
         expect(weights._data).to.have.keys("head", "jaw")
 
         // indices
-        expect(weights._data.get("head")[0]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.head[0])
-        expect(weights._data.get("jaw")[0]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.jaw[0])
+        expect(weights._data.get("head")![0]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.head[0])
+        expect(weights._data.get("jaw")![0]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.jaw[0])
         // weights
-        expect(weights._data.get("head")[1]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.head[1])
-        expect(weights._data.get("jaw")[1]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.jaw[1])
+        expect(weights._data.get("head")![1]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.head[1])
+        expect(weights._data.get("jaw")![1]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.jaw[1])
     })
 
     it("weights (intermediate)", function () {
@@ -111,7 +111,7 @@ describe("Proxy", function () {
         scene.proxies.set("Teeth", proxy)
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
         scene.skeleton = skeleton
-        const weights = proxy._getVertexWeights(skeleton.vertexWeights)
+        const weights = proxy._getVertexWeights(skeleton.vertexWeights!)
 
         expect(weights).to.deep.equal(teeth_proxy_intermediate_weights)
     })
@@ -259,7 +259,7 @@ describe("Proxy", function () {
             scene: {
                 vertexMorphed: hcoord
             }
-        }
+        } as Human
 
         const proxy = loadTextProxy(human, filepath, type, `
             x_scale 1 2 2.3
