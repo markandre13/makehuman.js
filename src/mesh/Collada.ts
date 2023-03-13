@@ -228,7 +228,7 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     for (let i = 0; i < vertexToBoneWeightPair.length; ++i) {
         vertexToBoneWeightPair[i] = []
     }
-    const allWeights: number[] = [] // this could also be a map to reuse weight values
+    const allWeights = new Map<number, number>()
     scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
         const boneIndices = boneData[0] as number[]
         const boneWeights = boneData[1] as number[]
@@ -238,8 +238,12 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
                 // vertex is not used
                 return
             }
-            vertexToBoneWeightPair[index].push([scene.skeleton.bones.get(boneName)!.index, allWeights.length])
-            allWeights.push(weight)
+            let weightIndex = allWeights.get(weight)
+            if (weightIndex === undefined) {
+                weightIndex = allWeights.size
+                allWeights.set(weight, weightIndex)
+            }
+            vertexToBoneWeightPair[index].push([scene.skeleton.bones.get(boneName)!.index, weightIndex])
         })
     })
 
@@ -251,6 +255,9 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
             )
         )
     })
+
+    const weightsArray = new Array<number>(allWeights.size)
+    allWeights.forEach((index, weight) => { weightsArray[index] = weight})
 
     return `  <library_controllers>
     <controller id="${skinName}" name="${armatureName}">
@@ -273,9 +280,9 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
           </technique_common>
         </source>
         <source id="${skinWeightsName}">
-          <float_array id="${skinWeightsArrayName}" count="${allWeights.length}">${allWeights.join(" ")}</float_array>
+          <float_array id="${skinWeightsArrayName}" count="${weightsArray.length}">${weightsArray.join(" ")}</float_array>
           <technique_common>
-            <accessor source="#${skinWeightsArrayName}" count="${allWeights.length}" stride="1">
+            <accessor source="#${skinWeightsArrayName}" count="${weightsArray.length}" stride="1">
               <param name="WEIGHT" type="float"/>
             </accessor>
           </technique_common>
