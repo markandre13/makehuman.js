@@ -9,6 +9,7 @@ import { vec3 } from 'gl-matrix'
 import { ProxyRefVert } from "./ProxyRefVert"
 import { TMatrix } from "./TMatrix"
 import { Skeleton } from "skeleton/Skeleton"
+import { zipForEach } from "lib/zipForEach"
 
 // proxy files .proxy, .mhclo
 // mesh    : .obj
@@ -111,7 +112,7 @@ export class Proxy {
         const offsets = this.offsets!     // an additional translation
 
         const coord: number[] = []
-        for(let i=0; i<ref_vIdxs.length; ++i) {
+        for (let i = 0; i < ref_vIdxs.length; ++i) {
             let w0 = weights[i][0], w1 = weights[i][1], w2 = weights[i][2],
                 idx = ref_vIdxs[i],
                 idx0 = idx[0] * 3, idx1 = idx[1] * 3, idx2 = idx[2] * 3,
@@ -120,11 +121,11 @@ export class Proxy {
                     vec3.fromValues(offsets[i][0], offsets[i][1], offsets[i][2]),
                     matrix)
 
-            let x = hcoord[idx0+0] * w0 + hcoord[idx1+0] * w1 + hcoord[idx2+0] * w2 + t[0]
-            let y = hcoord[idx0+1] * w0 + hcoord[idx1+1] * w1 + hcoord[idx2+1] * w2 + t[1]
-            let z = hcoord[idx0+2] * w0 + hcoord[idx1+2] * w1 + hcoord[idx2+2] * w2 + t[2]
+            let x = hcoord[idx0 + 0] * w0 + hcoord[idx1 + 0] * w1 + hcoord[idx2 + 0] * w2 + t[0]
+            let y = hcoord[idx0 + 1] * w0 + hcoord[idx1 + 1] * w1 + hcoord[idx2 + 1] * w2 + t[1]
+            let z = hcoord[idx0 + 2] * w0 + hcoord[idx1 + 2] * w1 + hcoord[idx2 + 2] * w2 + t[2]
 
-            coord.push(x,y,z)
+            coord.push(x, y, z)
         }
 
         return coord
@@ -134,9 +135,9 @@ export class Proxy {
     // o will be at least needed when exporting to wavefront, collada, ...
     // o for testing without export, we could apply the proxy to the morphed mesh
     //   and then pose the rig with it's own weights
-    getVertexWeights(humanWeights: VertexBoneWeights, skel: Skeleton | undefined = undefined, allowCache=false) {
+    getVertexWeights(humanWeights: VertexBoneWeights, skel: Skeleton | undefined = undefined, allowCache = false) {
         const weights = this._getVertexWeights(humanWeights)
-        return new VertexBoneWeights(this.file, {weights})
+        return new VertexBoneWeights(this.file, { weights })
     }
 
     _getVertexWeights(humanWeights: VertexBoneWeights) {
@@ -147,21 +148,20 @@ export class Proxy {
         const WEIGHT_THRESHOLD = 1e-4  // Threshold for including bone weight
         const weights = {} as any
         // humanWeights is from the base skeleton
-        humanWeights._data.forEach( ([indxs, wghts], bname) => {
-            const vgroup = []
-            for(let i=0; i<indxs.length; ++i) {
-                const v = indxs[i]
-                const wt = wghts[i]
+        humanWeights._data.forEach(([indxs, wghts], bname) => {
+            const vgroup: number[][] = []
+            zipForEach(indxs, wghts, (v, wt) => {
                 let vlist = this.vertWeights.get(v)
-                if (vlist !== undefined) {
-                    for(let [pv, w] of vlist) {
-                        const pw = w * wt
-                        if (pw > WEIGHT_THRESHOLD) {
-                            vgroup.push([pv,pw])
-                        }
+                if (vlist === undefined) {
+                    return
+                }
+                for (let [pv, w] of vlist) {
+                    const pw = w * wt
+                    if (pw > WEIGHT_THRESHOLD) {
+                        vgroup.push([pv, pw])
                     }
                 }
-            }
+            })
             if (vgroup.length > 0) {
                 weights[bname] = vgroup
             }

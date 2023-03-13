@@ -4,6 +4,7 @@ import { Bone } from '../skeleton/Bone'
 import { calculateNormals } from '../lib/calculateNormals'
 import { OrderedMap } from '../lib/OrderedMap'
 import { vec3, vec4, mat4 } from 'gl-matrix'
+import { zipForEach } from 'lib/zipForEach'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
@@ -208,23 +209,17 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
         const bone = scene.skeleton.bones.get(boneName)!
         ibmAll += ibm(bone) + " "
 
-        const boneIndices = boneData[0] as number[]
+        const boneIndices = boneData[0] as number[] 
         const boneWeights = boneData[1] as number[]
-        for (let i = 0; i < boneIndices.length; ++i) {
-            const index = geometry.indexMap.get(boneIndices[i])
-            if (boneIndices[i] < 10) {
-                console.log(`colladaControllers: ${boneIndices[i]} -> ${index}`)
-            }
+        zipForEach(boneIndices, boneWeights, (_index, weight) => {
+            const index = geometry.indexMap.get(_index)
             if (index === undefined) {
                 // vertex is not used
-                // console.log(`no index found for ${indices[i]}`)
-                continue
-            }
-            const weight = boneWeights[i]
-            const weightIndex = allWeights.length
+                return
+            }           
+            out[index].push([boneIndex, allWeights.length])
             allWeights.push(weight)
-            out[index].push([boneIndex, weightIndex])
-        }
+        })
     })
     ibmAll = ibmAll.trimEnd()
 
