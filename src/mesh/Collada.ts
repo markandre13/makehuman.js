@@ -8,7 +8,6 @@ import { vec3, vec4, mat4 } from 'gl-matrix'
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
 
-
 export function exportCollada(scene: HumanMesh) {
     let s = scene
     // s = testCube
@@ -56,8 +55,7 @@ function colladaHead() {
     <unit name="meter" meter="0.1"/>
     <up_axis>Y_UP</up_axis>
   </asset>
-  <library_images/>
-`
+  <library_images/>\n`
 }
 
 function colladaTail() { return `</COLLADA>` }
@@ -74,9 +72,9 @@ const materials: Material[] = [
     { meshId: BaseMeshGroup.SKIN, name: "skin", r: 1, g: 0.5, b: 0.5 },
     { meshId: BaseMeshGroup.EYEBALL0, name: "eyeL", r: 0, g: 1, b: 0 },
     { meshId: BaseMeshGroup.EYEBALL1, name: "eyeR", r: 1, g: 0, b: 0 },
-    { meshId: BaseMeshGroup.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1},
-    { meshId: BaseMeshGroup.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1},
-    { meshId: BaseMeshGroup.TOUNGE, name: "tounge", r: 1, g: 0, b: 0}
+    { meshId: BaseMeshGroup.TEETH_TOP, name: "teethTop", r: 1, g: 1, b: 1 },
+    { meshId: BaseMeshGroup.TEETH_BOTTOM, name: "teethBottom", r: 1, g: 1, b: 1 },
+    { meshId: BaseMeshGroup.TOUNGE, name: "tounge", r: 1, g: 0, b: 0 }
 ]
 
 function colladaEffects() {
@@ -98,8 +96,8 @@ function colladaEffects() {
           </lambert>
         </technique>
       </profile_COMMON>
-    </effect>
-`})
+    </effect>\n`
+    })
     out += `  </library_effects>\n`
     return out
 }
@@ -109,8 +107,8 @@ function colladaMaterials() {
     materials.forEach(m => {
         out += `    <material id="${m.name}-material" name="${m.name}">
       <instance_effect url="#${m.name}-effect"/>
-    </material>
-`})
+    </material>\n`
+    })
     out += `  </library_materials>\n`
     return out
 }
@@ -135,7 +133,7 @@ class Geometry {
         const ptr = origIndex * 3
         const p = [vertex[ptr], vertex[ptr + 1], vertex[ptr + 2]]
         this.vertex.push(...p)
-        
+
         return newIndex
     }
     addMesh() {
@@ -144,9 +142,9 @@ class Geometry {
     addQuad(vertex: number[], indices: number[], startIndex: number) {
         const currentMesh = this.indices[this.indices.length - 1]
         currentMesh.push(this.addPoint(vertex, indices[startIndex]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex+1]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex+2]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex+3]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
     }
 }
 
@@ -179,20 +177,17 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
         </source>
         <vertices id="${meshVerticesName}">
           <input semantic="POSITION" source="#${meshPositionsName}"/>
-        </vertices>
-`
+        </vertices>\n`
     for (let m = 0; m < materials.length; ++m) {
         out += `        <polylist material="${materials[m].name}-material" count="${geometry.indices[m].length / 4}">
           <input semantic="VERTEX" source="#${meshVerticesName}" offset="0"/>
           <vcount>${"4 ".repeat(geometry.indices[m].length / 4)}</vcount>
           <p>${geometry.indices[m].join(" ")}</p>
-        </polylist>
-`
+        </polylist>\n`
     }
     out += `      </mesh>
     </geometry>
-  </library_geometries>
-`
+  </library_geometries>\n`
     return out
 }
 
@@ -282,16 +277,15 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
         </vertex_weights>
       </skin>
     </controller>
-  </library_controllers>
-`}
+  </library_controllers>\n`
+}
 
 function colladaVisualScenes(scene: HumanMesh) {
     let out = `  <library_visual_scenes>
     <visual_scene id="${sceneName}" name="${sceneName}">
       <node id="${armatureName}" name="${armatureName}" type="NODE">
         <matrix sid="transform">${mat2txt(identity)}</matrix>
-${dumpBone(armatureName, scene.skeleton.roots[0])}
-`
+${dumpBone(armatureName, scene.skeleton.roots[0])}\n`
     // what varies...
     // node: id, name
     // instance_controller: url
@@ -306,8 +300,7 @@ ${dumpBone(armatureName, scene.skeleton.roots[0])}
           <instance_controller url="#${skinName}">
             <skeleton>#${armatureName}_${scene.skeleton.roots[0].name}</skeleton>
             <bind_material>
-              <technique_common>
-`
+              <technique_common>\n`
     for (let m = 0; m < materials.length; ++m) {
         out += `                <instance_material symbol="${materials[m].name}-material" target="#${materials[m].name}-material"/>\n`
     }
@@ -315,20 +308,18 @@ ${dumpBone(armatureName, scene.skeleton.roots[0])}
     out += `              </technique_common>
             </bind_material>
           </instance_controller>
-        </node>
-`
+        </node>\n`
     out += `      </node>
     </visual_scene>
-  </library_visual_scenes>
-`
+  </library_visual_scenes>\n`
     return out
 }
 
 function colladaScene() {
     return `  <scene>
     <instance_visual_scene url="#${sceneName}"/>
-  </scene>
-`}
+  </scene>\n`
+}
 
 const identity = mat4.identity(mat4.create())
 
