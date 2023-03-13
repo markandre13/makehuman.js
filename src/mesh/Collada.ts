@@ -201,15 +201,12 @@ function prepareControllers() {
 }
 
 function colladaControllers(scene: HumanMesh, geometry: Geometry) {
-    const boneNameToBoneIndex = new Map<string, number>()
-    const allBoneNames: string[] = []
-    const allWeights: number[] = [] // this could also be a map to reuse weight values
+
+    const allBoneNames = scene.skeleton.boneslist.map(bone => bone.name)
+
     let ibmAll = ""
-    scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
-        const bone = scene.skeleton.bones.get(boneName)!
+    scene.skeleton.boneslist.forEach((bone) => {
         ibmAll += ibm(bone) + " "
-        boneNameToBoneIndex.set(boneName, allBoneNames.length)
-        allBoneNames.push(boneName)
     })
     ibmAll = ibmAll.trimEnd()
 
@@ -231,16 +228,17 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     for (let i = 0; i < vertexToBoneWeightPair.length; ++i) {
         vertexToBoneWeightPair[i] = []
     }
+    const allWeights: number[] = [] // this could also be a map to reuse weight values
     scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
-        const boneIndices = boneData[0] as number[] 
+        const boneIndices = boneData[0] as number[]
         const boneWeights = boneData[1] as number[]
         zipForEach(boneIndices, boneWeights, (_index, weight) => {
             const index = geometry.indexMap.get(_index)
             if (index === undefined) {
                 // vertex is not used
                 return
-            }           
-            vertexToBoneWeightPair[index].push([boneNameToBoneIndex.get(boneName)!, allWeights.length])
+            }
+            vertexToBoneWeightPair[index].push([scene.skeleton.bones.get(boneName)!.index, allWeights.length])
             allWeights.push(weight)
         })
     })
