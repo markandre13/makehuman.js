@@ -211,6 +211,7 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
         boneNameToBoneIndex.set(boneName, allBoneNames.length)
         allBoneNames.push(boneName)
     })
+    ibmAll = ibmAll.trimEnd()
 
     // IT'S TIME TO MOVE THIS INTO A UNIT TEST...
     // AND GEOMETRY SHOULD HAVE AND INDEX MAP PER VERTEX LIST
@@ -221,14 +222,14 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     //     [weight, ...]
     //   ], ...
     // }
-    // out = [
+    // vertexToBoneWeightPair = [
     //   <vertexIndex>: [
     //     [boneIndex, weight], ...
     //   ]
     // ]
-    const out = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
-    for (let i = 0; i < out.length; ++i) {
-        out[i] = []
+    const vertexToBoneWeightPair = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
+    for (let i = 0; i < vertexToBoneWeightPair.length; ++i) {
+        vertexToBoneWeightPair[i] = []
     }
     scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
         const boneIndices = boneData[0] as number[] 
@@ -239,17 +240,16 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
                 // vertex is not used
                 return
             }           
-            out[index].push([boneNameToBoneIndex.get(boneName)!, allWeights.length])
+            vertexToBoneWeightPair[index].push([boneNameToBoneIndex.get(boneName)!, allWeights.length])
             allWeights.push(weight)
         })
     })
-    ibmAll = ibmAll.trimEnd()
 
-    const outFlat: number[] = []
-    out.forEach(vertexData => {
-        vertexData.forEach(y =>
-            y.forEach(z =>
-                outFlat.push(z)
+    const flatBoneWeightList: number[] = []
+    vertexToBoneWeightPair.forEach(vertexData => {
+        vertexData.forEach(boneWeightPair =>
+            boneWeightPair.forEach(value =>
+                flatBoneWeightList.push(value)
             )
         )
     })
@@ -286,11 +286,11 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
           <input semantic="JOINT" source="#${skinJointsName}"/>
           <input semantic="INV_BIND_MATRIX" source="#${skinIbmName}"/>
         </joints>
-        <vertex_weights count="${out.length}">
+        <vertex_weights count="${vertexToBoneWeightPair.length}">
           <input semantic="JOINT" source="#${skinJointsName}" offset="0"/>
           <input semantic="WEIGHT" source="#${skinWeightsName}" offset="1"/>
-          <vcount>${out.map(e => e.length).join(" ")}</vcount>
-          <v>${outFlat.join(" ")}</v>
+          <vcount>${vertexToBoneWeightPair.map(e => e.length).join(" ")}</vcount>
+          <v>${flatBoneWeightList.join(" ")}</v>
         </vertex_weights>
       </skin>
     </controller>
