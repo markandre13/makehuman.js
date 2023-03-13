@@ -44,8 +44,13 @@ export class VertexBoneWeights {
         this._calculate_num_weights()
     }
 
+    // name -> [[i,w]], ...]
     protected _build_vertex_weights_data(vertexWeightsDict: any, vertexCount: number | undefined = undefined, rootBone: string = "root"): VertexBoneMapping {
         const WEIGHT_THRESHOLD = 1e-4 // Threshold for including bone weight
+
+        if (vertexWeightsDict === undefined) {
+            throw Error(`vertexWeightsDict must not be undefined`)
+        }
 
         // first_entry = list(vertexWeightsDict.keys())[0] if len(vertexWeightsDict) > 0 else None
         // if len(vertexWeightsDict) > 0 and \
@@ -97,13 +102,14 @@ export class VertexBoneWeights {
             }
             let weights: number[] = [], verts: number[] = [], v_lookup = new Map<number, number>(), n = 0
             for (let [vn, w] of vgroup) {
-                if (v_lookup.has(vn)) {
-                    const v_idx = v_lookup.get(vn)!
-                    weights[v_idx] + -w / totalWeightPerVertex[vn]
-                } else {
+                const wn = w / totalWeightPerVertex[vn]
+                if (!v_lookup.has(vn)) {
                     v_lookup.set(vn, verts.length)
                     verts.push(vn)
-                    weights.push(w / totalWeightPerVertex[vn])
+                    weights.push(wn)
+                } else {
+                    const v_idx = v_lookup.get(vn)!
+                    weights[v_idx] += wn
                 }
             }
             // filter out weights under the threshold and sort by vertex index
@@ -111,6 +117,7 @@ export class VertexBoneWeights {
                 .map((weight, index) => weight > WEIGHT_THRESHOLD ? index : undefined)
                 .filter(index => index !== undefined)
                 .sort((a, b) => verts[a!] - verts[b!])
+
             verts = i_s.map(i => verts[i!])
             weights = i_s.map(i => weights[i!])
             boneWeights.set(bname, [verts, weights])

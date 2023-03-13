@@ -35,4 +35,13 @@ describe("VertexBoneWeights", function () {
             [1]
         ])
     })
+
+    it("sum duplicate indices", function() {
+        const weights = {
+            head: [[0, 0.2], [1, 0.42], [0, 0.8], [1, 0.63]]
+        }
+        const boneWeights = new VertexBoneWeights(this.file, {weights})
+        console.log(boneWeights)
+        expect(boneWeights._data.get("head")).to.deep.equal([[0,1],[1,1]])
+    })
 })

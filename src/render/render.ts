@@ -8,8 +8,6 @@ import { ProgramInfo } from './ProgramInfo'
 import { Buffers } from './Buffers'
 import { RenderMesh } from './RenderMesh'
 
-import { jaw_open_proxy_teeth_base } from "../jaw_open_proxy_teeth_base"
-
 let cubeRotation = 0.0
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
@@ -49,7 +47,6 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers
         mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 2, [0, 1, 0])
     } else {
         mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
-        // mat4.rotate(modelViewMatrix,  modelViewMatrix,  cubeRotation, [0, 0, 1])
         mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
     }
 
@@ -220,11 +217,7 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
 
     let proxies = new Map<string, RenderMesh>()
     scene.proxies.forEach((proxy, name) => {
-        // if (name === "Teeth") {
-        //     proxies.set(name, new RenderMesh(gl, jaw_open_proxy_teeth_base, proxy.mesh.indices))
-        // } else {
-            proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
-        // }
+        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
     })
 
     return {
@@ -242,11 +235,10 @@ function updateBuffers(scene: HumanMesh, buffers: Buffers) {
 
     buffers.proxies.forEach((renderMesh, name) => {
         const proxy = scene.proxies.get(name)!
-        // if (name === "Teeth") {
-        //     renderMesh.update(jaw_open_proxy_teeth_base, proxy.mesh.indices)
-        // } else {
-            renderMesh.update(proxy.getCoords(scene.vertexRigged), proxy.mesh.indices)
-        // }
+        const vertexMorphed = proxy.getCoords(scene.vertexMorphed)
+        const vertexWeights = proxy.getVertexWeights(scene.skeleton.vertexWeights!)
+        const vertexRigged = scene.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
+        renderMesh.update(vertexRigged, proxy.mesh.indices)
     })
 }
 

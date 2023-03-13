@@ -3,7 +3,7 @@
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { Human } from "Human"
 import { StringToLine } from "lib/StringToLine"
-import { VertexBoneWeights, VertexBoneMapping } from "skeleton/VertexBoneWeights"
+import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { vec3 } from 'gl-matrix'
 import { ProxyRefVert } from "./ProxyRefVert"
@@ -97,6 +97,9 @@ export class Proxy {
 
     /**
      * Return proxy meth vertices adjusted to base mesh
+     * 
+     * More suitable for morphing (translate) than posing (rotate), especially when the offset is noticable.
+     * 
      * @param hcoord base mesh vertices (may be morphed/posed)
      * @returns proxy mesh vertices
      */
@@ -132,37 +135,38 @@ export class Proxy {
     // o for testing without export, we could apply the proxy to the morphed mesh
     //   and then pose the rig with it's own weights
     getVertexWeights(humanWeights: VertexBoneWeights, skel: Skeleton | undefined = undefined, allowCache=false) {
+        const weights = this._getVertexWeights(humanWeights)
+        return new VertexBoneWeights(this.file, {weights})
+    }
+
+    _getVertexWeights(humanWeights: VertexBoneWeights) {
         if (this.vertexBoneWeights) {
             throw Error(`not implemented`)
         }
         // Remap weights through proxy mapping
         const WEIGHT_THRESHOLD = 1e-4  // Threshold for including bone weight
-        const weights: VertexBoneMapping = new Map()
+        const weights = {} as any
+        // humanWeights is from the base skeleton
         humanWeights._data.forEach( ([indxs, wghts], bname) => {
             const vgroup = []
-            let empty = true
             for(let i=0; i<indxs.length; ++i) {
                 const v = indxs[i]
                 const wt = wghts[i]
                 let vlist = this.vertWeights.get(v)
-                if (vlist === undefined) {
-                    vlist = []
-                } else {
+                if (vlist !== undefined) {
                     for(let [pv, w] of vlist) {
                         const pw = w * wt
                         if (pw > WEIGHT_THRESHOLD) {
                             vgroup.push([pv,pw])
-                            empty = false
                         }
                     }
                 }
-                if (!empty) {
-                    weights.set(bname, vgroup)
-                }
             }
-            const hw = new VertexBoneWeights("", {data: weights})
-            return hw
+            if (vgroup.length > 0) {
+                weights[bname] = vgroup
+            }
         })
+        return weights
     }
 }
 

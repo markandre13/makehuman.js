@@ -13,6 +13,12 @@ import { proxy741 } from "./proxy741"
 import { proxy_teeth_base } from "./proxy_teeth_base"
 import { jaw_open_base_mesh } from "./jaw_open_base_mesh"
 import { jaw_open_proxy_teeth_base } from "./jaw_open_proxy_teeth_base"
+import { jaw_open_proxy_teeth_base_weights } from "./jaw_open_proxy_teeth_base_weights"
+import { teeth_proxy_intermediate_weights } from "./teeth_proxy_intermediate_weights"
+import { Human } from '../src/Human'
+import { HumanMesh } from '../src/mesh/HumanMesh'
+import { loadSkeleton } from '../src/skeleton/loadSkeleton'
+import { VertexBoneWeights } from '../src/skeleton/VertexBoneWeights'
 
 // I am not quite sure how Proxy works, so the tests mostly compare the results of
 // this implementation with the results from Makehuman 1.2.0.
@@ -37,6 +43,9 @@ describe("Proxy", function () {
         expect(proxy.weights).to.deep.almost.equal(proxy741.weights)
         expect(proxy.ref_vIdxs).to.deep.almost.equal(proxy741.ref_vIdxs)
         expect(proxy.offsets).to.deep.almost.equal(proxy741.offsets)
+
+        // vertWeights
+
         expect(proxy.tmatrix.scaleData).to.deep.almost.equal([[5399, 11998, 1.398], [791, 881, 2.2048], [962, 5320, 1.8461]])
         expect(proxy.tmatrix.shearData).to.be.undefined
         expect(proxy.tmatrix.lShearData).to.be.undefined
@@ -60,7 +69,7 @@ describe("Proxy", function () {
     })
 
     // okay, since this gives the same result, maybe either 
-    it.only("i feed feed makehuman.js basemesh into the teeth python proxy, check if makehuman.js gives the same result", function(){
+    xit("i feed makehuman.js basemesh into the teeth python proxy, check if makehuman.js gives the same result", function () {
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
         const coords = proxy.getCoords(jaw_open_base_mesh)
         expect(coords).to.have.lengthOf(jaw_open_proxy_teeth_base.length)
@@ -68,6 +77,43 @@ describe("Proxy", function () {
 
         console.log(`${jaw_open_proxy_teeth_base[0]}, ${jaw_open_proxy_teeth_base[1]}, ${jaw_open_proxy_teeth_base[2]}`)
         console.log(`${coords[0]}, ${coords[1]}, ${coords[2]}`)
+    })
+
+    it("weights", function () {
+        const human = new Human()
+        const scene = new HumanMesh(human)
+        human.scene = scene
+
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+        scene.proxies.set("Teeth", proxy)
+
+        const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
+        scene.skeleton = skeleton
+        expect(skeleton.vertexWeights).not.to.be.undefined
+
+        const weights = proxy.getVertexWeights(skeleton.vertexWeights)
+        expect(weights._vertexCount).to.equal(jaw_open_proxy_teeth_base_weights._vertexCount)
+        expect(weights._data).to.have.keys("head", "jaw")
+
+        // indices
+        expect(weights._data.get("head")[0]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.head[0])
+        expect(weights._data.get("jaw")[0]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.jaw[0])
+        // weights
+        expect(weights._data.get("head")[1]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.head[1])
+        expect(weights._data.get("jaw")[1]).to.deep.almost.equal(jaw_open_proxy_teeth_base_weights._data.jaw[1])
+    })
+
+    it("weights (intermediate)", function () {
+        const human = new Human()
+        const scene = new HumanMesh(human)
+        human.scene = scene
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+        scene.proxies.set("Teeth", proxy)
+        const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
+        scene.skeleton = skeleton
+        const weights = proxy._getVertexWeights(skeleton.vertexWeights)
+
+        expect(weights).to.deep.equal(teeth_proxy_intermediate_weights)
     })
 
     it("constructor", function () {
@@ -198,17 +244,7 @@ describe("Proxy", function () {
         ])
         expect(proxy.basemesh).to.equal("hm08")
     })
-    it("getCoords()", function() {
-        const proxy = loadTextProxy(human, filepath, type, `
-            x_scale 1 2 2.3
-            y_scale 3 4 3.5
-            z_scale 5 6 4.7
-            verts 0
-            1 2 3 0.1 0.2 0.3 0.4 0.5 0.6
-            4 5 6 0.7 0.8 0.9 1.0 1.1 1.2
-            10644
-        `)
-
+    it("getCoords()", function () {
         const hcoord = [
             0, 0, 0,
             1.1, 2.1, 3.1,
@@ -219,9 +255,25 @@ describe("Proxy", function () {
             16, 17, 18,
         ]
 
+        const human = {
+            scene: {
+                vertexMorphed: hcoord
+            }
+        }
+
+        const proxy = loadTextProxy(human, filepath, type, `
+            x_scale 1 2 2.3
+            y_scale 3 4 3.5
+            z_scale 5 6 4.7
+            verts 0
+            1 2 3 0.1 0.2 0.3 0.4 0.5 0.6
+            4 5 6 0.7 0.8 0.9 1.0 1.1 1.2
+            10644
+        `)
+
         const coord = proxy.getCoords(hcoord)
-        
-        expect(coord.slice(0,6)).to.deep.almost.equal([
+
+        expect(coord.slice(0, 6)).to.deep.almost.equal([
             3.514347860813141, 4.038571432828903, 4.5929787373542785,
             33.06086962223053, 35.142857146263125, 37.36595747470855
         ])
@@ -291,9 +343,9 @@ describe("Proxy", function () {
                     16, 17, 18,
                 ])
                 expect(new Array(...a)).to.deep.almost.equal([
-                    1.30434783, 0,          0,
-                    0,          0.85714286, 0,
-                    0,          0,          0.63829787
+                    1.30434783, 0, 0,
+                    0, 0.85714286, 0,
+                    0, 0, 0.63829787
                 ])
             })
         })

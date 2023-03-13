@@ -1,4 +1,3 @@
-import { Human } from '../Human'
 import { Bone } from './Bone'
 import { FileInformation } from './loadSkeleton'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
