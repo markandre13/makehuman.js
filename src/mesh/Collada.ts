@@ -202,10 +202,10 @@ function prepareControllers() {
 
 function colladaControllers(scene: HumanMesh, geometry: Geometry) {
 
-    const allBoneNames = scene.skeleton.boneslist.map(bone => bone.name)
+    const allBoneNames = scene.skeleton.boneslist!.map(bone => bone.name)
 
     let ibmAll = ""
-    scene.skeleton.boneslist.forEach((bone) => {
+    scene.skeleton.boneslist!.forEach((bone) => {
         ibmAll += ibm(bone) + " "
     })
     ibmAll = ibmAll.trimEnd()
@@ -213,22 +213,29 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     // IT'S TIME TO MOVE THIS INTO A UNIT TEST...
     // AND GEOMETRY SHOULD HAVE AND INDEX MAP PER VERTEX LIST
 
-    // vertexWeights = {
-    //   <boneName>: [
-    //     [vertexIndex, ...],
-    //     [weight, ...]
-    //   ], ...
-    // }
-    // vertexToBoneWeightPair = [
-    //   <vertexIndex>: [
-    //     [boneIndex, weight], ...
+    // IN:
+    //   vertexWeights = {
+    //     <boneName>: [
+    //       [vertexIndex, ...],
+    //       [weight, ...]
+    //     ], ...
+    //   }
+    //   geometry
+    //   scene.skeleton.bones
+    // OUT:
+    //   boneWeightPairs = [
+    //     <vertexIndex>: [
+    //       [boneIndex, weightIndex], ...
+    //     ]
     //   ]
-    // ]
-    const vertexToBoneWeightPair = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
-    for (let i = 0; i < vertexToBoneWeightPair.length; ++i) {
-        vertexToBoneWeightPair[i] = []
+    //   weights = [
+    //     weightIndex: weight, ...
+    //   ]
+    const boneWeightPairs = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
+    for (let i = 0; i < boneWeightPairs.length; ++i) {
+        boneWeightPairs[i] = []
     }
-    const allWeights = new Map<number, number>()
+    const weightMap = new Map<number, number>()
     scene.skeleton.vertexWeights!._data.forEach((boneData, boneName) => {
         const boneIndices = boneData[0] as number[]
         const boneWeights = boneData[1] as number[]
@@ -238,26 +245,25 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
                 // vertex is not used
                 return
             }
-            let weightIndex = allWeights.get(weight)
+            let weightIndex = weightMap.get(weight)
             if (weightIndex === undefined) {
-                weightIndex = allWeights.size
-                allWeights.set(weight, weightIndex)
+                weightIndex = weightMap.size
+                weightMap.set(weight, weightIndex)
             }
-            vertexToBoneWeightPair[index].push([scene.skeleton.bones.get(boneName)!.index, weightIndex])
+            boneWeightPairs[index].push([scene.skeleton.bones.get(boneName)!.index, weightIndex])
         })
     })
+    const weights = new Array<number>(weightMap.size)
+    weightMap.forEach((index, weight) => { weights[index] = weight})
 
     const flatBoneWeightList: number[] = []
-    vertexToBoneWeightPair.forEach(vertexData => {
+    boneWeightPairs.forEach(vertexData => {
         vertexData.forEach(boneWeightPair =>
             boneWeightPair.forEach(value =>
                 flatBoneWeightList.push(value)
             )
         )
     })
-
-    const weightsArray = new Array<number>(allWeights.size)
-    allWeights.forEach((index, weight) => { weightsArray[index] = weight})
 
     return `  <library_controllers>
     <controller id="${skinName}" name="${armatureName}">
@@ -280,9 +286,9 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
           </technique_common>
         </source>
         <source id="${skinWeightsName}">
-          <float_array id="${skinWeightsArrayName}" count="${weightsArray.length}">${weightsArray.join(" ")}</float_array>
+          <float_array id="${skinWeightsArrayName}" count="${weights.length}">${weights.join(" ")}</float_array>
           <technique_common>
-            <accessor source="#${skinWeightsArrayName}" count="${weightsArray.length}" stride="1">
+            <accessor source="#${skinWeightsArrayName}" count="${weights.length}" stride="1">
               <param name="WEIGHT" type="float"/>
             </accessor>
           </technique_common>
@@ -291,10 +297,10 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
           <input semantic="JOINT" source="#${skinJointsName}"/>
           <input semantic="INV_BIND_MATRIX" source="#${skinIbmName}"/>
         </joints>
-        <vertex_weights count="${vertexToBoneWeightPair.length}">
+        <vertex_weights count="${boneWeightPairs.length}">
           <input semantic="JOINT" source="#${skinJointsName}" offset="0"/>
           <input semantic="WEIGHT" source="#${skinWeightsName}" offset="1"/>
-          <vcount>${vertexToBoneWeightPair.map(e => e.length).join(" ")}</vcount>
+          <vcount>${boneWeightPairs.map(e => e.length).join(" ")}</vcount>
           <v>${flatBoneWeightList.join(" ")}</v>
         </vertex_weights>
       </skin>

@@ -11,7 +11,7 @@ export class Skeleton {
     info: FileInformation
 
     bones = new Map<string, Bone>(); // Bone lookup list by name
-    boneslist!: Bone[] // Breadth-first ordered list of all bones
+    boneslist?: Bone[] // Breadth-first ordered list of all bones
     roots: Bone[] = []; // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
 
     joint_pos_idxs = new Map<string, Array<number>>(); // Lookup by joint name referencing vertex indices on the human, to determine joint position
