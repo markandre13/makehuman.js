@@ -15,7 +15,7 @@ import { jaw_open_base_mesh } from "../testdata/jaw_open_base_mesh"
 import { jaw_open_proxy_teeth_base } from "../testdata/jaw_open_proxy_teeth_base"
 import { jaw_open_proxy_teeth_base_weights } from "../testdata/jaw_open_proxy_teeth_base_weights"
 import { teeth_proxy_intermediate_weights } from "../testdata/teeth_proxy_intermediate_weights"
-import { Human } from '../../src/Human'
+import { Human } from '../../src/modifier/Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'

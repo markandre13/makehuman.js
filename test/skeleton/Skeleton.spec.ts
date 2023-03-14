@@ -4,7 +4,7 @@ import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { Skeleton } from '../../src/skeleton/Skeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { Human } from '../../src/Human'
+import { Human } from '../../src/modifier/Human'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 import { vec4 } from 'gl-matrix'

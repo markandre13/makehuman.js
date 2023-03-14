@@ -1,7 +1,7 @@
 import { expect, use } from '@esm-bundle/chai'
 import { chaiString } from "../chai/chaiString"
 use(chaiString)
-import { Human } from "../../src/Human"
+import { Human } from "../../src/modifier/Human"
 
 import { loadSliders, labelFromModifier } from "../../src/modifier/loadSliders"
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'

@@ -1,5 +1,4 @@
 import { TablePos } from 'toad.js/table/TablePos'
-import { TreeNode } from 'toad.js/table/model/TreeNode'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
@@ -7,7 +6,7 @@ import { Text } from 'toad.js/view/Text'
 import { Slider } from 'toad.js/view/Slider'
 import { Fragment } from "toad.jsx"
 
-import { SliderNode } from './loadSliders'
+import { SliderNode } from '../modifier/loadSliders'
 
 // this tells <toad-table> how to render TreeNodeModel<SliderNode>
 export class SliderTreeAdapter extends TreeAdapter<SliderNode> {

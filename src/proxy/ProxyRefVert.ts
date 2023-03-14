@@ -1,4 +1,4 @@
-import { Human } from "Human"
+import { Human } from "modifier/Human"
 
 export class ProxyRefVert {
     _verts!: number[]

@@ -3,7 +3,7 @@ import { TreeNode } from 'toad.js/table/model/TreeNode'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
-import { Bone } from "./Bone"
+import { Bone } from "../skeleton/Bone"
 import { Text } from "toad.js/view/Text"
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Fragment } from 'toad.jsx/lib/jsx-runtime'

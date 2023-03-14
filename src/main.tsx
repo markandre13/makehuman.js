@@ -1,14 +1,19 @@
-import { Human } from './Human'
+import { Human } from './modifier/Human'
 import { TargetFactory } from './target/TargetFactory'
 import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { HumanMesh, Update } from './mesh/HumanMesh'
 import { RenderMode } from './render/RenderMode'
+import { exportCollada } from 'mesh/Collada'
+import { loadProxy } from 'proxy/Proxy'
+
+import { PoseNode, PoseTreeAdapter } from 'ui/poseView'
+import { SliderTreeAdapter } from 'ui/morphView'
+import { render } from './render/render'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
-import { render } from './render/render'
 
 import { Table } from 'toad.js/table/Table'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
@@ -18,11 +23,7 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { Text } from "toad.js/view/Text"
 import { Slider } from "toad.js/view/Slider"
-import { PoseNode, PoseTreeAdapter } from 'skeleton/poseView'
-import { SliderTreeAdapter } from 'modifier/morphView'
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
-import { exportCollada } from 'mesh/Collada'
-import { loadProxy } from 'proxy/Proxy'
 
 window.onload = () => { main() }
 
@@ -104,7 +105,7 @@ function run() {
     const jaw = poseNodes.find("jaw")!
 
     const download = makeDownloadAnchor()
-    const references = new class { canvas!: HTMLCanvasElement }
+    const refCanvas = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
             <Tab label="Debug" value="DEBUG">
@@ -144,11 +145,11 @@ function run() {
             </Tab>
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
-            <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
+            <canvas set={ref(refCanvas, 'canvas')} style={{ width: '100%', height: '100%' }} />
         </div>
     </> as Fragment
     mainScreen.appendTo(document.body)
-    render(references.canvas, scene, renderMode)
+    render(refCanvas.canvas, scene, renderMode)
 }
 
 function makeDownloadAnchor() {

@@ -1,11 +1,11 @@
 import { expect, use } from '@esm-bundle/chai'
-import { chaiString } from "./chai/chaiString"
+import { chaiString } from "../chai/chaiString"
 use(chaiString)
 
-import { ManagedTargetModifier } from "../src/modifier/ManagedTargetModifier"
-import { Human } from "../src/Human"
-import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
-import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
+import { ManagedTargetModifier } from "../../src/modifier/ManagedTargetModifier"
+import { Human } from "../../src/modifier/Human"
+import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
 describe("Human", function() {
     this.beforeAll(function () {

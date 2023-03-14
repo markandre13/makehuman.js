@@ -1,7 +1,7 @@
 // Human has setProxy, setHairProxy, setEyesProxy, ...
 
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
-import { Human } from "Human"
+import { Human } from "modifier/Human"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"

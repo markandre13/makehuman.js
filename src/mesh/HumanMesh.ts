@@ -1,6 +1,6 @@
 import { RenderMode } from 'render/RenderMode'
 import { Proxy } from 'proxy/Proxy'
-import { Human } from '../Human'
+import { Human } from '../modifier/Human'
 import { getTarget } from '../target/TargetFactory'
 import { Group } from './Mesh'
 import { Skeleton } from '../skeleton/Skeleton'

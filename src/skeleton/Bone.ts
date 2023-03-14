@@ -1,4 +1,4 @@
-import { Human } from '../Human'
+import { Human } from '../modifier/Human'
 import { vec3, mat4, vec4 } from 'gl-matrix'
 import { getMatrix, get_normal } from './loadSkeleton'
 import { Skeleton } from "./Skeleton"

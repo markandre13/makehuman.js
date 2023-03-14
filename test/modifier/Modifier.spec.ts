@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { Human } from '../../src/Human'
+import { Human } from '../../src/modifier/Human'
 import { getTargetWeights } from '../../src/modifier/getTargetWeights'
 import { loadModifiers, parseModifiers } from '../../src/modifier/loadModifiers'
 import { TargetRef } from '../../src/modifier/TargetRef'

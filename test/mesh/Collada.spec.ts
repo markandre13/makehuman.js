@@ -2,7 +2,7 @@ import { expect, use } from '@esm-bundle/chai'
 import { chaiString } from '../chai/chaiString'
 use(chaiString)
 
-import { Human } from '../../src//Human'
+import { Human } from '../../src/modifier/Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 

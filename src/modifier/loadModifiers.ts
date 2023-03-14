@@ -2,7 +2,7 @@ import { EthnicModifier } from './EthnicModifier'
 import { MacroModifier } from './MacroModifier'
 import { UniversalModifier } from './UniversalModifier'
 import { Modifier } from './Modifier'
-import { Human } from '../Human'
+import { Human } from './Human'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
 // {

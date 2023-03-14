@@ -1,4 +1,4 @@
-import { Modifier } from './modifier/Modifier'
+import { Modifier } from './Modifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 import { HumanMesh } from 'mesh/HumanMesh'

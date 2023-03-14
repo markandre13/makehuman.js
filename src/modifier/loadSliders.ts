@@ -1,5 +1,5 @@
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { Human } from '../Human'
+import { Human } from './Human'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { TreeNode } from 'toad.js/table/model/TreeNode'
 
