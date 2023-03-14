@@ -20,8 +20,8 @@ describe("Collada", function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
 
-    it.only("", function() {
-        
+    it.only("prepare data", function() {
+         
     })
 
     it("load a valid collada and check it", function () {

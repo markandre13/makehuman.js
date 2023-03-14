@@ -54,7 +54,7 @@ export abstract class Modifier {
     }
 
     setValue(value: number, {skipDependencies = false} = {}) {
-        console.log(`Modifier.setValue(${value}) // modifier ${this.fullName}`)
+        // console.log(`Modifier.setValue(${value}) // modifier ${this.fullName}`)
         const clampedValue = this.clampValue(value)
         const factors = this.getFactors(clampedValue)
         const tWeights = getTargetWeights(this.targets, factors, clampedValue)

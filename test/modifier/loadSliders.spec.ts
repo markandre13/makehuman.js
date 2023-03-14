@@ -1,13 +1,20 @@
-import { expect } from "chai"
-
-var chai = require('chai');
-chai.use(require('chai-string'));
+import { expect, use } from '@esm-bundle/chai'
+import { chaiString } from "../chai/chaiString"
+use(chaiString)
+import { Human } from "../../src/Human"
 
 import { loadSliders, labelFromModifier } from "../../src/modifier/loadSliders"
+import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
-describe("Modifier", ()=> {
+describe("Modifier", function() {
+    this.beforeAll(function () {
+        FileSystemAdapter.setInstance(new HTTPFSAdapter())
+    })
+
     it("loadSliders", async ()=> {
-        loadSliders("data/modifiers/modeling_sliders.json")
+        const human = new Human()
+        loadSliders(human, "data/modifiers/modeling_sliders.json")
     })
 
     describe("label from modifier name and groupName", ()=> {
