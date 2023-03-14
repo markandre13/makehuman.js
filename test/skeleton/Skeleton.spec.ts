@@ -1,14 +1,14 @@
 import { expect } from '@esm-bundle/chai'
 
-import { loadSkeleton } from '../src/skeleton/loadSkeleton'
-import { Skeleton } from '../src/skeleton/Skeleton'
-import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
-import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
-import { Human } from '../src/Human'
-import { WavefrontObj } from '../src/mesh/WavefrontObj'
+import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
+import { Skeleton } from '../../src/skeleton/Skeleton'
+import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
+import { Human } from '../../src/Human'
+import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 import { vec4 } from 'gl-matrix'
-import { HumanMesh } from '../src/mesh/HumanMesh'
+import { HumanMesh } from '../../src/mesh/HumanMesh'
 
 function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6

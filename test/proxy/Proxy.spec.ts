@@ -1,24 +1,24 @@
 import { expect, use } from '@esm-bundle/chai'
-import { chaiString } from './chai/chaiString'
+import { chaiString } from '../chai/chaiString'
 use(chaiString)
-import { chaiAlmost } from "./chai/chaiAlmost"
+import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost(0.00001))
 
-import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
-import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
-import { loadProxy, loadTextProxy, Proxy } from "../src/proxy/Proxy"
-import { TMatrix } from '../src/proxy/TMatrix'
-import { ProxyRefVert } from '../src/proxy/ProxyRefVert'
-import { proxy741 } from "./proxy741"
-import { proxy_teeth_base } from "./proxy_teeth_base"
-import { jaw_open_base_mesh } from "./jaw_open_base_mesh"
-import { jaw_open_proxy_teeth_base } from "./jaw_open_proxy_teeth_base"
-import { jaw_open_proxy_teeth_base_weights } from "./jaw_open_proxy_teeth_base_weights"
-import { teeth_proxy_intermediate_weights } from "./teeth_proxy_intermediate_weights"
-import { Human } from '../src/Human'
-import { HumanMesh } from '../src/mesh/HumanMesh'
-import { loadSkeleton } from '../src/skeleton/loadSkeleton'
-import { VertexBoneWeights } from '../src/skeleton/VertexBoneWeights'
+import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
+import { loadProxy, loadTextProxy, Proxy } from "../../src/proxy/Proxy"
+import { TMatrix } from '../../src/proxy/TMatrix'
+import { ProxyRefVert } from '../../src/proxy/ProxyRefVert'
+import { proxy741 } from "../testdata/proxy741"
+import { proxy_teeth_base } from "../testdata/proxy_teeth_base"
+import { jaw_open_base_mesh } from "../testdata/jaw_open_base_mesh"
+import { jaw_open_proxy_teeth_base } from "../testdata/jaw_open_proxy_teeth_base"
+import { jaw_open_proxy_teeth_base_weights } from "../testdata/jaw_open_proxy_teeth_base_weights"
+import { teeth_proxy_intermediate_weights } from "../testdata/teeth_proxy_intermediate_weights"
+import { Human } from '../../src/Human'
+import { HumanMesh } from '../../src/mesh/HumanMesh'
+import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
+import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 
 // I am not quite sure how Proxy works, so the tests mostly compare the results of
 // this implementation with the results from Makehuman 1.2.0.

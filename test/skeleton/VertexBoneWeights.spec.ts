@@ -1,5 +1,5 @@
 import { expect } from '@esm-bundle/chai'
-import { VertexBoneWeights } from '../src/skeleton/VertexBoneWeights'
+import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 
 describe("VertexBoneWeights", function () {
     it("init", function () {
