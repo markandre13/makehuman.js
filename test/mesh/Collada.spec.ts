@@ -300,27 +300,27 @@ describe("Collada", function () {
             3, 2, 4,
         ]
 
-        const groups: Group[] = [
-            { name: "one", startIndex: 0, length: 6 },
-            { name: "two", startIndex: 6, length: 6 }
-        ]
+        // const groups: Group[] = [
+        //     { name: "one", startIndex: 0, length: 6 },
+        //     { name: "two", startIndex: 6, length: 6 }
+        // ]
 
         const materials: Material[] = [
-            { group: 0, name: "ONE", r: 1, g: 0, b: 0 },
-            { group: 1, name: "TWO", r: 0, g: 1, b: 0 }
+            { vertex: vertex0, indices: indices0, start: 0, length: 6, name: "ONE", r: 1, g: 0, b: 0 },
+            { vertex: vertex0, indices: indices0, start: 6, length: 6, name: "TWO", r: 0, g: 1, b: 0 }
         ]
 
         describe("prepareGeometry()", () => {
             it("single mesh", () => {
                 const geometry = new Geometry()
-                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                prepareGeometry(vertex0, indices0, materials, geometry)
                 expect(geometry.indices.length).to.equal(2)
                 expect(geometry.getQuad(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
                 expect(geometry.getQuad(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
             })
             it("two meshes", () => {
                 const geometry = new Geometry()
-                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                prepareGeometry(vertex0, indices0, materials, geometry)
                 prepareMesh(vertex1, indices1, 0, indices1.length / 2, geometry)
 
                 expect(geometry.indices.length).to.equal(3)
@@ -333,7 +333,7 @@ describe("Collada", function () {
             it("single mesh", () => {
                 const geometry = new Geometry()
 
-                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                prepareGeometry(vertex0, indices0, materials, geometry)
                 const { weights, boneWeightPairs } = prepareControllers(vertex0, vertexWeights0, boneMap, geometry)
 
                 expect(weights.length).to.equal(3)
@@ -351,7 +351,7 @@ describe("Collada", function () {
             it("two meshes", () => {
                 const geometry = new Geometry()
 
-                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                prepareGeometry(vertex0, indices0, materials, geometry)
                 prepareMesh(vertex1, indices1, 0, indices1.length, geometry)
 
                 const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
