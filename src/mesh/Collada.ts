@@ -14,6 +14,7 @@ import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
 export interface Material {
     vertex: number[]
     indices: number[]
+    vertexWeights: VertexBoneWeights
     start: number
     length: number
     name: string
@@ -27,41 +28,42 @@ export function exportCollada(scene: HumanMesh) {
     // s = testCube
     const geometry = new Geometry()
 
+    const proxy = scene.proxies.get("Teeth")!
+
+
     const materials: Material[] = [
         {
             vertex: scene.vertexMorphed,
             indices: scene.baseMesh.indices,
+            vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.SKIN].length,
             name: "skin", r: 1, g: 0.5, b: 0.5
-        },
-        {
+        }, {
             vertex: scene.vertexMorphed,
             indices: scene.baseMesh.indices,
+            vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
             name: "eyeL", r: 0.0, g: 1.0, b: 0.5
         }, {
             vertex: scene.vertexMorphed,
             indices: scene.baseMesh.indices,
+            vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
             name: "eyeR", r: 1.0, g: 0.0, b: 0.0
         }, {
-            vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.indices,
-            start: scene.baseMesh.groups[BaseMeshGroup.TEETH_TOP].startIndex,
-            length: scene.baseMesh.groups[BaseMeshGroup.TEETH_TOP].length,
-            name: "teethTop", r: 1, g: 1.0, b: 1.0
+            vertex: proxy.getCoords(scene.vertexMorphed),
+            indices: proxy.mesh.indices,
+            vertexWeights: proxy.getVertexWeights(scene.skeleton.vertexWeights!),
+            start: 0,
+            length: proxy.mesh.indices.length,
+            name: "teeth", r: 1.0, g: 1.0, b: 1.0
         }, {
             vertex: scene.vertexMorphed,
             indices: scene.baseMesh.indices,
-            start: scene.baseMesh.groups[BaseMeshGroup.TEETH_BOTTOM].startIndex,
-            length: scene.baseMesh.groups[BaseMeshGroup.TEETH_BOTTOM].length,
-            name: "teethBottom", r: 1, g: 1.0, b: 1.0
-        }, {
-            vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.indices,
+            vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
             name: "tounge", r: 1, g: 0.0, b: 0.0
@@ -72,7 +74,7 @@ export function exportCollada(scene: HumanMesh) {
         colladaEffects(materials) +
         colladaMaterials(materials) +
         colladaGeometries(s, geometry, materials) + // mesh
-        colladaControllers(s, geometry) + // weights
+        colladaControllers(s, geometry, materials) + // weights
         colladaVisualScenes(s, materials) + // skeleton
         colladaScene() +
         colladaTail()
@@ -153,20 +155,16 @@ function colladaMaterials(materials: Material[]) {
 
 function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Material[]) {
 
-    // for (let m = 0; m < materials.length; ++m) {
-    //     const meshId = materials[m].group
-    //     // if (meshId === BaseMeshGroup.TEETH_TOP || BaseMeshGroup.TEETH_BOTTOM) {
-    //     //     continue
-    //     // }
-    //     prepareMesh(
-    //         scene.vertexMorphed,
-    //         scene.baseMesh.indices,
-    //         scene.baseMesh.groups[meshId].startIndex,
-    //         scene.baseMesh.groups[meshId].length,
-    //         geometry)
-    // }
+    for (let m of materials) {
+        prepareMesh(
+            m.vertex,
+            m.indices,
+            m.start,
+            m.length,
+            geometry)
+    }
 
-    prepareGeometry(scene.vertexMorphed, scene.baseMesh.indices, materials, geometry)
+    // prepareGeometry(scene.vertexMorphed, scene.baseMesh.indices, materials, geometry)
 
     let out = `  <library_geometries>
     <geometry id="${meshName}" name="${objectName}">
@@ -197,7 +195,7 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Mate
     return out
 }
 
-function colladaControllers(scene: HumanMesh, geometry: Geometry) {
+function colladaControllers(scene: HumanMesh, geometry: Geometry, materials: Material[]) {
 
     const allBoneNames = scene.skeleton.boneslist!.map(bone => bone.name)
 
@@ -208,13 +206,16 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     ibmAll = ibmAll.trimEnd()
 
     const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
-    prepareControllerAddBoneWeights(
-        scene.vertexMorphed,
-        scene.skeleton.vertexWeights!,
-        scene.skeleton.bones,
-        geometry,
-        boneWeightPairs, weightMap
-    )
+    for (const m of materials) {
+        prepareControllerAddBoneWeights(
+            m.vertex,
+            m.vertexWeights,
+            scene.skeleton.bones,
+            geometry,
+            boneWeightPairs, weightMap
+        )
+
+    }
 
     const weights = prepareControllerFlatWeightMap(weightMap)
     const flatBoneWeightList = prepareControllerFlatBoneWeight(boneWeightPairs)

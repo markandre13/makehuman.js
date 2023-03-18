@@ -306,8 +306,8 @@ describe("Collada", function () {
         // ]
 
         const materials: Material[] = [
-            { vertex: vertex0, indices: indices0, start: 0, length: 6, name: "ONE", r: 1, g: 0, b: 0 },
-            { vertex: vertex0, indices: indices0, start: 6, length: 6, name: "TWO", r: 0, g: 1, b: 0 }
+            { vertex: vertex0, indices: indices0, vertexWeights: vertexWeights0, start: 0, length: 6, name: "ONE", r: 1, g: 0, b: 0 },
+            { vertex: vertex0, indices: indices0, vertexWeights: vertexWeights0, start: 6, length: 6, name: "TWO", r: 0, g: 1, b: 0 }
         ]
 
         describe("prepareGeometry()", () => {
