@@ -63,7 +63,7 @@ function colladaHead() {
 
 function colladaTail() { return `</COLLADA>` }
 
-interface Material {
+export interface Material {
     group: number
     name: string
     r: number
@@ -119,20 +119,30 @@ function colladaMaterials() {
 // const epsilon = Number.EPSILON * 2.0
 const epsilon = 0.000000001
 
-class Geometry {
+export class Geometry {
     vertex: number[] = []
     indices: number[][] = []
     weights: number[] = []
-    indexMap = new Map<number, number>()
+    private indexMap = new Map<number[], Map<number, number>>()
+
+    getIndex(vertex: number[], index: number) {
+        return this.indexMap.get(vertex)?.get(index)
+    }
 
     addPoint(vertex: number[], origIndex: number): number {
-        let newIndex = this.indexMap.get(origIndex)
+        let indexMap = this.indexMap.get(vertex)
+        if (indexMap === undefined) {
+            indexMap = new Map<number, number>()
+            this.indexMap.set(vertex, indexMap)
+        }
+
+        let newIndex = indexMap.get(origIndex)
         if (newIndex !== undefined) {
             return newIndex
         }
 
         newIndex = this.vertex.length / 3
-        this.indexMap.set(origIndex, newIndex)
+        indexMap.set(origIndex, newIndex)
 
         const ptr = origIndex * 3
         const p = [vertex[ptr], vertex[ptr + 1], vertex[ptr + 2]]
@@ -150,23 +160,37 @@ class Geometry {
         currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
         currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
     }
-}
+    getQuad(mesh: number, quad: number) {
+        const p0 = this.indices[mesh][quad * 4] * 3
+        const p1 = this.indices[mesh][quad * 4 + 1] * 3
+        const p2 = this.indices[mesh][quad * 4 + 2] * 3
+        const p3 = this.indices[mesh][quad * 4 + 3] * 3
 
-function prepareGeometry(vertex: number[], indices: number[], groups: Group[], materials: Material[], geometry: Geometry) {
-    for (let m = 0; m < materials.length; ++m) {
-        const meshId = materials[m].group
-        const indexStart = groups[meshId].startIndex
-        const indexEnd = indexStart + groups[meshId].length
-        geometry.addMesh()
-        // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
-        for (let i = indexStart; i < indexEnd; i += 6) {
-            geometry.addQuad(vertex, indices, i)
-        }
+        return [[
+            this.vertex[p0],
+            this.vertex[p0 + 1],
+            this.vertex[p0 + 2]
+        ],
+        [
+            this.vertex[p1],
+            this.vertex[p1 + 1],
+            this.vertex[p1 + 2]
+        ],
+        [
+            this.vertex[p2],
+            this.vertex[p2 + 1],
+            this.vertex[p2 + 2]
+        ],
+        [
+            this.vertex[p3],
+            this.vertex[p3 + 1],
+            this.vertex[p3 + 2]
+        ]]
     }
 }
 
 function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
-    prepareGeometry(scene.vertexRigged, scene.baseMesh.indices, scene.baseMesh.groups, materials, geometry)
+    prepareGeometry(scene.vertexMorphed, scene.baseMesh.indices, scene.baseMesh.groups, materials, geometry)
 
     let out = `  <library_geometries>
     <geometry id="${meshName}" name="${objectName}">
@@ -197,55 +221,6 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
     return out
 }
 
-// IT'S TIME TO MOVE THIS INTO A UNIT TEST...
-// AND GEOMETRY SHOULD HAVE AND INDEX MAP PER VERTEX LIST
-
-// IN:
-//   vertexWeights = {
-//     <boneName>: [
-//       [vertexIndex, ...],
-//       [weight, ...]
-//     ], ...
-//   }
-//   geometry
-//   scene.skeleton.bones
-// OUT:
-//   boneWeightPairs = [
-//     <vertexIndex>: [
-//       [boneIndex, weightIndex], ...
-//     ]
-//   ]
-//   weights = [
-//     weightIndex: weight, ...
-//   ]
-function prepareControllers(vertexWeights: VertexBoneWeights, boneMap: Map<string, Bone>, geometry: Geometry) {
-    const boneWeightPairs = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
-    for (let i = 0; i < boneWeightPairs.length; ++i) {
-        boneWeightPairs[i] = []
-    }
-    const weightMap = new Map<number, number>()
-    vertexWeights!._data.forEach((boneData, boneName) => {
-        const boneIndices = boneData[0] as number[]
-        const boneWeights = boneData[1] as number[]
-        zipForEach(boneIndices, boneWeights, (_index, weight) => {
-            const index = geometry.indexMap.get(_index)
-            if (index === undefined) {
-                // vertex is not used
-                return
-            }
-            let weightIndex = weightMap.get(weight)
-            if (weightIndex === undefined) {
-                weightIndex = weightMap.size
-                weightMap.set(weight, weightIndex)
-            }
-            boneWeightPairs[index].push([boneMap.get(boneName)!.index, weightIndex])
-        })
-    })
-    const weights = new Array<number>(weightMap.size)
-    weightMap.forEach((index, weight) => { weights[index] = weight})
-    return {weights, boneWeightPairs}
-}
-
 function colladaControllers(scene: HumanMesh, geometry: Geometry) {
 
     const allBoneNames = scene.skeleton.boneslist!.map(bone => bone.name)
@@ -256,16 +231,17 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry) {
     })
     ibmAll = ibmAll.trimEnd()
 
-    const {weights, boneWeightPairs} = prepareControllers(scene.skeleton.vertexWeights!, scene.skeleton.bones, geometry)
+    const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
+    prepareControllerAddBoneWeights(
+        scene.vertexMorphed,
+        scene.skeleton.vertexWeights!,
+        scene.skeleton.bones,
+        geometry,
+        boneWeightPairs, weightMap
+    )
 
-    const flatBoneWeightList: number[] = []
-    boneWeightPairs.forEach(vertexData => {
-        vertexData.forEach(boneWeightPair =>
-            boneWeightPair.forEach(value =>
-                flatBoneWeightList.push(value)
-            )
-        )
-    })
+    const weights = prepareControllerFlatWeightMap(weightMap)
+    const flatBoneWeightList = prepareControllerFlatBoneWeight(boneWeightPairs)
 
     return `  <library_controllers>
     <controller id="${skinName}" name="${armatureName}">
@@ -349,6 +325,100 @@ function colladaScene() {
     return `  <scene>
     <instance_visual_scene url="#${sceneName}"/>
   </scene>\n`
+}
+
+export function prepareGeometry(vertex: number[], indices: number[], groups: Group[], materials: Material[], geometry: Geometry) {
+    for (let m = 0; m < materials.length; ++m) {
+        const meshId = materials[m].group
+        prepareMesh(vertex, indices, groups[meshId].startIndex, groups[meshId].length, geometry)
+    }
+}
+
+export function prepareMesh(vertex: number[], indices: number[], startCoord: number, length: number, geometry: Geometry) {
+    const indexEnd = startCoord + length
+    geometry.addMesh()
+    // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
+    for (let i = startCoord; i < indexEnd; i += 6) {
+        geometry.addQuad(vertex, indices, i)
+    }
+}
+
+// IN:
+//   vertexWeights = {
+//     <boneName>: [
+//       [vertexIndex, ...],
+//       [weight, ...]
+//     ], ...
+//   }
+//   geometry
+//   scene.skeleton.bones
+// OUT:
+//   boneWeightPairs = [
+//     <vertexIndex>: [
+//       [boneIndex, weightIndex], ...
+//     ]
+//   ]
+//   weights = [
+//     weightIndex: weight, ...
+//   ]
+export function prepareControllers(vertex: number[], vertexWeights: VertexBoneWeights, boneMap: Map<string, Bone>, geometry: Geometry) {
+    const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
+    prepareControllerAddBoneWeights(vertex, vertexWeights, boneMap, geometry, boneWeightPairs, weightMap)
+    const weights = prepareControllerFlatWeightMap(weightMap)
+
+    return { weights, boneWeightPairs }
+}
+
+export function prepareControllerInit(geometry: Geometry) {
+    let boneWeightPairs = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
+    for (let i = 0; i < boneWeightPairs.length; ++i) {
+        boneWeightPairs[i] = []
+    }
+    const weightMap = new Map<number, number>()
+    return { boneWeightPairs, weightMap }
+}
+
+export function prepareControllerAddBoneWeights(vertex: number[], vertexWeights: VertexBoneWeights,
+    boneMap: Map<string, Bone>,
+    geometry: Geometry,
+    boneWeightPairs: Array<Array<Array<number>>>,
+    weightMap: Map<number, number>
+) {
+    vertexWeights!._data.forEach((boneData, boneName) => {
+        const boneIndices = boneData[0] as number[]
+        const boneWeights = boneData[1] as number[]
+        zipForEach(boneIndices, boneWeights, (_index, weight) => {
+            const index = geometry.getIndex(vertex, _index)
+            if (index === undefined) {
+                // vertex is not used
+                return
+            }
+            let weightIndex = weightMap.get(weight)
+            if (weightIndex === undefined) {
+                weightIndex = weightMap.size
+                weightMap.set(weight, weightIndex)
+            }
+            boneWeightPairs[index].push([boneMap.get(boneName)!.index, weightIndex])
+        })
+    })
+}
+
+export function prepareControllerFlatWeightMap(weightMap: Map<number, number>) {
+    const weights = new Array<number>(weightMap.size)
+    weightMap.forEach((index, weight) => { weights[index] = weight })
+    return weights
+}
+
+export function prepareControllerFlatBoneWeight(boneWeightPairs: Array<Array<Array<number>>>) {
+    const flatBoneWeightList: number[] = []
+    boneWeightPairs.forEach(vertexData => {
+        vertexData.forEach(boneWeightPair =>
+            boneWeightPair.forEach(value =>
+                flatBoneWeightList.push(value)
+            )
+        )
+    })
+    return flatBoneWeightList
 }
 
 const identity = mat4.identity(mat4.create())

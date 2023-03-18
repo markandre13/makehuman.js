@@ -9,10 +9,13 @@ import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
-import { exportCollada } from "../../src/mesh/Collada"
+import { exportCollada, Geometry, Material, prepareControllerAddBoneWeights, prepareControllerFlatWeightMap, prepareControllerInit, prepareControllers, prepareGeometry, prepareMesh } from "../../src/mesh/Collada"
 import { testCube } from "../../src/mesh/testCube"
 
 import { parseXML, Tag, Text } from "./xml"
+import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
+import { Group } from '../../src/mesh/Mesh'
+import { Bone } from '../../src/skeleton/Bone'
 
 describe("Collada", function () {
 
@@ -20,18 +23,14 @@ describe("Collada", function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
 
-    it.only("prepare data", function() {
-         
-    })
-
     it("load a valid collada and check it", function () {
         const data = FileSystemAdapter.getInstance().readFile("data/test.dae")
         checkCollada("data/test.dae", data)
     })
 
-    it("test cube", function () {
+    xit("test cube", function () {
         const xml = exportCollada(testCube)
-        
+
         const document = parseXML("exportCollada()", xml)
 
         const collada = findTag(document, "COLLADA")
@@ -232,7 +231,183 @@ describe("Collada", function () {
         const polygonsData = parseNumbers(polygons!)
         expect(polygonsData).to.have.lengthOf(polylistCount)
     }
+
+    describe("helper functions", () => {
+        const boneMap: Map<string, Bone> = new Map()
+        boneMap.set("b0", { index: 0 } as Bone)
+        boneMap.set("b1", { index: 1 } as Bone)
+
+        // BASE MESH
+
+        const vertexWeights0 = {
+            _data: new Map()
+        } as VertexBoneWeights
+        vertexWeights0._data.set("b0", [
+            [0, 1, 2, 3],
+            [0, 0, .5, .5]
+        ])
+        vertexWeights0._data.set("b1", [
+            [2, 3, 4, 5],
+            [.5, .5, 1, 1]
+        ])
+
+        //  0   2   4
+        //
+        //  1   3   5
+        const vertex0 = [
+            0, 0, 0,
+            0, 1, 0,
+            1, 0, 0,
+            1, 1, 0,
+            2, 0, 0,
+            2, 1, 0,
+        ]
+
+        const indices0 = [
+            0, 2, 3,
+            1, 0, 4,
+            2, 4, 5,
+            3, 2, 4,
+        ]
+
+        // PROXY MESH
+
+        const vertexWeights1 = {
+            _data: new Map()
+        } as VertexBoneWeights
+        vertexWeights1._data.set("b0", [
+            [0, 1, 2, 3],
+            [1, 1, .3, .3]
+        ])
+        vertexWeights1._data.set("b1", [
+            [2, 3, 4, 5],
+            [.7, .7, 1, 1]
+        ])
+
+        const vertex1 = [
+            0, 0, 1,
+            0, 1, 1,
+            1, 0, 1,
+            1, 1, 1,
+            2, 0, 1,
+            2, 1, 1,
+        ]
+
+        const indices1 = [
+            0, 2, 3,
+            1, 0, 4,
+            2, 4, 5,
+            3, 2, 4,
+        ]
+
+        const groups: Group[] = [
+            { name: "one", startIndex: 0, length: 6 },
+            { name: "two", startIndex: 6, length: 6 }
+        ]
+
+        const materials: Material[] = [
+            { group: 0, name: "ONE", r: 1, g: 0, b: 0 },
+            { group: 1, name: "TWO", r: 0, g: 1, b: 0 }
+        ]
+
+        describe("prepareGeometry()", () => {
+            it("single mesh", () => {
+                const geometry = new Geometry()
+                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                expect(geometry.indices.length).to.equal(2)
+                expect(geometry.getQuad(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
+                expect(geometry.getQuad(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
+            })
+            it("two meshes", () => {
+                const geometry = new Geometry()
+                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                prepareMesh(vertex1, indices1, 0, indices1.length / 2, geometry)
+
+                expect(geometry.indices.length).to.equal(3)
+                expect(geometry.getQuad(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
+                expect(geometry.getQuad(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
+                expect(geometry.getQuad(2, 0)).to.deep.equal([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]])
+            })
+        })
+        describe("prepareControllers()", () => {
+            it("single mesh", () => {
+                const geometry = new Geometry()
+
+                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                const { weights, boneWeightPairs } = prepareControllers(vertex0, vertexWeights0, boneMap, geometry)
+
+                expect(weights.length).to.equal(3)
+                expect(boneWeightPairs.length).to.equal(6)
+                // console.log(getBoneWeight([vertex0], geometry, weights, boneWeightPairs))
+                expect(getBoneWeight([vertex0], geometry, weights, boneWeightPairs)).to.deep.equal([
+                    [[0], [0]],
+                    [[0], [0]],
+                    [[0, 1], [0.5, 0.5]],
+                    [[0, 1], [0.5, 0.5]],
+                    [[1], [1]],
+                    [[1], [1]]
+                ])
+            })
+            it("two meshes", () => {
+                const geometry = new Geometry()
+
+                prepareGeometry(vertex0, indices0, groups, materials, geometry)
+                prepareMesh(vertex1, indices1, 0, indices1.length, geometry)
+
+                const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
+                prepareControllerAddBoneWeights(vertex0, vertexWeights0, boneMap, geometry, boneWeightPairs, weightMap)
+                prepareControllerAddBoneWeights(vertex1, vertexWeights1, boneMap, geometry, boneWeightPairs, weightMap)
+                const weights = prepareControllerFlatWeightMap(weightMap)
+
+                // console.log(getBoneWeight([vertex0, vertex1], geometry, weights, boneWeightPairs))
+
+                expect(getBoneWeight([vertex0, vertex1], geometry, weights, boneWeightPairs)).to.deep.equal([
+                    [[0], [0]],
+                    [[0], [0]],
+                    [[0, 1], [0.5, 0.5]],
+                    [[0, 1], [0.5, 0.5]],
+                    [[1], [1]],
+                    [[1], [1]],
+                    [[0], [1]],
+                    [[0], [1]],
+                    [[0, 1], [0.3, 0.7]],
+                    [[0, 1], [0.3, 0.7]],
+                    [[1], [1]],
+                    [[1], [1]]
+                ])
+            })
+        })
+    })
 })
+
+function origIndexToGeoIndex(vertex: number[], vertIdx: number, geometry: Geometry) {
+    vertIdx *= 3
+    for (let j = 0; j < geometry.vertex.length; j += 3) {
+        if (vertex[vertIdx] === geometry.vertex[j] &&
+            vertex[vertIdx + 1] === geometry.vertex[j + 1] &&
+            vertex[vertIdx + 2] === geometry.vertex[j + 2]) {
+            return j / 3
+        }
+    }
+    throw Error(`couldn't find [${vertex[vertIdx]}, ${vertex[vertIdx + 1]}, ${vertex[vertIdx + 2]}] in geometry.vertex`)
+}
+
+function getBoneWeight(vertexList: number[][], geometry: Geometry, weights: number[], boneWeightPairs: Array<Array<Array<number>>>) {
+    const r: number[][][] = []
+    for (let vertex of vertexList) {
+        for (let vertIdx = 0; vertIdx < vertex.length / 3; ++vertIdx) {
+            const idx = origIndexToGeoIndex(vertex, vertIdx, geometry)
+            r.push(
+                [
+                    boneWeightPairs[idx].map(e => e[0]),
+                    boneWeightPairs[idx].map(e => weights[e[1]]),
+                ]
+            )
+        }
+    }
+
+    return r
+}
 
 function parseNumbers(node: Tag) {
     return text(node)
