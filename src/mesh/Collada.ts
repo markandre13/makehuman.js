@@ -116,79 +116,6 @@ function colladaMaterials() {
     return out
 }
 
-// const epsilon = Number.EPSILON * 2.0
-const epsilon = 0.000000001
-
-export class Geometry {
-    vertex: number[] = []
-    indices: number[][] = []
-    weights: number[] = []
-    private indexMap = new Map<number[], Map<number, number>>()
-
-    getIndex(vertex: number[], index: number) {
-        return this.indexMap.get(vertex)?.get(index)
-    }
-
-    addPoint(vertex: number[], origIndex: number): number {
-        let indexMap = this.indexMap.get(vertex)
-        if (indexMap === undefined) {
-            indexMap = new Map<number, number>()
-            this.indexMap.set(vertex, indexMap)
-        }
-
-        let newIndex = indexMap.get(origIndex)
-        if (newIndex !== undefined) {
-            return newIndex
-        }
-
-        newIndex = this.vertex.length / 3
-        indexMap.set(origIndex, newIndex)
-
-        const ptr = origIndex * 3
-        const p = [vertex[ptr], vertex[ptr + 1], vertex[ptr + 2]]
-        this.vertex.push(...p)
-
-        return newIndex
-    }
-    addMesh() {
-        this.indices.push([])
-    }
-    addQuad(vertex: number[], indices: number[], startIndex: number) {
-        const currentMesh = this.indices[this.indices.length - 1]
-        currentMesh.push(this.addPoint(vertex, indices[startIndex]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
-    }
-    getQuad(mesh: number, quad: number) {
-        const p0 = this.indices[mesh][quad * 4] * 3
-        const p1 = this.indices[mesh][quad * 4 + 1] * 3
-        const p2 = this.indices[mesh][quad * 4 + 2] * 3
-        const p3 = this.indices[mesh][quad * 4 + 3] * 3
-
-        return [[
-            this.vertex[p0],
-            this.vertex[p0 + 1],
-            this.vertex[p0 + 2]
-        ],
-        [
-            this.vertex[p1],
-            this.vertex[p1 + 1],
-            this.vertex[p1 + 2]
-        ],
-        [
-            this.vertex[p2],
-            this.vertex[p2 + 1],
-            this.vertex[p2 + 2]
-        ],
-        [
-            this.vertex[p3],
-            this.vertex[p3 + 1],
-            this.vertex[p3 + 2]
-        ]]
-    }
-}
-
 function colladaGeometries(scene: HumanMesh, geometry: Geometry) {
     prepareGeometry(scene.vertexMorphed, scene.baseMesh.indices, scene.baseMesh.groups, materials, geometry)
 
@@ -325,6 +252,79 @@ function colladaScene() {
     return `  <scene>
     <instance_visual_scene url="#${sceneName}"/>
   </scene>\n`
+}
+
+// const epsilon = Number.EPSILON * 2.0
+const epsilon = 0.000000001
+
+export class Geometry {
+    vertex: number[] = []
+    indices: number[][] = []
+    weights: number[] = []
+    private indexMap = new Map<number[], Map<number, number>>()
+
+    getIndex(vertex: number[], index: number) {
+        return this.indexMap.get(vertex)?.get(index)
+    }
+
+    addPoint(vertex: number[], origIndex: number): number {
+        let indexMap = this.indexMap.get(vertex)
+        if (indexMap === undefined) {
+            indexMap = new Map<number, number>()
+            this.indexMap.set(vertex, indexMap)
+        }
+
+        let newIndex = indexMap.get(origIndex)
+        if (newIndex !== undefined) {
+            return newIndex
+        }
+
+        newIndex = this.vertex.length / 3
+        indexMap.set(origIndex, newIndex)
+
+        const ptr = origIndex * 3
+        const p = [vertex[ptr], vertex[ptr + 1], vertex[ptr + 2]]
+        this.vertex.push(...p)
+
+        return newIndex
+    }
+    addMesh() {
+        this.indices.push([])
+    }
+    addQuad(vertex: number[], indices: number[], startIndex: number) {
+        const currentMesh = this.indices[this.indices.length - 1]
+        currentMesh.push(this.addPoint(vertex, indices[startIndex]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
+        currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
+    }
+    getQuad(mesh: number, quad: number) {
+        const p0 = this.indices[mesh][quad * 4] * 3
+        const p1 = this.indices[mesh][quad * 4 + 1] * 3
+        const p2 = this.indices[mesh][quad * 4 + 2] * 3
+        const p3 = this.indices[mesh][quad * 4 + 3] * 3
+
+        return [[
+            this.vertex[p0],
+            this.vertex[p0 + 1],
+            this.vertex[p0 + 2]
+        ],
+        [
+            this.vertex[p1],
+            this.vertex[p1 + 1],
+            this.vertex[p1 + 2]
+        ],
+        [
+            this.vertex[p2],
+            this.vertex[p2 + 1],
+            this.vertex[p2 + 2]
+        ],
+        [
+            this.vertex[p3],
+            this.vertex[p3 + 1],
+            this.vertex[p3 + 2]
+        ]]
+    }
 }
 
 export function prepareGeometry(vertex: number[], indices: number[], groups: Group[], materials: Material[], geometry: Geometry) {
