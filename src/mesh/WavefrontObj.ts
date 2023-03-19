@@ -5,11 +5,16 @@ import { Mesh, Group, FaceGroup } from './Mesh'
 // makehuman/shared/wavefront.py
 export class WavefrontObj implements Mesh {
     name = ""
-    vertex: number[]
-    texture: number[]
-    normal: number[]
-    indices: number[] // vertex indices
-    groups: Group[] // name, startIndex, length
+
+    // TODO: have a look at what WebGL needs
+
+    vertex: number[]  // x,y,z (coord in makehuman)
+    indices: number[] // quads of vertex indices (fvert in makehuman?)
+
+    texture: number[] // u,v (texco in makehuman)
+    
+    normal: number[]  // x,y,z
+    groups: Group[]   // name, startIndex, length
     material: Group[] // name, startIndex, length
 
     faceGroups = new Map<string, FaceGroup>()

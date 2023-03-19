@@ -1,4 +1,4 @@
-import { mat4, vec4 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
 
 export class ProgramInfo {
     gl: WebGL2RenderingContext
@@ -14,7 +14,6 @@ export class ProgramInfo {
         color: WebGLUniformLocation
     }
     constructor(gl: WebGL2RenderingContext) {
-        // function linkProgram(, vertexShader: WebGLShader, fragmentShader: WebGLShader): ProgramInfo {
         const program = gl.createProgram()
         if (program === null) {
             throw Error('Unable to create WebGLProgram')
@@ -88,7 +87,6 @@ const vertexShaderSrc = `
 // this is our input per vertex
 attribute vec4 aVertexPosition;
 attribute vec3 aVertexNormal;
-// attribute vec4 aVertexColor;
 
 // input for all vertices (uniform for the whole shader program)
 uniform mat4 uNormalMatrix;
@@ -120,7 +118,6 @@ varying lowp vec4 vColor;
 varying highp vec3 vLighting;
 void main(void) {
   gl_FragColor = vec4(vec3(vColor[0],vColor[1],vColor[2]) * vLighting, vColor[3]);
-    // gl_FragColor = vColor;
 }`
 
 function compileShader(gl: WebGL2RenderingContext, type: GLenum, source: string): WebGLShader {

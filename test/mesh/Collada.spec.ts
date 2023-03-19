@@ -9,12 +9,19 @@ import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
-import { exportCollada, Geometry, Material, prepareControllerAddBoneWeights, prepareControllerFlatWeightMap, prepareControllerInit, prepareControllers, prepareGeometry, prepareMesh } from "../../src/mesh/Collada"
+import { 
+    exportCollada, Geometry, Material, 
+    prepareControllerAddBoneWeights, 
+    prepareControllerFlatWeightMap, 
+    prepareControllerInit, 
+    prepareControllers, 
+    prepareGeometry, 
+    prepareMesh 
+} from "../../src/mesh/Collada"
 import { testCube } from "../../src/mesh/testCube"
 
 import { parseXML, Tag, Text } from "./xml"
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
-import { Group } from '../../src/mesh/Mesh'
 import { Bone } from '../../src/skeleton/Bone'
 
 describe("Collada", function () {
