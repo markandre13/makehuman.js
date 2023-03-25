@@ -4,7 +4,7 @@ import { BaseMeshGroup } from '../mesh/BaseMeshGroup'
 import { HumanMesh, Update } from '../mesh/HumanMesh'
 import { RenderMode } from './RenderMode'
 import { Bone } from "../skeleton/Bone"
-import { ProgramInfo } from './ProgramInfo'
+import { ProgramRGBA } from './ProgramInfo'
 import { Buffers } from './Buffers'
 import { RenderMesh } from './RenderMesh'
 
@@ -20,7 +20,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
     }
 
     const buffers = createAllBuffers(gl, scene)
-    const programInfo = new ProgramInfo(gl)
+    const programInfo = new ProgramRGBA(gl)
 
     let then = 0
     function render(now: number) {
@@ -39,7 +39,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
     requestAnimationFrame(render)
 }
 
-function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramInfo, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
+function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
 
     const modelViewMatrix = mat4.create()
     if (renderMode === RenderMode.DEBUG) {

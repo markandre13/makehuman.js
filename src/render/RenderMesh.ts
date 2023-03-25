@@ -1,5 +1,5 @@
 import { calculateNormals } from '../lib/calculateNormals'
-import { ProgramInfo } from './ProgramInfo'
+import { ProgramRGBA } from './ProgramInfo'
 
 /**
  * I am a mesh which can be rendered by OpenGL.
@@ -24,12 +24,12 @@ export class RenderMesh {
         this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
     }
 
-    draw(programInfo: ProgramInfo, mode: number) {
+    draw(programInfo: ProgramRGBA, mode: number) {
         this.bind(programInfo)
         this.drawSubset(mode, 0, this.length)
     }
 
-    bind(programInfo: ProgramInfo) {
+    bind(programInfo: ProgramRGBA) {
         const numComponents = 3, type = this.gl.FLOAT, normalize = false, stride = 0, offset = 0
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex)
         this.gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, numComponents, type, normalize, stride, offset)
