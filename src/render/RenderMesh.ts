@@ -30,16 +30,7 @@ export class RenderMesh {
     }
 
     bind(programInfo: ProgramRGBA) {
-        const numComponents = 3, type = this.gl.FLOAT, normalize = false, stride = 0, offset = 0
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex)
-        this.gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, numComponents, type, normalize, stride, offset)
-        this.gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normal)
-        this.gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, numComponents, type, normalize, stride, offset)
-        this.gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal)
-
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indices)
+        programInfo.bind(this.indices, this.vertex, this.normal)
     }
 
     drawSubset(mode: number, offset: number, length: number) {
