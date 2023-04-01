@@ -1,5 +1,5 @@
 import { calculateNormals } from '../lib/calculateNormals'
-import { ProgramRGBA } from './ProgramInfo'
+import { GLProgram, ProgramRGBA, ProgramTexture } from './ProgramInfo'
 
 /**
  * I am a mesh which can be rendered by OpenGL.
@@ -9,13 +9,17 @@ export class RenderMesh {
     vertex: WebGLBuffer
     normal: WebGLBuffer
     indices: WebGLBuffer
+    texture?: WebGLBuffer
     length: number
 
-    constructor(gl: WebGL2RenderingContext, vertex: number[], index: number[]) {
+    constructor(gl: WebGL2RenderingContext, vertex: number[], index: number[], texture?: number[]) {
         this.gl = gl
         this.vertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
         this.indices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, index)
         this.normal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
+        if (texture !== undefined) {
+            this.texture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, texture)
+        }
         this.length = index.length
     }
 
@@ -24,13 +28,13 @@ export class RenderMesh {
         this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
     }
 
-    draw(programInfo: ProgramRGBA, mode: number) {
+    draw(programInfo: GLProgram, mode: number) {
         this.bind(programInfo)
         this.drawSubset(mode, 0, this.length)
     }
 
-    bind(programInfo: ProgramRGBA) {
-        programInfo.bind(this.indices, this.vertex, this.normal)
+    bind(programInfo: GLProgram) {
+        programInfo.bind(this.indices, this.vertex, this.normal, this.texture)
     }
 
     drawSubset(mode: number, offset: number, length: number) {

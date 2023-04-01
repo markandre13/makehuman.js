@@ -3,26 +3,29 @@ import { EnumModel } from 'toad.js'
 import { BaseMeshGroup } from '../mesh/BaseMeshGroup'
 import { HumanMesh, Update } from '../mesh/HumanMesh'
 import { RenderMode } from './RenderMode'
-import { Bone } from "../skeleton/Bone"
-import { ProgramRGBA } from './ProgramInfo'
+import { ProgramRGBA, ProgramTexture } from './ProgramInfo'
 import { Buffers } from './Buffers'
 import { RenderMesh } from './RenderMesh'
 
 let cubeRotation = 0.0
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
-
-    console.log(`NUMBER OF BONES ${scene.skeleton.bones.size}`)
-
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
-    if (!gl) {
+    if (gl == null) {
         throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
     }
+    // Flip image pixels into the bottom-to-top order that WebGL expects.
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+
+    const programRGBA = new ProgramRGBA(gl)
+    const programTex = new ProgramTexture(gl)
 
     const buffers = createAllBuffers(gl, scene)
-    const programInfo = new ProgramRGBA(gl)
+    const texture = loadTexture(gl, "data/cubetexture.png")!
 
     let then = 0
+
+    // Draw the scene repeatedly
     function render(now: number) {
         now *= 0.001  // convert to seconds
         const deltaTime = now - then
@@ -32,14 +35,22 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
             updateBuffers(scene, buffers)
         }
 
-        drawScene(gl, programInfo, buffers, deltaTime, scene, mode.value)
+        drawScene(gl, programRGBA, programTex, texture, buffers, deltaTime, scene, mode.value)
 
         requestAnimationFrame(render)
     }
     requestAnimationFrame(render)
 }
 
-function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers: Buffers, deltaTime: number, scene: HumanMesh, renderMode: RenderMode): void {
+function drawScene(
+    gl: WebGL2RenderingContext,
+    programRGBA: ProgramRGBA,
+    programTex: ProgramTexture,
+    texture: WebGLTexture,
+    buffers: Buffers,
+    deltaTime: number,
+    scene: HumanMesh,
+    renderMode: RenderMode): void {
 
     const modelViewMatrix = mat4.create()
     if (renderMode === RenderMode.DEBUG) {
@@ -50,9 +61,9 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers
         mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
     }
 
-    programInfo.init(modelViewMatrix)
-    buffers.base.bind(programInfo)
+    programRGBA.init(modelViewMatrix)
 
+    buffers.base.bind(programRGBA)
     let skin
     switch (renderMode) {
         case RenderMode.POLYGON:
@@ -92,7 +103,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers
             continue
         }
 
-        programInfo.color(rgba)
+        programRGBA.color(rgba)
         let offset = scene.baseMesh.groups[idx].startIndex * 2 // index is a word, hence 2 bytes
         let length = scene.baseMesh.groups[idx].length
 
@@ -101,7 +112,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers
 
     // SKELETON
     if (renderMode !== RenderMode.POLYGON) {
-        programInfo.color([1, 1, 1, 1])
+        programRGBA.color([1, 1, 1, 1])
         const offset = buffers.skeletonIndex
         const count = scene.skeleton.boneslist!.length * 2
         buffers.base.drawSubset(gl.LINES, offset, count)
@@ -109,7 +120,7 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers
 
     // JOINTS
     if (renderMode !== RenderMode.POLYGON) {
-        programInfo.color([1, 1, 1, 1])
+        programRGBA.color([1, 1, 1, 1])
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
         buffers.base.drawSubset(gl.TRIANGLES, offset, count)
@@ -145,10 +156,15 @@ function drawScene(gl: WebGL2RenderingContext, programInfo: ProgramRGBA, buffers
                 rgba = [1.0, 0.0, 0, 1]
                 break
         }
-        programInfo.color(rgba)
-
-        renderMesh.draw(programInfo, glMode)
+        programRGBA.color(rgba)
+        renderMesh.draw(programRGBA, glMode)
     })
+
+    // texture
+    programTex.init(modelViewMatrix)
+    programTex.texture(texture)
+    buffers.texCube.draw(programTex, gl.TRIANGLES)
+
     cubeRotation += deltaTime
 }
 
@@ -176,55 +192,17 @@ function renderSkeletonGlobal(scene: HumanMesh) {
     return { vertex, indices }
 }
 
-// render the skeleton using matRestRelative
-function renderSkeletonRelative(scene: HumanMesh) {
-    const skel = scene.skeleton
-    const v = vec4.fromValues(0, 0, 0, 1)
-    const vertex: number[] = []
-    const indices: number[] = []
-    const rootBone = skel.roots[0]!
-
-    mat4.identity(mat4.create())
-    renderSkeletonRelativeHelper(
-        mat4.identity(mat4.create()),
-        rootBone,
-        vertex,
-        indices
-    )
-    return { vertex, indices }
-}
-
-function renderSkeletonRelativeHelper(m: mat4, bone: Bone, vertex: number[], indices: number[]) {
-    const v = vec4.fromValues(0, 0, 0, 1)
-
-    const a = vec4.transformMat4(vec4.create(), v, bone.matRestGlobal!)
-    const b = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
-
-    const index = vertex.length / 3
-    vertex.push(a[0], a[1], a[2], b[0], b[1], b[2])
-    indices.push(index, index + 1)
-
-    const m0 = m
-    const m1 = mat4.multiply(mat4.create(), m0, bone.matRestRelative!)
-    bone.children.forEach(childBone => {
-        renderSkeletonRelativeHelper(m1, childBone, vertex, indices)
-    })
-}
-
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
     const { vx, ix, skeletonIndex } = buildBase(scene)
     const base = new RenderMesh(gl, vx, ix)
+    const texCube = createTexturedCubeRenderer(gl)
 
     let proxies = new Map<string, RenderMesh>()
     scene.proxies.forEach((proxy, name) => {
         proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
     })
 
-    return {
-        base,
-        skeletonIndex,
-        proxies
-    }
+    return { base, texCube, skeletonIndex, proxies }
 }
 
 function updateBuffers(scene: HumanMesh, buffers: Buffers) {
@@ -254,4 +232,115 @@ function buildBase(scene: HumanMesh) {
     vx = vx.concat(skeleton.vertex)
     ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
     return { vx, ix, skeletonIndex }
+}
+
+//
+// Initialize a texture and load an image.
+// When the image finished loading copy it into the texture.
+//
+function loadTexture(gl: WebGLRenderingContext, url: string) {
+    const texture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+
+    // Because images have to be downloaded over the internet
+    // they might take a moment until they are ready.
+    // Until then put a single pixel in the texture so we can
+    // use it immediately. When the image has finished downloading
+    // we'll update the texture with the contents of the image.
+    const level = 0
+    const internalFormat = gl.RGBA
+    const width = 1
+    const height = 1
+    const border = 0
+    const srcFormat = gl.RGBA
+    const srcType = gl.UNSIGNED_BYTE
+    const pixel = new Uint8Array([0, 0, 255, 255]) // opaque blue
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        internalFormat,
+        width,
+        height,
+        border,
+        srcFormat,
+        srcType,
+        pixel
+    )
+
+    const image = new Image()
+    image.onload = () => {
+        console.log(`texture "${url}" has been loaded`)
+        gl.bindTexture(gl.TEXTURE_2D, texture)
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            level,
+            internalFormat,
+            srcFormat,
+            srcType,
+            image
+        )
+
+        // WebGL1 has different requirements for power of 2 images
+        // vs non power of 2 images so check if the image is a
+        // power of 2 in both dimensions.
+        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+            // Yes, it's a power of 2. Generate mips.
+            gl.generateMipmap(gl.TEXTURE_2D)
+        } else {
+            // No, it's not a power of 2. Turn off mips and set
+            // wrapping to clamp to edge
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+        }
+    }
+    image.src = url
+
+    return texture
+}
+
+function isPowerOf2(value: number) {
+    return (value & (value - 1)) === 0
+}
+
+function createTexturedCubeRenderer(gl: WebGL2RenderingContext): RenderMesh {
+    const positions = [
+        // Front face
+        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+        // Back face
+        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+        // Top face
+        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+        // Bottom face
+        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+        // Right face
+        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+        // Left face
+        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+    ]
+
+    const indices = [
+        0, 1, 2, 0, 2, 3, // front
+        4, 5, 6, 4, 6, 7, // back
+        8, 9, 10, 8, 10, 11, // top
+        12, 13, 14, 12, 14, 15, // bottom
+        16, 17, 18, 16, 18, 19, // right
+        20, 21, 22, 20, 22, 23, // left
+    ]
+
+    return new RenderMesh(gl, positions, indices, [
+        // Front
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Back
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Top
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Bottom
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Right
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        // Left
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    ])
+
 }

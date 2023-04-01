@@ -1,11 +1,12 @@
 import { mat4 } from 'gl-matrix'
 
-abstract class GLProgram {
+export abstract class GLProgram {
     protected gl: WebGL2RenderingContext
     protected program: WebGLProgram
 
     protected vertexPosition: number
     protected vertexNormal: number
+    protected textureCoord?: number
 
     protected projectionMatrix: WebGLUniformLocation
     protected modelViewMatrix: WebGLUniformLocation
@@ -36,7 +37,7 @@ abstract class GLProgram {
         this.normalMatrix = getUniformLocation(gl, this.program, 'uNormalMatrix')
     }
 
-    bind(indices: WebGLBuffer, vertices: WebGLBuffer, normales: WebGLBuffer) {
+    bind(indices: WebGLBuffer, vertices: WebGLBuffer, normales: WebGLBuffer, texture?: WebGLBuffer) {
         const numComponents = 3, type = this.gl.FLOAT, normalize = false, stride = 0, offset = 0
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertices)
         this.gl.vertexAttribPointer(this.vertexPosition, numComponents, type, normalize, stride, offset)
@@ -45,6 +46,24 @@ abstract class GLProgram {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, normales)
         this.gl.vertexAttribPointer(this.vertexNormal, numComponents, type, normalize, stride, offset)
         this.gl.enableVertexAttribArray(this.vertexNormal)
+
+        if (texture) {
+            const num = 2 // every coordinate composed of 2 values
+            const type = this.gl.FLOAT // the data in the buffer is 32-bit float
+            const normalize = false // don't normalize
+            const stride = 0 // how many bytes to get from one set to the next
+            const offset = 0 // how many bytes inside the buffer to start from
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texture!)
+            this.gl.vertexAttribPointer(
+                this.textureCoord!,
+                num,
+                type,
+                normalize,
+                stride,
+                offset
+            )
+            this.gl.enableVertexAttribArray(this.textureCoord!)
+        }
 
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indices)
     }
@@ -138,13 +157,38 @@ void main(void) {
 }`
 
 export class ProgramTexture extends GLProgram {
-    protected textureCoord: number
     protected uSampler: WebGLUniformLocation
     constructor(gl: WebGL2RenderingContext) {
         super(gl, textureVertexShaderSrc, textureFragmentShaderSrc)
-        // this._color = getUniformLocation(gl, this.program, 'uColor')
         this.textureCoord = gl.getAttribLocation(this.program, "aTextureCoord")
         this.uSampler = gl.getUniformLocation(this.program, "uSampler")!
+    }
+
+    use() {
+        this.gl.useProgram(this.program)
+    }
+
+    override init(modelViewMatrix: mat4) {
+        const gl = this.gl
+        const canvas = gl.canvas as HTMLCanvasElement
+
+        const fieldOfView = 45 * Math.PI / 180    // in radians
+        const aspect = canvas.width / canvas.height
+        const zNear = 0.1
+        const zFar = 100.0
+        const projectionMatrix = mat4.create()
+        mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
+
+        const normalMatrix = mat4.create()
+        mat4.invert(normalMatrix, modelViewMatrix)
+        mat4.transpose(normalMatrix, normalMatrix)
+
+        gl.useProgram(this.program)
+
+        gl.uniformMatrix4fv(this.projectionMatrix, false, projectionMatrix)
+        gl.uniformMatrix4fv(this.modelViewMatrix, false, modelViewMatrix)
+        gl.uniformMatrix4fv(this.normalMatrix, false, normalMatrix)
+        gl.uniform1i(this.uSampler, 0)
     }
 
     bindTex(indices: WebGLBuffer, vertices: WebGLBuffer, normales: WebGLBuffer, texture: WebGLBuffer) {
@@ -153,9 +197,10 @@ export class ProgramTexture extends GLProgram {
     }
 
     // set texture
-    // color(rgba: number[]) {
-    //     this.gl.uniform4fv(this.uniformLocations.color, rgba)
-    // }
+    texture(texture: WebGLTexture) {
+        this.gl.activeTexture(this.gl.TEXTURE0)
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
+    }
 }
 
 const textureVertexShaderSrc = `

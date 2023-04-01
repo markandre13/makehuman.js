@@ -108,14 +108,14 @@ function run() {
     const refCanvas = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Debug" value="DEBUG">
+            {/* <Tab label="Debug" value="DEBUG">
                 <p>
                 jaw <Text model={jaw.x} style={{ width: '50px'}}/><Slider model={jaw.x} style={{ width: '200px' }}/>
                 </p>
                 <p>
                     <Button action={() => downloadBaseMesh(scene, download)}>Export morphed and rigged base mesh</Button>
                 </p>
-            </Tab>
+            </Tab> */}
             <Tab label="Morph" value="POLYGON">
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
