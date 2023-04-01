@@ -54,39 +54,17 @@ function drawScene(
     renderMode: RenderMode): void {
 
     const canvas = gl.canvas as HTMLCanvasElement
-    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-        canvas.width = canvas.clientWidth
-        canvas.height = canvas.clientHeight
-    }
-
-    gl.viewport(0, 0, canvas.width, canvas.height)
-    gl.clearColor(0.0, 0.0, 0.0, 1.0)
-    gl.clearDepth(1.0)
-    gl.enable(gl.DEPTH_TEST)
-    gl.depthFunc(gl.LEQUAL)
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-    const modelViewMatrix = mat4.create()
-    if (renderMode === RenderMode.DEBUG) {
-        mat4.translate(modelViewMatrix, modelViewMatrix, [1.0, -7.0, -5.0])
-        mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 2, [0, 1, 0])
-    } else {
-        mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
-        mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
-    }
-
-    const fieldOfView = 45 * Math.PI / 180    // in radians
-    const aspect = canvas.width / canvas.height
-    const zNear = 0.1
-    const zFar = 100.0
-    const projectionMatrix = mat4.create()
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
-
-    const normalMatrix = mat4.create()
-    mat4.invert(normalMatrix, modelViewMatrix)
-    mat4.transpose(normalMatrix, normalMatrix)
+    prepareCanvas(canvas)
+    prepareViewport(gl, canvas)
+    const projectionMatrix = createProjectionMatrix(canvas)
+    const modelViewMatrix = createModelViewMatrix(renderMode)
+    const normalMatrix = createNormalMatrix(modelViewMatrix)
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+
+    //
+    // BASEMESH
+    //
 
     buffers.base.bind(programRGBA)
     let skin
@@ -135,7 +113,9 @@ function drawScene(
         buffers.base.drawSubset(mode, offset, length)
     }
 
+    //
     // SKELETON
+    //
     if (renderMode !== RenderMode.POLYGON) {
         programRGBA.color([1, 1, 1, 1])
         const offset = buffers.skeletonIndex
@@ -143,13 +123,19 @@ function drawScene(
         buffers.base.drawSubset(gl.LINES, offset, count)
     }
 
+    //
     // JOINTS
+    //
     if (renderMode !== RenderMode.POLYGON) {
         programRGBA.color([1, 1, 1, 1])
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
         buffers.base.drawSubset(gl.TRIANGLES, offset, count)
     }
+
+    //
+    // PROXIES
+    //
 
     let glMode: number
     switch (renderMode) {
@@ -185,12 +171,59 @@ function drawScene(
         renderMesh.draw(programRGBA, glMode)
     })
 
-    // texture
+    //
+    // TEXTURED CUBE
+    //
     programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
     programTex.texture(texture)
     buffers.texCube.draw(programTex, gl.TRIANGLES)
 
     cubeRotation += deltaTime
+}
+
+function prepareCanvas(canvas: HTMLCanvasElement) {
+    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+        canvas.width = canvas.clientWidth
+        canvas.height = canvas.clientHeight
+    }
+}
+
+function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement) {
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clearDepth(1.0)
+    gl.enable(gl.DEPTH_TEST)
+    gl.depthFunc(gl.LEQUAL)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+}
+
+function createModelViewMatrix(renderMode: RenderMode) {
+    const modelViewMatrix = mat4.create()
+    if (renderMode === RenderMode.DEBUG) {
+        mat4.translate(modelViewMatrix, modelViewMatrix, [1.0, -7.0, -5.0])
+        mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 2, [0, 1, 0])
+    } else {
+        mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
+        mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
+    }
+    return modelViewMatrix
+}
+
+function createProjectionMatrix(canvas: HTMLCanvasElement) {
+    const fieldOfView = 45 * Math.PI / 180    // in radians
+    const aspect = canvas.width / canvas.height
+    const zNear = 0.1
+    const zFar = 100.0
+    const projectionMatrix = mat4.create()
+    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
+    return projectionMatrix
+}
+
+function createNormalMatrix(modelViewMatrix: mat4) {
+    const normalMatrix = mat4.create()
+    mat4.invert(normalMatrix, modelViewMatrix)
+    mat4.transpose(normalMatrix, normalMatrix)
+    return normalMatrix
 }
 
 // render the skeleton using matRestGlobal
