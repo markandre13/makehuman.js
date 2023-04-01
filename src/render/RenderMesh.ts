@@ -33,7 +33,7 @@ export class RenderMesh {
         this.drawSubset(mode, 0, this.length)
     }
 
-    bind(programInfo: AbstractShader) {
+    bind(programInfo: AbstractShader): void {
         programInfo.bind(this.indices, this.vertex, this.normal, this.texture)
     }
 

@@ -14,6 +14,26 @@ export class TextureShader extends AbstractShader {
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
         this.gl.uniform1i(this.uSampler, 0)
     }
+    override bind(indices: WebGLBuffer, vertices: WebGLBuffer, normales: WebGLBuffer, texture?: WebGLBuffer): void {
+        super.bind(indices, vertices, normales, texture)
+        if (texture) {
+            const num = 2 // every coordinate composed of 2 values
+            const type = this.gl.FLOAT // the data in the buffer is 32-bit float
+            const normalize = false // don't normalize
+            const stride = 0 // how many bytes to get from one set to the next
+            const offset = 0 // how many bytes inside the buffer to start from
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texture!)
+            this.gl.vertexAttribPointer(
+                this.textureCoord!,
+                num,
+                type,
+                normalize,
+                stride,
+                offset
+            )
+            this.gl.enableVertexAttribArray(this.textureCoord!)
+        }
+    }
 }
 const textureVertexShaderSrc = `
 // this is our input per vertex

@@ -47,24 +47,6 @@ export abstract class AbstractShader {
         this.gl.vertexAttribPointer(this.vertexNormal, numComponents, type, normalize, stride, offset)
         this.gl.enableVertexAttribArray(this.vertexNormal)
 
-        if (texture) {
-            const num = 2 // every coordinate composed of 2 values
-            const type = this.gl.FLOAT // the data in the buffer is 32-bit float
-            const normalize = false // don't normalize
-            const stride = 0 // how many bytes to get from one set to the next
-            const offset = 0 // how many bytes inside the buffer to start from
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texture!)
-            this.gl.vertexAttribPointer(
-                this.textureCoord!,
-                num,
-                type,
-                normalize,
-                stride,
-                offset
-            )
-            this.gl.enableVertexAttribArray(this.textureCoord!)
-        }
-
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indices)
     }
 
@@ -87,7 +69,7 @@ export abstract class AbstractShader {
         }
         return shader
     }
-    
+
     static getUniformLocation(gl: WebGL2RenderingContext, program: WebGLProgram, name: string): WebGLUniformLocation {
         const location = gl.getUniformLocation(program, name)
         if (location === null)
