@@ -93,13 +93,13 @@ function drawScene(
         const rgba = x[1] as number[]
         const mode = x[2] as number
 
-        if (idx === BaseMeshGroup.SKIN) {
+        if (idx === BaseMeshGroup.SKIN && renderMode === RenderMode.POLYGON) {
             continue
         }
 
-        // if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
-        //     continue
-        // }
+        if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
+            continue
+        }
         if ((idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1) && buffers.proxies.has("Eyes")) {
             continue
         }
@@ -178,15 +178,18 @@ function drawScene(
     //
     // TEXTURED CUBE
     //
-    programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    programTex.texture(texture)
+    if (renderMode !== RenderMode.WIREFRAME) {
 
-    // buffers.texCube.draw(programTex, gl.TRIANGLES)
+        programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programTex.texture(texture)
 
-    let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
-    let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
-    buffers.base.bind(programTex)
-    buffers.base.drawSubset(gl.TRIANGLES, offset, length)
+        // buffers.texCube.draw(programTex, gl.TRIANGLES)
+
+        let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
+        let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
+        buffers.base.bind(programTex)
+        buffers.base.drawSubset(gl.TRIANGLES, offset, length)
+    }
 
     cubeRotation += deltaTime
 }
