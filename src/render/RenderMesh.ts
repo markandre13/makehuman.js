@@ -1,5 +1,5 @@
 import { calculateNormals } from '../lib/calculateNormals'
-import { GLProgram, ProgramRGBA, ProgramTexture } from './ProgramInfo'
+import { AbstractShader } from './shader/AbstractShader'
 
 /**
  * I am a mesh which can be rendered by OpenGL.
@@ -28,12 +28,12 @@ export class RenderMesh {
         this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
     }
 
-    draw(programInfo: GLProgram, mode: number) {
+    draw(programInfo: AbstractShader, mode: number) {
         this.bind(programInfo)
         this.drawSubset(mode, 0, this.length)
     }
 
-    bind(programInfo: GLProgram) {
+    bind(programInfo: AbstractShader) {
         programInfo.bind(this.indices, this.vertex, this.normal, this.texture)
     }
 

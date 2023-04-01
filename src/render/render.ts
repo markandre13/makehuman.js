@@ -3,7 +3,8 @@ import { EnumModel } from 'toad.js'
 import { BaseMeshGroup } from '../mesh/BaseMeshGroup'
 import { HumanMesh, Update } from '../mesh/HumanMesh'
 import { RenderMode } from './RenderMode'
-import { ProgramRGBA, ProgramTexture } from './ProgramInfo'
+import { RGBAShader } from "./shader/RGBAShader"
+import { TextureShader } from "./shader/TextureShader"
 import { Buffers } from './Buffers'
 import { RenderMesh } from './RenderMesh'
 
@@ -17,8 +18,8 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
-    const programRGBA = new ProgramRGBA(gl)
-    const programTex = new ProgramTexture(gl)
+    const programRGBA = new RGBAShader(gl)
+    const programTex = new TextureShader(gl)
 
     const buffers = createAllBuffers(gl, scene)
     const texture = loadTexture(gl, "data/cubetexture.png")!
@@ -44,13 +45,26 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 
 function drawScene(
     gl: WebGL2RenderingContext,
-    programRGBA: ProgramRGBA,
-    programTex: ProgramTexture,
+    programRGBA: RGBAShader,
+    programTex: TextureShader,
     texture: WebGLTexture,
     buffers: Buffers,
     deltaTime: number,
     scene: HumanMesh,
     renderMode: RenderMode): void {
+
+    const canvas = gl.canvas as HTMLCanvasElement
+    if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+        canvas.width = canvas.clientWidth
+        canvas.height = canvas.clientHeight
+    }
+
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clearDepth(1.0)
+    gl.enable(gl.DEPTH_TEST)
+    gl.depthFunc(gl.LEQUAL)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     const modelViewMatrix = mat4.create()
     if (renderMode === RenderMode.DEBUG) {
@@ -61,7 +75,18 @@ function drawScene(
         mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * .7, [0, 1, 0])
     }
 
-    programRGBA.init(modelViewMatrix)
+    const fieldOfView = 45 * Math.PI / 180    // in radians
+    const aspect = canvas.width / canvas.height
+    const zNear = 0.1
+    const zFar = 100.0
+    const projectionMatrix = mat4.create()
+    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
+
+    const normalMatrix = mat4.create()
+    mat4.invert(normalMatrix, modelViewMatrix)
+    mat4.transpose(normalMatrix, normalMatrix)
+
+    programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
     buffers.base.bind(programRGBA)
     let skin
@@ -161,7 +186,7 @@ function drawScene(
     })
 
     // texture
-    programTex.init(modelViewMatrix)
+    programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
     programTex.texture(texture)
     buffers.texCube.draw(programTex, gl.TRIANGLES)
 
