@@ -8,12 +8,16 @@
 
 ## Current Status
 
-* Have a look at [build 2023-02-26](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
+* Have a look at [build 2023-04-01](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Render a proxy mesh instead of the basemesh
 * Export the basemesh and rig as Collada for Blender
 * Nothing else... 😅
+
+Next steps:
+* Render UVs correctly
+* Export UVs in Collada
 
 ## Why?
 
