@@ -93,9 +93,13 @@ function drawScene(
         const rgba = x[1] as number[]
         const mode = x[2] as number
 
-        if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
+        if (idx === BaseMeshGroup.SKIN) {
             continue
         }
+
+        // if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
+        //     continue
+        // }
         if ((idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1) && buffers.proxies.has("Eyes")) {
             continue
         }
@@ -176,7 +180,13 @@ function drawScene(
     //
     programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
     programTex.texture(texture)
+
     buffers.texCube.draw(programTex, gl.TRIANGLES)
+
+    let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
+    let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
+    buffers.base.bind(programTex)
+    buffers.base.drawSubset(gl.TRIANGLES, offset, length)
 
     cubeRotation += deltaTime
 }
@@ -251,8 +261,8 @@ function renderSkeletonGlobal(scene: HumanMesh) {
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-    const { vx, ix, skeletonIndex } = buildBase(scene)
-    const base = new RenderMesh(gl, vx, ix)
+    const { vx, ix, ux, skeletonIndex } = buildBase(scene)
+    const base = new RenderMesh(gl, vx, ix, ux)
     const texCube = createTexturedCubeRenderer(gl)
 
     let proxies = new Map<string, RenderMesh>()
@@ -283,13 +293,14 @@ function buildBase(scene: HumanMesh) {
 
     let vx = scene.vertexRigged
     let ix = scene.baseMesh.indices
+    let ux = scene.baseMesh.texture
 
     const skeletonIndex = ix.length * 2
 
     const vertexOffset = scene.vertexRigged.length / 3
     vx = vx.concat(skeleton.vertex)
     ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
-    return { vx, ix, skeletonIndex }
+    return { vx, ix, ux, skeletonIndex }
 }
 
 //
