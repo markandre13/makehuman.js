@@ -32,17 +32,19 @@ export class WavefrontObj implements Mesh {
         return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.indices.length / 6}, groups: ${this.groups.length}} `
     }
 
-    load(filename: string) {
+    load(filename: string, data?: string) {
         this.name = filename
-        const data = FileSystemAdapter.getInstance().readFile(filename)
-        const vertex = new Array<number>()
-        const texture = new Array<number>()
-        const normal = new Array<number>()
-        const indices = new Array<number>()
-        // const primitives = new Array<any>()
-        const group = new Map<string, number>()
+        if (data === undefined) {
+            data = FileSystemAdapter.getInstance().readFile(filename)
+        }
+        const vertex: number[] = []
+        const texture: number[] = []
+        const normal: number[] = []
+        const indices: number[] = []
+        const uvIndices0: number[] = []
+        const uvIndices: number[] = []
         const reader = new StringToLine(data)
-        //  const reader = readline.createInterface(input)
+
         let lineNumber = 0
         for (let line of reader) {
             ++lineNumber
@@ -114,6 +116,8 @@ export class WavefrontObj implements Mesh {
                     for (let i = 1; i < tokens.length; ++i) {
                         const split = tokens[i].split('/')
                         indices.push(parseInt(split[0], 10) - 1)
+                        uvIndices0.push(parseInt(split[0], 10) - 1)
+                        uvIndices.push(parseInt(split[1], 10) - 1)
                     }
                     const idx = indices.length - 4
                     indices.push(indices[idx + 0])
@@ -163,9 +167,15 @@ export class WavefrontObj implements Mesh {
             }
         }
         this.vertex = vertex
-        this.texture = texture
+        // this.texture = texture
         this.normal = normal
         this.indices = indices
+
+        this.texture = new Array(uvIndices.length * 2)
+        for(let i=0; i<uvIndices.length; ++i) {
+            this.texture[uvIndices0[i]*2] =  texture[uvIndices[i]*2]
+            this.texture[uvIndices0[i]*2+1] =  texture[uvIndices[i]*2+1]
+        }
 
         // set group's lengths
         if (this.groups.length > 0) {
