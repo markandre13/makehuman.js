@@ -22,7 +22,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
     const programTex = new TextureShader(gl)
 
     const buffers = createAllBuffers(gl, scene)
-    const texture = loadTexture(gl, "data/cubetexture.png")!
+    const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
 
     let then = 0
 
@@ -181,7 +181,7 @@ function drawScene(
     programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
     programTex.texture(texture)
 
-    buffers.texCube.draw(programTex, gl.TRIANGLES)
+    // buffers.texCube.draw(programTex, gl.TRIANGLES)
 
     let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
     let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
