@@ -103,14 +103,14 @@ export class Proxy {
      * @param hcoord base mesh vertices (may be morphed/posed)
      * @returns proxy mesh vertices
      */
-    getCoords(hcoord: number[]): number[] {
+    getCoords(hcoord: Float32Array): Float32Array {
         const matrix = this.tmatrix.getMatrix(this.human.scene.vertexMorphed)
 
         const ref_vIdxs = this.ref_vIdxs! // three vertices in the base mesh
         const weights = this.weights!     // three weights for each of those vertices
         const offsets = this.offsets!     // an additional translation
 
-        const coord: number[] = []
+        const coord = new Float32Array(ref_vIdxs.length * 3)
         for (let i = 0; i < ref_vIdxs.length; ++i) {
             let w0 = weights[i][0], w1 = weights[i][1], w2 = weights[i][2],
                 idx = ref_vIdxs[i],
@@ -124,7 +124,10 @@ export class Proxy {
             let y = hcoord[idx0 + 1] * w0 + hcoord[idx1 + 1] * w1 + hcoord[idx2 + 1] * w2 + t[1]
             let z = hcoord[idx0 + 2] * w0 + hcoord[idx1 + 2] * w1 + hcoord[idx2 + 2] * w2 + t[2]
 
-            coord.push(x, y, z)
+            // coord.push(x, y, z)
+            coord[i*3] = x
+            coord[i*3+1] = y
+            coord[i*3+2] = z
         }
 
         return coord

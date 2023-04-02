@@ -1,6 +1,6 @@
 import { vec3 } from 'gl-matrix'
 
-export function calculateNormals(vertex: number[], indices: number[]): number[] {
+export function calculateNormals(vertex: Float32Array, indices: number[]): number[] {
 
     function addNormal(index: number, normal: vec3) {
         normals[index] += normal[0]

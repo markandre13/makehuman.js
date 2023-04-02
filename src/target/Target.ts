@@ -40,7 +40,7 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 // number: 64bit double float
 // should use these instead to save memory and to improve performance:
 // Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array
-// Float32Array, Float64Array
+// Float32Array, Float32Array
 // BigInt64Array, BigUint64Array
 
 // morph target
@@ -75,7 +75,7 @@ export class Target {
         }
     }
 
-    apply(verts: number[], scale: number) {
+    apply(verts: Float32Array, scale: number) {
         // console.log(`morphing ${this.data.length} vertices by ${scale}`)
         let dataIndex = 0, vertexIndex = 0
         while(dataIndex < this.data.length) {

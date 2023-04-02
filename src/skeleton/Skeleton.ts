@@ -267,8 +267,8 @@ export class Skeleton {
         return bone
     }
 
-    skinMesh(meshCoords: number[], vertBoneMapping: VertexBoneMapping): number[] {
-        const coords = new Array<number>(meshCoords.length).fill(0)
+    skinMesh(meshCoords: Float32Array, vertBoneMapping: VertexBoneMapping): Float32Array {
+        const coords = new Float32Array(meshCoords.length)
         for (let [bname, mapping] of vertBoneMapping.entries()) {
             const [verts, weights] = mapping
             const bone = this.getBone(bname)

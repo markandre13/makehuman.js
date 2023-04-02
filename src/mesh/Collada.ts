@@ -12,7 +12,7 @@ import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
 // https://en.wikipedia.org/wiki/COLLADA
 
 export interface Material {
-    vertex: number[]
+    vertex: Float32Array
     indices: number[]
     vertexWeights: VertexBoneWeights
     start: number
@@ -314,13 +314,13 @@ export class Geometry {
     vertex: number[] = []
     indices: number[][] = []
     weights: number[] = []
-    private indexMap = new Map<number[], Map<number, number>>()
+    private indexMap = new Map<Float32Array, Map<number, number>>()
 
-    getIndex(vertex: number[], index: number) {
+    getIndex(vertex: Float32Array, index: number) {
         return this.indexMap.get(vertex)?.get(index)
     }
 
-    addPoint(vertex: number[], origIndex: number): number {
+    addPoint(vertex: Float32Array, origIndex: number): number {
         let indexMap = this.indexMap.get(vertex)
         if (indexMap === undefined) {
             indexMap = new Map<number, number>()
@@ -344,7 +344,7 @@ export class Geometry {
     addMesh() {
         this.indices.push([])
     }
-    addQuad(vertex: number[], indices: number[], startIndex: number) {
+    addQuad(vertex: Float32Array, indices: number[], startIndex: number) {
         const currentMesh = this.indices[this.indices.length - 1]
         currentMesh.push(this.addPoint(vertex, indices[startIndex]))
         currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
@@ -380,13 +380,13 @@ export class Geometry {
     }
 }
 
-export function prepareGeometry(vertex: number[], indices: number[], materials: Material[], geometry: Geometry) {
+export function prepareGeometry(vertex: Float32Array, indices: number[], materials: Material[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
         prepareMesh(vertex, indices, materials[m].start, materials[m].length, geometry)
     }
 }
 
-export function prepareMesh(vertex: number[], indices: number[], startCoord: number, length: number, geometry: Geometry) {
+export function prepareMesh(vertex: Float32Array, indices: number[], startCoord: number, length: number, geometry: Geometry) {
     const indexEnd = startCoord + length
     geometry.addMesh()
     // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
@@ -413,7 +413,7 @@ export function prepareMesh(vertex: number[], indices: number[], startCoord: num
 //   weights = [
 //     weightIndex: weight, ...
 //   ]
-export function prepareControllers(vertex: number[], vertexWeights: VertexBoneWeights, boneMap: Map<string, Bone>, geometry: Geometry) {
+export function prepareControllers(vertex: Float32Array, vertexWeights: VertexBoneWeights, boneMap: Map<string, Bone>, geometry: Geometry) {
     const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
     prepareControllerAddBoneWeights(vertex, vertexWeights, boneMap, geometry, boneWeightPairs, weightMap)
     const weights = prepareControllerFlatWeightMap(weightMap)
@@ -430,7 +430,7 @@ export function prepareControllerInit(geometry: Geometry) {
     return { boneWeightPairs, weightMap }
 }
 
-export function prepareControllerAddBoneWeights(vertex: number[], vertexWeights: VertexBoneWeights,
+export function prepareControllerAddBoneWeights(vertex: Float32Array, vertexWeights: VertexBoneWeights,
     boneMap: Map<string, Bone>,
     geometry: Geometry,
     boneWeightPairs: Array<Array<Array<number>>>,

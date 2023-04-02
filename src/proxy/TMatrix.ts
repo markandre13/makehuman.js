@@ -42,7 +42,7 @@ export class TMatrix {
             this.shearData[idx] = bbdata
         }
     }
-    getMatrix(hcoord: number[]): mat3 {
+    getMatrix(hcoord: Float32Array): mat3 {
         if (this.scaleData !== undefined) {
             const matrix = mat3.identity(mat3.create())
             for (let n = 0; n < 3; ++n) {

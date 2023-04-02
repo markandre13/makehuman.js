@@ -22,8 +22,8 @@ export enum Update {
 export class HumanMesh {
     human: Human
     baseMesh: WavefrontObj
-    vertexMorphed: number[]
-    vertexRigged: number[]
+    vertexMorphed: Float32Array
+    vertexRigged: Float32Array
     skeleton!: Skeleton
 
     proxies = new Map<string, Proxy>
@@ -50,7 +50,7 @@ export class HumanMesh {
 
         if (this.updateRequired === Update.MORPH) {
             // morph
-            this.vertexMorphed = [...this.baseMesh.vertex]
+            this.vertexMorphed = new Float32Array(this.baseMesh.vertex)
             this.human.targetsDetailStack.forEach((value, targetName) => {
                 if (isNaN(value)) {
                     // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)

@@ -120,12 +120,12 @@ function drawScene(
     //
     // SKELETON
     //
-    if (renderMode !== RenderMode.POLYGON) {
-        programRGBA.color([1, 1, 1, 1])
-        const offset = buffers.skeletonIndex
-        const count = scene.skeleton.boneslist!.length * 2
-        buffers.base.drawSubset(gl.LINES, offset, count)
-    }
+    // if (renderMode !== RenderMode.POLYGON) {
+    //     programRGBA.color([1, 1, 1, 1])
+    //     const offset = buffers.skeletonIndex
+    //     const count = scene.skeleton.boneslist!.length * 2
+    //     buffers.base.drawSubset(gl.LINES, offset, count)
+    // }
 
     //
     // JOINTS
@@ -264,7 +264,7 @@ function renderSkeletonGlobal(scene: HumanMesh) {
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-    const { vx, ix, ux, skeletonIndex } = buildBase(scene)
+    const { vx, ix, ux } = buildBase(scene)
     const base = new RenderMesh(gl, vx, ix, ux)
     const texCube = createTexturedCubeRenderer(gl)
 
@@ -273,7 +273,7 @@ function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers
         proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
     })
 
-    return { base, texCube, skeletonIndex, proxies }
+    return { base, texCube, proxies }
 }
 
 function updateBuffers(scene: HumanMesh, buffers: Buffers) {
@@ -292,18 +292,17 @@ function updateBuffers(scene: HumanMesh, buffers: Buffers) {
 }
 
 function buildBase(scene: HumanMesh) {
-    let skeleton = renderSkeletonGlobal(scene)
+    // let skeleton = renderSkeletonGlobal(scene)
 
     let vx = scene.vertexRigged
     let ix = scene.baseMesh.indices
     let ux = scene.baseMesh.texture
 
-    const skeletonIndex = ix.length * 2
-
-    const vertexOffset = scene.vertexRigged.length / 3
-    vx = vx.concat(skeleton.vertex)
-    ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
-    return { vx, ix, ux, skeletonIndex }
+    // const skeletonIndex = ix.length * 2
+    // const vertexOffset = scene.vertexRigged.length / 3
+    // vx = vx.concat(skeleton.vertex)
+    // ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
+    return { vx, ix, ux }
 }
 
 //
@@ -376,7 +375,7 @@ function isPowerOf2(value: number) {
 }
 
 function createTexturedCubeRenderer(gl: WebGL2RenderingContext): RenderMesh {
-    const positions = [
+    const positions = new Float32Array([
         // Front face
         -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
         // Back face
@@ -389,7 +388,7 @@ function createTexturedCubeRenderer(gl: WebGL2RenderingContext): RenderMesh {
         1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
         // Left face
         -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
-    ]
+    ])
 
     const indices = [
         0, 1, 2, 0, 2, 3, // front

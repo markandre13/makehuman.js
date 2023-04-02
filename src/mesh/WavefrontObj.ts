@@ -8,7 +8,7 @@ export class WavefrontObj {
 
     // TODO: have a look at what WebGL needs
 
-    vertex: number[]  // x,y,z (coord in makehuman)
+    vertex: Float32Array  // x,y,z (coord in makehuman)
     indices: number[] // quads of vertex indices (fvert in makehuman?)
 
     texture: number[] // u,v (texco in makehuman)
@@ -157,7 +157,7 @@ export class WavefrontObj {
                     throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file in line '${line}' of length ${line.length}'.`)
             }
         }
-        this.vertex = vertex
+        this.vertex = new Float32Array(vertex)
         // this.texture = texture
         this.normal = normal
         this.indices = indices

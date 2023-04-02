@@ -261,14 +261,14 @@ describe("Collada", function () {
         //  0   2   4
         //
         //  1   3   5
-        const vertex0 = [
+        const vertex0 = new Float32Array([
             0, 0, 0,
             0, 1, 0,
             1, 0, 0,
             1, 1, 0,
             2, 0, 0,
             2, 1, 0,
-        ]
+        ])
 
         const indices0 = [
             0, 2, 3,
@@ -291,14 +291,14 @@ describe("Collada", function () {
             [.7, .7, 1, 1]
         ])
 
-        const vertex1 = [
+        const vertex1 = new Float32Array([
             0, 0, 1,
             0, 1, 1,
             1, 0, 1,
             1, 1, 1,
             2, 0, 1,
             2, 1, 1,
-        ]
+        ])
 
         const indices1 = [
             0, 2, 3,
@@ -387,7 +387,7 @@ describe("Collada", function () {
     })
 })
 
-function origIndexToGeoIndex(vertex: number[], vertIdx: number, geometry: Geometry) {
+function origIndexToGeoIndex(vertex: Float32Array, vertIdx: number, geometry: Geometry) {
     vertIdx *= 3
     for (let j = 0; j < geometry.vertex.length; j += 3) {
         if (vertex[vertIdx] === geometry.vertex[j] &&
@@ -399,7 +399,7 @@ function origIndexToGeoIndex(vertex: number[], vertIdx: number, geometry: Geomet
     throw Error(`couldn't find [${vertex[vertIdx]}, ${vertex[vertIdx + 1]}, ${vertex[vertIdx + 2]}] in geometry.vertex`)
 }
 
-function getBoneWeight(vertexList: number[][], geometry: Geometry, weights: number[], boneWeightPairs: Array<Array<Array<number>>>) {
+function getBoneWeight(vertexList: Float32Array[], geometry: Geometry, weights: number[], boneWeightPairs: Array<Array<Array<number>>>) {
     const r: number[][][] = []
     for (let vertex of vertexList) {
         for (let vertIdx = 0; vertIdx < vertex.length / 3; ++vertIdx) {

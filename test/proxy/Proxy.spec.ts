@@ -71,9 +71,9 @@ describe("Proxy", function () {
     // okay, since this gives the same result, maybe either 
     xit("i feed makehuman.js basemesh into the teeth python proxy, check if makehuman.js gives the same result", function () {
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
-        const coords = proxy.getCoords(jaw_open_base_mesh)
-        expect(coords).to.have.lengthOf(jaw_open_proxy_teeth_base.length)
-        expect(coords).to.deep.almost.equal(jaw_open_proxy_teeth_base)
+        const coords = proxy.getCoords(new Float32Array(jaw_open_base_mesh))
+        expect(coords.length).to.equal(jaw_open_proxy_teeth_base.length)
+        expect(coords).to.deep.almost.equal(new Float32Array(jaw_open_proxy_teeth_base))
 
         console.log(`${jaw_open_proxy_teeth_base[0]}, ${jaw_open_proxy_teeth_base[1]}, ${jaw_open_proxy_teeth_base[2]}`)
         console.log(`${coords[0]}, ${coords[1]}, ${coords[2]}`)
@@ -244,8 +244,8 @@ describe("Proxy", function () {
         ])
         expect(proxy.basemesh).to.equal("hm08")
     })
-    it("getCoords()", function () {
-        const hcoord = [
+    it.only("getCoords()", function () {
+        const hcoord = new Float32Array([
             0, 0, 0,
             1.1, 2.1, 3.1,
             4, 5, 6,
@@ -253,7 +253,7 @@ describe("Proxy", function () {
             10, 11, 12,
             13, 14, 15,
             16, 17, 18,
-        ]
+        ])
 
         const human = {
             scene: {
@@ -273,10 +273,10 @@ describe("Proxy", function () {
 
         const coord = proxy.getCoords(hcoord)
 
-        expect(coord.slice(0, 6)).to.deep.almost.equal([
+        expect(coord.slice(0, 6)).to.deep.almost.equal(new Float32Array([
             3.514347860813141, 4.038571432828903, 4.5929787373542785,
             33.06086962223053, 35.142857146263125, 37.36595747470855
-        ])
+        ]))
     })
     describe("ProxyRefVert", function () {
         it("fromSingle", function () {
@@ -333,7 +333,7 @@ describe("Proxy", function () {
                 m.getScaleData(["1", "2", "2.3"], 0)
                 m.getScaleData(["3", "4", "3.5"], 1)
                 m.getScaleData(["5", "6", "4.7"], 2)
-                const a = m.getMatrix([
+                const a = m.getMatrix(new Float32Array([
                     0, 0, 0,
                     1, 2, 3,
                     4, 5, 6,
@@ -341,12 +341,12 @@ describe("Proxy", function () {
                     10, 11, 12,
                     13, 14, 15,
                     16, 17, 18,
-                ])
-                expect(new Array(...a)).to.deep.almost.equal([
+                ]))
+                expect(new Array(...a)).to.deep.almost.equal(new Float32Array([
                     1.30434783, 0, 0,
                     0, 0.85714286, 0,
                     0, 0, 0.63829787
-                ])
+                ]))
             })
         })
     })

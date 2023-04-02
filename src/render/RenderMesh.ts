@@ -12,7 +12,7 @@ export class RenderMesh {
     texture?: WebGLBuffer
     length: number
 
-    constructor(gl: WebGL2RenderingContext, vertex: number[], index: number[], texture?: number[]) {
+    constructor(gl: WebGL2RenderingContext, vertex: Float32Array, index: number[], texture?: number[]) {
         this.gl = gl
         this.vertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
         this.indices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, index)
@@ -23,7 +23,7 @@ export class RenderMesh {
         this.length = index.length
     }
 
-    update(vertex: number[], index: number[]) {
+    update(vertex: Float32Array, index: number[]) {
         this.updateBuffer(this.vertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, vertex)
         this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(vertex, index))
     }
@@ -41,7 +41,7 @@ export class RenderMesh {
         this.gl.drawElements(mode, length, this.gl.UNSIGNED_SHORT, offset)
     }
 
-    protected createBuffer(target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[]): WebGLBuffer {
+    protected createBuffer(target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[] | Float32Array): WebGLBuffer {
         const buffer = this.gl.createBuffer()
         if (buffer === null)
             throw Error('Failed to create new WebGLBuffer')
@@ -49,9 +49,13 @@ export class RenderMesh {
         return buffer
     }
 
-    protected updateBuffer(buffer: WebGLBuffer, target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[]): WebGLBuffer {
+    protected updateBuffer(buffer: WebGLBuffer, target: GLenum, usage: GLenum, type: Float32ArrayConstructor | Uint16ArrayConstructor, data: number[] | Float32Array): WebGLBuffer {
         this.gl.bindBuffer(target, buffer)
-        this.gl.bufferData(target, new type(data), usage)
+        if (data instanceof Float32Array) {
+            this.gl.bufferData(target, data, usage)
+        } else {
+            this.gl.bufferData(target, new type(data), usage)
+        }
         return buffer
     }
 }
