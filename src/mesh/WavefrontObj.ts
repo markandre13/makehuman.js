@@ -17,24 +17,17 @@ export class WavefrontObj {
     groups: Group[]   // name, startIndex, length
     material: Group[] // name, startIndex, length
 
-    constructor() {
-        this.vertex = []
-        this.texture = []
-        this.normal = []
-        this.indices = []
-        this.groups = []
-        this.material = []
-    }
-
     toString(): string {
         return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.indices.length / 6}, groups: ${this.groups.length}} `
     }
 
-    load(filename: string, data?: string) {
+    constructor(filename: string, data?: string) {
         this.name = filename
         if (data === undefined) {
             data = FileSystemAdapter.getInstance().readFile(filename)
         }
+        this.groups = []
+        this.material = []
         const vertex: number[] = []
         const texture: number[] = []
         const normal: number[] = []

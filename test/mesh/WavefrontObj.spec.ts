@@ -14,14 +14,12 @@ describe("class WavefrontOBJ", function () {
     it("can parse base.obj without throwing an exception", () => {
         const url = "data/3dobjs/base.obj"
         // const stream = fs.readFileSync(url).toString()
-        const obj = new WavefrontObj()
-        obj.load(url)
+        const obj = new WavefrontObj(url)
         expect(obj.vertex.length).to.equal(19158 * 3) // 3 coord per vertex
         expect(obj.indices.length).to.equal(18486 * 3 * 2) // each face is 3 triangles
     })
     it.only("foo", () => {
-        const obj = new WavefrontObj()
-        obj.load("foo.wav", `
+        const obj = new WavefrontObj("foo.wav", `
 v -1.0 -1.0 1.0
 v  1.0 -1.0 1.0
 v  1.0  1.0 1.0

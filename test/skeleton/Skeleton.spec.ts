@@ -35,8 +35,7 @@ describe("Skeleton", function () {
     it("loads the default.mhskel", function () {
         // the skeleton references Human.meshData, hence we must load the mesh
         const human = new Human()
-        const obj = new WavefrontObj()
-        obj.load('data/3dobjs/base.obj')
+        const obj = new WavefrontObj('data/3dobjs/base.obj')
         const scene = new HumanMesh(human)
 
         const skel = loadSkeleton(scene, "data/rigs/default.mhskel")

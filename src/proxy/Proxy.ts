@@ -85,8 +85,7 @@ export class Proxy {
     }
 
     loadMeshAndObject(): WavefrontObj {
-        const mesh = new WavefrontObj()
-        mesh.load(this._obj_file!)
+        const mesh = new WavefrontObj(this._obj_file!)
         return mesh
     }
 
