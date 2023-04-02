@@ -5,7 +5,7 @@ import { calculateNormals } from '../lib/calculateNormals'
 import { OrderedMap } from '../lib/OrderedMap'
 import { vec3, vec4, mat4 } from 'gl-matrix'
 import { zipForEach } from 'lib/zipForEach'
-import { Group } from './Mesh'
+import { Group } from './Group'
 import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender

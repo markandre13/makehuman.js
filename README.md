@@ -167,6 +167,15 @@ WHAT TO DO TO HANDLE TEXTURES/UV
   * OpenGL aims at performance, hence the indirection using indices goes away
   * MH morph operates on vertex
   => i'll need to add a layer between opengl and the rest of MH
+  => find out about performance, in the end opengl will need FloatArray. can i just use
+     those in the code instead of Array<number>() ? can i measure the performance ?
+     when i switch to binaries in data/, i might have even more binaries around.
+     then get a diagram on how the data flows through MH and optimize it.
+     https://v8.dev/blog/dataview
+
+     * HumanMesh.update()
+       * Target.apply()
+
 * where to add normals & texture coordinates in Collada
   * function colladaGeometries()
     + <source id="Dariya_Body_001-mesh-map-0">

@@ -1,9 +1,9 @@
 import { StringToLine } from '../lib/StringToLine'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { Mesh, Group, FaceGroup } from './Mesh'
+import { Group } from './Group'
 
 // makehuman/shared/wavefront.py
-export class WavefrontObj implements Mesh {
+export class WavefrontObj {
     name = ""
 
     // TODO: have a look at what WebGL needs
@@ -16,8 +16,6 @@ export class WavefrontObj implements Mesh {
     normal: number[]  // x,y,z
     groups: Group[]   // name, startIndex, length
     material: Group[] // name, startIndex, length
-
-    faceGroups = new Map<string, FaceGroup>()
 
     constructor() {
         this.vertex = []
