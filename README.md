@@ -154,11 +154,34 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
-[ ] the the other meshes/proxy meshes
-[ ] export normals
+[X] the the other meshes/proxy meshes
 [ ] export UV
+[ ] export normals
 [ ] ...
 [ ] export animation
+
+WHAT TO DO TO HANDLE TEXTURES/UV
+
+* definition of faces in Wavefront & Collada is closer to each other than OpenGL
+  * Wavefront & Collada define a face by indices into vertex, normal & texcoord tables
+  * OpenGL aims at performance, hence the indirection using indices goes away
+  * MH morph operates on vertex
+  => i'll need to add a layer between opengl and the rest of MH
+* where to add normals & texture coordinates in Collada
+  * function colladaGeometries()
+    + <source id="Dariya_Body_001-mesh-map-0">
+    +   <float_array id="Dariya_Body_001-mesh-map-0-array" count="3624">...</float_array>
+    +   <technique_common>
+    +     <accessor source="#Dariya_Body_001-mesh-map-0-array" count="1812" stride="2">
+    +       <param name="S" type="float"/>
+    +       <param name="T" type="float"/>
+    +     </accessor>
+    +   </technique_common>
+    + </source>
+
+      <polylist ...>
+    +    <input semantic="TEXCOORD" source="#Dariya_Body_001-mesh-map-0" offset="2" set="1"/>
+       </polylist>
 
 FLOW OF MESH DATA, MORPH, SKINNING & PROXY
 

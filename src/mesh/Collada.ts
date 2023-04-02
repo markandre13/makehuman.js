@@ -118,6 +118,8 @@ function colladaHead() {
 function colladaTail() { return `</COLLADA>` }
 
 function colladaEffects(materials: Material[]) {
+    // instead of color:
+    // <texture texture="teeth_png-sampler" texcoord="UVMap"/>
     let out = `  <library_effects>\n`
     materials.forEach(m => {
         out += `    <effect id="${m.name}-effect">
@@ -284,6 +286,7 @@ ${dumpBone(armatureName, scene.skeleton.roots[0])}\n`
             <skeleton>#${armatureName}_${scene.skeleton.roots[0].name}</skeleton>
             <bind_material>
               <technique_common>\n`
+    // <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
     for (let m = 0; m < materials.length; ++m) {
         out += `                <instance_material symbol="${materials[m].name}-material" target="#${materials[m].name}-material"/>\n`
     }
