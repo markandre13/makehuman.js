@@ -34,35 +34,35 @@ export function exportCollada(scene: HumanMesh) {
     const materials: Material[] = [
         {
             vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.indices,
+            indices: scene.baseMesh.fvertex,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.SKIN].length,
             name: "skin", r: 1, g: 0.5, b: 0.5
         }, {
             vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.indices,
+            indices: scene.baseMesh.fvertex,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
             name: "eyeL", r: 0.0, g: 1.0, b: 0.5
         }, {
             vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.indices,
+            indices: scene.baseMesh.fvertex,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
             name: "eyeR", r: 1.0, g: 0.0, b: 0.0
         }, {
             vertex: proxy.getCoords(scene.vertexMorphed),
-            indices: proxy.mesh.indices,
+            indices: proxy.mesh.fvertex,
             vertexWeights: proxy.getVertexWeights(scene.skeleton.vertexWeights!),
             start: 0,
-            length: proxy.mesh.indices.length,
+            length: proxy.mesh.fvertex.length,
             name: "teeth", r: 1.0, g: 1.0, b: 1.0
         }, {
             vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.indices,
+            indices: scene.baseMesh.fvertex,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].length,

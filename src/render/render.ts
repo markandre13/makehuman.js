@@ -23,6 +23,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 
     const buffers = createAllBuffers(gl, scene)
     const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
+    // const texture = loadTexture(gl, "data/cubetexture.png")!
 
     let then = 0
 
@@ -176,20 +177,21 @@ function drawScene(
     })
 
     //
-    // TEXTURED CUBE
+    // TEXTURED SKIN
     //
     if (renderMode !== RenderMode.WIREFRAME) {
-
         programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programTex.texture(texture)
-
-        // buffers.texCube.draw(programTex, gl.TRIANGLES)
-
         let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
         let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
         buffers.base.bind(programTex)
         buffers.base.drawSubset(gl.TRIANGLES, offset, length)
+        buffers.base.drawSubset(gl.TRIANGLES, 8000 * 4, 4)
     }
+
+    // programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    // programTex.texture(texture)
+    // buffers.texCube.draw(programTex, gl.TRIANGLES)
 
     cubeRotation += deltaTime
 }
@@ -264,45 +266,30 @@ function renderSkeletonGlobal(scene: HumanMesh) {
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-    const { vx, ix, ux } = buildBase(scene)
-    const base = new RenderMesh(gl, vx, ix, ux)
-    const texCube = createTexturedCubeRenderer(gl)
+    const base = new RenderMesh(gl, scene.vertexRigged, scene.baseMesh.fvertex, scene.baseMesh.texcoord, scene.baseMesh.fuv)
+
+    // const texCube = createTexturedCubeRenderer(gl)
 
     let proxies = new Map<string, RenderMesh>()
     scene.proxies.forEach((proxy, name) => {
-        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.indices))
+        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fvertex))
     })
 
-    return { base, texCube, proxies }
+    return { base, proxies }
 }
 
 function updateBuffers(scene: HumanMesh, buffers: Buffers) {
     scene.update()
 
-    const { vx, ix } = buildBase(scene)
-    buffers.base.update(vx, ix)
+    buffers.base.update(scene.vertexRigged)
 
     buffers.proxies.forEach((renderMesh, name) => {
         const proxy = scene.proxies.get(name)!
         const vertexMorphed = proxy.getCoords(scene.vertexMorphed)
         const vertexWeights = proxy.getVertexWeights(scene.skeleton.vertexWeights!)
         const vertexRigged = scene.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
-        renderMesh.update(vertexRigged, proxy.mesh.indices)
+        renderMesh.update(vertexRigged)
     })
-}
-
-function buildBase(scene: HumanMesh) {
-    // let skeleton = renderSkeletonGlobal(scene)
-
-    let vx = scene.vertexRigged
-    let ix = scene.baseMesh.indices
-    let ux = scene.baseMesh.texture
-
-    // const skeletonIndex = ix.length * 2
-    // const vertexOffset = scene.vertexRigged.length / 3
-    // vx = vx.concat(skeleton.vertex)
-    // ix = ix.concat(skeleton.indices.map(v => v + vertexOffset))
-    return { vx, ix, ux }
 }
 
 //
@@ -375,43 +362,43 @@ function isPowerOf2(value: number) {
 }
 
 function createTexturedCubeRenderer(gl: WebGL2RenderingContext): RenderMesh {
-    const positions = new Float32Array([
-        // Front face
-        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
-        // Back face
-        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
-        // Top face
-        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
-        // Bottom face
-        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
-        // Right face
-        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
-        // Left face
-        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
-    ])
-
-    const indices = [
-        0, 1, 2, 0, 2, 3, // front
-        4, 5, 6, 4, 6, 7, // back
-        8, 9, 10, 8, 10, 11, // top
-        12, 13, 14, 12, 14, 15, // bottom
-        16, 17, 18, 16, 18, 19, // right
-        20, 21, 22, 20, 22, 23, // left
+    //         4-------5
+    //        /       /|
+    //       0-------1 |
+    //       | 7     | 6
+    //       |       |/
+    //       3-------2
+    const xyz = [
+        -1.0, 1.0, 1.0,   // 0
+        1.0, 1.0, 1.0,    // 1
+        1.0, -1.0, 1.0,   // 2
+        -1.0, -1.0, 1.0,  // 3
+        -1.0, 1.0, -1.0,  // 4
+        1.0, 1.0, -1.0,   // 5
+        1.0, -1.0, -1.0,  // 6
+        -1.0, -1.0, -1.0, // 7
     ]
-
-    return new RenderMesh(gl, positions, indices, [
-        // Front
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-        // Back
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-        // Top
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-        // Bottom
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-        // Right
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-        // Left
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-    ])
-
+    const fxyz = [
+        0, 1, 2, 3, // front
+        7, 6, 5, 4, // back
+        4, 5, 1, 0, // top
+        3, 2, 6, 7, // bottom
+        1, 5, 6, 2, // right
+        4, 0, 3, 7  // left
+    ]
+    const uv = [
+        0.0, 1.0,
+        1.0, 1.0,
+        1.0, 0.0,
+        0.0, 0.0,
+    ]
+    const fuv = [
+        0,1,2,3,
+        0,1,2,3,
+        0,1,2,3,
+        0,1,2,3,
+        0,1,2,3,
+        0,1,2,3
+    ]
+    return new RenderMesh(gl, new Float32Array(xyz), fxyz, new Float32Array(uv), fuv)
 }

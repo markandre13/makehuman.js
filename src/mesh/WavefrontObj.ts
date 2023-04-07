@@ -6,19 +6,21 @@ import { Group } from './Group'
 export class WavefrontObj {
     name = ""
 
-    // TODO: have a look at what WebGL needs
+    // makehuman: fverts, fuvs, fnorm; verts, uvs(texco)
 
     vertex: Float32Array  // x,y,z (coord in makehuman)
-    indices: number[] // quads of vertex indices (fvert in makehuman?)
+    texcoord: Float32Array // u,v (texco in makehuman)
+    // normal: number[]  // x,y,z (due to morphing & skinning, normals are calculated in makehuman)
 
-    texture: number[] // u,v (texco in makehuman)
-    
-    normal: number[]  // x,y,z
+    // list of quads
+    fvertex: number[] = [] // (fvert in makehuman)
+    fuv: number[] = []
+
     groups: Group[]   // name, startIndex, length
     material: Group[] // name, startIndex, length
 
     toString(): string {
-        return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.indices.length / 6}, groups: ${this.groups.length}} `
+        return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.fvertex.length / 6}, groups: ${this.groups.length}} `
     }
 
     constructor(filename: string, data?: string) {
@@ -29,11 +31,9 @@ export class WavefrontObj {
         this.groups = []
         this.material = []
         const vertex: number[] = []
-        const texture: number[] = []
+        const texcoord: number[] = []
         const normal: number[] = []
-        const indices: number[] = []
-        const uvIndices0: number[] = []
-        const uvIndices: number[] = []
+
         const reader = new StringToLine(data)
 
         let lineNumber = 0
@@ -51,40 +51,27 @@ export class WavefrontObj {
             switch (tokens[0]) {
                 // vertex data
                 case 'v': // vertex X Y Z [W]
-                    if (tokens.length < 4)
-                        throw Error(`Too few arguments in ${line}`)
-                    if (tokens.length > 5)
-                        throw Error(`Too many arguments in ${line}`)
+                    if (tokens.length !== 4) {
+                        throw Error(`vertex (v) must have 3 arguments in ${line}`)
+                    }
                     vertex.push(parseFloat(tokens[1]))
                     vertex.push(parseFloat(tokens[2]))
                     vertex.push(parseFloat(tokens[3]))
-                    if (tokens.length === 5)
-                        throw Error('Can\'t handle vertex with weight yet...')
-                    //     vertex.push(parseFloat(tokens[4]))
-                    // else
-                    //     vertex.push(1)
                     break
-                case 'vt': // vectex texture U V
-                    if (tokens.length < 3)
-                        throw Error(`Too few arguments in ${line}`)
-                    if (tokens.length > 4)
-                        throw Error(`Too many arguments in ${line}`)
-                    texture.push(parseFloat(tokens[1]))
-                    texture.push(parseFloat(tokens[2]))
+                case 'vt': // vertex texture U V
+                    if (tokens.length != 3) {
+                        throw Error(`vertex texture (vt) must have 2 arguments in ${line}`)
+                    }
+                    texcoord.push(parseFloat(tokens[1]))
+                    texcoord.push(parseFloat(tokens[2]))
                     break
                 case 'vn': // vertex normal I J K
-                    if (tokens.length < 4)
-                        throw Error(`Too few arguments in ${line}`)
-                    if (tokens.length > 5)
-                        throw Error(`Too many arguments in ${line}`)
+                    if (tokens.length != 4) {
+                        throw Error(`vertex normal (vn) must have 3 arguments in ${line}`)
+                    }
                     normal.push(parseFloat(tokens[1]))
                     normal.push(parseFloat(tokens[2]))
                     normal.push(parseFloat(tokens[3]))
-                    if (tokens.length === 5)
-                        throw Error('Can\'t handle vertex with weight yet...')
-                    //     vertex.push(parseFloat(tokens[4]))
-                    // else
-                    //     vertex.push(1)
                     break
                 case 'vp': break // vertext parameter space U V W
 
@@ -98,25 +85,18 @@ export class WavefrontObj {
                 case 'p': break // point
                 case 'l': break // line
                 case 'f': // face( vertex[/[texture][/normal]])+
-                    if (tokens.length !== 5)
+                    if (tokens.length !== 5) {
                         throw Error(`can't handle faces which are not quads yet (line ${lineNumber}: '${line}'}`)
-                    // CONVERT QUAD INTO TRIANGLE FOR WEBGL
-                    // 0   1
-                    //
-                    // 3   2
+                    }
                     for (let i = 1; i < tokens.length; ++i) {
                         const split = tokens[i].split('/')
-                        indices.push(parseInt(split[0], 10) - 1)
-                        uvIndices0.push(parseInt(split[0], 10) - 1)
-                        uvIndices.push(parseInt(split[1], 10) - 1)
+                        this.fvertex.push(parseInt(split[0], 10) - 1)
+                        this.fuv.push(parseInt(split[1], 10) - 1)
                     }
-                    const idx = indices.length - 4
-                    indices.push(indices[idx + 0])
-                    indices.push(indices[idx + 2])
                     break
-                case 'curv': break // curve
+                case 'curv': break  // curve
                 case 'curv2': break // 2d curve
-                case 'surf': break // surface
+                case 'surf': break  // surface
 
                 // free-form curve/surface body statements
                 case 'parm': break
@@ -131,7 +111,7 @@ export class WavefrontObj {
 
                 // grouping
                 case 'g': // <groupname>+ the following elements belong to that group    
-                    this.groups.push(new Group(tokens[1], indices.length))
+                    this.groups.push(new Group(tokens[1], this.fvertex.length))
                     break
                 case 's': break
                 case 'mg': break
@@ -145,7 +125,7 @@ export class WavefrontObj {
                 case 'd_interp': break
                 case 'lod': break
                 case 'usemtl': // <materialname>
-                    this.material.push(new Group(tokens[1], indices.length))
+                    this.material.push(new Group(tokens[1], this.fvertex.length))
                     break
                 case 'mtllib': break
                 case 'shadow_obj': break
@@ -158,29 +138,21 @@ export class WavefrontObj {
             }
         }
         this.vertex = new Float32Array(vertex)
-        // this.texture = texture
-        this.normal = normal
-        this.indices = indices
-
-        this.texture = new Array(uvIndices.length * 2)
-        for(let i=0; i<uvIndices.length; ++i) {
-            this.texture[uvIndices0[i]*2] =  texture[uvIndices[i]*2]
-            this.texture[uvIndices0[i]*2+1] =  texture[uvIndices[i]*2+1]
-        }
+        this.texcoord = new Float32Array(texcoord)
 
         // set group's lengths
         if (this.groups.length > 0) {
             for (let i = 0; i < this.groups.length - 1; ++i) {
                 this.groups[i].length = this.groups[i + 1].startIndex - this.groups[i].startIndex
             }
-            this.groups[this.groups.length - 1].length = indices.length - this.groups[this.groups.length - 1].startIndex
+            this.groups[this.groups.length - 1].length = this.fvertex.length - this.groups[this.groups.length - 1].startIndex
         }
 
         if (this.material.length > 0) {
             for (let i = 0; i < this.material.length - 1; ++i) {
                 this.material[i].length = this.material[i + 1].startIndex - this.material[i].startIndex
             }
-            this.material[this.material.length - 1].length = indices.length - this.material[this.material.length - 1].startIndex
+            this.material[this.material.length - 1].length = this.fvertex.length - this.material[this.material.length - 1].startIndex
         }
 
         this.logStatistics(filename)
@@ -225,6 +197,6 @@ export class WavefrontObj {
         if (groupNames.length !== 0) {
             groupNames = ` and ${groupNames}`
         }
-        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.texture.length/2} uvs, ${this.normal.length/3} normals. ${this.indices.length / 3} triangles from file '${filename}'`)
+        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.texcoord.length/2} uvs, ${this.fvertex.length / 3} triangles from file '${filename}'`)
     }
 }
