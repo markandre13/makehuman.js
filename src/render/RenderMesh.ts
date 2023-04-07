@@ -1,7 +1,12 @@
 import { calculateNormals } from '../lib/calculateNormals'
 import { AbstractShader } from './shader/AbstractShader'
 
-interface GLXYZYV { indices: number[], vertex: Float32Array, texcoord?: Float32Array }
+interface GLXYZYV { 
+    idxExtra: number[],
+    indices: number[],
+    vertex: Float32Array,
+    texcoord?: Float32Array
+}
 
 /**
  * I am a mesh which can be rendered by OpenGL.
@@ -17,10 +22,12 @@ export class RenderMesh {
     texture?: WebGLBuffer
     length: number
 
+    fvertex: number[]
     glData: GLXYZYV
 
     constructor(gl: WebGL2RenderingContext, vertex: Float32Array, fvertex: number[], uvs?: Float32Array, fuvs?: number[]) {
         this.gl = gl
+        this.fvertex = fvertex
 
         // okay, this we will have to change this as follows:
         // [X] convert fvertex and ftexcoords from quads to triangles
@@ -29,8 +36,8 @@ export class RenderMesh {
         // [ ] fix normal calculation (NO: keep the existing one, but copy normals similar to the update code
         //     we could later also add sharp corneres based on the degree (fingernails, bottom, eyes, ...)
         //     i bet makehuman already does something similar
-        // [ ] create a list to be used during update()
-        // [ ] fix update
+        // [X] create a list to be used during update()
+        // [X] fix update
         const glData = decoupleXYZandUV(vertex, fvertex, uvs, fuvs)
         this.glData = glData
         this.indices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
@@ -44,6 +51,12 @@ export class RenderMesh {
 
     update(vertex: Float32Array) {
         this.glData.vertex.set(vertex)
+        this.glData.idxExtra.forEach( (v, i) => {
+            this.glData.vertex[vertex.length + i*3] = vertex[v*3]
+            this.glData.vertex[vertex.length + i*3+1] = vertex[v*3+1]
+            this.glData.vertex[vertex.length + i*3+2] = vertex[v*3+2]
+        })
+
         this.updateBuffer(this.vertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
         this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(this.glData.vertex, this.glData.indices))
     }
@@ -94,6 +107,7 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
     const indices: number[] = []
     const uvOut: number[] = new Array(xyz.length / 3 * 2) // for each vertex we have texture coordinate
 
+    const idxExtra: number[] = []
     const xyzOutExtra: number[] = []
     const uvOutExtra: number[] = []
 
@@ -102,7 +116,7 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
     }
 
     function decoupleXYZandUV(i: number) {
-        let idxXYZ = fxyz[i]
+        const idxXYZ = fxyz[i]
 
         const xyzIdx = fxyz[i]
         const uvIdx = fuv![i]
@@ -118,21 +132,21 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
             return idxXYZ
         }
 
-        idxXYZ = (xyz.length + xyzOutExtra.length) / 3
+        const newIdxXYZ = (xyz.length + xyzOutExtra.length) / 3
 
-        const idxXYZIn = fxyz[i] * 3
+        const idxXYZIn = idxXYZ * 3
         const x = xyz[idxXYZIn]
         const y = xyz[idxXYZIn + 1]
         const z = xyz[idxXYZIn + 2]
 
-
+        idxExtra.push(idxXYZ)
         xyzOutExtra.push(x)
         xyzOutExtra.push(y)
         xyzOutExtra.push(z)
         uvOutExtra.push(u)
         uvOutExtra.push(v)
 
-        return idxXYZ
+        return newIdxXYZ
     }
 
     let f
@@ -155,6 +169,7 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
 
     if (fuv === undefined) {
         return {
+            idxExtra: [],
             indices,
             vertex: xyz,
             texcoord: undefined
@@ -169,5 +184,5 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
     texcoord.set(uvOut)
     texcoord.set(uvOutExtra, uvOut.length)
 
-    return { indices, vertex, texcoord }
+    return { indices, vertex, texcoord, idxExtra }
 }
