@@ -1,7 +1,7 @@
 import { calculateNormals } from '../lib/calculateNormals'
 import { AbstractShader } from './shader/AbstractShader'
 
-interface GLXYZYV { 
+interface GLXYZYV {
     idxExtra: number[],
     indices: number[],
     vertex: Float32Array,
@@ -33,7 +33,7 @@ export class RenderMesh {
         // [X] convert fvertex and ftexcoords from quads to triangles
         // [X] convert into webgl suitable structure by having once list of quads referencing vertex and texcoords
         // [X] fix uv
-        // [ ] fix normal calculation (NO: keep the existing one, but copy normals similar to the update code
+        // [X] fix normal calculation (NO: keep the existing one, but copy normals similar to the update code
         //     we could later also add sharp corneres based on the degree (fingernails, bottom, eyes, ...)
         //     i bet makehuman already does something similar
         // [X] create a list to be used during update()
@@ -45,20 +45,40 @@ export class RenderMesh {
         if (glData.texcoord) {
             this.texture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
         }
-        this.normal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, calculateNormals(glData.vertex, glData.indices))
+
+        // const nx = calculateNormals(vertex, fvertex) // this should also work but doesn't... why?
+        const nx = calculateNormals(glData.vertex, glData.indices)
+        const normal = new Float32Array(glData.vertex.length)
+        normal.set(nx, 0)
+        this.glData.idxExtra.forEach((v, i) => {
+            normal[vertex.length + i * 3] = normal[v * 3]
+            normal[vertex.length + i * 3 + 1] = normal[v * 3 + 1]
+            normal[vertex.length + i * 3 + 2] = normal[v * 3 + 2]
+        })
+
+        this.normal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, normal)
         this.length = glData.indices.length
     }
 
     update(vertex: Float32Array) {
         this.glData.vertex.set(vertex)
-        this.glData.idxExtra.forEach( (v, i) => {
-            this.glData.vertex[vertex.length + i*3] = vertex[v*3]
-            this.glData.vertex[vertex.length + i*3+1] = vertex[v*3+1]
-            this.glData.vertex[vertex.length + i*3+2] = vertex[v*3+2]
+        this.glData.idxExtra.forEach((v, i) => {
+            this.glData.vertex[vertex.length + i * 3] = vertex[v * 3]
+            this.glData.vertex[vertex.length + i * 3 + 1] = vertex[v * 3 + 1]
+            this.glData.vertex[vertex.length + i * 3 + 2] = vertex[v * 3 + 2]
+        })
+
+        const nx = calculateNormals(this.glData.vertex, this.glData.indices)
+        const normal = new Float32Array(this.glData.vertex.length)
+        normal.set(nx, 0)
+        this.glData.idxExtra.forEach((v, i) => {
+            normal[vertex.length + i * 3] = normal[v * 3]
+            normal[vertex.length + i * 3 + 1] = normal[v * 3 + 1]
+            normal[vertex.length + i * 3 + 2] = normal[v * 3 + 2]
         })
 
         this.updateBuffer(this.vertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
-        this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, calculateNormals(this.glData.vertex, this.glData.indices))
+        this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, normal)
     }
 
     draw(programInfo: AbstractShader, mode: number) {
@@ -105,7 +125,7 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
         throw Error(`uv & fuv must both be defined`)
     }
     const indices: number[] = []
-    const uvOut: number[] = new Array(xyz.length / 3 * 2) // for each vertex we have texture coordinate
+    const uvOut = new Array(xyz.length / 3 * 2) // for each vertex we have texture coordinate
 
     const idxExtra: number[] = []
     const xyzOutExtra: number[] = []
@@ -120,15 +140,15 @@ export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[]
 
         const xyzIdx = fxyz[i]
         const uvIdx = fuv![i]
-        const u = uv![uvIdx*2]
-        const v = uv![uvIdx*2+1]
+        const u = uv![uvIdx * 2]
+        const v = uv![uvIdx * 2 + 1]
 
-        if (uvOut[xyzIdx*2] === undefined) {
-            uvOut[xyzIdx*2] = u
-            uvOut[xyzIdx*2+1] = v
+        if (uvOut[xyzIdx * 2] === undefined) {
+            uvOut[xyzIdx * 2] = u
+            uvOut[xyzIdx * 2 + 1] = v
             return idxXYZ
         }
-        if (uvOut[xyzIdx*2] === u && uvOut[xyzIdx*2+1] === v) {
+        if (uvOut[xyzIdx * 2] === u && uvOut[xyzIdx * 2 + 1] === v) {
             return idxXYZ
         }
 

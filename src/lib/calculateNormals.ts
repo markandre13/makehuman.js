@@ -1,15 +1,14 @@
 import { vec3 } from 'gl-matrix'
 
-export function calculateNormals(vertex: Float32Array, indices: number[]): number[] {
+export function calculateNormals(vertex: Float32Array, indices: number[]): Float32Array {
+
+    const normals = new Float32Array(vertex.length)
 
     function addNormal(index: number, normal: vec3) {
         normals[index] += normal[0]
         normals[index + 1] += normal[1]
         normals[index + 2] += normal[2]
     }
-
-    const normals = new Array<number>(vertex.length)
-    normals.fill(0)
     
     // add vectors
     for (let i = 0; i < indices.length;) {
@@ -21,13 +20,9 @@ export function calculateNormals(vertex: Float32Array, indices: number[]): numbe
         const p2 = vec3.fromValues(vertex[i2], vertex[i2 + 1], vertex[i2 + 2])
         const p3 = vec3.fromValues(vertex[i3], vertex[i3 + 1], vertex[i3 + 2])
 
-        const u = vec3.create()
+        const u = vec3.create(), v = vec3.create(), n = vec3.create()
         vec3.subtract(u, p2, p1)
-
-        const v = vec3.create()
         vec3.subtract(v, p3, p1)
-
-        const n = vec3.create()
         vec3.cross(n, u, v)
 
         addNormal(i1, n)
