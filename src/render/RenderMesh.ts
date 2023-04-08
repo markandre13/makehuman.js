@@ -1,4 +1,4 @@
-import { calculateNormals } from '../lib/calculateNormals'
+import { calculateNormalsQuads } from '../lib/calculateNormals'
 import { AbstractShader } from './shader/AbstractShader'
 
 interface GLXYZYV {
@@ -16,69 +16,56 @@ interface GLXYZYV {
  */
 export class RenderMesh {
     gl: WebGL2RenderingContext
-    indices: WebGLBuffer
-    vertex: WebGLBuffer
-    normal: WebGLBuffer
-    texture?: WebGLBuffer
+    glIndices: WebGLBuffer
+    glVertex: WebGLBuffer
+    glNormal: WebGLBuffer
+    glTexture?: WebGLBuffer
     length: number
 
     fvertex: number[]
+    normal: Float32Array
     glData: GLXYZYV
 
     constructor(gl: WebGL2RenderingContext, vertex: Float32Array, fvertex: number[], uvs?: Float32Array, fuvs?: number[]) {
         this.gl = gl
         this.fvertex = fvertex
 
-        // okay, this we will have to change this as follows:
-        // [X] convert fvertex and ftexcoords from quads to triangles
-        // [X] convert into webgl suitable structure by having once list of quads referencing vertex and texcoords
-        // [X] fix uv
-        // [X] fix normal calculation (NO: keep the existing one, but copy normals similar to the update code
-        //     we could later also add sharp corneres based on the degree (fingernails, bottom, eyes, ...)
-        //     i bet makehuman already does something similar
-        // [X] create a list to be used during update()
-        // [X] fix update
         const glData = decoupleXYZandUV(vertex, fvertex, uvs, fuvs)
         this.glData = glData
-        this.indices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
-        this.vertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.vertex)
+        this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
+        this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.vertex)
         if (glData.texcoord) {
-            this.texture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
+            this.glTexture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
         }
 
-        // const nx = calculateNormals(vertex, fvertex) // this should also work but doesn't... why?
-        const nx = calculateNormals(glData.vertex, glData.indices)
-        const normal = new Float32Array(glData.vertex.length)
-        normal.set(nx, 0)
+        this.normal = new Float32Array(glData.vertex.length)
+        calculateNormalsQuads(this.normal, vertex, fvertex)
         this.glData.idxExtra.forEach((v, i) => {
-            normal[vertex.length + i * 3] = normal[v * 3]
-            normal[vertex.length + i * 3 + 1] = normal[v * 3 + 1]
-            normal[vertex.length + i * 3 + 2] = normal[v * 3 + 2]
+            this.normal[vertex.length + i * 3] = this.normal[v * 3]
+            this.normal[vertex.length + i * 3 + 1] = this.normal[v * 3 + 1]
+            this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
         })
 
-        this.normal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, normal)
+        this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
         this.length = glData.indices.length
     }
 
     update(vertex: Float32Array) {
         this.glData.vertex.set(vertex)
+        calculateNormalsQuads(this.normal, vertex, this.fvertex)
+
         this.glData.idxExtra.forEach((v, i) => {
             this.glData.vertex[vertex.length + i * 3] = vertex[v * 3]
             this.glData.vertex[vertex.length + i * 3 + 1] = vertex[v * 3 + 1]
             this.glData.vertex[vertex.length + i * 3 + 2] = vertex[v * 3 + 2]
+
+            this.normal[vertex.length + i * 3] = this.normal[v * 3]
+            this.normal[vertex.length + i * 3 + 1] = this.normal[v * 3 + 1]
+            this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
         })
 
-        const nx = calculateNormals(this.glData.vertex, this.glData.indices)
-        const normal = new Float32Array(this.glData.vertex.length)
-        normal.set(nx, 0)
-        this.glData.idxExtra.forEach((v, i) => {
-            normal[vertex.length + i * 3] = normal[v * 3]
-            normal[vertex.length + i * 3 + 1] = normal[v * 3 + 1]
-            normal[vertex.length + i * 3 + 2] = normal[v * 3 + 2]
-        })
-
-        this.updateBuffer(this.vertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
-        this.updateBuffer(this.normal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, normal)
+        this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
+        this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
     }
 
     draw(programInfo: AbstractShader, mode: number) {
@@ -87,7 +74,7 @@ export class RenderMesh {
     }
 
     bind(programInfo: AbstractShader): void {
-        programInfo.bind(this.indices, this.vertex, this.normal, this.texture)
+        programInfo.bind(this.glIndices, this.glVertex, this.glNormal, this.glTexture)
     }
 
     drawSubset(mode: number, offset: number, length: number) {

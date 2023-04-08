@@ -1,8 +1,9 @@
 import { vec3 } from 'gl-matrix'
 
-export function calculateNormals(vertex: Float32Array, indices: number[]): Float32Array {
-
-    const normals = new Float32Array(vertex.length)
+export function calculateNormalsQuads(
+    normals: Float32Array,
+    vertex: Float32Array,
+    indices: number[]): Float32Array {
 
     function addNormal(index: number, normal: vec3) {
         normals[index] += normal[0]
@@ -15,6 +16,8 @@ export function calculateNormals(vertex: Float32Array, indices: number[]): Float
         const i1 = indices[i++] * 3
         const i2 = indices[i++] * 3
         const i3 = indices[i++] * 3
+        const i4 = indices[i++] * 3
+    
 
         const p1 = vec3.fromValues(vertex[i1], vertex[i1 + 1], vertex[i1 + 2])
         const p2 = vec3.fromValues(vertex[i2], vertex[i2 + 1], vertex[i2 + 2])
@@ -28,6 +31,7 @@ export function calculateNormals(vertex: Float32Array, indices: number[]): Float
         addNormal(i1, n)
         addNormal(i2, n)
         addNormal(i3, n)
+        addNormal(i4, n)
     }
 
     // normalize
