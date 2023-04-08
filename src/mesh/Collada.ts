@@ -387,7 +387,7 @@ export function prepareMesh(vertex: Float32Array, indices: number[], startCoord:
     const indexEnd = startCoord + length
     geometry.addMesh()
     // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
-    for (let i = startCoord; i < indexEnd; i += 6) {
+    for (let i = startCoord; i < indexEnd; i += 4) {
         geometry.addQuad(vertex, indices, i)
     }
 }
