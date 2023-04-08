@@ -1,7 +1,7 @@
 import { calculateNormalsQuads } from '../lib/calculateNormals'
 import { AbstractShader } from './shader/AbstractShader'
 
-interface GLXYZYV {
+interface GLXYZUV {
     idxExtra: number[],
     indices: number[],
     vertex: Float32Array,
@@ -20,11 +20,10 @@ export class RenderMesh {
     glVertex: WebGLBuffer
     glNormal: WebGLBuffer
     glTexture?: WebGLBuffer
-    length: number
 
     fvertex: number[]
     normal: Float32Array
-    glData: GLXYZYV
+    glData: GLXYZUV
 
     constructor(gl: WebGL2RenderingContext, vertex: Float32Array, fvertex: number[], uvs?: Float32Array, fuvs?: number[]) {
         this.gl = gl
@@ -47,7 +46,6 @@ export class RenderMesh {
         })
 
         this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
-        this.length = glData.indices.length
     }
 
     update(vertex: Float32Array) {
@@ -70,7 +68,7 @@ export class RenderMesh {
 
     draw(programInfo: AbstractShader, mode: number) {
         this.bind(programInfo)
-        this.drawSubset(mode, 0, this.length)
+        this.drawSubset(mode, 0, this.glData.indices.length)
     }
 
     bind(programInfo: AbstractShader): void {
@@ -104,7 +102,7 @@ export class RenderMesh {
     }
 }
 
-export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[], uv?: Float32Array | number[], fuv?: Uint16Array | number[]): GLXYZYV {
+export function decoupleXYZandUV(xyz: Float32Array, fxyz: Uint16Array | number[], uv?: Float32Array | number[], fuv?: Uint16Array | number[]): GLXYZUV {
     if (fuv !== undefined && fxyz.length !== fuv.length) {
         throw Error(`fvertex and fuv must have the same length, instead it is ${fxyz.length} and ${fuv.length}`)
     }
