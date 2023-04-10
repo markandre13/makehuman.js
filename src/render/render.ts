@@ -266,13 +266,13 @@ function renderSkeletonGlobal(scene: HumanMesh) {
 }
 
 function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-    const base = new RenderMesh(gl, scene.vertexRigged, scene.baseMesh.fvertex, scene.baseMesh.texcoord, scene.baseMesh.fuv)
+    const base = new RenderMesh(gl, scene.vertexRigged, scene.baseMesh.fxyz, scene.baseMesh.uv, scene.baseMesh.fuv)
 
     // const texCube = createTexturedCubeRenderer(gl)
 
     let proxies = new Map<string, RenderMesh>()
     scene.proxies.forEach((proxy, name) => {
-        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fvertex))
+        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz))
     })
 
     return { base, proxies }

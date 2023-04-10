@@ -114,7 +114,7 @@ f 1/1 2/2 3/3 4/4
 f 5/1 6/2 7/3 8/4
 `)
         console.log(obj)
-        expect(obj.fvertex).to.deep.equal([
+        expect(obj.fxyz).to.deep.equal([
             0, 1, 2, 3, 0, 2,
             4, 5, 6, 7, 4, 6
         ])
@@ -129,7 +129,7 @@ f 5/1 6/2 7/3 8/4
             1.0, 1.0, -1.0,
             -1.0, 1.0, -1.0,
         ]))
-        expect(obj.texcoord).to.deep.equal([
+        expect(obj.uv).to.deep.equal([
             0, 0,
             1, 0,
             1, 1,

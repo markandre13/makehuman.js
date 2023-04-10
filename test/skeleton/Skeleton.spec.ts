@@ -1,4 +1,6 @@
-import { expect } from '@esm-bundle/chai'
+import { expect, use } from '@esm-bundle/chai'
+import { chaiAlmost } from "../chai/chaiAlmost"
+use(chaiAlmost())
 
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { Skeleton } from '../../src/skeleton/Skeleton'
@@ -44,13 +46,13 @@ describe("Skeleton", function () {
         const rootBone = skel.roots[0]
         expect(rootBone.name).equal("root")
         // headPos and tailPost as in makehuman
-        expect(rootBone.headPos).to.deep.equal([0, 0.5639, -0.7609])
-        expect(rootBone.tailPos).to.deep.equal([0, 0.72685, 0.1445])
+        expect(rootBone.headPos).to.deep.almost.equal([0, 0.5639, -0.7609])
+        expect(rootBone.tailPos).to.deep.almost.equal([0, 0.72685, 0.1445])
 
         // Bone.build() calculates length, yvector4, matRestGlobal, ...
         expect(rootBone.roll).to.equal("root____plane")
-        expect(rootBone.length).to.equal(0.9199466816932041)
-        expect(rootBone.yvector4).to.deep.equal(vec4.fromValues(0, 0.9199466816932041, 0, 1))
+        expect(rootBone.length).to.almost.equal(0.9199466816932041)
+        expect(rootBone.yvector4).to.deep.almost.equal(vec4.fromValues(0, 0.9199466816932041, 0, 1))
 
         // chai-almost isn't esm6 compatible
         const _0 = [

@@ -9,8 +9,10 @@ import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
 // https://en.wikipedia.org/wiki/COLLADA
 
 export interface Material {
-    vertex: Float32Array
-    indices: number[]
+    xyz: Float32Array
+    fxyz: number[]
+    uv: Float32Array
+    fuv: number[]
     vertexWeights: VertexBoneWeights
     start: number
     length: number
@@ -27,39 +29,52 @@ export function exportCollada(scene: HumanMesh) {
 
     const proxy = scene.proxies.get("Teeth")!
 
-
+    // TODO
+    // [ ] combine this with the creation of RenderMesh!!!
+    // [ ] also use fuv
+    // [ ] the proxy mesh mostly be copied (but: we are merging them all into one list!)
     const materials: Material[] = [
         {
-            vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.fvertex,
+            xyz: scene.vertexMorphed,
+            fxyz: scene.baseMesh.fxyz,
+            uv: scene.baseMesh.uv,
+            fuv: scene.baseMesh.fuv,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.SKIN].length,
             name: "skin", r: 1, g: 0.5, b: 0.5
         }, {
-            vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.fvertex,
+            xyz: scene.vertexMorphed,
+            fxyz: scene.baseMesh.fxyz,
+            uv: scene.baseMesh.uv,
+            fuv: scene.baseMesh.fuv,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
             name: "eyeL", r: 0.0, g: 1.0, b: 0.5
         }, {
-            vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.fvertex,
+            xyz: scene.vertexMorphed,
+            fxyz: scene.baseMesh.fxyz,
+            uv: scene.baseMesh.uv,
+            fuv: scene.baseMesh.fuv,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
             name: "eyeR", r: 1.0, g: 0.0, b: 0.0
         }, {
-            vertex: proxy.getCoords(scene.vertexMorphed),
-            indices: proxy.mesh.fvertex,
+            xyz: proxy.getCoords(scene.vertexMorphed),
+            fxyz: proxy.mesh.fxyz,
+            uv: proxy.mesh.uv,
+            fuv: proxy.mesh.fuv,
             vertexWeights: proxy.getVertexWeights(scene.skeleton.vertexWeights!),
             start: 0,
-            length: proxy.mesh.fvertex.length,
+            length: proxy.mesh.fxyz.length,
             name: "teeth", r: 1.0, g: 1.0, b: 1.0
         }, {
-            vertex: scene.vertexMorphed,
-            indices: scene.baseMesh.fvertex,
+            xyz: scene.vertexMorphed,
+            fxyz: scene.baseMesh.fxyz,
+            uv: scene.baseMesh.uv,
+            fuv: scene.baseMesh.fuv,
             vertexWeights: scene.skeleton.vertexWeights!,
             start: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
             length: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
@@ -83,6 +98,8 @@ const meshName = `${objectName}-mesh`
 const meshPositionsName = `${meshName}-positions`
 const meshPositionsArrayName = `${meshPositionsName}-array`
 const meshVerticesName = `${meshName}-vertices`
+const meshTexCoordName = `${meshName}-texcoords`
+const meshTexCoordArrayName = `${meshTexCoordName}-array`
 
 const armatureName = `Armature`
 const armatureLongName = `${armatureName}_${objectName}`
@@ -156,8 +173,10 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Mate
 
     for (let m of materials) {
         prepareMesh(
-            m.vertex,
-            m.indices,
+            m.xyz,
+            m.uv,
+            m.fxyz,
+            m.fuv,
             m.start,
             m.length,
             geometry)
@@ -169,9 +188,9 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Mate
     <geometry id="${meshName}" name="${objectName}">
       <mesh>
         <source id="${meshPositionsName}">
-          <float_array id="${meshPositionsArrayName}" count="${geometry.vertex.length}">${geometry.vertex.join(" ")}</float_array>
+          <float_array id="${meshPositionsArrayName}" count="${geometry.xyz.length}">${geometry.xyz.join(" ")}</float_array>
           <technique_common>
-            <accessor source="#${meshPositionsArrayName}" count="${geometry.vertex.length / 3}" stride="3">
+            <accessor source="#${meshPositionsArrayName}" count="${geometry.xyz.length / 3}" stride="3">
               <param name="X" type="float"/>
               <param name="Y" type="float"/>
               <param name="Z" type="float"/>
@@ -180,12 +199,26 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Mate
         </source>
         <vertices id="${meshVerticesName}">
           <input semantic="POSITION" source="#${meshPositionsName}"/>
-        </vertices>\n`
+        </vertices>
+        <source id="${meshTexCoordName}">
+          <float_array id="${meshTexCoordArrayName}" count="${geometry.uv.length}">${geometry.uv.join(" ")}</float_array>
+          <technique_common>
+            <accessor source="#${meshTexCoordArrayName}" count="${geometry.uv.length / 2}" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>\n`
     for (let m = 0; m < materials.length; ++m) {
-        out += `        <polylist material="${materials[m].name}-material" count="${geometry.indices[m].length / 4}">
+        let l = ""
+        zipForEach(geometry.indices[m].fxyz, geometry.indices[m].fuv, (xyz, uv) => {
+            l = `${l}${xyz} ${uv} `
+        })
+        out += `        <polylist material="${materials[m].name}-material" count="${geometry.indices[m].fxyz.length / 4}">
           <input semantic="VERTEX" source="#${meshVerticesName}" offset="0"/>
-          <vcount>${"4 ".repeat(geometry.indices[m].length / 4)}</vcount>
-          <p>${geometry.indices[m].join(" ")}</p>
+          <input semantic="TEXCOORD" source="#${meshTexCoordName}" offset="1" set="1"/>
+          <vcount>${"4 ".repeat(geometry.indices[m].fxyz.length / 4)}</vcount>
+          <p>${l}</p>
         </polylist>\n`
     }
     out += `      </mesh>
@@ -207,7 +240,7 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry, materials: Mat
     const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
     for (const m of materials) {
         prepareControllerAddBoneWeights(
-            m.vertex,
+            m.xyz,
             m.vertexWeights,
             scene.skeleton.bones,
             geometry,
@@ -285,7 +318,9 @@ ${dumpBone(armatureName, scene.skeleton.roots[0])}\n`
               <technique_common>\n`
     // <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
     for (let m = 0; m < materials.length; ++m) {
-        out += `                <instance_material symbol="${materials[m].name}-material" target="#${materials[m].name}-material"/>\n`
+        out += `                <instance_material symbol="${materials[m].name}-material" target="#${materials[m].name}-material">
+                  <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+                </instance_material>\n`
     }
 
     out += `              </technique_common>
@@ -298,6 +333,16 @@ ${dumpBone(armatureName, scene.skeleton.roots[0])}\n`
     return out
 }
 
+interface PerSourceMappings {
+    fxyz: Map<number, number>
+    fuv: Map<number, number>
+}
+
+interface PerMeshIndices {
+    fxyz: number[],
+    fuv: number[]
+}
+
 function colladaScene() {
     return `  <scene>
     <instance_visual_scene url="#${sceneName}"/>
@@ -307,88 +352,136 @@ function colladaScene() {
 // const epsilon = Number.EPSILON * 2.0
 const epsilon = 0.000000001
 
+// no freakin' test mate!!!
 export class Geometry {
-    vertex: number[] = []
-    indices: number[][] = []
-    weights: number[] = []
-    private indexMap = new Map<Float32Array, Map<number, number>>()
+    // one list of quad indices for each material
+    indices: PerMeshIndices[] = []
+
+    xyz: number[] = []
+    uv: number[] = []
+
+    // geometry merges vertices from multiple meshes
+    private indexMap = new Map<Float32Array, PerSourceMappings>()
 
     getIndex(vertex: Float32Array, index: number) {
-        return this.indexMap.get(vertex)?.get(index)
+        return this.indexMap.get(vertex)?.fxyz.get(index)
     }
 
-    addPoint(vertex: Float32Array, origIndex: number): number {
-        let indexMap = this.indexMap.get(vertex)
+    protected addPoint(xyz: Float32Array, uv: Float32Array, fxyz: number, fuv: number) {
+        let indexMap = this.indexMap.get(xyz)
         if (indexMap === undefined) {
-            indexMap = new Map<number, number>()
-            this.indexMap.set(vertex, indexMap)
+            indexMap = {
+                fxyz: new Map<number, number>(),
+                fuv: new Map<number, number>()
+            }
+            this.indexMap.set(xyz, indexMap)
         }
 
-        let newIndex = indexMap.get(origIndex)
-        if (newIndex !== undefined) {
-            return newIndex
+        let xyzIdx = indexMap.fxyz.get(fxyz)
+        if (xyzIdx === undefined) {
+            xyzIdx = this.xyz.length / 3
+            indexMap.fxyz.set(fxyz, xyzIdx)
+
+            const ptr = fxyz * 3
+            const p = [xyz[ptr], xyz[ptr + 1], xyz[ptr + 2]]
+            this.xyz.push(...p)
         }
 
-        newIndex = this.vertex.length / 3
-        indexMap.set(origIndex, newIndex)
+        let uvIdx = indexMap.fuv.get(fuv)
+        if (uvIdx === undefined) {
+            uvIdx = this.uv.length / 2
+            indexMap.fuv.set(fuv, uvIdx)
+            const ptr = fuv * 2
+            const p = [uv[ptr], uv[ptr + 1]]
+            this.uv.push(...p)
+        }
 
-        const ptr = origIndex * 3
-        const p = [vertex[ptr], vertex[ptr + 1], vertex[ptr + 2]]
-        this.vertex.push(...p)
-
-        return newIndex
+        const dstIndices = this.indices[this.indices.length - 1]
+        dstIndices.fxyz.push(xyzIdx)
+        dstIndices.fuv.push(uvIdx)
     }
     addMesh() {
-        this.indices.push([])
+        this.indices.push({
+            fxyz: [],
+            fuv: []
+        })
     }
-    addQuad(vertex: Float32Array, indices: number[], startIndex: number) {
-        const currentMesh = this.indices[this.indices.length - 1]
-        currentMesh.push(this.addPoint(vertex, indices[startIndex]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 1]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 2]))
-        currentMesh.push(this.addPoint(vertex, indices[startIndex + 3]))
+    addQuad(xyz: Float32Array, uv: Float32Array, fxyz: number[], fuv: number[], start: number) {
+        this.addPoint(xyz, uv, fxyz[start], fuv[start])
+        this.addPoint(xyz, uv, fxyz[start + 1], fuv[start + 1])
+        this.addPoint(xyz, uv, fxyz[start + 2], fuv[start + 2])
+        this.addPoint(xyz, uv, fxyz[start + 3], fuv[start + 3])
     }
-    getQuad(mesh: number, quad: number) {
-        const p0 = this.indices[mesh][quad * 4] * 3
-        const p1 = this.indices[mesh][quad * 4 + 1] * 3
-        const p2 = this.indices[mesh][quad * 4 + 2] * 3
-        const p3 = this.indices[mesh][quad * 4 + 3] * 3
+    getQuadXYZ(mesh: number, quad: number) {
+        const p0 = this.indices[mesh].fxyz[quad * 4] * 3
+        const p1 = this.indices[mesh].fxyz[quad * 4 + 1] * 3
+        const p2 = this.indices[mesh].fxyz[quad * 4 + 2] * 3
+        const p3 = this.indices[mesh].fxyz[quad * 4 + 3] * 3
 
         return [[
-            this.vertex[p0],
-            this.vertex[p0 + 1],
-            this.vertex[p0 + 2]
+            this.xyz[p0],
+            this.xyz[p0 + 1],
+            this.xyz[p0 + 2]
         ],
         [
-            this.vertex[p1],
-            this.vertex[p1 + 1],
-            this.vertex[p1 + 2]
+            this.xyz[p1],
+            this.xyz[p1 + 1],
+            this.xyz[p1 + 2]
         ],
         [
-            this.vertex[p2],
-            this.vertex[p2 + 1],
-            this.vertex[p2 + 2]
+            this.xyz[p2],
+            this.xyz[p2 + 1],
+            this.xyz[p2 + 2]
         ],
         [
-            this.vertex[p3],
-            this.vertex[p3 + 1],
-            this.vertex[p3 + 2]
+            this.xyz[p3],
+            this.xyz[p3 + 1],
+            this.xyz[p3 + 2]
+        ]]
+    }
+    getQuadUV(mesh: number, quad: number) {
+        const p0 = this.indices[mesh].fuv[quad * 4] * 2
+        const p1 = this.indices[mesh].fuv[quad * 4 + 1] * 2
+        const p2 = this.indices[mesh].fuv[quad * 4 + 2] * 2
+        const p3 = this.indices[mesh].fuv[quad * 4 + 3] * 2
+
+        return [[
+            this.uv[p0],
+            this.uv[p0 + 1],
+        ],
+        [
+            this.uv[p1],
+            this.uv[p1 + 1],
+        ],
+        [
+            this.uv[p2],
+            this.uv[p2 + 1],
+        ],
+        [
+            this.uv[p3],
+            this.uv[p3 + 1],
         ]]
     }
 }
 
-export function prepareGeometry(vertex: Float32Array, indices: number[], materials: Material[], geometry: Geometry) {
-    for (let m = 0; m < materials.length; ++m) {
-        prepareMesh(vertex, indices, materials[m].start, materials[m].length, geometry)
-    }
-}
+// export function prepareGeometry(vertex: Float32Array, indices: number[], materials: Material[], geometry: Geometry) {
+//     for (let m = 0; m < materials.length; ++m) {
+//         prepareMesh(vertex, indices, materials[m].start, materials[m].length, geometry)
+//     }
+// }
 
-export function prepareMesh(vertex: Float32Array, indices: number[], startCoord: number, length: number, geometry: Geometry) {
-    const indexEnd = startCoord + length
+export function prepareMesh(
+    xyz: Float32Array,
+    uv: Float32Array,
+    fxyz: number[],
+    fuv: number[],
+    start: number,
+    length: number,
+    geometry: Geometry) {
+    const indexEnd = start + length
     geometry.addMesh()
-    // the mesh is in quads but converted to triangles for OpenGL. when exporting, revert to quads
-    for (let i = startCoord; i < indexEnd; i += 4) {
-        geometry.addQuad(vertex, indices, i)
+    for (let i = start; i < indexEnd; i += 4) {
+        geometry.addQuad(xyz, uv, fxyz, fuv, i)
     }
 }
 
@@ -413,13 +506,13 @@ export function prepareMesh(vertex: Float32Array, indices: number[], startCoord:
 export function prepareControllers(vertex: Float32Array, vertexWeights: VertexBoneWeights, boneMap: Map<string, Bone>, geometry: Geometry) {
     const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
     prepareControllerAddBoneWeights(vertex, vertexWeights, boneMap, geometry, boneWeightPairs, weightMap)
+    console.log(`weightMap.size = ${weightMap.size}`)
     const weights = prepareControllerFlatWeightMap(weightMap)
-
     return { weights, boneWeightPairs }
 }
 
 export function prepareControllerInit(geometry: Geometry) {
-    let boneWeightPairs = new Array<Array<Array<number>>>(geometry.vertex.length / 3)
+    let boneWeightPairs = new Array<Array<Array<number>>>(geometry.xyz.length / 3)
     for (let i = 0; i < boneWeightPairs.length; ++i) {
         boneWeightPairs[i] = []
     }
@@ -427,7 +520,9 @@ export function prepareControllerInit(geometry: Geometry) {
     return { boneWeightPairs, weightMap }
 }
 
-export function prepareControllerAddBoneWeights(vertex: Float32Array, vertexWeights: VertexBoneWeights,
+export function prepareControllerAddBoneWeights(
+    vertex: Float32Array,
+    vertexWeights: VertexBoneWeights,
     boneMap: Map<string, Bone>,
     geometry: Geometry,
     boneWeightPairs: Array<Array<Array<number>>>,

@@ -9,18 +9,18 @@ export class WavefrontObj {
     // makehuman: fverts, fuvs, fnorm; verts, uvs(texco)
 
     vertex: Float32Array  // x,y,z (coord in makehuman)
-    texcoord: Float32Array // u,v (texco in makehuman)
+    uv: Float32Array // u,v (texco in makehuman)
     // normal: number[]  // x,y,z (due to morphing & skinning, normals are calculated in makehuman)
 
     // list of quads
-    fvertex: number[] = [] // (fvert in makehuman)
+    fxyz: number[] = [] // (fvert in makehuman)
     fuv: number[] = []
 
     groups: Group[]   // name, startIndex, length
     material: Group[] // name, startIndex, length
 
     toString(): string {
-        return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.fvertex.length / 6}, groups: ${this.groups.length}} `
+        return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.fxyz.length / 6}, groups: ${this.groups.length}} `
     }
 
     constructor(filename: string, data?: string) {
@@ -90,7 +90,7 @@ export class WavefrontObj {
                     }
                     for (let i = 1; i < tokens.length; ++i) {
                         const split = tokens[i].split('/')
-                        this.fvertex.push(parseInt(split[0], 10) - 1)
+                        this.fxyz.push(parseInt(split[0], 10) - 1)
                         this.fuv.push(parseInt(split[1], 10) - 1)
                     }
                     break
@@ -111,7 +111,7 @@ export class WavefrontObj {
 
                 // grouping
                 case 'g': // <groupname>+ the following elements belong to that group    
-                    this.groups.push(new Group(tokens[1], this.fvertex.length))
+                    this.groups.push(new Group(tokens[1], this.fxyz.length))
                     break
                 case 's': break
                 case 'mg': break
@@ -125,7 +125,7 @@ export class WavefrontObj {
                 case 'd_interp': break
                 case 'lod': break
                 case 'usemtl': // <materialname>
-                    this.material.push(new Group(tokens[1], this.fvertex.length))
+                    this.material.push(new Group(tokens[1], this.fxyz.length))
                     break
                 case 'mtllib': break
                 case 'shadow_obj': break
@@ -138,21 +138,21 @@ export class WavefrontObj {
             }
         }
         this.vertex = new Float32Array(vertex)
-        this.texcoord = new Float32Array(texcoord)
+        this.uv = new Float32Array(texcoord)
 
         // set group's lengths
         if (this.groups.length > 0) {
             for (let i = 0; i < this.groups.length - 1; ++i) {
                 this.groups[i].length = this.groups[i + 1].startIndex - this.groups[i].startIndex
             }
-            this.groups[this.groups.length - 1].length = this.fvertex.length - this.groups[this.groups.length - 1].startIndex
+            this.groups[this.groups.length - 1].length = this.fxyz.length - this.groups[this.groups.length - 1].startIndex
         }
 
         if (this.material.length > 0) {
             for (let i = 0; i < this.material.length - 1; ++i) {
                 this.material[i].length = this.material[i + 1].startIndex - this.material[i].startIndex
             }
-            this.material[this.material.length - 1].length = this.fvertex.length - this.material[this.material.length - 1].startIndex
+            this.material[this.material.length - 1].length = this.fxyz.length - this.material[this.material.length - 1].startIndex
         }
 
         this.logStatistics(filename)
@@ -197,6 +197,6 @@ export class WavefrontObj {
         if (groupNames.length !== 0) {
             groupNames = ` and ${groupNames}`
         }
-        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.texcoord.length/2} uvs, ${this.fvertex.length / 3} triangles from file '${filename}'`)
+        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.uv.length/2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
     }
 }

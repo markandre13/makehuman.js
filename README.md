@@ -16,7 +16,6 @@
 * Nothing else... 😅
 
 Next steps:
-* Render UVs correctly
 * Export UVs in Collada
 
 ## Why?

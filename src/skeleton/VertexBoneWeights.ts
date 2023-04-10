@@ -28,8 +28,6 @@ export class VertexBoneWeights {
     _vertexCount!: number
     _data: VertexBoneMapping
     constructor(filename: string, data: any) {
-        // data.weights = []
-        console.log(`VertexBoneWeights: filename='${filename}', data=${data}`)
         if (data.name) {
             this.info = {
                 name: data.name,

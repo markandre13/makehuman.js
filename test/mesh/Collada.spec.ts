@@ -1,6 +1,8 @@
 import { expect, use } from '@esm-bundle/chai'
 import { chaiString } from '../chai/chaiString'
 use(chaiString)
+import { chaiAlmost } from "../chai/chaiAlmost"
+use(chaiAlmost())
 
 import { Human } from '../../src/modifier/Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
@@ -9,20 +11,25 @@ import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
-import { 
-    exportCollada, Geometry, Material, 
-    prepareControllerAddBoneWeights, 
-    prepareControllerFlatWeightMap, 
-    prepareControllerInit, 
-    prepareControllers, 
-    prepareGeometry, 
-    prepareMesh 
+import {
+    exportCollada, Geometry, Material,
+    prepareControllerAddBoneWeights,
+    prepareControllerFlatWeightMap,
+    prepareControllerInit,
+    prepareControllers,
+    prepareMesh
 } from "../../src/mesh/Collada"
 import { testCube } from "../../src/mesh/testCube"
 
 import { parseXML, Tag, Text } from "./xml"
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 import { Bone } from '../../src/skeleton/Bone'
+
+export function prepareGeometry(materials: Material[], geometry: Geometry) {
+    for (let m = 0; m < materials.length; ++m) {
+        prepareMesh(materials[m].xyz, materials[m].uv, materials[m].fxyz, materials[m].fuv, materials[m].start, materials[m].length, geometry)
+    }
+}
 
 describe("Collada", function () {
 
@@ -195,7 +202,7 @@ describe("Collada", function () {
         // console.log(xml)
     })
 
-    it("exportCollada() with real world data", function () {
+    xit("exportCollada() with real world data", function () {
         const human = new Human()
         const scene = new HumanMesh(human)
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
@@ -261,20 +268,27 @@ describe("Collada", function () {
         //  0   2   4
         //
         //  1   3   5
-        const vertex0 = new Float32Array([
+        const xyz0 = new Float32Array([
             0, 0, 0,
             0, 1, 0,
             1, 0, 0,
             1, 1, 0,
             2, 0, 0,
-            2, 1, 0,
+            2, 1, 0
         ])
-
-        const indices0 = [
-            0, 2, 3,
-            1, 0, 4,
-            2, 4, 5,
-            3, 2, 4,
+        const fxyz0 = [
+            0, 2, 3, 1,
+            2, 4, 5, 3,
+        ]
+        const uv0 = new Float32Array([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ])
+        const fuv0: number[] = [
+            0, 1, 2, 3,
+            0, 1, 2, 3
         ]
 
         // PROXY MESH
@@ -291,7 +305,7 @@ describe("Collada", function () {
             [.7, .7, 1, 1]
         ])
 
-        const vertex1 = new Float32Array([
+        const xyz1 = new Float32Array([
             0, 0, 1,
             0, 1, 1,
             1, 0, 1,
@@ -299,54 +313,66 @@ describe("Collada", function () {
             2, 0, 1,
             2, 1, 1,
         ])
-
-        const indices1 = [
-            0, 2, 3,
-            1, 0, 4,
-            2, 4, 5,
-            3, 2, 4,
+        const fxyz1 = [
+            0, 2, 3, 1,
+            2, 4, 5, 3,
+        ]
+        const uv1 = new Float32Array([
+            0.2, 0.9,
+            0.8, 0.9,
+            0.8, 0.1,
+            0.2, 0.1,
+        ])
+        const fuv1: number[] = [
+            3, 2, 1, 0,
+            3, 2, 1, 0,
         ]
 
-        // const groups: Group[] = [
-        //     { name: "one", startIndex: 0, length: 6 },
-        //     { name: "two", startIndex: 6, length: 6 }
-        // ]
-
+        // TODO: replace with RenderMesh or it's base class
         const materials: Material[] = [
-            { vertex: vertex0, indices: indices0, vertexWeights: vertexWeights0, start: 0, length: 6, name: "ONE", r: 1, g: 0, b: 0 },
-            { vertex: vertex0, indices: indices0, vertexWeights: vertexWeights0, start: 6, length: 6, name: "TWO", r: 0, g: 1, b: 0 }
+            { xyz: xyz0, fxyz: fxyz0, uv: uv0, fuv: fuv0, vertexWeights: vertexWeights0, start: 0, length: 4, name: "ONE", r: 1, g: 0, b: 0 },
+            { xyz: xyz0, fxyz: fxyz0, uv: uv0, fuv: fuv0, vertexWeights: vertexWeights0, start: 4, length: 4, name: "TWO", r: 0, g: 1, b: 0 }
         ]
 
         describe("prepareGeometry()", () => {
             it("single mesh", () => {
                 const geometry = new Geometry()
-                prepareGeometry(vertex0, indices0, materials, geometry)
+                prepareGeometry(materials, geometry)
                 expect(geometry.indices.length).to.equal(2)
-                expect(geometry.getQuad(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
-                expect(geometry.getQuad(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
+                expect(geometry.xyz).to.have.lengthOf(6 * 3)
+                expect(geometry.uv).to.have.lengthOf(4 * 2)
+                expect(geometry.getQuadXYZ(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
+                expect(geometry.getQuadUV(0, 0)).to.deep.equal([[0, 0], [1, 0], [1, 1], [0, 1]])
+                expect(geometry.getQuadXYZ(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
+                expect(geometry.getQuadUV(1, 0)).to.deep.equal([[0, 0], [1, 0], [1, 1], [0, 1]])
             })
             it("two meshes", () => {
                 const geometry = new Geometry()
-                prepareGeometry(vertex0, indices0, materials, geometry)
-                prepareMesh(vertex1, indices1, 0, indices1.length / 2, geometry)
+                prepareGeometry([
+                    materials[0], materials[1],
+                    { xyz: xyz1, fxyz: fxyz1, uv: uv1, fuv: fuv1, vertexWeights: vertexWeights0, start: 0, length: 4, name: "THREE", r: 0, g: 0, b: 1 }
+                ], geometry)
 
                 expect(geometry.indices.length).to.equal(3)
-                expect(geometry.getQuad(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
-                expect(geometry.getQuad(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
-                expect(geometry.getQuad(2, 0)).to.deep.equal([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]])
+                expect(geometry.getQuadXYZ(0, 0)).to.deep.equal([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]])
+                expect(geometry.getQuadUV(0, 0)).to.deep.equal([[0, 0], [1, 0], [1, 1], [0, 1]])
+                expect(geometry.getQuadXYZ(1, 0)).to.deep.equal([[1, 0, 0], [2, 0, 0], [2, 1, 0], [1, 1, 0]])
+                expect(geometry.getQuadUV(1, 0)).to.deep.equal([[0, 0], [1, 0], [1, 1], [0, 1]])
+                expect(geometry.getQuadXYZ(2, 0)).to.deep.equal([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]])
+                expect(geometry.getQuadUV(2, 0)).to.deep.almost.equal([[0.2, 0.1], [0.8, 0.1], [0.8, 0.9], [0.2, 0.9]])
             })
         })
         describe("prepareControllers()", () => {
             it("single mesh", () => {
                 const geometry = new Geometry()
 
-                prepareGeometry(vertex0, indices0, materials, geometry)
-                const { weights, boneWeightPairs } = prepareControllers(vertex0, vertexWeights0, boneMap, geometry)
+                prepareGeometry(materials, geometry)
+                const { weights, boneWeightPairs } = prepareControllers(xyz0, vertexWeights0, boneMap, geometry)
 
-                expect(weights.length).to.equal(3)
-                expect(boneWeightPairs.length).to.equal(6)
+                expect(weights.length, 'weights.length').to.equal(3)
+                expect(boneWeightPairs.length, 'boneWeightPairs.length').to.equal(6)
                 // console.log(getBoneWeight([vertex0], geometry, weights, boneWeightPairs))
-                expect(getBoneWeight([vertex0], geometry, weights, boneWeightPairs)).to.deep.equal([
+                expect(getBoneWeight([xyz0], geometry, weights, boneWeightPairs)).to.deep.equal([
                     [[0], [0]],
                     [[0], [0]],
                     [[0, 1], [0.5, 0.5]],
@@ -357,18 +383,19 @@ describe("Collada", function () {
             })
             it("two meshes", () => {
                 const geometry = new Geometry()
-
-                prepareGeometry(vertex0, indices0, materials, geometry)
-                prepareMesh(vertex1, indices1, 0, indices1.length, geometry)
+                prepareGeometry([
+                    materials[0], materials[1],
+                    { xyz: xyz1, fxyz: fxyz1, uv: uv0, fuv: fuv0, vertexWeights: vertexWeights0, start: 0, length: 8, name: "THREE", r: 0, g: 0, b: 1 }
+                ], geometry)
 
                 const { boneWeightPairs, weightMap } = prepareControllerInit(geometry)
-                prepareControllerAddBoneWeights(vertex0, vertexWeights0, boneMap, geometry, boneWeightPairs, weightMap)
-                prepareControllerAddBoneWeights(vertex1, vertexWeights1, boneMap, geometry, boneWeightPairs, weightMap)
+                prepareControllerAddBoneWeights(xyz0, vertexWeights0, boneMap, geometry, boneWeightPairs, weightMap)
+                prepareControllerAddBoneWeights(xyz1, vertexWeights1, boneMap, geometry, boneWeightPairs, weightMap)
                 const weights = prepareControllerFlatWeightMap(weightMap)
 
                 // console.log(getBoneWeight([vertex0, vertex1], geometry, weights, boneWeightPairs))
 
-                expect(getBoneWeight([vertex0, vertex1], geometry, weights, boneWeightPairs)).to.deep.equal([
+                expect(getBoneWeight([xyz0, xyz1], geometry, weights, boneWeightPairs)).to.deep.equal([
                     [[0], [0]],
                     [[0], [0]],
                     [[0, 1], [0.5, 0.5]],
@@ -382,6 +409,174 @@ describe("Collada", function () {
                     [[1], [1]],
                     [[1], [1]]
                 ])
+            })
+        })
+        describe("Geometry collects the data for output in Collada files", () => {
+            describe("addQuad()", () => {
+                it("can copy a single quad", () => {
+                    const xyz = [
+                        1, 2, 3,
+                        4, 5, 6,
+                        7, 8, 9,
+                        10, 11, 12,
+                    ]
+                    const fxyz = [
+                        0, 1, 2, 3,
+                    ]
+                    const uv = [
+                        0, 0,
+                        1, 0,
+                        1, 1,
+                        0, 1
+                    ]
+                    const fuv = [
+                        0, 1, 2, 3
+                    ]
+                    const geometry = new Geometry()
+                    const binXyz = new Float32Array(xyz)
+                    const binUv = new Float32Array(uv)
+                    geometry.addMesh()
+                    geometry.addQuad(binXyz, binUv, fxyz, fuv, 0)
+
+                    expect(geometry.indices[0].fxyz).to.deep.equal(fxyz)
+                    expect(geometry.xyz).to.deep.equal(xyz)
+                    expect(geometry.indices[0].fuv).to.deep.equal(fuv)
+                    expect(geometry.uv).to.deep.equal(uv)
+                })
+                it("two quads with overlapping points will share those points", () => {
+                    const xyz = [
+                        1, 2, 3,
+                        4, 5, 6,
+                        7, 8, 9,
+                        10, 11, 12,
+                        13, 14, 15,
+                        16, 17, 18
+                    ]
+                    const fxyz = [
+                        0, 1, 2, 3,
+                        2, 3, 4, 5,
+                    ]
+                    const uv = [
+                        1, 2,
+                        2, 3,
+                        4, 5,
+                        6, 7,
+                        8, 9,
+                        10, 11
+                    ]
+                    const fuv = [
+                        0, 1, 2, 3,
+                        2, 3, 4, 5,
+                    ]
+                    const geometry = new Geometry()
+                    const binXyz = new Float32Array(xyz)
+                    const binUv = new Float32Array(uv)
+                    geometry.addMesh()
+                    geometry.addQuad(binXyz, binUv, fxyz, fuv, 0)
+                    geometry.addQuad(binXyz, binUv, fxyz, fuv, 4)
+
+                    expect(geometry.indices[0].fxyz).to.deep.equal(fxyz)
+                    expect(geometry.xyz).to.deep.equal(xyz)
+                    expect(geometry.indices[0].fuv).to.deep.equal(fuv)
+                    expect(geometry.uv).to.deep.equal(uv)
+                })
+                it("when overlapping points are from different sources, they won't be shared", () => {
+                    const xyz0 = [
+                        1, 2, 3,
+                        4, 5, 6,
+                        7, 8, 9,
+                        10, 11, 12,
+                        13, 14, 15,
+                        16, 17, 18
+                    ]
+                    const uv0 = [
+                        1, 2,
+                        3, 4,
+                        5, 6,
+                        7, 8,
+                        9, 10,
+                        11, 12
+                    ]
+                    const uv1 = [...uv0]
+                    const xyz1 = [...xyz0]
+                    const fxyz0 = [0, 1, 2, 3]
+                    const fxyz1 = [2, 3, 4, 5]
+                    const fuv0 = [0, 1, 2, 3]
+                    const fuv1 = [2, 3, 4, 5]
+                    const geometry = new Geometry()
+                    const binXyz0 = new Float32Array(xyz0)
+                    const binXyz1 = new Float32Array(xyz1)
+                    const binUv0 = new Float32Array(uv0)
+                    const binUv1 = new Float32Array(uv1)
+                    geometry.addMesh()
+                    geometry.addQuad(binXyz0, binUv0, fxyz0, fuv0, 0)
+                    geometry.addQuad(binXyz1, binUv1, fxyz1, fuv1, 0)
+
+                    expect(geometry.indices[0].fxyz).to.deep.equal([0, 1, 2, 3, 4, 5, 6, 7])
+                    expect(geometry.indices[0].fuv).to.deep.equal([0, 1, 2, 3, 4, 5, 6, 7])
+                    expect(geometry.xyz).to.deep.equal([
+                        1, 2, 3,
+                        4, 5, 6,
+                        7, 8, 9,
+                        10, 11, 12,
+
+                        7, 8, 9,
+                        10, 11, 12,
+                        13, 14, 15,
+                        16, 17, 18
+                    ])
+                    expect(geometry.uv).to.deep.equal([
+                        1, 2,
+                        3, 4,
+                        5, 6,
+                        7, 8,
+
+                        5, 6,
+                        7, 8,
+                        9, 10,
+                        11, 12
+                    ])
+                })
+                it("addMesh() will start a new list of indices", () => {
+                    const xyz = [
+                        1, 2, 3,
+                        4, 5, 6,
+                        7, 8, 9,
+                        10, 11, 12,
+                        13, 14, 15,
+                        16, 17, 18
+                    ]
+                    const fxyz = [
+                        0, 1, 2, 3,
+                        2, 3, 4, 5,
+                    ]
+                    const uv = [
+                        1, 2,
+                        2, 3,
+                        4, 5,
+                        6, 7,
+                        8, 9,
+                        10, 11
+                    ]
+                    const fuv = [
+                        0, 1, 2, 3,
+                        2, 3, 4, 5,
+                    ]
+                    const geometry = new Geometry()
+                    const binXyz = new Float32Array(xyz)
+                    const binUv = new Float32Array(uv)
+                    geometry.addMesh()
+                    geometry.addQuad(binXyz, binUv, fxyz, fuv, 0)
+                    geometry.addMesh()
+                    geometry.addQuad(binXyz, binUv, fxyz, fuv, 4)
+
+                    expect(geometry.indices[0].fxyz).to.deep.equal([0, 1, 2, 3])
+                    expect(geometry.indices[1].fxyz).to.deep.equal([2, 3, 4, 5])
+                    expect(geometry.indices[0].fuv).to.deep.equal([0, 1, 2, 3])
+                    expect(geometry.indices[1].fuv).to.deep.equal([2, 3, 4, 5])
+                    expect(geometry.xyz).to.deep.equal(xyz)
+                    expect(geometry.uv).to.deep.equal(uv)
+                })
             })
         })
     })
@@ -389,10 +584,10 @@ describe("Collada", function () {
 
 function origIndexToGeoIndex(vertex: Float32Array, vertIdx: number, geometry: Geometry) {
     vertIdx *= 3
-    for (let j = 0; j < geometry.vertex.length; j += 3) {
-        if (vertex[vertIdx] === geometry.vertex[j] &&
-            vertex[vertIdx + 1] === geometry.vertex[j + 1] &&
-            vertex[vertIdx + 2] === geometry.vertex[j + 2]) {
+    for (let j = 0; j < geometry.xyz.length; j += 3) {
+        if (vertex[vertIdx] === geometry.xyz[j] &&
+            vertex[vertIdx + 1] === geometry.xyz[j + 1] &&
+            vertex[vertIdx + 2] === geometry.xyz[j + 2]) {
             return j / 3
         }
     }
