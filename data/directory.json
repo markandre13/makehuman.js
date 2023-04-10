@@ -1,8 +1,13 @@
 [
   {"file": "3dobjs", "isDir": true},
   {"file": "README.md", "isDir": false},
+  {"file": "eyes", "isDir": true},
   {"file": "modifiers", "isDir": true},
+  {"file": "proxymeshes", "isDir": true},
   {"file": "rigs", "isDir": true},
   {"file": "screenshot.png", "isDir": false},
-  {"file": "targets", "isDir": true}
+  {"file": "targets", "isDir": true},
+  {"file": "teeth", "isDir": true},
+  {"file": "test.dae", "isDir": false},
+  {"file": "tongue", "isDir": true}
 ]
