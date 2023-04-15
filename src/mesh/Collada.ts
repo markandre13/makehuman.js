@@ -417,50 +417,24 @@ export class Geometry {
         const p1 = this.indices[mesh].fxyz[quad * 4 + 1] * 3
         const p2 = this.indices[mesh].fxyz[quad * 4 + 2] * 3
         const p3 = this.indices[mesh].fxyz[quad * 4 + 3] * 3
-
-        return [[
-            this.xyz[p0],
-            this.xyz[p0 + 1],
-            this.xyz[p0 + 2]
-        ],
-        [
-            this.xyz[p1],
-            this.xyz[p1 + 1],
-            this.xyz[p1 + 2]
-        ],
-        [
-            this.xyz[p2],
-            this.xyz[p2 + 1],
-            this.xyz[p2 + 2]
-        ],
-        [
-            this.xyz[p3],
-            this.xyz[p3 + 1],
-            this.xyz[p3 + 2]
-        ]]
+        return [
+            [this.xyz[p0], this.xyz[p0 + 1], this.xyz[p0 + 2]],
+            [this.xyz[p1], this.xyz[p1 + 1], this.xyz[p1 + 2]],
+            [this.xyz[p2], this.xyz[p2 + 1], this.xyz[p2 + 2]],
+            [this.xyz[p3], this.xyz[p3 + 1], this.xyz[p3 + 2]]
+        ]
     }
     getQuadUV(mesh: number, quad: number) {
         const p0 = this.indices[mesh].fuv[quad * 4] * 2
         const p1 = this.indices[mesh].fuv[quad * 4 + 1] * 2
         const p2 = this.indices[mesh].fuv[quad * 4 + 2] * 2
         const p3 = this.indices[mesh].fuv[quad * 4 + 3] * 2
-
-        return [[
-            this.uv[p0],
-            this.uv[p0 + 1],
-        ],
-        [
-            this.uv[p1],
-            this.uv[p1 + 1],
-        ],
-        [
-            this.uv[p2],
-            this.uv[p2 + 1],
-        ],
-        [
-            this.uv[p3],
-            this.uv[p3 + 1],
-        ]]
+        return [
+            [this.uv[p0], this.uv[p0 + 1]],
+            [this.uv[p1], this.uv[p1 + 1]],
+            [this.uv[p2], this.uv[p2 + 1]],
+            [this.uv[p3], this.uv[p3 + 1]]
+        ]
     }
 }
 
