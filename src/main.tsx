@@ -21,14 +21,13 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
-import { Text } from "toad.js/view/Text"
-import { Slider } from "toad.js/view/Slider"
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
 
 window.onload = () => { main() }
 
 export function main() {
     try {
+        FileSystemAdapter.setInstance(new HTTPFSAdapter())
         run()
     }
     catch (e) {
@@ -45,7 +44,6 @@ export function main() {
 //     startupSequence()
 function run() {
     console.log('loading assets...')
-    FileSystemAdapter.setInstance(new HTTPFSAdapter())
 
     const human = new Human()
     const scene = new HumanMesh(human)
