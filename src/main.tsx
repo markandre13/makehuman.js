@@ -91,16 +91,16 @@ function run() {
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
 
-    const teethProxy = new BooleanModel(true)
-    const toungeProxy = new BooleanModel(false)
-    const eyesProxy = new BooleanModel(true)
-    const skinProxy = new BooleanModel(true)
+    // const teethProxy = new BooleanModel(true)
+    // const toungeProxy = new BooleanModel(false)
+    // const eyesProxy = new BooleanModel(true)
+    // const skinProxy = new BooleanModel(true)
 
-    teethProxy.modified.add(() => {
-        console.log(`teeth proxy changed to ${teethProxy.value}`)
-    })
+    // teethProxy.modified.add(() => {
+    //     console.log(`teeth proxy changed to ${teethProxy.value}`)
+    // })
 
-    const jaw = poseNodes.find("jaw")!
+    // const jaw = poseNodes.find("jaw")!
 
     const download = makeDownloadAnchor()
     const refCanvas = new class { canvas!: HTMLCanvasElement }
@@ -122,22 +122,8 @@ function run() {
             </Tab>
             <Tab label="Export" value="WIREFRAME">
                 <div style={{ padding: "10px" }}>
-                    WiP: Only the base mesh is exported.<br />
-                    Upcoming: Proxy meshes:
-                    <table>
-                        <tr>
-                            <td><Checkbox model={teethProxy} /></td><td>Teeth</td>
-                        </tr>
-                        <tr>
-                            <td><Checkbox model={toungeProxy} /></td><td>Tounge</td>
-                        </tr>
-                        <tr>
-                            <td><Checkbox model={eyesProxy} /></td><td>Eyes</td>
-                        </tr>
-                        <tr>
-                            <td><Checkbox model={skinProxy} /></td><td>Skin</td>
-                        </tr>
-                    </table>
+                    NOTE: When importing into Blender, only the first material's UVs will look correctly
+                    in the UV editor. But rendering is okay.
                     <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
                 </div>
             </Tab>
