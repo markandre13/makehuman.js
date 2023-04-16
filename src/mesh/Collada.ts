@@ -717,9 +717,9 @@ function at(m: mat4, a: number, b: number) {
 }
 
 export function toEuler(m: mat4) {
-    if (!isRotation(m)) {
-        throw Error(`matrix is not rotation with translation`)
-    }
+    // if (!isRotation(m)) {
+    //     throw Error(`matrix is not rotation with translation`)
+    // }
 
     const sy = at(m, 0, 0) * at(m, 0, 0) + at(m, 0, 1) * at(m, 0, 1)
     const singular = sy < Number.EPSILON
