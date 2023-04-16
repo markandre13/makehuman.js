@@ -101,6 +101,10 @@ function run() {
     // })
 
     // const jaw = poseNodes.find("jaw")!
+    const useBlenderProfile = new BooleanModel(true)
+    const limitPrecision = new BooleanModel(false)
+    useBlenderProfile.enabled = false
+    limitPrecision.enabled = false
 
     const download = makeDownloadAnchor()
     const refCanvas = new class { canvas!: HTMLCanvasElement }
@@ -122,8 +126,21 @@ function run() {
             </Tab>
             <Tab label="Export" value="WIREFRAME">
                 <div style={{ padding: "10px" }}>
-                    NOTE: When importing into Blender, only the first material's UVs will look correctly
-                    in the UV editor. But rendering is okay.
+                    <p>
+                        <Checkbox model={useBlenderProfile} title="Export additional Blender specific information (for material, shaders, bones, etc.)."/> Use Blender Profile
+                    </p>
+                    <p>
+                        <Checkbox model={limitPrecision} title="Reduce the precision of the exported data to 6 digits."/> Limit Precision
+                    </p>
+                    <p>
+                        <u>NOTE</u>: When importing into Blender, only the first material may look correct
+                        in the UV editor while rendering will still be okay.
+                        A workaround it to separate the mesh by material after import.(Edit Mode, P).
+                    </p>
+                    <p>
+                        <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded
+                        animation of the jaw.
+                    </p>
                     <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
                 </div>
             </Tab>
@@ -147,12 +164,6 @@ function makeDownloadAnchor() {
 function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
     download.download = "makehuman.dae"
     download.href = URL.createObjectURL(new Blob([exportCollada(scene)], { type: 'text/plain' }))
-    download.dispatchEvent(new MouseEvent("click"))
-}
-
-function downloadBaseMesh(scene: HumanMesh, download: HTMLAnchorElement) {
-    download.download = "vertex.json"
-    download.href = URL.createObjectURL(new Blob([JSON.stringify(scene.vertexRigged)], { type: 'text/plain' }))
     download.dispatchEvent(new MouseEvent("click"))
 }
 
