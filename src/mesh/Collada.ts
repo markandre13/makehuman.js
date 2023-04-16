@@ -87,6 +87,7 @@ export function exportCollada(scene: HumanMesh) {
         colladaMaterials(materials) +
         colladaGeometries(s, geometry, materials) + // mesh
         colladaControllers(s, geometry, materials) + // weights
+        colladaAnimations() +
         colladaVisualScenes(s, materials) + // skeleton
         colladaScene() +
         colladaTail()
@@ -293,6 +294,82 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry, materials: Mat
       </skin>
     </controller>
   </library_controllers>\n`
+}
+
+function colladaAnimations() {
+    // <animation> Collada 1.4.1; 5-11:
+    //   input: time (in seconds?)
+    //   output: value being animated
+    // <channel> Collada 1.4.1; 5-21
+    // COLLADA Target Addressing; Collada 1.4.1; 3-3
+    // e.g.        Armature_jaw/rotationX.ANGLE
+    //      target="<nodeID>/<rotationSID>.ANGLE"
+    //
+    // <node id="Armature_jaw" name="jaw" sid="jaw" type="JOINT">
+    //   <scale sid="scale">1 1 1</scale>
+    //   <rotate sid="rotationZ">0 0 1 0</rotate>
+    //   <rotate sid="rotationY">0 1 0 0</rotate>
+    //   <rotate sid="rotationX">1 0 0 144.2012</rotate>
+    // <node>
+    //
+    // but i currently store the joint from matRestGlobal
+    //
+    // <node id="Armature_jaw" name="jaw" sid="jaw" type="JOINT">
+    //   <matrix sid="transform">
+    //     1 0 0 0
+    //     0 -0.8110761642456055 -0.5849405527114868 -0.11635739356279373 0
+    //     0.5849405527114868 -0.8110761642456055 0.4750467836856842
+    //     0 0 0 1
+    //   </matrix>
+    // </node>
+    //
+    // but in the begining i might as well get away by just adding additional <rotate/> tags?
+    // NOPE! doesn't work. the matrix results in Blender setting the nodes to Quaternion, where
+    // the rotation does not work. using rotation XYZ, will result in "Euler XYZ", were the rotation
+    // will work.
+
+    // here/trans.(X|Y|Z)
+    // here/rot.ANGLE
+    // here/rot\(3\)
+    // here/mat\(3\)\(2\)
+    return `  <library_animations>
+    <animation id="action_container-Armature" name="Armature">
+        <!-- X -->
+       <animation id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X" name="Armature_jaw">
+         <source id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-input">
+           <float_array id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-input-array" count="3">0.04166662 0.4166666 0.8333333</float_array>
+           <technique_common>
+             <accessor source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-input-array" count="3" stride="1">
+               <param name="TIME" type="float"/>
+             </accessor>
+           </technique_common>
+         </source>
+         <source id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-output">
+           <float_array id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-output-array" count="3">0.0 20.0 0.0</float_array>
+           <technique_common>
+             <accessor source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-output-array" count="3" stride="1">
+               <param name="ANGLE" type="float"/>
+             </accessor>
+           </technique_common>
+         </source>
+         <source id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-interpolation">
+           <Name_array id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-interpolation-array" count="3">LINEAR LINEAR LINEAR</Name_array>
+           <technique_common>
+             <accessor source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-interpolation-array" count="3" stride="1">
+               <param name="INTERPOLATION" type="name"/>
+             </accessor>
+           </technique_common>
+         </source>
+         <sampler id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-sampler">
+           <input semantic="INPUT" source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-input"/>
+           <input semantic="OUTPUT" source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-output"/>
+           <input semantic="INTERPOLATION" source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-interpolation"/>
+         </sampler>
+         <channel source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-sampler" target="Armature_jaw/rotationX.ANGLE"/>
+       </animation>
+       <!-- Y, Z, ... -->
+     </animation>
+   </library_animations>\n`
 }
 
 function colladaVisualScenes(scene: HumanMesh, materials: Material[]) {
@@ -566,7 +643,15 @@ function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectW
     const is = indentToString(indent)
     let out = ``
     out += `${is}<node id="${armatureName}_${bone.name.replace(/\./g, "_")}" name="${bone.name}" sid="${bone.name.replace(/\./g, "_")}" type="JOINT">\n`
-    out += `${is}  <matrix sid="transform">${bsm(bone)}</matrix>\n`
+
+    // out += `${is}  <matrix sid="transform">${bsm(bone)}</matrix>\n`
+
+    const {x,y,z} = toEuler(bone.matRestRelative!)
+    out += `${is}  <rotate sid="rotationX">1 0 0 ${x}</rotate>\n`
+    out += `${is}  <rotate sid="rotationY">0 1 0 ${y}</rotate>\n`
+    out += `${is}  <rotate sid="rotationZ">0 0 1 ${z}</rotate>\n`
+    out += `${is}  <translate sid="location">${bone.matRestRelative![3]} ${bone.matRestRelative![7]} ${bone.matRestRelative![11]}</translate>\n`
+
     out += `${is}  <extra>\n`
     out += `${is}    <technique profile="blender">\n`
 
@@ -605,4 +690,49 @@ function indentToString(indent: number): string {
         indentStr += "  "
     }
     return indentStr
+}
+
+// rotation matrix to euler angles
+// https://learnopencv.com/rotation-matrix-to-euler-angles/
+
+function almost(left: number, right: number) {
+    return Math.abs(left - right) <= 1e-6
+}
+
+function isRotation(m: mat4): boolean {
+    let mT = mat4.transpose(mat4.create(), m)
+    let mI = mat4.invert(mat4.create(), m)
+    if (!mat4.equals(mT, mI)) {
+        return false
+    }
+    let d = mat4.determinant(m)
+    if (!almost(d, 1.0)) {
+        return false
+    }
+    return true
+}
+
+function at(m: mat4, a: number, b: number) {
+    return m[a + b * 4]
+}
+
+export function toEuler(m: mat4) {
+    if (!isRotation(m)) {
+        throw Error(`matrix is not rotation with translation`)
+    }
+
+    const sy = at(m, 0, 0) * at(m, 0, 0) + at(m, 0, 1) * at(m, 0, 1)
+    const singular = sy < Number.EPSILON
+
+    let x, y, z
+    if (!singular) {
+        x = Math.atan2(at(m, 2, 1), at(m, 2, 2))
+        y = Math.atan2(-at(m, 2, 0), sy)
+        z = Math.atan2(at(m, 1, 0), at(m, 0, 0))
+    } else {
+        x = Math.atan2(-at(m, 1, 2), at(m, 1, 1))
+        y = Math.atan2(-at(m, 2, 0), sy)
+        z = 0
+    }
+    return {x,y,z}
 }

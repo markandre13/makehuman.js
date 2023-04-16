@@ -7,7 +7,6 @@ use(chaiAlmost())
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { decoupleXYZandUV } from '../../src/render/RenderMesh'
 
 // http://paulbourke.net/dataformats/obj/
 describe("class WavefrontOBJ", function () {

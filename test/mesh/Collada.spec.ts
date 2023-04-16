@@ -17,13 +17,15 @@ import {
     prepareControllerFlatWeightMap,
     prepareControllerInit,
     prepareControllers,
-    prepareMesh
+    prepareMesh,
+    toEuler
 } from "../../src/mesh/Collada"
 import { testCube } from "../../src/mesh/testCube"
 
 import { parseXML, Tag, Text } from "./xml"
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 import { Bone } from '../../src/skeleton/Bone'
+import { mat4, vec3, vec4 } from 'gl-matrix'
 
 export function prepareGeometry(materials: Material[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
@@ -578,6 +580,37 @@ describe("Collada", function () {
                     expect(geometry.uv).to.deep.equal(uv)
                 })
             })
+        })
+    })
+
+    function printMat4(m: mat4) {
+        console.log(`\n${m[0]} ${m[1]} ${m[2]} ${m[3]}\n${m[4]} ${m[5]} ${m[6]} ${m[7]}\n${m[8]} ${m[9]} ${m[10]} ${m[11]}\n${m[12]} ${m[13]} ${m[14]} ${m[15]}`)
+    }
+
+    describe("matrix", () => {
+        it("toEuler", () => {
+            for (const v of [
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1],
+                [1, 1, 0],
+                [0, 1, 1],
+                [1, 1, 1]
+            ]) {
+                const m = mat4.fromRotation(mat4.create(), 1, vec3.normalize(vec3.create(), vec3.fromValues(v[0], v[1], v[2])))
+
+                const { x, y, z } = toEuler(m)
+
+                const m0 = mat4.create()
+                mat4.rotateX(m0, m0, x)
+                mat4.rotateY(m0, m0, y)
+                mat4.rotateZ(m0, m0, z)
+                const vY = vec4.fromValues(0, 1, 0, 1)
+                expect(vec4.equals(
+                    vec4.transformMat4(vec4.create(), vY, m),
+                    vec4.transformMat4(vec4.create(), vY, m0),
+                ))
+            }
         })
     })
 })

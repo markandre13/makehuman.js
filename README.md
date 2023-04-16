@@ -154,10 +154,19 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 TODO
 [X] the the other meshes/proxy meshes
-[ ] export UV
+[X] export UV
+[ ] export multiple meshes
+    (e.g. for clothing; or to separate skin/teeth/tounge/eyes for better Blender compability)
+[ ] load expression (e.g. data/expressions/laugh01.mhpose) ?
+[ ] load pose (eg. data/poses/sit01.bvh) ?
+[ ] export animation
+[ ] select proxy, ...
+[ ] load/save *.mhm (that's the textfile )
 [ ] export normals
 [ ] ...
-[ ] export animation
+
+makehuman-0.9.1-rc1a
+
 
 WHAT TO DO TO HANDLE TEXTURES/UV
 
