@@ -135,7 +135,7 @@ function run() {
                     <p>
                         <u>NOTE</u>: When importing into Blender, only the first material may look correct
                         in the UV editor while rendering will still be okay.
-                        A workaround it to separate the mesh by material after import.(Edit Mode, P).
+                        A workaround is to separate the mesh by material after import. (Edit Mode, P).
                     </p>
                     <p>
                         <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded

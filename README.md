@@ -39,6 +39,7 @@ Next steps:
 * data/modifiers/ bundles those morph targets into 249 more user friendly **modifiers**
 
 #### Code
+
 ```js
 // render's the morphed base mesh
 function render(canvas: HTMLCanvasElement, scene: HumanMesh)
@@ -141,7 +142,6 @@ npm run dev:test --file=build/test/skeleton.spec.js
 
 ## Next Goals
 
-* export collada (WIP)
 * save/load morph
 * save/load pose
 * posing via mediapipe/chordata (Done: PoC reading data in C++)
@@ -164,62 +164,6 @@ TODO
 [ ] load/save *.mhm (that's the textfile )
 [ ] export normals
 [ ] ...
-
-makehuman-0.9.1-rc1a
-
-
-WHAT TO DO TO HANDLE TEXTURES/UV
-
-* definition of faces in Wavefront & Collada is closer to each other than OpenGL
-  * Wavefront & Collada define a face by indices into vertex, normal & texcoord tables
-  * OpenGL aims at performance, hence the indirection using indices goes away
-  * MH morph operates on vertex
-  => i'll need to add a layer between opengl and the rest of MH
-  => find out about performance, in the end opengl will need FloatArray. can i just use
-     those in the code instead of Array<number>() ? can i measure the performance ?
-     when i switch to binaries in data/, i might have even more binaries around.
-     then get a diagram on how the data flows through MH and optimize it.
-     https://v8.dev/blog/dataview
-
-     * HumanMesh.update()
-       * Target.apply()
-
-* where to add normals & texture coordinates in Collada
-  * function colladaGeometries()
-    + <source id="Dariya_Body_001-mesh-map-0">
-    +   <float_array id="Dariya_Body_001-mesh-map-0-array" count="3624">...</float_array>
-    +   <technique_common>
-    +     <accessor source="#Dariya_Body_001-mesh-map-0-array" count="1812" stride="2">
-    +       <param name="S" type="float"/>
-    +       <param name="T" type="float"/>
-    +     </accessor>
-    +   </technique_common>
-    + </source>
-
-      <polylist ...>
-    +    <input semantic="TEXCOORD" source="#Dariya_Body_001-mesh-map-0" offset="2" set="1"/>
-       </polylist>
-
-FLOW OF MESH DATA, MORPH, SKINNING & PROXY
-
-* original mesh
-* mesh with morphs except current morp
-* mesh with current morp
-* posed mesh
-
-and for the rest... me thinks i can come up with something on my own
-
-class Group {
-    name: string
-    startIndex: number  // in points
-    length: number      // in points
-}
-
-WavefrontObj {
-    vertex: number[]    // x0,y0,z0,x1,y1,z1,...
-    indices: number[]   // quads in points
-    groups: Group[]
-}
 
 -----
 
@@ -269,10 +213,6 @@ Human: AnimatedMesh {
 }
 
 how upstream Makehuman does it...
-
-# Development Notes
-
-have a look at https://www.npmjs.com/package/avro-js to compress the data files some more
 
 ## Makehuman
 
