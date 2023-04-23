@@ -53,6 +53,9 @@ export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: A
         minZ = Math.min(minZ, xyz[i + 2])
         maxZ = Math.max(maxZ, xyz[i + 2])
     }
+    // console.log(`X:${minX}:${maxX}`)
+    // console.log(`Y:${minY}:${maxY}`)
+    // console.log( `Z:${minZ}:${maxZ}`)
     const originX = minX += (maxX - minX) / 2, originY = minY += (maxY - minY) / 2, originZ = minZ += (maxZ - minZ) / 2
     for (let i = 3; i < xyz.length; i += 3) {
         xyz[i] -= originX
@@ -71,33 +74,18 @@ export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: A
     // }
     // console.log(l)
 
-    // console.log(`X:${minX}:${maxX}`)
-    // console.log(`Y:${minY}:${maxY}`)
-    // console.log( `Z:${minZ}:${maxZ}`)
-
     const mesh = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
     programRGBA.color([1.0, 0.8, 0.7, 1])
     mesh.bind(programRGBA)
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 
-    // 7 eye
-
-    // 10 kopf oben
-    // oberlippe oben 11, 12, 13
-    // unterlippe oben 14, 15, 16, 17
-
-    // 19 nase
-
-    // 21 kopf rand oben links
-    // unter auge 22, 23
-
     programRGBA.color([0.0, 1.8, 0.0, 1])
-    const ring0 = [
-        // ring0
+    const lineStrips = [[
+        // RING 0
         10, 338, 297, 332, 284, 251, 389, 356,
-        454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 
-
-        // vertical
+        454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10,
+    ], [
+        // VERTICAL TOP DOWN
         // stirn
         10, 151, 9, 8,
         // nose
@@ -108,28 +96,18 @@ export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: A
         14, 15, 16, 17,
         // chin
         18, 200, 199, 175, 152
-    ]
-    const ring1 = [
+    ], [
+        // RING 1
         139, 71, 68, 104, 69, 108, 151, 337, 299, 333, 298, 301, 368, 264, 447, 366, 401, 435, 367, 364,
         394, 395, 369, 396, 175, 171, 140, 170, 169, 135, 138, 215, 177, 137, 227, 34, 139
-    ]
-    const ring2 = [
+    ], [
+        // RING 2
         199, 208, 211, 210, 214, 192, 213, 147, 123, 116, 143, 156, 70, 63, 105, 66, 107, 9, 336, 296, 334,
         293, 300, 383, 372, 345, 352, 376, 433, 416, 434, 430, 431, 262, 428, 199
-    ]
-
-    const mesh0 = new RenderMesh(gl, xyz, ring0, undefined, undefined, false)
-    mesh0.bind(programRGBA)
-    gl.drawElements(gl.LINE_STRIP, ring0.length, gl.UNSIGNED_SHORT, 0)
-
-    const mesh1 = new RenderMesh(gl, xyz, ring1, undefined, undefined, false)
-    mesh1.bind(programRGBA)
-    gl.drawElements(gl.LINE_STRIP, ring1.length, gl.UNSIGNED_SHORT, 0)
-
-    const mesh2 = new RenderMesh(gl, xyz, ring2, undefined, undefined, false)
-    mesh2.bind(programRGBA)
-    gl.drawElements(gl.LINE_STRIP, ring2.length, gl.UNSIGNED_SHORT, 0)
-
-
-    // mesh.draw(programRGBA, gl.TRIANGLES)
+    ]]
+    for (const line of lineStrips) {
+        const mesh0 = new RenderMesh(gl, xyz, line, undefined, undefined, false)
+        mesh0.bind(programRGBA)
+        gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
+    }
 }
