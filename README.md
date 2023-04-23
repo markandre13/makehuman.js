@@ -3,12 +3,12 @@
 <div style="text-align:npm center">
   <img src="data/screenshot.png" />
 
-  A re-implementation of [Makehuman](http://www.makehumancommunity.org) as a WebApp.
+  A variation of [Makehuman](http://www.makehumancommunity.org) as a WebApp.
 </div>
 
 ## Current Status
 
-* Have a look at [build 2023-04-08](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
+* Have a look at [build 2023-04-16](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Render a proxy mesh instead of the basemesh
@@ -17,7 +17,7 @@
 
 Currently working on:
 
-* pose/animate the face with mediapipe
+* pose/animate the face with mediapipe which will require
 
   * https://github.com/markandre13/mediapipe_daemon
   * https://github.com/markandre13/mediapipe_cpp_lib
