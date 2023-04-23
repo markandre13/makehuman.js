@@ -23,12 +23,54 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
 
+import { WavefrontObj } from "mesh/WavefrontObj"
+import { renderFace } from 'render/renderFace'
+
 window.onload = () => { main() }
+
+// [ ] load wavefront of face to get mesh
+// [ ] assuming that we receive the vertices, render the face
+// [ ] add ability to reconnect (client & server)
+
+export function runX() {
+    const refCanvas = new class { canvas!: HTMLCanvasElement }
+    document.body.replaceChildren(...<>
+        <canvas set={ref(refCanvas, 'canvas')} style={{ width: '1280px', height: '960px', border: "1px #fff solid" }} />
+        <br/>
+        <Button action={() => { socket.send(enc.encode("GET FACE")) }}>Pull Face</Button>
+    </>)
+
+    const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
+
+    const enc = new TextEncoder()
+    const host = "localhost"
+    const port = 9001
+    const socket = new WebSocket(`ws://${host}:${port}`)
+    socket.binaryType = "arraybuffer"
+    socket.onopen = () => {
+        console.log(`web socket is open`)
+        socket.onmessage = async (msg: MessageEvent) => {
+            let arrayBuffer: ArrayBuffer
+            if (msg.data instanceof Blob) {
+                arrayBuffer = await msg.data.arrayBuffer()
+            } else
+            if (msg.data instanceof ArrayBuffer) {
+                arrayBuffer = msg.data
+            } else {
+                console.log("neither blob nor arraybuffer")
+                return
+            }
+            renderFace(refCanvas.canvas, obj, arrayBuffer)
+            socket.send(enc.encode("GET FACE"))
+        }
+        socket.send(enc.encode("GET FACE"))
+    }
+}
 
 export function main() {
     try {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
-        run()
+        runX()
     }
     catch (e) {
         console.log(e)
@@ -127,10 +169,10 @@ function run() {
             <Tab label="Export" value="WIREFRAME">
                 <div style={{ padding: "10px" }}>
                     <p>
-                        <Checkbox model={useBlenderProfile} title="Export additional Blender specific information (for material, shaders, bones, etc.)."/> Use Blender Profile
+                        <Checkbox model={useBlenderProfile} title="Export additional Blender specific information (for material, shaders, bones, etc.)." /> Use Blender Profile
                     </p>
                     <p>
-                        <Checkbox model={limitPrecision} title="Reduce the precision of the exported data to 6 digits."/> Limit Precision
+                        <Checkbox model={limitPrecision} title="Reduce the precision of the exported data to 6 digits." /> Limit Precision
                     </p>
                     <p>
                         <u>NOTE</u>: When importing into Blender, only the first material may look correct

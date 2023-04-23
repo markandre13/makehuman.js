@@ -18,6 +18,7 @@
     "build:once": "rollup --config rollup.config.mjs",
     "build:chai": "mkdir -p build/test/chai && cp test/chai/*\\.js test/chai/*\\.d\\.ts build/test/chai",
     "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && mv -f dist/filesystem/build-directory-files.js dist/filesystem/build-directory-files.cjs && node dist/filesystem/build-directory-files.cjs ) ",
+    "rebuild:data": "rm -f data/directory.json && npm run build:data",
     "build:watch": "rollup --config rollup.config.js --watch",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",

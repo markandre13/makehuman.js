@@ -13,6 +13,7 @@ export class WavefrontObj {
     // normal: number[]  // x,y,z (due to morphing & skinning, normals are calculated in makehuman)
 
     // list of quads
+    vcount: number[] = []
     fxyz: number[] = [] // (fvert in makehuman)
     fuv: number[] = []
 
@@ -30,6 +31,7 @@ export class WavefrontObj {
         }
         this.groups = []
         this.material = []
+        const vcount: number[] = []
         const vertex: number[] = []
         const texcoord: number[] = []
         const normal: number[] = []
@@ -85,9 +87,10 @@ export class WavefrontObj {
                 case 'p': break // point
                 case 'l': break // line
                 case 'f': // face( vertex[/[texture][/normal]])+
-                    if (tokens.length !== 5) {
-                        throw Error(`can't handle faces which are not quads yet (line ${lineNumber}: '${line}'}`)
-                    }
+                    // if (tokens.length !== 5) {
+                    //     throw Error(`can't handle faces which are not quads yet (line ${lineNumber}: '${line}'}`)
+                    // }
+                    vcount.push(tokens.length - 1)
                     for (let i = 1; i < tokens.length; ++i) {
                         const split = tokens[i].split('/')
                         this.fxyz.push(parseInt(split[0], 10) - 1)
@@ -137,9 +140,10 @@ export class WavefrontObj {
                     throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file in line '${line}' of length ${line.length}'.`)
             }
         }
+        this.vcount = vcount
         this.vertex = new Float32Array(vertex)
         this.uv = new Float32Array(texcoord)
-
+        
         // set group's lengths
         if (this.groups.length > 0) {
             for (let i = 0; i < this.groups.length - 1; ++i) {
@@ -197,6 +201,6 @@ export class WavefrontObj {
         if (groupNames.length !== 0) {
             groupNames = ` and ${groupNames}`
         }
-        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.uv.length/2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
+        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.uv.length / 2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
     }
 }

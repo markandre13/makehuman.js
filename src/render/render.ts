@@ -196,14 +196,14 @@ function drawScene(
     cubeRotation += deltaTime
 }
 
-function prepareCanvas(canvas: HTMLCanvasElement) {
+export function prepareCanvas(canvas: HTMLCanvasElement) {
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
         canvas.width = canvas.clientWidth
         canvas.height = canvas.clientHeight
     }
 }
 
-function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement) {
+export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement) {
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.clearDepth(1.0)
@@ -212,7 +212,7 @@ function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasElement) 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-function createModelViewMatrix(renderMode: RenderMode) {
+export function createModelViewMatrix(renderMode: RenderMode) {
     const modelViewMatrix = mat4.create()
     if (renderMode === RenderMode.DEBUG) {
         mat4.translate(modelViewMatrix, modelViewMatrix, [1.0, -7.0, -5.0])
@@ -224,7 +224,7 @@ function createModelViewMatrix(renderMode: RenderMode) {
     return modelViewMatrix
 }
 
-function createProjectionMatrix(canvas: HTMLCanvasElement) {
+export function createProjectionMatrix(canvas: HTMLCanvasElement) {
     const fieldOfView = 45 * Math.PI / 180    // in radians
     const aspect = canvas.width / canvas.height
     const zNear = 0.1
@@ -234,7 +234,7 @@ function createProjectionMatrix(canvas: HTMLCanvasElement) {
     return projectionMatrix
 }
 
-function createNormalMatrix(modelViewMatrix: mat4) {
+export function createNormalMatrix(modelViewMatrix: mat4) {
     const normalMatrix = mat4.create()
     mat4.invert(normalMatrix, modelViewMatrix)
     mat4.transpose(normalMatrix, normalMatrix)

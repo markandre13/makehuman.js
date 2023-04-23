@@ -1,4 +1,4 @@
-import { calculateNormalsQuads } from '../lib/calculateNormals'
+import { calculateNormalsQuads, calculateNormalsTriangles } from '../lib/calculateNormals'
 import { AbstractShader } from './shader/AbstractShader'
 
 interface GLXYZUV {
@@ -25,9 +25,21 @@ export class RenderMesh {
     normal: Float32Array
     glData: GLXYZUV
 
-    constructor(gl: WebGL2RenderingContext, vertex: Float32Array, fvertex: number[], uvs?: Float32Array, fuvs?: number[]) {
+    constructor(gl: WebGL2RenderingContext, vertex: Float32Array, fvertex: number[], uvs?: Float32Array, fuvs?: number[], quads = true) {
         this.gl = gl
         this.fvertex = fvertex
+
+        if (quads == false) {
+            this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, fvertex)
+            this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
+            this.normal = new Float32Array(vertex.length)
+            calculateNormalsTriangles(this.normal, vertex, fvertex)
+            this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
+            this.glData = {
+                indices: fvertex
+            } as GLXYZUV
+            return
+        }
 
         const glData = decoupleXYZandUV(vertex, fvertex, uvs, fuvs)
         this.glData = glData
