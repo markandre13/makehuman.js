@@ -3,7 +3,7 @@
 <div style="text-align:npm center">
   <img src="data/screenshot.png" />
 
-  An **experimental** port of [Makehuman](http://www.makehumancommunity.org) to Typescript/The Web.
+  A re-implementation of [Makehuman](http://www.makehumancommunity.org) as a WebApp.
 </div>
 
 ## Current Status
@@ -12,11 +12,17 @@
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Render a proxy mesh instead of the basemesh
-* Export the basemesh and rig as Collada for Blender
+* Export the mesh with rig and texture coordinates as Collada for Blender
 * Nothing else... 😅
 
-Next steps:
-* Export UVs in Collada
+Currently working on:
+
+* pose/animate the face with mediapipe
+
+  * https://github.com/markandre13/mediapipe_daemon
+  * https://github.com/markandre13/mediapipe_cpp_lib
+
+* export pose/animation via Collada
 
 ## Why?
 
