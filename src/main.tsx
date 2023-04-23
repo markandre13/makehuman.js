@@ -40,7 +40,7 @@ export function runX() {
         <Button action={() => { socket.send(enc.encode("GET FACE")) }}>Pull Face</Button>
     </>)
 
-    const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
+    // const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
 
     const enc = new TextEncoder()
     const host = "localhost"
@@ -60,7 +60,7 @@ export function runX() {
                 console.log("neither blob nor arraybuffer")
                 return
             }
-            renderFace(refCanvas.canvas, obj, arrayBuffer)
+            renderFace(refCanvas.canvas, arrayBuffer)
             socket.send(enc.encode("GET FACE"))
         }
         socket.send(enc.encode("GET FACE"))

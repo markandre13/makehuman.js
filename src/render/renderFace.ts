@@ -5,8 +5,8 @@ import { RenderMesh } from "./RenderMesh"
 import { RGBAShader } from "./shader/RGBAShader"
 import { testCube } from "mesh/testCube"
 
-export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: ArrayBuffer) {
-    console.log("render face")
+export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
+    // console.log("render face")
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (gl == null) {
         throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
@@ -24,7 +24,8 @@ export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: A
     const modelViewMatrix = mat4.create()
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -5.0]) // test cube
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -30.0]) // obj file face
-    mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -0.5]) // obj file face
+    mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -0.5]) // obj file face centered
+    // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -1.5]) // obj file face
     mat4.rotate(modelViewMatrix, modelViewMatrix, 0.0 * .7, [0, 1, 0])
 
     const normalMatrix = createNormalMatrix(modelViewMatrix)
@@ -37,9 +38,11 @@ export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: A
     // const xyz = new Float32Array((testCube.vertexMorphed as any) as number[])
     // const fxyz = (testCube.baseMesh as any).indices as number[]
 
-    // const xyz = obj.vertex
     const xyz = new Float32Array(face)
-    const fxyz = obj.fxyz
+    const fxyz = new Array<number>(xyz.length / 3)
+    for(let i=0; i<fxyz.length; ++i) {
+        fxyz[i] = i
+    }
 
     let minX, maxX, minY, maxY, minZ, maxZ
     minX = maxX = xyz[0]
@@ -104,8 +107,118 @@ export function renderFace(canvas: HTMLCanvasElement, obj: WavefrontObj, face: A
         // RING 2
         199, 208, 211, 210, 214, 192, 213, 147, 123, 116, 143, 156, 70, 63, 105, 66, 107, 9, 336, 296, 334,
         293, 300, 383, 372, 345, 352, 376, 433, 416, 434, 430, 431, 262, 428, 199
+    ], [
+        // NOSE HORZ 0
+        102, 115, 220, 45, 4, 275, 440, 344, 331
+    ], [
+        // NOSE HORZ -1
+        129, 49, 131, 134, 51, 5, 281, 363, 360, 279, 358
+    ], [
+        // NOSE HORZ -2
+        209, 198, 236, 3, 195, 248, 456, 420, 429
+    ], [
+        // NOSE HORZ -3
+        36, 142, 126, 217, 174, 196, 197, 419, 399, 437, 355, 371, 266,
+    ], [
+        // NOSE HORZ -4
+        147, 50, 101, 100, 47, 114, 188, 122, 6, 351, 412, 343, 277, 329, 330, 280, 376
+    ],[
+        // RIGHT EYE HORZ 0
+        111, 117, 118, 119, 120, 121, 128, 245
+    ], [
+        // LEFT EYE HORZ 0
+        340, 346, 347, 348, 349, 350, 357, 465
+    ], [
+        // LEFT IRIS
+        474, 473, 
+        476, 473,
+        475, 473,
+        477
+    ], [
+        // RIGHT IRIS
+        469, 471, 468,
+
+        470, 472
+    ], [
+        // RIGHT EYE HORZ 1
+        31, 228, 229, 230, 231, 232, 233, // two more
+    ], [
+        // LEFT EYE HORZ 1
+        261, 448, 449, 450, 451, 452, 453,
+    ], [
+        // RIGHT EYE HORZ 2
+        25, 110, 24, 23, 22, 26, 112, 243 // two more
+    ], [
+        255, 339, 254, 253, 252, 256, 341, 463
+    ], [
+        // RIGHT EYE BROW
+        55, 65, 52, 53, 46, 156
+    ], [
+        // LEFT EYE BROW
+        285, 295, 282, 283, 276, 383
+    ],[
+        // LEFT EYE BROW -1
+        441, 442, 443, 444, 445, 353
+    ], [
+        // RIGHT EYE BROW -1
+        221, 222, 223, 224, 225, 124
+    ], [
+        // RIGHT EYE BROW -2
+        56, 28, 27, 29, 30, 247
+    ], [
+        // LEFT EYE BROW -2
+        286, 258, 257, 259, 260, 467
+    ], [
+        // MOUSTACHE
+        202, 57, 186, 92, 165, 167, 164, 393, 391, 322, 410, 287, 422
+    ], [
+        // MOUSTACHE RIGHT -1
+        210, 212, 216, 206, 203
+    ], [
+        // MOUSTACHE LEFT -1
+        430, 432, 436, 426, 423
+    ], [
+        // MOUSTACHE RIGHT -2
+        205, 207, 214
+    ], [
+        // MOUSTACHE LEFT -2
+        425, 427, 434
+    ], [
+        // NASENBEIN
+        417, 168, 193,
+    ], [
+        // SCHLAEFE RIGHT
+        234, 143, 35, 226, 130
+    ], [
+        // SCHLAEFE LEFT
+        359, 446, 265, 372, 454
+    ],[
+        // EYE LID TOP LEFT
+        398,384,385,386,387,388,466,263
+    ], [
+        // EYE LID BOTTOM LEFT
+        263, 249, 390, 373, 374, 380, 381, 382,
+    ], [
+        // EYE LID TOP RIGHT
+        173, 157, 158, 159, 160, 161, 246, 33
+    ],[
+        // EYE LID BOTTOM RIGHT
+        7, 163, 144, 145, 153, 154, 155, 133
+    ], [
+        // BELOW LIPS
+        422, 424, 418, 421, 200, 201, 194, 204, 202
+    ], [
+        // NASENBEIN -1
+        285, 8, 55,
+    ], [
+        264, 342
+    ], [
+        34, 113
     ]]
     for (const line of lineStrips) {
+        if (line === lineStrips[lineStrips.length-1]) {
+            programRGBA.color([0.0, 0.5, 1.0, 1])
+        }
         const mesh0 = new RenderMesh(gl, xyz, line, undefined, undefined, false)
         mesh0.bind(programRGBA)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
