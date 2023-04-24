@@ -17,10 +17,9 @@
 
 Currently working on:
 
-* pose/animate the face with mediapipe which will require
-
-  * https://github.com/markandre13/mediapipe_daemon
-  * https://github.com/markandre13/mediapipe_cpp_lib
+* pose/animate the face with Google's [MediaPipe](https://developers.google.com/mediapipe) which will require building some C++ code from
+  [mediapipe_cpp_lib](https://github.com/markandre13/mediapipe_cpp_lib) and
+  [mediapipe_daemon](https://github.com/markandre13/mediapipe_daemon)
 
 * export pose/animation via Collada
 
