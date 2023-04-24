@@ -11,6 +11,7 @@ import { loadProxy } from 'proxy/Proxy'
 import { PoseNode, PoseTreeAdapter } from 'ui/poseView'
 import { SliderTreeAdapter } from 'ui/morphView'
 import { render } from './render/render'
+import { renderFace } from 'render/renderFace'
 
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
@@ -23,22 +24,45 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
 
-import { WavefrontObj } from "mesh/WavefrontObj"
-import { renderFace } from 'render/renderFace'
 
 window.onload = () => { main() }
 
-// [ ] load wavefront of face to get mesh
-// [ ] assuming that we receive the vertices, render the face
-// [ ] add ability to reconnect (client & server)
+export function main() {
+    try {
+        FileSystemAdapter.setInstance(new HTTPFSAdapter())
+        // run()
+        runMediaPipe()
+    }
+    catch (e) {
+        console.log(e)
+        if (e instanceof Error)
+            alert(`${e.name}: ${e.message}`)
+        else
+            alert(e)
+    }
+}
 
-export function runX() {
+// MEDIAPIPE INTEGRATION PLAYGROUND
+// [X] assuming that we receive the vertices, render the face
+// [ ] render makehuman head besides mediapipe head
+// [ ] have a look at http://www.makehumancommunity.org/wiki/Documentation:Basemesh
+//     and provide some controls to manually animate the face
+// [ ] try to animate the makehuman head from the mediapipe head
+//     (assume that the camera is mounted to the head)
+// [ ] have a look at shape keys
+//     http://www.makehumancommunity.org/wiki/Documentation:Corrective_shape_keys
+// [ ] add ability to reconnect (client & server)
+// [ ] put server side ws code into a separate thread to improve performance
+// [ ] record to file
+// [ ] read file (either with frames dropped or precise)
+// [ ] try opencv motion tracking to track optional markers painted
+//     on the real face
+export function runMediaPipe() {
     const refCanvas = new class { canvas!: HTMLCanvasElement }
     document.body.replaceChildren(...<>
-        <canvas set={ref(refCanvas, 'canvas')} style={{ width: '1280px', height: '960px', border: "1px #fff solid" }} />
-        <br/>
-        <Button action={() => { socket.send(enc.encode("GET FACE")) }}>Pull Face</Button>
+        <canvas set={ref(refCanvas, 'canvas')} style={{ width: '480px', height: '480px', border: "1px #fff solid" }} />
     </>)
+    // <Button action={() => { socket.send(enc.encode("GET FACE")) }}>Pull Face</Button>
 
     // const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
 
@@ -64,20 +88,6 @@ export function runX() {
             socket.send(enc.encode("GET FACE"))
         }
         socket.send(enc.encode("GET FACE"))
-    }
-}
-
-export function main() {
-    try {
-        FileSystemAdapter.setInstance(new HTTPFSAdapter())
-        runX()
-    }
-    catch (e) {
-        console.log(e)
-        if (e instanceof Error)
-            alert(`${e.name}: ${e.message}`)
-        else
-            alert(e)
     }
 }
 

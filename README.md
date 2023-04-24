@@ -31,6 +31,10 @@ Currently working on:
 
 ## How does Makehuman work?
 
+Some links into the official MakeHuman documentation:
+* [Mesh Topology](http://www.makehumancommunity.org/wiki/Documentation:Professional_mesh_topology)
+* [Base Mesh and Rig](http://www.makehumancommunity.org/wiki/Documentation:Basemesh)
+
 ### Morph Mesh
 
 #### Data

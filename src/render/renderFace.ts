@@ -1,9 +1,7 @@
 import { mat4 } from "gl-matrix"
-import { WavefrontObj } from "mesh/WavefrontObj"
-import { createModelViewMatrix, createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./render"
+import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./render"
 import { RenderMesh } from "./RenderMesh"
 import { RGBAShader } from "./shader/RGBAShader"
-import { testCube } from "mesh/testCube"
 
 export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     // console.log("render face")
@@ -40,7 +38,7 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
 
     const xyz = new Float32Array(face)
     const fxyz = new Array<number>(xyz.length / 3)
-    for(let i=0; i<fxyz.length; ++i) {
+    for (let i = 0; i < fxyz.length; ++i) {
         fxyz[i] = i
     }
 
@@ -78,7 +76,7 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     // console.log(l)
 
     const mesh = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
-    programRGBA.color([1.0, 0.8, 0.7, 1])
+    programRGBA.color([10.0, 8, 7, 1])
     mesh.bind(programRGBA)
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 
@@ -105,7 +103,7 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
         394, 395, 369, 396, 175, 171, 140, 170, 169, 135, 138, 215, 177, 137, 227, 34, 139
     ], [
         // RING 2
-        199, 208, 211, 210, 214, 192, 213, 147, 123, 116, 143, 156, 70, 63, 105, 66, 107, 9, 336, 296, 334,
+        199, 208, 32, 211, 210, 214, 192, 213, 147, 123, 116, 143, 156, 70, 63, 105, 66, 107, 9, 336, 296, 334,
         293, 300, 383, 372, 345, 352, 376, 433, 416, 434, 430, 431, 262, 428, 199
     ], [
         // NOSE HORZ 0
@@ -118,33 +116,22 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
         209, 198, 236, 3, 195, 248, 456, 420, 429
     ], [
         // NOSE HORZ -3
-        36, 142, 126, 217, 174, 196, 197, 419, 399, 437, 355, 371, 266,
+        214, 207, 205, 36, 142, 126, 217, 174, 196, 197, 419, 399, 437, 355, 371, 266, 425, 427, 434
     ], [
         // NOSE HORZ -4
-        147, 50, 101, 100, 47, 114, 188, 122, 6, 351, 412, 343, 277, 329, 330, 280, 376
-    ],[
+        192, 187, 50, 101, 100, 47, 114, 188, 122, 6, 351, 412, 343, 277, 329, 330, 280, 411, 416
+    ], [
         // RIGHT EYE HORZ 0
         111, 117, 118, 119, 120, 121, 128, 245
     ], [
         // LEFT EYE HORZ 0
         340, 346, 347, 348, 349, 350, 357, 465
     ], [
-        // LEFT IRIS
-        474, 473, 
-        476, 473,
-        475, 473,
-        477
-    ], [
-        // RIGHT IRIS
-        469, 471, 468,
-
-        470, 472
-    ], [
         // RIGHT EYE HORZ 1
-        31, 228, 229, 230, 231, 232, 233, // two more
+        31, 228, 229, 230, 231, 232, 233, 244 // two more
     ], [
         // LEFT EYE HORZ 1
-        261, 448, 449, 450, 451, 452, 453,
+        261, 448, 449, 450, 451, 452, 453, 464
     ], [
         // RIGHT EYE HORZ 2
         25, 110, 24, 23, 22, 26, 112, 243 // two more
@@ -156,18 +143,18 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     ], [
         // LEFT EYE BROW
         285, 295, 282, 283, 276, 383
-    ],[
+    ], [
         // LEFT EYE BROW -1
-        441, 442, 443, 444, 445, 353
+        413, 441, 442, 443, 444, 445, 353
     ], [
         // RIGHT EYE BROW -1
-        221, 222, 223, 224, 225, 124
+        189, 221, 222, 223, 224, 225, 124
     ], [
         // RIGHT EYE BROW -2
-        56, 28, 27, 29, 30, 247
+        190, 56, 28, 27, 29, 30, 247
     ], [
         // LEFT EYE BROW -2
-        286, 258, 257, 259, 260, 467
+        414, 286, 258, 257, 259, 260, 467
     ], [
         // MOUSTACHE
         202, 57, 186, 92, 165, 167, 164, 393, 391, 322, 410, 287, 422
@@ -178,12 +165,6 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
         // MOUSTACHE LEFT -1
         430, 432, 436, 426, 423
     ], [
-        // MOUSTACHE RIGHT -2
-        205, 207, 214
-    ], [
-        // MOUSTACHE LEFT -2
-        425, 427, 434
-    ], [
         // NASENBEIN
         417, 168, 193,
     ], [
@@ -192,16 +173,16 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     ], [
         // SCHLAEFE LEFT
         359, 446, 265, 372, 454
-    ],[
+    ], [
         // EYE LID TOP LEFT
-        398,384,385,386,387,388,466,263
+        398, 384, 385, 386, 387, 388, 466, 263
     ], [
         // EYE LID BOTTOM LEFT
-        263, 249, 390, 373, 374, 380, 381, 382,
+        263, 249, 390, 373, 374, 380, 381, 382, 362
     ], [
         // EYE LID TOP RIGHT
         173, 157, 158, 159, 160, 161, 246, 33
-    ],[
+    ], [
         // EYE LID BOTTOM RIGHT
         7, 163, 144, 145, 153, 154, 155, 133
     ], [
@@ -211,16 +192,62 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
         // NASENBEIN -1
         285, 8, 55,
     ], [
+        // LEFT NOSE HOLE
+        458, 459, 309, 392, 289, 305, 290, 250, 458
+    ], [
+        // RIGHT NOSE HOLE
+        60, 75, 59, 166, 79, 239, 238, 20, 60
+    ], [
+        // BOTH NOSE HOLES
+        240, 235, 219, 218, 237, 44, 1, 274, 457, 438, 439, 455, 460, 328, 2, 99, 240
+    ], [
+        // INBETWEEN NOSE UPPER
+        458, 461, 354, 19, 125, 241, 238
+    ], [
+        // INBETWEEN NOSE LOWER
+        250, 462, 370, 94, 141, 242, 20
+    ], [
+        // NOSE BOTTOM
+        278, 294, 327, 326, 97, 98, 64, 48
+    ], [
+        // RIGHT BELOW LIBS
+        43, 106, 182, 83, 18, 313, 406, 335, 273
+    ], [
         264, 342
     ], [
         34, 113
+    ], [
+        // LEFT IRIS
+        474, 473,
+        476, 473,
+        475, 473,
+        477
+    ], [
+        // RIGHT IRIS
+        469, 471, 468,
+        470, 472
+    ], [
+        // LIPS 0
+        317, 14, 87, 178, 88, 95, 78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317
+    ], [
+        // LIPS 1
+        316, 15, 86, 179, 89, 96, 62, 183, 42, 41, 38, 12, 268, 271, 272, 407, 292, 325, 319, 403, 316
+    ], [
+        // LIPS 2
+        315, 16, 85, 180, 90, 77, 76, 184, 74, 73, 72, 11, 302, 303, 304, 408, 306, 307, 320, 404, 315
+    ], [
+        // LIPS 3
+        314, 17, 84, 181, 91, 146, 61, 185, 40, 39, 37, 11, 267, 269, 270, 409, 291, 375, 321, 405, 314
     ]]
     for (const line of lineStrips) {
-        if (line === lineStrips[lineStrips.length-1]) {
-            programRGBA.color([0.0, 0.5, 1.0, 1])
-        }
+        // if (line === lineStrips[lineStrips.length - 1]) {
+        //     programRGBA.color([0.0, 0.0, 10.0, 1])
+        // }
         const mesh0 = new RenderMesh(gl, xyz, line, undefined, undefined, false)
         mesh0.bind(programRGBA)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
+        if (line[0] === 34) {
+            programRGBA.color([8.0, 0.0, 0.0, 1])
+        }
     }
 }
