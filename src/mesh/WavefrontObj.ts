@@ -137,7 +137,7 @@ export class WavefrontObj {
                 case 'stech': break
 
                 default:
-                    throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file in line '${line}' of length ${line.length}'.`)
+                    throw Error(`Unknown keyword '${tokens[0]}' in Wavefront OBJ file in line '${line}' of length ${line.length}.`)
             }
         }
         this.vcount = vcount

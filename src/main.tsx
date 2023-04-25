@@ -30,8 +30,8 @@ window.onload = () => { main() }
 export function main() {
     try {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
-        // run()
-        runMediaPipe()
+        run()
+        // runMediaPipe()
     }
     catch (e) {
         console.log(e)
@@ -44,11 +44,29 @@ export function main() {
 
 // MEDIAPIPE INTEGRATION PLAYGROUND
 // [X] assuming that we receive the vertices, render the face
-// [ ] render makehuman head besides mediapipe head
 // [ ] have a look at http://www.makehumancommunity.org/wiki/Documentation:Basemesh
 //     and provide some controls to manually animate the face
+//     (maybe even save the pose in case we have some good ones)
+//     MH provides some additional level of abstraction:
+//         data/poseunits/face-poseunits.bvh with 60 frames
+//         data/poseunits/face-poseunits.json with names for each frame
+//         data/expressions/*.pose with percentage for each poseunit
+//     expressions are most expressive on old people with teeth, hair and eye brows
+//     [ ] load bvh
+//     [ ] load poseunits
+//     [ ] load expression
+//     [ ] add face page showing face, list of expression and list of poseunits
+//     [ ] apply expression
+//     [ ] export expression as animation in collada file
+//     [ ] animate between expressions?
+//         http://www.makehumancommunity.org/wiki/Documentation:Basemesh
+//         dark helper bones: no deformation (of the skin), used to guide other bones
+
+// [ ] it seems we get normalized face landmarks, try to get the non-normalized ones
+// [ ] render makehuman head besides mediapipe head
 // [ ] try to animate the makehuman head from the mediapipe head
 //     (assume that the camera is mounted to the head)
+// [ ] to adjust to different people, we might need an initialisation step
 // [ ] have a look at shape keys
 //     http://www.makehumancommunity.org/wiki/Documentation:Corrective_shape_keys
 // [ ] add ability to reconnect (client & server)
@@ -62,8 +80,6 @@ export function runMediaPipe() {
     document.body.replaceChildren(...<>
         <canvas set={ref(refCanvas, 'canvas')} style={{ width: '480px', height: '480px', border: "1px #fff solid" }} />
     </>)
-    // <Button action={() => { socket.send(enc.encode("GET FACE")) }}>Pull Face</Button>
-
     // const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
 
     const enc = new TextEncoder()
