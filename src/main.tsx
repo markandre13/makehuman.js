@@ -22,10 +22,8 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
-import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
+import { BooleanModel, Button, Checkbox, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
-import { isNull } from 'util'
-
 
 window.onload = () => { main() }
 
@@ -139,17 +137,31 @@ function run() {
 
     loadMacroTargets()
 
+    //
+    // EXPRESSIONS
+    //
+
     const facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
     const facePoseUnitsNames = JSON
         .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
         .framemapping as string[]
     const poseUnitName2Frame = new Map<string, number>()
     facePoseUnitsNames.forEach((name, index) => poseUnitName2Frame.set(name, index))
-    const expression = JSON.parse(FileSystemAdapter.getInstance().readFile("data/expressions/laugh02.mhpose"))
+    const expression = JSON.parse(FileSystemAdapter.getInstance().readFile("data/expressions/surprise01.mhpose"))
         .unit_poses as any
 
-    console.log('everything is loaded...');
+    const expressions = FileSystemAdapter.getInstance()
+        .listDir("expressions")
+        .filter(filename => filename.endsWith(".mhpose"))
+        .map(filename => filename.substring(0, filename.length - 7))
+    const expressionModel = new StringArrayModel(expressions)
+    const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
+    // human.setExpression() ???
+    selectedExpression.modified.add( () => console.log(expressions[selectedExpression.row]))
 
+    console.log('everything is loaded...')
+
+    TableAdapter.register(StringArrayAdapter, StringArrayModel)
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
@@ -167,11 +179,18 @@ function run() {
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
 
+    // 2_posing_expression.py
+    // gui3d.app.do(ExpressionAction(msg, self.selectedFile, filename, self))
+    // applyToPose()
+    // human.addAnimation
+    // human.setActiveAnimation
+
     // console.log(facePoseUnitsNames)
     // console.log(expression)
     for (let prop of Object.getOwnPropertyNames(expression)) {
+        const value = expression[prop]
         const frame = poseUnitName2Frame.get(prop)!!
-        console.log(`${frame} = ${expression[prop]}`)
+        console.log(`${prop} (${frame}) = ${value}`)
         for (const joint of facePoseUnits.bvhJoints) {
             if (joint.name === "End effector") {
                 continue
@@ -181,17 +200,19 @@ function run() {
                 console.log(`NO POSE NODE FOUND FOR BVH JOINT '${joint.name}'`)
                 continue
             }
-
             const start = frame * joint.channels.length
-            const rotation = [joint.frames[start], joint.frames[start + 1], joint.frames[start + 2]] as number[]
+            const rotation = [
+                value * joint.frames[start],
+                value * joint.frames[start + 1],
+                value * joint.frames[start + 2]
+            ] as number[]
             // there also values below this threshold for toes... wtf? ignore(?)
             const e = 0.000016
             if (Math.abs(rotation[0]) > e || Math.abs(rotation[1]) > e || Math.abs(rotation[2]) > e) {
-                console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
-                // THIS IS NOT CORRRECT
-                node.x.value = node.x.value - rotation[0]
-                node.y.value = node.y.value - rotation[1]
-                node.z.value = node.z.value - rotation[2]
+                // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
+                node.x.value = node.x.value + rotation[0]
+                node.y.value = node.y.value + rotation[1]
+                node.z.value = node.z.value + rotation[2]
             }
         }
     }
@@ -215,14 +236,12 @@ function run() {
     const refCanvas = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            {/* <Tab label="Debug" value="DEBUG">
-                <p>
-                jaw <Text model={jaw.x} style={{ width: '50px'}}/><Slider model={jaw.x} style={{ width: '200px' }}/>
-                </p>
-                <p>
-                    <Button action={() => downloadBaseMesh(scene, download)}>Export morphed and rigged base mesh</Button>
-                </p>
-            </Tab> */}
+            <Tab label="Debug" value="DEBUG">
+                <Table
+                    model={expressionModel}
+                    selectionModel={selectedExpression}
+                    style={{ width: '150px', height: '100%' }} />
+            </Tab>
             <Tab label="Morph" value="POLYGON">
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
@@ -284,5 +303,26 @@ function loadMacroTargets() {
         //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
         // console.log(target.path)
         // target.getTarget()
+    }
+}
+
+class StringArrayModel extends TableModel {
+    protected data: string[]
+    constructor(data: string[]) {
+        super()
+        this.data = data
+    }
+    override get colCount() { return 1 }
+    override get rowCount() { return this.data.length }
+    get(row: number) {
+        return this.data[row]
+    }
+}
+
+class StringArrayAdapter extends TableAdapter<StringArrayModel> {
+    override showCell(pos: TablePos, cell: HTMLSpanElement): void {
+        cell.replaceChildren(
+            text(this.model!.get(pos.row))
+        )
     }
 }
