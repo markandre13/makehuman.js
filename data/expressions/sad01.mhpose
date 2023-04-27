@@ -1,0 +1,19 @@
+{
+    "license": "CC0", 
+    "name": "sad01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "sadness"        
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "UpperLipBackward": 0.286, 
+        "RightInnerBrowUp": 0.422, 
+        "lowerLipForward": 0.05, 
+        "LeftInnerBrowUp": 0.337, 
+        "lowerLipUp": 1.0
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

@@ -1,0 +1,24 @@
+{
+    "license": "CC0", 
+    "name": "doubt01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "doubt"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "LeftEyeturnRight": 0.492, 
+        "RightEyeUp": 0.573, 
+        "MouthRightPullDown": 0.146, 
+        "UpperLipBackward": 0.362, 
+        "RightOuterBrowUp": 0.322, 
+        "LeftEyeUp": 0.563, 
+        "MouthLeftPullDown": 0.181, 
+        "lowerLipUp": 0.327, 
+        "LeftBrowDown": 0.045, 
+        "RightEyeturnRight": 0.497
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

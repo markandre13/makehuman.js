@@ -1,0 +1,17 @@
+{
+    "license": "CC0", 
+    "name": "sleep", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "boredom"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "LeftUpperLidClosed": 1.0, 
+        "JawDrop": 0.065, 
+        "RightUpperLidClosed": 1.0
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

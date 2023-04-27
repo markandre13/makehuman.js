@@ -1,0 +1,20 @@
+{
+    "license": "CC0", 
+    "name": "attention01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "interest"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "MouthMoveLeft": 0.01, 
+        "RightCheekUp": 0.005, 
+        "RightBrowDown": 0.146, 
+        "LipsKiss": 0.01, 
+        "NoseWrinkler": 0.352, 
+        "LeftBrowDown": 0.06
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

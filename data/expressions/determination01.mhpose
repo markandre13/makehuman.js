@@ -1,0 +1,19 @@
+{
+    "license": "CC0", 
+    "name": "determination01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "courage"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "NoseWrinkler": 0.126, 
+        "MouthRightPullUp": 0.347, 
+        "LeftBrowDown": 0.312, 
+        "RightBrowDown": 0.075, 
+        "MouthLeftPullSide": 0.382
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

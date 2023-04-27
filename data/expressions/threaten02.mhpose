@@ -1,0 +1,23 @@
+{
+    "license": "CC0", 
+    "name": "threaten02", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "anger"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "LeftUpperLidClosed": 0.171, 
+        "UpperLipUp": 0.513, 
+        "NasolabialDeepener": 0.558, 
+        "RightBrowDown": 0.075, 
+        "RightLowerLidUp": 0.734, 
+        "RightUpperLidClosed": 0.276, 
+        "LeftLowerLidUp": 0.834, 
+        "NoseWrinkler": 0.261, 
+        "LeftBrowDown": 0.588
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

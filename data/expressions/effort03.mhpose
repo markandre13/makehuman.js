@@ -1,0 +1,29 @@
+{
+    "license": "CC0", 
+    "name": "effort03", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "tension"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "LeftUpperLidClosed": 0.417, 
+        "lowerLipDown": 0.698, 
+        "RightCheekUp": 0.724, 
+        "UpperLipUp": 1.0, 
+        "MouthRightPullUp": 0.523, 
+        "RightEyeUp": 0.005, 
+        "NasolabialDeepener": 1.0, 
+        "RightBrowDown": 0.447, 
+        "MouthRightPlatysma": 0.523, 
+        "RightLowerLidUp": 0.98, 
+        "MouthLeftPlatysma": 0.477, 
+        "RightUpperLidClosed": 0.598, 
+        "LeftLowerLidUp": 1.0, 
+        "NoseWrinkler": 0.789, 
+        "LeftBrowDown": 0.171
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

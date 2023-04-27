@@ -27,6 +27,8 @@ function build(path: string) {
                 file.endsWith(".modifier") ||
                 file.endsWith(".target") ||
                 file.endsWith(".obj") ||
+                file.endsWith(".dae") ||
+                file.endsWith(".bvh") ||
                 file.endsWith(".json") ||
                 file.endsWith(".mhskel") ||
                 file.endsWith(".mhw") ||
@@ -35,7 +37,7 @@ function build(path: string) {
                 file.endsWith(".mhmat") ||
                 file.endsWith(".jsonw") ||
                 file.endsWith(".mhuv") ||
-                file.endsWith(".dae")
+                file.endsWith(".mhpose")
             ) {
                 const data = fs.readFileSync(`${path}/${file}`)
                 const view = new Uint8Array(data)

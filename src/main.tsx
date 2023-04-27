@@ -23,6 +23,8 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { BooleanModel, Button, Checkbox, Signal } from 'toad.js'
+import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
+import { isNull } from 'util'
 
 
 window.onload = () => { main() }
@@ -94,12 +96,12 @@ export function runMediaPipe() {
             if (msg.data instanceof Blob) {
                 arrayBuffer = await msg.data.arrayBuffer()
             } else
-            if (msg.data instanceof ArrayBuffer) {
-                arrayBuffer = msg.data
-            } else {
-                console.log("neither blob nor arraybuffer")
-                return
-            }
+                if (msg.data instanceof ArrayBuffer) {
+                    arrayBuffer = msg.data
+                } else {
+                    console.log("neither blob nor arraybuffer")
+                    return
+                }
             renderFace(refCanvas.canvas, arrayBuffer)
             socket.send(enc.encode("GET FACE"))
         }
@@ -137,10 +139,16 @@ function run() {
 
     loadMacroTargets()
 
-    // TargetFactory.getInstance()
-    // const vertexCopy = [scene.vertex]
+    const facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
+    const facePoseUnitsNames = JSON
+        .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
+        .framemapping as string[]
+    const poseUnitName2Frame = new Map<string, number>()
+    facePoseUnitsNames.forEach((name, index) => poseUnitName2Frame.set(name, index))
+    const expression = JSON.parse(FileSystemAdapter.getInstance().readFile("data/expressions/laugh02.mhpose"))
+        .unit_poses as any
 
-    console.log('everything is loaded...')
+    console.log('everything is loaded...');
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
@@ -158,6 +166,35 @@ function run() {
     })
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
+
+    // console.log(facePoseUnitsNames)
+    // console.log(expression)
+    for (let prop of Object.getOwnPropertyNames(expression)) {
+        const frame = poseUnitName2Frame.get(prop)!!
+        console.log(`${frame} = ${expression[prop]}`)
+        for (const joint of facePoseUnits.bvhJoints) {
+            if (joint.name === "End effector") {
+                continue
+            }
+            const node = poseNodes.find(joint.name)
+            if (node === undefined) {
+                console.log(`NO POSE NODE FOUND FOR BVH JOINT '${joint.name}'`)
+                continue
+            }
+
+            const start = frame * joint.channels.length
+            const rotation = [joint.frames[start], joint.frames[start + 1], joint.frames[start + 2]] as number[]
+            // there also values below this threshold for toes... wtf? ignore(?)
+            const e = 0.000016
+            if (Math.abs(rotation[0]) > e || Math.abs(rotation[1]) > e || Math.abs(rotation[2]) > e) {
+                console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
+                // THIS IS NOT CORRRECT
+                node.x.value = node.x.value - rotation[0]
+                node.y.value = node.y.value - rotation[1]
+                node.z.value = node.z.value - rotation[2]
+            }
+        }
+    }
 
     // const teethProxy = new BooleanModel(true)
     // const toungeProxy = new BooleanModel(false)

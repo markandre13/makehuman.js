@@ -1,0 +1,30 @@
+{
+    "license": "CC0", 
+    "name": "disgust01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "disgust"        
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "MouthMoveLeft": 0.01, 
+        "lowerLipDown": 0.156, 
+        "NoseWrinkler": 0.181, 
+        "LeftLowerLidUp": 0.161, 
+        "UpperLipStretched": 0.156, 
+        "NasolabialDeepener": 1.0, 
+        "LeftUpperLidClosed": 0.126, 
+        "MouthRightPlatysma": 0.95, 
+        "LeftBrowDown": 0.276, 
+        "RightCheekUp": 0.698, 
+        "LipsKiss": 0.01, 
+        "MouthLeftPlatysma": 1.0, 
+        "RightUpperLidClosed": 0.106, 
+        "RightLowerLidUp": 0.156, 
+        "LeftCheekUp": 0.598, 
+        "CheeksSuck": 0.01
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

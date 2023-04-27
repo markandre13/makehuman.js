@@ -12,6 +12,30 @@ describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
+    it("load data/poseunits/face-poseunits.bvh", function () {
+        const facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
+        expect(facePoseUnits.joints.get("toe4-3.R")?.frames).to.deep.almost.equal([
+            3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06, -0.e+00, -0.e+00, 0.e+00,
+            3.e-06, 1.e-06, -1.e-06, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            3.e-06, 1.e-06, -1.e-06, -0.e+00, -0.e+00, 0.e+00, 3.e-06, 1.e-06, -1.e-06,
+            3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            3.e-06, 1.e-06, -1.e-06, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            3.e-06, 1.e-06, -1.e-06, -0.e+00, -0.e+00, 0.e+00, 3.e-06, 1.e-06, -1.e-06,
+            3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06,
+            3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06,
+            3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06, -0.e+00, -0.e+00, 0.e+00,
+            3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06, 3.e-06, 1.e-06, -1.e-06,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00,
+            -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00, -0.e+00, -0.e+00, 0.e+00])
+    })
     it("first entry must be HIERARCHY", function () {
         new BiovisionHierarchy("biohazard.bvh", `HIERARCHY`)
         expect(() => new BiovisionHierarchy("biohazard.bvh", `THE DOCTOR`)).to.throw()
@@ -23,7 +47,7 @@ describe("class BiovisionHierarchy", function () {
         expect(() => new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT`)).to.throw()
         expect(() => new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT VS SQUARE`)).to.throw()
     })
-    it.only("third entry must be joint data", function () {
+    it("third entry must be joint data", function () {
         const bvh = new BiovisionHierarchy("biohazard.bvh", `HIERARCHY
 ROOT root
 {
@@ -62,7 +86,7 @@ Frame Time: 0.041667
         expect(child0.offset).to.deep.equal([1.9, 2.8, 3.7])
         expect(child0.position).to.deep.equal([2, 3, 4])
         expect(child0.channels).to.deep.equal(["Xrotation", "Yrotation", "Zrotation"])
-        expect(child0.frames).to.deep.equal([4,  5,  6, 10, 11, 12])
+        expect(child0.frames).to.deep.equal([4, 5, 6, 10, 11, 12])
 
         const child1 = child0.children[0]
         expect(child1.name).to.equal("End effector")

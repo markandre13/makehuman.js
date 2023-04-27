@@ -1,0 +1,25 @@
+{
+    "license": "CC0", 
+    "name": "fear04", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "fear"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "lowerLipDown": 0.171, 
+        "LeftUpperLidOpen": 1.0, 
+        "LeftInnerBrowUp": 0.618, 
+        "MouthRightPlatysma": 0.281, 
+        "RightInnerBrowUp": 0.548, 
+        "MouthLeftPlatysma": 0.342, 
+        "RightOuterBrowUp": 0.357, 
+        "LeftOuterBrowUp": 0.322, 
+        "JawDropStretched": 1.0, 
+        "RightUpperLidOpen": 1.0, 
+        "ChinRight": 1.0
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

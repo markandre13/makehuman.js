@@ -1,0 +1,20 @@
+{
+    "license": "CC0", 
+    "name": "stunned01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "boredom"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "LeftUpperLidClosed": 0.422, 
+        "JawDrop": 0.161, 
+        "LeftUpperLidOpen": 0.01, 
+        "RightUpperLidClosed": 0.638, 
+        "LeftOuterBrowUp": 0.216, 
+        "JawDropStretched": 0.015
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

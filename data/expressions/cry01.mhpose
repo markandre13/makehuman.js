@@ -1,0 +1,24 @@
+{
+    "license": "CC0", 
+    "name": "cry01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "sadness"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "lowerLipDown": 0.206, 
+        "LeftInnerBrowUp": 0.578, 
+        "NasolabialDeepener": 0.608, 
+        "LeftUpperLidClosed": 0.382, 
+        "MouthRightPlatysma": 0.578, 
+        "RightInnerBrowUp": 0.643, 
+        "RightLowerLidUp": 0.593, 
+        "MouthLeftPlatysma": 0.528, 
+        "RightUpperLidClosed": 0.412, 
+        "LeftLowerLidUp": 0.688
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

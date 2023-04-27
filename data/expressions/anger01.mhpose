@@ -1,0 +1,27 @@
+{
+    "license": "CC0", 
+    "name": "anger01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "anger"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "MouthMoveLeft": 0.01, 
+        "lowerLipDown": 0.186, 
+        "NoseWrinkler": 0.472, 
+        "UpperLipUp": 1.0, 
+        "NasolabialDeepener": 1.0, 
+        "RightBrowDown": 0.357, 
+        "MouthRightPlatysma": 0.161, 
+        "LeftBrowDown": 0.643, 
+        "RightCheekUp": 0.854, 
+        "LipsKiss": 0.01, 
+        "MouthLeftPlatysma": 0.327, 
+        "LeftCheekUp": 0.965, 
+        "CheeksSuck": 0.307
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}

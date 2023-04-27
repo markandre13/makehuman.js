@@ -186,7 +186,7 @@ export class BiovisionHierarchy {
     }
 }
 
-class BVHJoint {
+export class BVHJoint {
     name: string
 
     parent?: BVHJoint

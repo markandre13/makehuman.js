@@ -1,0 +1,16 @@
+{
+    "license": "CC0", 
+    "name": "sceptical01", 
+    "copyright": "(c) 2020 Data Collection AB, Joel Palmius, Jonas Hauquier", 
+    "tags": [
+        "MakeHuman™",
+        "doubt"
+    ], 
+    "author": "MakeHuman Team", 
+    "unit_poses": {
+        "LeftBrowDown": 0.05, 
+        "RightOuterBrowUp": 0.618
+    }, 
+    "homepage": "http://www.makehumancommunity.org", 
+    "description": "No description set"
+}
