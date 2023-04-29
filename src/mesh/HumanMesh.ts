@@ -1,8 +1,6 @@
-import { RenderMode } from 'render/RenderMode'
 import { Proxy } from 'proxy/Proxy'
 import { Human } from '../modifier/Human'
 import { getTarget } from '../target/TargetFactory'
-import { Group } from './Group'
 import { Skeleton } from '../skeleton/Skeleton'
 import { WavefrontObj } from './WavefrontObj'
 

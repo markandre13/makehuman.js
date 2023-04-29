@@ -39,7 +39,6 @@ export class VertexBoneWeights {
             }
         }
         this._data = this._build_vertex_weights_data(data.weights)
-        this._calculate_num_weights()
     }
 
     // name -> [[i,w]], ...]
@@ -147,8 +146,5 @@ export class VertexBoneWeights {
         }
 
         return boneWeights
-    }
-
-    protected _calculate_num_weights() {
     }
 }
