@@ -2,6 +2,43 @@ import { PoseNode } from 'ui/poseView'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
 
+// MakeHuman 1.2 sets the pose 5 times when selecting a single pose...
+
+// plugins/2_posing_expression.py
+//   70  class ExpressionTaskView
+//  152      def applyToPose(self, pose):
+//  170          self.human.addAnimation(pose_)
+//  171          self.human.setActiveAnimation('expr-lib-pose')
+//  173          self.human.setPosed(True)
+//  174          self.human.refreshPose()
+
+//  178      def chooseExpression(self, filename): (1)
+//  203          self.selectedPose = animation.poseFromUnitPose('expr-lib-pose', filename, self.base_anim)
+//  204          self.applyToPose(self.selectedPose)
+//  205          self.human.refreshPose()
+
+// shared/animation.py
+//   57  class AnimationTrack
+//
+//  264  class Pose(AnimationTrack):
+//  287       def fromPoseUnit(self, filename, poseUnit):
+//  312  class PoseUnit
+//  422      def poseFromUnitPose(name, filename, poseUnit):
+//  431          return Pose(name, emptyPose()).fromPoseUnit(filename, poseUnit)
+//  818  class AnimatedMesh(object):
+//  993      def setPosed(self, posed):
+// 1034      def _pose()
+// 1064          self.getBaseSkeleton().setPose(poseState)
+// 1113      def refreshPose(self, updateIfInRest=False, syncSkeleton=True):
+
+// apps/human.py
+//   56  class Human(guicommon.Object, animation.AnimatedMesh)
+// 1439      def refreshPose(self, updateIfInRest=False):
+// 1445          super(Human, self).refreshPose(updateIfInRest)
+//
+// shared/skeleton.py
+//       class Skeleton(object):
+//  570      def setPose(self, poseMats):
 export class ExpressionManager {
     facePoseUnits: BiovisionHierarchy
     facePoseUnitsNames: string[]
@@ -9,6 +46,7 @@ export class ExpressionManager {
     expressions: string[]
 
     constructor() {
+        // TODO: check if some of the json files contain some of the filenames being hardcoded here
         this.facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
         this.facePoseUnitsNames = JSON
             .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))

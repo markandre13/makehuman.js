@@ -25,6 +25,9 @@ import { Tab, Tabs } from 'toad.js/view/Tab'
 import { BooleanModel, Button, Checkbox, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { ExpressionManager } from './ExpressionManager'
 
+import { laugh01_IN, laugh01_OUT } from 'laugh01'
+import { mat4 } from 'gl-matrix'
+
 window.onload = () => { main() }
 
 export function main() {
@@ -174,6 +177,22 @@ function run() {
     //     console.log(`teeth proxy changed to ${teethProxy.value}`)
     // })
 
+    // might need use order from mat2txt
+    setTimeout(() => {
+        const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
+        let k = 0
+        for (let i = 0; i < laugh01_OUT.length;) {
+            const m = mat4.create()
+            for (let j = 0; j < 16; ++j) {
+                m[map[j]] = laugh01_OUT[i]
+                ++i
+            }
+            skeleton.boneslist![k].matPose = m
+            ++k
+        }
+        skeleton.update()
+        scene.updateRequired = Update.POSE
+    }, 0)
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
     useBlenderProfile.enabled = false
