@@ -120,7 +120,7 @@ class ExpressionManager {
             .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
         this.facePoseUnitsNames.forEach((name, index) => this.poseUnitName2Frame.set(name, index))
-    
+
         this.expressions = FileSystemAdapter.getInstance()
             .listDir("expressions")
             .filter(filename => filename.endsWith(".mhpose"))
@@ -129,6 +129,7 @@ class ExpressionManager {
 
     setExpression(expression: number, poseNodes: PoseNode) {
         const expressionName = this.expressions[expression]
+        console.log(`=================== ${expressionName} ===================`)
         // console.log(`ExpressionManager::setExpression(${expressionName})`)
         expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
@@ -136,8 +137,10 @@ class ExpressionManager {
     }
 
     applyExpression(expression: any, poseNodes: PoseNode) {
-        const a = new Map<string, number[]>()
-
+        //
+        // calculate face pose from expression
+        //
+        const facePose = new Map<string, number[]>()
         for (let prop of Object.getOwnPropertyNames(expression)) {
             const value = expression[prop]
             const frame = this.poseUnitName2Frame.get(prop)!!
@@ -146,42 +149,53 @@ class ExpressionManager {
                 if (joint.name === "End effector") {
                     continue
                 }
-                // const node = poseNodes.find(joint.name)
-                // if (node === undefined) {
-                //     console.log(`NO POSE NODE FOUND FOR BVH JOINT '${joint.name}'`)
-                //     continue
-                // }
                 const start = frame * joint.channels.length
                 const rotation = [
                     value * joint.frames[start],
                     value * joint.frames[start + 1],
                     value * joint.frames[start + 2]
                 ] as number[]
-                // there also values below this threshold for toes... wtf? ignore(?)
 
-                let r = a.get(joint.name)
+                let r = facePose.get(joint.name)
                 if (r === undefined) {
-                    r = [0,0,0]
-                    a.set(joint.name, r)
+                    r = [0, 0, 0]
+                    facePose.set(joint.name, r)
                 }
-
-                const e = 0.000016
-
-                if (Math.abs(rotation[0]) > e || Math.abs(rotation[1]) > e || Math.abs(rotation[2]) > e) {
-                    // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
-                    r[0] += rotation[0]
-                    r[1] += rotation[1]
-                    r[2] += rotation[2]
-                }
+                // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
+                r[0] -= rotation[0]
+                r[1] -= rotation[1]
+                r[2] -= rotation[2]
             }
         }
 
-        for(let [name, r] of a) {
-            const node = poseNodes.find(name)
-            node!.x.value = r[0]
-            node!.y.value = r[1]
-            node!.z.value = r[2]
+        //
+        // copy final rotation to pose
+        //
+        function d(num: number) {
+            return Math.round((num + Number.EPSILON) * 1000000) / 1000000
         }
+
+        function applyToPose(node: PoseNode | undefined) {
+            if (node === undefined) {
+                return
+            }
+            if (node.bone.name !== "head") {
+                let r = facePose.get(node.bone.name)
+                if (r === undefined) {
+                    r = [0, 0, 0]
+                }
+                node.x.value = r[0]
+                node.y.value = r[1]
+                node.z.value = r[2]
+                const e = 0.00003
+                if (Math.abs(r[0]) > e || Math.abs(r[1]) > e || Math.abs(r[2]) > e) {
+                    console.log(`${node.bone.name} := [${d(r[0])}, ${d(r[1])}, ${d(r[2])}]`)
+                }
+            }
+            applyToPose(node.next)
+            applyToPose(node.down)
+        }
+        applyToPose(poseNodes.find("head"))
     }
 }
 
@@ -222,7 +236,7 @@ function run() {
     const expressionManager = new ExpressionManager()
     const expressionModel = new StringArrayModel(expressionManager.expressions)
     const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
-    selectedExpression.modified.add( () => expressionManager.setExpression(selectedExpression.row, poseNodes))
+    selectedExpression.modified.add(() => expressionManager.setExpression(selectedExpression.row, poseNodes))
 
     console.log('everything is loaded...')
 
