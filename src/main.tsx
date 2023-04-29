@@ -107,6 +107,84 @@ export function runMediaPipe() {
     }
 }
 
+class ExpressionManager {
+    facePoseUnits: BiovisionHierarchy
+    facePoseUnitsNames: string[]
+    poseUnitName2Frame = new Map<string, number>()
+    expressions: string[]
+    // expression: any[]
+
+    constructor() {
+        this.facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
+        this.facePoseUnitsNames = JSON
+            .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
+            .framemapping as string[]
+        this.facePoseUnitsNames.forEach((name, index) => this.poseUnitName2Frame.set(name, index))
+    
+        this.expressions = FileSystemAdapter.getInstance()
+            .listDir("expressions")
+            .filter(filename => filename.endsWith(".mhpose"))
+            .map(filename => filename.substring(0, filename.length - 7))
+    }
+
+    setExpression(expression: number, poseNodes: PoseNode) {
+        const expressionName = this.expressions[expression]
+        // console.log(`ExpressionManager::setExpression(${expressionName})`)
+        expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
+            .unit_poses as any
+        this.applyExpression(expression, poseNodes)
+    }
+
+    applyExpression(expression: any, poseNodes: PoseNode) {
+        const a = new Map<string, number[]>()
+
+        for (let prop of Object.getOwnPropertyNames(expression)) {
+            const value = expression[prop]
+            const frame = this.poseUnitName2Frame.get(prop)!!
+            // console.log(`${prop} (${frame}) = ${value}`)
+            for (const joint of this.facePoseUnits.bvhJoints) {
+                if (joint.name === "End effector") {
+                    continue
+                }
+                // const node = poseNodes.find(joint.name)
+                // if (node === undefined) {
+                //     console.log(`NO POSE NODE FOUND FOR BVH JOINT '${joint.name}'`)
+                //     continue
+                // }
+                const start = frame * joint.channels.length
+                const rotation = [
+                    value * joint.frames[start],
+                    value * joint.frames[start + 1],
+                    value * joint.frames[start + 2]
+                ] as number[]
+                // there also values below this threshold for toes... wtf? ignore(?)
+
+                let r = a.get(joint.name)
+                if (r === undefined) {
+                    r = [0,0,0]
+                    a.set(joint.name, r)
+                }
+
+                const e = 0.000016
+
+                if (Math.abs(rotation[0]) > e || Math.abs(rotation[1]) > e || Math.abs(rotation[2]) > e) {
+                    // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
+                    r[0] += rotation[0]
+                    r[1] += rotation[1]
+                    r[2] += rotation[2]
+                }
+            }
+        }
+
+        for(let [name, r] of a) {
+            const node = poseNodes.find(name)
+            node!.x.value = r[0]
+            node!.y.value = r[1]
+            node!.z.value = r[2]
+        }
+    }
+}
+
 // core/mhmain.py
 //   class MHApplication
 //     startupSequence()
@@ -141,23 +219,10 @@ function run() {
     // EXPRESSIONS
     //
 
-    const facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
-    const facePoseUnitsNames = JSON
-        .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
-        .framemapping as string[]
-    const poseUnitName2Frame = new Map<string, number>()
-    facePoseUnitsNames.forEach((name, index) => poseUnitName2Frame.set(name, index))
-    const expression = JSON.parse(FileSystemAdapter.getInstance().readFile("data/expressions/surprise01.mhpose"))
-        .unit_poses as any
-
-    const expressions = FileSystemAdapter.getInstance()
-        .listDir("expressions")
-        .filter(filename => filename.endsWith(".mhpose"))
-        .map(filename => filename.substring(0, filename.length - 7))
-    const expressionModel = new StringArrayModel(expressions)
+    const expressionManager = new ExpressionManager()
+    const expressionModel = new StringArrayModel(expressionManager.expressions)
     const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
-    // human.setExpression() ???
-    selectedExpression.modified.add( () => console.log(expressions[selectedExpression.row]))
+    selectedExpression.modified.add( () => expressionManager.setExpression(selectedExpression.row, poseNodes))
 
     console.log('everything is loaded...')
 
@@ -179,54 +244,14 @@ function run() {
     const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
     const poseControls = new TreeNodeModel(PoseNode, poseNodes)
 
-    // 2_posing_expression.py
-    // gui3d.app.do(ExpressionAction(msg, self.selectedFile, filename, self))
-    // applyToPose()
-    // human.addAnimation
-    // human.setActiveAnimation
-
-    // console.log(facePoseUnitsNames)
-    // console.log(expression)
-    for (let prop of Object.getOwnPropertyNames(expression)) {
-        const value = expression[prop]
-        const frame = poseUnitName2Frame.get(prop)!!
-        console.log(`${prop} (${frame}) = ${value}`)
-        for (const joint of facePoseUnits.bvhJoints) {
-            if (joint.name === "End effector") {
-                continue
-            }
-            const node = poseNodes.find(joint.name)
-            if (node === undefined) {
-                console.log(`NO POSE NODE FOUND FOR BVH JOINT '${joint.name}'`)
-                continue
-            }
-            const start = frame * joint.channels.length
-            const rotation = [
-                value * joint.frames[start],
-                value * joint.frames[start + 1],
-                value * joint.frames[start + 2]
-            ] as number[]
-            // there also values below this threshold for toes... wtf? ignore(?)
-            const e = 0.000016
-            if (Math.abs(rotation[0]) > e || Math.abs(rotation[1]) > e || Math.abs(rotation[2]) > e) {
-                // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
-                node.x.value = node.x.value + rotation[0]
-                node.y.value = node.y.value + rotation[1]
-                node.z.value = node.z.value + rotation[2]
-            }
-        }
-    }
-
     // const teethProxy = new BooleanModel(true)
     // const toungeProxy = new BooleanModel(false)
     // const eyesProxy = new BooleanModel(true)
     // const skinProxy = new BooleanModel(true)
-
     // teethProxy.modified.add(() => {
     //     console.log(`teeth proxy changed to ${teethProxy.value}`)
     // })
 
-    // const jaw = poseNodes.find("jaw")!
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
     useBlenderProfile.enabled = false
@@ -236,7 +261,7 @@ function run() {
     const refCanvas = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Debug" value="DEBUG">
+            <Tab label="Expression" value="DEBUG">
                 <Table
                     model={expressionModel}
                     selectionModel={selectedExpression}
