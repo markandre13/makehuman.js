@@ -19,6 +19,7 @@ import { Human } from '../../src/modifier/Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
+import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 // I am not quite sure how Proxy works, so the tests mostly compare the results of
 // this implementation with the results from Makehuman 1.2.0.
@@ -81,7 +82,8 @@ describe("Proxy", function () {
 
     it("weights", function () {
         const human = new Human()
-        const scene = new HumanMesh(human)
+        const obj = new WavefrontObj('data/3dobjs/base.obj')
+        const scene = new HumanMesh(human, obj)
         human.scene = scene
 
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
@@ -105,7 +107,8 @@ describe("Proxy", function () {
 
     it("weights (intermediate)", function () {
         const human = new Human()
-        const scene = new HumanMesh(human)
+        const obj = new WavefrontObj('data/3dobjs/base.obj')
+        const scene = new HumanMesh(human, obj)
         human.scene = scene
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
         scene.proxies.set("Teeth", proxy)

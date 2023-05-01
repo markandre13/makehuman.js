@@ -7,10 +7,10 @@ import { Skeleton } from '../../src/skeleton/Skeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 import { Human } from '../../src/modifier/Human'
-import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 import { vec4 } from 'gl-matrix'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
+import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 function almost(left: number, right: number) {
     return Math.abs(left - right) <= 1e-6
@@ -38,7 +38,7 @@ describe("Skeleton", function () {
         // the skeleton references Human.meshData, hence we must load the mesh
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human)
+        const scene = new HumanMesh(human, obj)
 
         const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
         expect(skel.roots).has.lengthOf(1)
@@ -118,7 +118,8 @@ describe("Skeleton", function () {
     })
 
     xit("xxx", function () {
-        const scene = new HumanMesh(new Human())
+        const obj = new WavefrontObj('data/3dobjs/base.obj')
+        const scene = new HumanMesh(new Human(), obj)
         new Skeleton(scene, "memory", {
             name: "bones",
             version: "1.0",

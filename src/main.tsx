@@ -23,10 +23,12 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { BooleanModel, Button, Checkbox, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
-import { ExpressionManager } from './ExpressionManager'
+import { calcWebGL, ExpressionManager } from './ExpressionManager'
 
-import { laugh01_IN, laugh01_OUT } from 'laugh01'
+import { laugh01_IN } from 'laugh01'
 import { mat4 } from 'gl-matrix'
+import { WavefrontObj } from 'mesh/WavefrontObj'
+import { boring01_IN } from 'boring01'
 
 window.onload = () => { main() }
 
@@ -115,9 +117,9 @@ export function runMediaPipe() {
 //     startupSequence()
 function run() {
     console.log('loading assets...')
-
     const human = new Human()
-    const scene = new HumanMesh(human)
+    const obj = new WavefrontObj('data/3dobjs/base.obj')
+    const scene = new HumanMesh(human, obj)
     human.scene = scene
 
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes"))
@@ -147,7 +149,11 @@ function run() {
     const expressionManager = new ExpressionManager()
     const expressionModel = new StringArrayModel(expressionManager.expressions)
     const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
-    selectedExpression.modified.add(() => expressionManager.setExpression(selectedExpression.row, poseNodes))
+    selectedExpression.modified.add(() => {
+        expressionManager.setExpression(selectedExpression.row, poseNodes)
+        skeleton.update()
+        scene.updateRequired = Update.POSE
+    })
 
     console.log('everything is loaded...')
 
@@ -179,16 +185,16 @@ function run() {
 
     // might need use order from mat2txt
     setTimeout(() => {
-        const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
-        let k = 0
-        for (let i = 0; i < laugh01_OUT.length;) {
-            const m = mat4.create()
-            for (let j = 0; j < 16; ++j) {
-                m[map[j]] = laugh01_OUT[i]
-                ++i
+        for (let k = 0, mrgIdx = 0, pmIdx = 0, outIdx = 0; k < skeleton.boneslist!.length; ++k) {
+            const bone = skeleton.boneslist![k]
+            const mrg = bone.matRestGlobal!
+            const pm = mat4.create()
+            for (let j = 0; j < 12; ++j) {
+                pm[j] = boring01_IN[pmIdx++]
             }
-            skeleton.boneslist![k].matPose = m
-            ++k
+            mat4.transpose(pm, pm)
+
+            skeleton.boneslist![k].matPose = calcWebGL(pm, mrg)
         }
         skeleton.update()
         scene.updateRequired = Update.POSE

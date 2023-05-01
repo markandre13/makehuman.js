@@ -28,11 +28,8 @@ export class HumanMesh {
 
     updateRequired = Update.NONE
 
-    constructor(human: Human) {
+    constructor(human: Human, obj: WavefrontObj) {
         this.human = human
-
-        const obj = new WavefrontObj('data/3dobjs/base.obj') // TODO: provide as argument
-
         this.baseMesh = obj
         this.vertexRigged = this.vertexMorphed = obj.vertex
     }

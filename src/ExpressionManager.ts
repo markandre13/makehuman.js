@@ -1,6 +1,10 @@
 import { PoseNode } from 'ui/poseView'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
+import { mat4 } from 'gl-matrix'
+import { toEuler } from 'mesh/Collada'
+import { laugh01_IN } from 'laugh01'
+import { boring01_IN } from 'boring01'
 
 // MakeHuman 1.2 sets the pose 5 times when selecting a single pose...
 
@@ -116,17 +120,59 @@ export class ExpressionManager {
                 if (r === undefined) {
                     r = [0, 0, 0]
                 }
-                node.x.value = r[0]
-                node.y.value = r[1]
-                node.z.value = r[2]
+
+                // const pm = mat4.create()
+                // let pmIdx = node.bone.index * 12
+                // for (let j = 0; j < 12; ++j) {
+                //     pm[j] = laugh01_IN[pmIdx++]
+                // }
+                // mat4.transpose(pm, pm)
+                // let out = pm
+
+                let out = mat4.create()
+                let tmp = mat4.create()
+                mat4.multiply(out, out, mat4.fromXRotation(tmp, -r[0] / 360 * 2 * Math.PI))
+                mat4.multiply(out, out, mat4.fromYRotation(tmp, -r[1] / 360 * 2 * Math.PI))
+                mat4.multiply(out, out, mat4.fromZRotation(tmp, -r[2] / 360 * 2 * Math.PI))
+
+                let out2 = calcWebGL(out, node.bone.matRestGlobal!)
+                node.bone.matPose = out2
+
+                // const { x, y, z } = toEuler(out2)
+                // this.bone.matPose = out
+
+                // if (node.bone.name === "jaw") {
+                //     console.log("JAW")
+                //     console.log(mrg)
+                //     console.log(r)
+                //     console.log(out)
+                // }
+
+                // node.x.value = x / (2 * Math.PI) * 360
+                // node.y.value = y / (2 * Math.PI) * 360
+                // node.z.value = z / (2 * Math.PI) * 360
                 const e = 0.00003
-                if (Math.abs(r[0]) > e || Math.abs(r[1]) > e || Math.abs(r[2]) > e) {
-                    console.log(`${node.bone.name} := [${d(r[0])}, ${d(r[1])}, ${d(r[2])}]`)
-                }
+                // if (Math.abs(r[0]) > e || Math.abs(r[1]) > e || Math.abs(r[2]) > e) {
+                //     console.log(`${node.bone.name} := [${d(r[0])}, ${d(r[1])}, ${d(r[2])}] (${x}, ${y}, ${z})`)
+                // }
             }
             applyToPose(node.next)
             applyToPose(node.down)
         }
         applyToPose(poseNodes.find("head"))
     }
+}
+
+export function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
+    let matPose = mat4.fromValues(
+        poseMat[0], poseMat[1], poseMat[2], 0,
+        poseMat[4], poseMat[5], poseMat[6], 0,
+        poseMat[8], poseMat[9], poseMat[10], 0,
+        0, 0, 0, 1
+    )
+    const invRest = mat4.invert(mat4.create(), matRestGlobal)
+    const m0 = mat4.multiply(mat4.create(), invRest, matPose)
+    mat4.multiply(matPose, m0, matRestGlobal)
+    matPose[12] = matPose[13] = matPose[14] = 0
+    return matPose
 }

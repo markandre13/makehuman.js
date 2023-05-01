@@ -26,6 +26,7 @@ import { parseXML, Tag, Text } from "./xml"
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 import { Bone } from '../../src/skeleton/Bone'
 import { mat4, vec3, vec4 } from 'gl-matrix'
+import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 export function prepareGeometry(materials: Material[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
@@ -206,7 +207,8 @@ describe("Collada", function () {
 
     xit("exportCollada() with real world data", function () {
         const human = new Human()
-        const scene = new HumanMesh(human)
+        const obj = new WavefrontObj('data/3dobjs/base.obj')
+        const scene = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
         scene.skeleton = skeleton
 
