@@ -44,8 +44,9 @@ import { boring01_IN } from 'boring01'
 //       class Skeleton(object):
 //  570      def setPose(self, poseMats):
 export class ExpressionManager {
-    facePoseUnits: BiovisionHierarchy
-    facePoseUnitsNames: string[]
+    facePoseUnits: BiovisionHierarchy               // base_bvh
+    // bas_anim
+    facePoseUnitsNames: string[]                    // poseunit_names
     poseUnitName2Frame = new Map<string, number>();
     expressions: string[]
 
@@ -64,21 +65,22 @@ export class ExpressionManager {
     }
 
     setExpression(expression: number, poseNodes: PoseNode) {
-        const expressionName = this.expressions[expression]
-        console.log(`=================== ${expressionName} ===================`)
-        // console.log(`ExpressionManager::setExpression(${expressionName})`)
-        expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
-            .unit_poses as any
+        // const expressionName = this.expressions[expression]
+        // console.log(`=================== ${expressionName} ===================`)
+        // // console.log(`ExpressionManager::setExpression(${expressionName})`)
+        // expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
+        //     .unit_poses as any
         this.applyExpression(expression, poseNodes)
     }
 
-    applyExpression(expression: any, poseNodes: PoseNode) {
-        //
-        // calculate face pose from expression
-        //
+    calculateExpression(expression: number) {
+        const expressionName = this.expressions[expression]
+        const unit_poses = expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
+            .unit_poses as any
+
         const facePose = new Map<string, number[]>()
-        for (let prop of Object.getOwnPropertyNames(expression)) {
-            const value = expression[prop]
+        for (let prop of Object.getOwnPropertyNames(unit_poses)) {
+            const value = unit_poses[prop]
             const frame = this.poseUnitName2Frame.get(prop)!!
             // console.log(`${prop} (${frame}) = ${value}`)
             for (const joint of this.facePoseUnits.bvhJoints) {
@@ -103,6 +105,14 @@ export class ExpressionManager {
                 r[2] -= rotation[2]
             }
         }
+        return facePose
+    }
+
+    applyExpression(expression: number, poseNodes: PoseNode) {
+        //
+        // calculate face pose from expression
+        //
+        const facePose = this.calculateExpression(expression)
 
         //
         // copy final rotation to pose

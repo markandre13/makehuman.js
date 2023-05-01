@@ -184,6 +184,19 @@ export class BiovisionHierarchy {
             joint.parent.position.forEach((v, i) => joint.position[i] += v)
         }
     }
+
+    getJoint(name: string): BVHJoint | undefined {
+        return this.joints.get(name)
+    }
+
+    getJointByCanonicalName(canonicalName: string): BVHJoint | undefined {
+        canonicalName = canonicalName.toLowerCase().replace(' ','_').replace('-','_')
+        for(const jointName of this.joints.keys()) {
+            if (canonicalName === jointName.toLowerCase().replace(' ','_').replace('-','_'))
+                return this.getJoint(jointName)
+        }
+        return undefined
+    }
 }
 
 export class BVHJoint {
@@ -196,11 +209,16 @@ export class BVHJoint {
     position!: number[]
     matRestRelative!: mat4
     matRestGlobal!: mat4
+    matrixPoses: mat4[] = [] // list of 4x4 pose matrices for n frames, relative parent and own rest pose
 
     channels!: string[]
     frames: any[] = []
 
     constructor(name: string) {
         this.name = name
+    }
+
+    calculateFrames() {
+        // TODO: CONTINUE HERE!!!
     }
 }

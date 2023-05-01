@@ -14,6 +14,7 @@ import { HumanMesh } from '../src/mesh/HumanMesh'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
 import { laugh01_IN, laugh01_mrg, laugh01_OUT } from '../src/laugh01'
 import { toEuler } from '../src/mesh/Collada'
+import { calcWebGL, ExpressionManager } from '../src/ExpressionManager'
 
 describe("expression", function () {
 
@@ -166,20 +167,6 @@ describe("expression", function () {
         return matPose
     }
 
-    function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
-        let matPose = mat4.fromValues(
-            poseMat[0], poseMat[1], poseMat[2], 0,
-            poseMat[4], poseMat[5], poseMat[6], 0,
-            poseMat[8], poseMat[9], poseMat[10], 0,
-            0, 0, 0, 1
-        )
-        const invRest = mat4.invert(mat4.create(), matRestGlobal)
-        const m0 = mat4.multiply(mat4.create(), invRest, matPose)
-        mat4.multiply(matPose, m0, matRestGlobal)
-        matPose[12] = matPose[13] = matPose[14] = 0
-        return matPose
-    }
-
     it("with real word data", async function () {
         this.timeout(10000)
 
@@ -240,11 +227,107 @@ describe("expression", function () {
             }
             console.log(m2s(`bone  .matRestGlobal`, bone.matRestGlobal!))
             console.log(m2s(`python.matRestGlobal`, mrg))
-            
+
             // console.log(m2s(`my     poseMat`, out))
             // console.log(m2s(`python poseMat`, pout))
 
         }
 
+    })
+
+    // plugins/2_posing_expression.py
+    // def _load_pose_units(self):
+    // def chooseExpression(self, filename):
+    //     self.selectedPose = animation.poseFromUnitPose('expr-lib-pose', filename, self.base_anim)
+    //     self.applyToPose(self.selectedPose)
+    //     self.human.refreshPose()
+    // def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
+    //    this function calculates the values in the _IN array
+    // jaw = -14.271322498,0,0
+    it.only("calculate", function () {
+        // LOAD SKELETON
+        const human = new Human()
+        const obj = new WavefrontObj('data/3dobjs/base.obj')
+        const scene = new HumanMesh(human, obj)
+        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+
+        // const name = "boring01"
+        const name = "laugh01"
+        const mgr = new ExpressionManager()
+        // const map = mgr.calculateExpression(
+        //     mgr.expressions.findIndex((v) => v === name)
+        // )
+        // map.forEach( (value, key) => console.log(`${key} = ${value}`))
+
+        const unit_poses = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${name}.mhpose`))
+            .unit_poses as any
+
+        // poses & weight as in getBlendedPose(...)
+        const poses: number[] = []
+        const weight: number[] = []
+        for (let poseName of Object.getOwnPropertyNames(unit_poses)) {
+            poses.push(mgr.poseUnitName2Frame.get(poseName)!)
+            weight.push(unit_poses[poseName])
+        }
+        // console.log(weight)
+        // console.log(poses)
+
+        function _bvhJointName(boneName: string | undefined) {
+            // Remove the tail from duplicate bone names (added by the BVH parser)
+            if (boneName === undefined) {
+                return boneName
+            }
+            const r = boneName.match(/(.*)_\d+$/)
+            if (r !== null) {
+                return r[1]
+            }
+            return boneName    
+        }
+
+        // 2_posing_expression.py
+        //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
+        //         def _load_pose_units(self):
+        //              self.base_bvh = bvh.load("data/poseunits/face-poseunits.bvh", allowTranslation="none"))
+        //              TODO: createAnimationTrack() is not implemented yet
+        //              self.base_anim = self.base_bvh.createAnimationTrack(self.human.getBaseSkeleton(), name="Expression-Face-PoseUnits")
+        //              self.poseunit_names = loadJson("poseunits/face-poseunits.json").framemapping
+        //              self.base_anim = animation.PoseUnit(self.base_anim.name, self.base_anim._data, self.poseunit_names)
+        //         def chooseExpression(self, filename):
+        //             self.selectedPose = animation.poseFromUnitPose('expr-lib-pose', filename, self.base_anim)
+        // animation.py
+        //     def poseFromUnitPose(name, filename, poseUnit):
+        //         return Pose(name, emptyPose()).fromPoseUnit(filename, poseUnit)
+        //     class Pose(AnimationTrack):
+        //         def fromPoseUnit(self, filename, poseUnit):
+        //             self._data = poseUnit.getBlendedPose(list(self.unitposes.keys()), list(self.unitposes.values()), only_data=True)
+        //     class PoseUnit(AnimationTrack):
+        //         def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
+        //             ...
+        const self = mgr.facePoseUnits
+
+        // bvh.py: def createAnimationTrack(self, skel=None, name=None):
+        // L198
+        const jointsData = []
+        for(const bone of skeleton.boneslist!) {
+            // L234
+            // Map bone to joint by bone name
+            const jointName = _bvhJointName(bone.name)
+            console.log(jointName)
+            const joint = self.getJointByCanonicalName(jointName)
+            if (joint !== undefined) {
+                // jointsData.push(...joint.matrixPoses)
+                // jointsData.append( joint.matrixPoses.copy() )
+            } else {
+            //     jointsData.append(animation.emptyTrack(self.frameCount))
+            }
+        }
+
+        for (let b_idx = 0, pmIdx = 0; b_idx < skeleton.boneslist!.length; ++b_idx) {
+            const expectPoseMat = mat4.create()
+            for (let j = 0; j < 12; ++j) {
+                expectPoseMat[j] = laugh01_IN[pmIdx++]
+            }
+            mat4.transpose(expectPoseMat, expectPoseMat)
+        }
     })
 })
