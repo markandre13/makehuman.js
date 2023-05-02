@@ -75,6 +75,7 @@ Frame Time: 0.041667
         // TODO check that calculateFrames has been called for the joints
 
         const root = bvh.rootJoint
+        expect(root.skeleton).to.equal(bvh)
         expect(root.name).to.equal("root")
         expect(root.parent).to.be.undefined
         expect(root.children).to.have.lengthOf(1)
@@ -84,6 +85,7 @@ Frame Time: 0.041667
         expect(root.frames).to.deep.equal([1, 2, 3, 7, 8, 9])
 
         const child0 = root.children[0]
+        expect(child0.skeleton).to.equal(bvh)
         expect(child0.name).to.equal("spine05")
         expect(child0.parent).to.equal(root)
         expect(child0.children).to.have.lengthOf(1)
@@ -93,6 +95,7 @@ Frame Time: 0.041667
         expect(child0.frames).to.deep.equal([4, 5, 6, 10, 11, 12])
 
         const child1 = child0.children[0]
+        expect(child1.skeleton).to.equal(bvh)
         expect(child1.name).to.equal("End effector")
         expect(child1.parent).to.equal(child0)
         expect(child1.children).to.have.lengthOf(0)
@@ -115,8 +118,23 @@ Frame Time: 0.041667
     })
 
     describe("BVHJoint.calculateFrames()", function() {
-        it("foo", () => {
-
+        it.only("foo", () => {
+            const bvh = new BiovisionHierarchy("biohazard.bvh", `HIERARCHY
+ROOT root
+{
+    OFFSET 1 2 3
+    CHANNELS 6 Xposition Yposition Zposition Xrotation Yrotation Zrotation
+    End Site
+    {
+        OFFSET 4 5 6
+    }
+}
+MOTION
+Frames: 2
+Frame Time: 0.041667
+1 2 3 4 5 6 7 9 10
+11 12 13 14 15 16 17 18 19 20`)
+            expect(bvh.rootJoint.rotOrder).to.equal("szyx")
         })
     })
 })
