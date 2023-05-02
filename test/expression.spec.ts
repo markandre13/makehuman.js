@@ -235,6 +235,10 @@ describe("expression", function () {
 
     })
 
+    it.only("BVH.createAnimationTrack()", function() {
+
+    })
+
     // plugins/2_posing_expression.py
     // def _load_pose_units(self):
     // def chooseExpression(self, filename):
@@ -244,7 +248,7 @@ describe("expression", function () {
     // def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
     //    this function calculates the values in the _IN array
     // jaw = -14.271322498,0,0
-    it.only("calculate", function () {
+    it("calculate", function () {
         // LOAD SKELETON
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
@@ -288,8 +292,10 @@ describe("expression", function () {
         //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
         //         def _load_pose_units(self):
         //              self.base_bvh = bvh.load("data/poseunits/face-poseunits.bvh", allowTranslation="none"))
+
         //              TODO: createAnimationTrack() is not implemented yet
         //              self.base_anim = self.base_bvh.createAnimationTrack(self.human.getBaseSkeleton(), name="Expression-Face-PoseUnits")
+
         //              self.poseunit_names = loadJson("poseunits/face-poseunits.json").framemapping
         //              self.base_anim = animation.PoseUnit(self.base_anim.name, self.base_anim._data, self.poseunit_names)
         //         def chooseExpression(self, filename):
@@ -311,8 +317,8 @@ describe("expression", function () {
         for(const bone of skeleton.boneslist!) {
             // L234
             // Map bone to joint by bone name
-            const jointName = _bvhJointName(bone.name)
-            console.log(jointName)
+            const jointName = _bvhJointName(bone.name)!
+            // console.log(jointName)
             const joint = self.getJointByCanonicalName(jointName)
             if (joint !== undefined) {
                 // jointsData.push(...joint.matrixPoses)

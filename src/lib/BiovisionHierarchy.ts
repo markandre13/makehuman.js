@@ -10,7 +10,7 @@ export class BiovisionHierarchy {
     name: string
     bvhJoints: BVHJoint[] = [] // joints in order of definition, used for parsing the motion data
     joints = new Map<string, BVHJoint>() // joint name to joint
-    // jointslist: BVHJoint[] // breadth-first list of all joints
+    jointslist: BVHJoint[] = [] // breadth-first list of all joints
     rootJoint!: BVHJoint
     frameCount!: number
     frameTime!: number
@@ -131,8 +131,8 @@ export class BiovisionHierarchy {
                         break
                     }
                     let idx = 0
-                    for(const joint of this.bvhJoints) {
-                        for(let j = 0; j < joint.channels.length; ++j) {
+                    for (const joint of this.bvhJoints) {
+                        for (let j = 0; j < joint.channels.length; ++j) {
                             if (idx >= tokens.length) {
                                 throw Error(`Not enough MOTION entries in line ${this.lineNumber}.`)
                             }
@@ -145,6 +145,19 @@ export class BiovisionHierarchy {
                 default:
                     throw Error(`Unexpected state ${state}`)
             }
+        }
+
+        // create breadth first array of joints
+        this.jointslist = [this.rootJoint]
+        let queueIdx = 0
+        while (queueIdx < this.jointslist.length) {
+            const joint = this.jointslist[queueIdx++]
+            this.jointslist.push(...joint.children)
+        }
+
+        // transform frame data into transformation matrices for all joints
+        for (const joint of this.jointslist) {
+            joint.calculateFrames() // TODO we don't need to calculate pose matrices for end effectors
         }
     }
 
@@ -190,9 +203,9 @@ export class BiovisionHierarchy {
     }
 
     getJointByCanonicalName(canonicalName: string): BVHJoint | undefined {
-        canonicalName = canonicalName.toLowerCase().replace(' ','_').replace('-','_')
-        for(const jointName of this.joints.keys()) {
-            if (canonicalName === jointName.toLowerCase().replace(' ','_').replace('-','_'))
+        canonicalName = canonicalName.toLowerCase().replace(' ', '_').replace('-', '_')
+        for (const jointName of this.joints.keys()) {
+            if (canonicalName === jointName.toLowerCase().replace(' ', '_').replace('-', '_'))
                 return this.getJoint(jointName)
         }
         return undefined
@@ -207,9 +220,9 @@ export class BVHJoint {
 
     offset!: number[]
     position!: number[]
-    matRestRelative!: mat4
-    matRestGlobal!: mat4
-    matrixPoses: mat4[] = [] // list of 4x4 pose matrices for n frames, relative parent and own rest pose
+    // matRestRelative!: mat4
+    // matRestGlobal!: mat4
+    // matrixPoses: mat4[] = [] // list of 4x4 pose matrices for n frames, relative parent and own rest pose
 
     channels!: string[]
     frames: any[] = []
