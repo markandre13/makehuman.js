@@ -6,6 +6,8 @@ import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { mat4 } from "gl-matrix"
 import { StringToLine } from "./StringToLine"
 
+export type TranslationType = "all" | "onlyroot" | "none"
+
 export class BiovisionHierarchy {
     name: string
     bvhJoints: BVHJoint[] = [] // joints in order of definition, used for parsing the motion data
@@ -14,12 +16,18 @@ export class BiovisionHierarchy {
     rootJoint!: BVHJoint
     frameCount!: number
     frameTime!: number
+
+    // Set to true to convert the coordinates from a Z-is-up coordinate system.
+    // Most motion capture data uses Y-is-up, though.
     convertFromZUp = false // TODO: set during load
+    // joints to accept translation animation data for
+    allowTranslation: TranslationType
 
     lineNumber = 0
 
-    constructor(filename: string, data?: string) {
+    constructor(filename: string, allowTranslation: TranslationType="onlyroot", data?: string) {
         this.name = filename
+        this.allowTranslation = allowTranslation
         if (data === undefined) {
             data = FileSystemAdapter.getInstance().readFile(filename)
         }
@@ -247,7 +255,7 @@ export class BVHJoint {
 
         let rotOrder = ""
         let rotAngles: number[][] = []
-        let rXs, rYs, rZs
+        let rXs: number[] | undefined, rYs: number[] | undefined, rZs: number[] | undefined
 
         function sub(array: number[], offset: number, total: number, width: number): number[] {
             const arrayOut = new Array<number>(total / width)
@@ -269,12 +277,10 @@ export class BVHJoint {
             return array
         }
 
-        console.log(this.frames)
         const D = Math.PI / 180
         this.channels.forEach((channel, chanIdx,) => {
             switch (channel) {
                 case "Xposition":
-                    console.log(`chanIdx:${chanIdx}, dataLen:${dataLen}, nChannels:${nChannels}`)
                     rXs = sub(this.frames, chanIdx, dataLen, nChannels)
                     break
                 case "Yposition":
@@ -325,15 +331,47 @@ export class BVHJoint {
 
         if (rotAngles.length > 0 && rotAngles.length < 3) {
             // pass
-        } else
-        if (rotAngles.length >= 3) {
-            for(let frameIdx = 0; frameIdx<nFrames; ++frameIdx) {
-                this.matrixPoses[frameIdx] = euler_matrix(rotAngles[2][frameIdx], rotAngles[1][frameIdx], rotAngles[0][frameIdx], rotOrder)
-                // self.matrixPoses[frameIdx,:3,:3] = tm.euler_matrix(rotAngles[2][frameIdx], rotAngles[1][frameIdx], rotAngles[0][frameIdx], axes=rotOrder)[:3,:3]
+        } else {
+            if (rotAngles.length >= 3) {
+                for (let frameIdx = 0; frameIdx < nFrames; ++frameIdx) {
+                    this.matrixPoses[frameIdx] = euler_matrix(rotAngles[2][frameIdx], rotAngles[1][frameIdx], rotAngles[0][frameIdx], rotOrder)
+                }
             }
         }
 
-        /// ....
+        // Add translations to pose matrices
+        // Allow partial transformation channels too
+        let poseTranslate: boolean
+        switch (this.skeleton.allowTranslation) {
+            case "all":
+                poseTranslate = true
+                break
+            case "onlyroot":
+                poseTranslate = this.parent === undefined
+                break
+            case "none":
+                poseTranslate = false
+        }
+
+        if (poseTranslate && (rXs !== undefined || rYs !== undefined || rZs !== undefined)) {
+            if (rXs === undefined) {
+                rXs = new Array(nFrames)
+                rXs.fill(0)
+            }
+            if (rYs === undefined) {
+                rYs = new Array(nFrames)
+                rYs.fill(0)
+            }
+            if (rZs === undefined) {
+                rZs = new Array(nFrames)
+                rZs.fill(0)
+            }
+            this.matrixPoses.forEach((m, i) => {
+                m[3] = rXs![i]
+                m[7] = rYs![i]
+                m[11] = rZs![i]
+            })
+        }
     }
 }
 
@@ -341,7 +379,7 @@ export class BVHJoint {
 // https://github.com/cgohlke/transformations/blob/master/transformations/transformations.py
 // Copyright (c) 2006-2022, Christoph Gohlke
 
-function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz') {
+function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz'): mat4 {
     // Return homogeneous rotation matrix from Euler angles and axis sequence.
 
     // ai, aj, ak : Euler's roll, pitch and yaw angles
@@ -383,9 +421,8 @@ function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz')
 
     const M = mat4.create()
 
-    // TODO: row, col OR col, row
     function set(row: number, col: number, v: number) {
-        M[row * 4 + col] = v
+        M[col * 4 + row] = v
     }
     if (repetition) {
         set(i, i, cj)
@@ -441,6 +478,4 @@ const _AXES2TUPLE = new Map([
     ['rzxz', [2, 0, 1, 1]],
     ['rxyz', [2, 1, 0, 1]],
     ['rzyz', [2, 1, 1, 1]],
-]
-
-// const _TUPLE2AXES = {v: k for k, v in _AXES2TUPLE.items()}
+])

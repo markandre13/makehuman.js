@@ -7,6 +7,7 @@ use(chaiAlmost())
 import { BiovisionHierarchy } from '../../src/lib/BiovisionHierarchy'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
+import { mat4 } from 'gl-matrix'
 
 describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {
@@ -39,18 +40,18 @@ describe("class BiovisionHierarchy", function () {
         expect(facePoseUnits.jointslist.map(j => j.name).join(",")).to.equal("root,spine05,pelvis.L,pelvis.R,spine04,upperleg01.L,upperleg01.R,spine03,upperleg02.L,upperleg02.R,spine02,lowerleg01.L,lowerleg01.R,spine01,breast.R,breast.L,lowerleg02.L,lowerleg02.R,neck01,clavicle.L,clavicle.R,End effector,End effector,foot.L,foot.R,neck02,shoulder01.L,shoulder01.R,toe5-1.L,toe4-1.L,toe2-1.L,toe1-1.L,toe3-1.L,toe4-1.R,toe2-1.R,toe5-1.R,toe1-1.R,toe3-1.R,neck03,upperarm01.L,upperarm01.R,toe5-2.L,toe4-2.L,toe2-2.L,toe1-2.L,toe3-2.L,toe4-2.R,toe2-2.R,toe5-2.R,toe1-2.R,toe3-2.R,head,upperarm02.L,upperarm02.R,toe5-3.L,toe4-3.L,toe2-3.L,End effector,toe3-3.L,toe4-3.R,toe2-3.R,toe5-3.R,End effector,toe3-3.R,levator02.L,special01,levator02.R,special03,special06.R,jaw,temporalis01.L,temporalis01.R,special06.L,temporalis02.R,temporalis02.L,lowerarm01.L,lowerarm01.R,End effector,End effector,End effector,End effector,End effector,End effector,End effector,End effector,levator03.L,oris04.R,oris06,oris04.L,levator03.R,levator06.R,levator06.L,special05.R,tongue00,special04,oculi02.L,oculi02.R,special05.L,risorius02.R,risorius02.L,lowerarm02.L,lowerarm02.R,levator04.L,oris03.R,oris05,oris03.L,levator04.R,End effector,End effector,orbicularis03.R,orbicularis04.R,eye.R,tongue01,oris02,oris06.R,oris06.L,oculi01.L,oculi01.R,orbicularis04.L,orbicularis03.L,eye.L,risorius03.R,risorius03.L,wrist.L,wrist.R,levator05.L,End effector,End effector,End effector,levator05.R,End effector,End effector,End effector,tongue02,tongue05.L,tongue05.R,oris01,oris07.R,oris07.L,End effector,End effector,End effector,End effector,End effector,End effector,End effector,metacarpal4.L,metacarpal1.L,metacarpal3.L,metacarpal2.L,finger1-1.L,metacarpal2.R,metacarpal3.R,finger1-1.R,metacarpal1.R,metacarpal4.R,End effector,End effector,tongue03,tongue06.R,tongue06.L,End effector,End effector,End effector,End effector,End effector,finger5-1.L,finger2-1.L,finger4-1.L,finger3-1.L,finger1-2.L,finger3-1.R,finger4-1.R,finger1-2.R,finger2-1.R,finger5-1.R,tongue07.L,tongue07.R,tongue04,End effector,End effector,finger5-2.L,finger2-2.L,finger4-2.L,finger3-2.L,finger1-3.L,finger3-2.R,finger4-2.R,finger1-3.R,finger2-2.R,finger5-2.R,End effector,End effector,End effector,finger5-3.L,finger2-3.L,finger4-3.L,finger3-3.L,End effector,finger3-3.R,finger4-3.R,End effector,finger2-3.R,finger5-3.R,End effector,End effector,End effector,End effector,End effector,End effector,End effector,End effector")
     })
     it("first entry must be HIERARCHY", function () {
-        new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT root`)
-        expect(() => new BiovisionHierarchy("biohazard.bvh", `THE DOCTOR`)).to.throw()
-        expect(() => new BiovisionHierarchy("biohazard.bvh", `HIERARCHY VS THE DOCTOR`)).to.throw()
+        new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT root`)
+        expect(() => new BiovisionHierarchy("biohazard.bvh", "none", `THE DOCTOR`)).to.throw()
+        expect(() => new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY VS THE DOCTOR`)).to.throw()
     })
     it("second entry must be ROOT <rootname>", function () {
-        const bvh = new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT enoch`)
+        const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT enoch`)
         expect(bvh.rootJoint.name).to.equal("enoch")
-        expect(() => new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT`)).to.throw()
-        expect(() => new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT VS SQUARE`)).to.throw()
+        expect(() => new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT`)).to.throw()
+        expect(() => new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT VS SQUARE`)).to.throw()
     })
     it("third entry must be joint data", function () {
-        const bvh = new BiovisionHierarchy("biohazard.bvh", `HIERARCHY
+        const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY
 ROOT root
 {
     OFFSET 0.1 0.2 0.3
@@ -114,12 +115,12 @@ Frame Time: 0.041667
         expect(bvh.frameCount).to.equal(2)
         expect(bvh.frameTime).to.equal(0.041667)
 
-        expect(() => new BiovisionHierarchy("biohazard.bvh", `HIERARCHY\nROOT root\nNOPE`)).to.throw()
+        expect(() => new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT root\nNOPE`)).to.throw()
     })
 
-    describe("BVHJoint.calculateFrames()", function() {
+    describe("BVHJoint.calculateFrames()", function () {
         it.only("foo", () => {
-            const bvh = new BiovisionHierarchy("biohazard.bvh", `HIERARCHY
+            const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY
 ROOT root
 {
     OFFSET 1 2 3
@@ -135,6 +136,22 @@ Frame Time: 0.041667
 1 2 3 4 5 6 7 9 10
 11 12 13 14 15 16 17 18 19 20`)
             expect(bvh.rootJoint.rotOrder).to.equal("szyx")
+            const m0 = mat4.fromValues(
+                0.99073744, -0.1041307, 0.08715574, 0.,
+                0.11032021, 0.9914638, -0.06949103, 0.,
+                -0.07917561, 0.07846241, 0.99376804, 0.,
+                0, 0, 0, 1
+            )
+            mat4.transpose(m0, m0)
+            const m1 = mat4.fromValues(
+                0.9285075, -0.26624525, 0.25881904, 0.,
+                0.32763818, 0.9154494, -0.23367861, 0.,
+                -0.17471991, 0.30177134, 0.9372337, 0.,
+                0, 0, 0, 1
+            )
+            mat4.transpose(m1, m1)
+            expect(bvh.rootJoint.matrixPoses[0]).to.deep.almost.equal(m0)
+            expect(bvh.rootJoint.matrixPoses[1]).to.deep.almost.equal(m1)
         })
     })
 })

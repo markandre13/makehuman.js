@@ -52,7 +52,7 @@ export class ExpressionManager {
 
     constructor() {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
-        this.facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh')
+        this.facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh', 'none')
         this.facePoseUnitsNames = JSON
             .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
