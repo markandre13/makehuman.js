@@ -8,6 +8,8 @@ import { BiovisionHierarchy } from '../../src/lib/BiovisionHierarchy'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 import { mat4 } from 'gl-matrix'
+import { Skeleton } from '../../src/skeleton/Skeleton'
+import { Bone } from '../../src/skeleton/Bone'
 
 describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {
@@ -118,9 +120,78 @@ Frame Time: 0.041667
         expect(() => new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT root\nNOPE`)).to.throw()
     })
 
-    describe("BVHJoint.calculateFrames()", function () {
-        it.only("foo", () => {
-            const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY
+    it.only("createAnimationTrack(skel, name)", function () {
+        const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY
+ROOT root
+{
+    OFFSET 0.1 0.2 0.3
+    CHANNELS 3 Xrotation Yrotation Zrotation
+    JOINT spine05
+    {
+        OFFSET 1.9 2.8 3.7
+        CHANNELS 3 Xrotation Yrotation Zrotation
+        End Site
+        {
+            OFFSET 11 12 13
+        }
+    }
+}
+MOTION
+Frames: 2
+Frame Time: 0.041667
+1 2 3 4 5 6
+7 8 9 10 11 12
+`)
+        const skeleton = {
+            getBones: function (): Bone[] {
+                return [
+                    { name: "root", reference_bones: [] },
+                    { name: "spine05", reference_bones: [] }
+                ] as Bone[]
+            }
+        } as Skeleton
+
+        const track = bvh.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+
+        expect(track.length).to.equal(4)
+
+        const m0 = mat4.fromValues(
+            0.9980212, -0.05230408, 0.0348995, 0.,
+            0.05293623, 0.9984456, -0.01744178, 0.,
+            -0.03393297, 0.01925471, 0.9992386, 0.,
+            0, 0, 0, 1
+        )
+        mat4.transpose(m0, m0)
+        expect(track[0]).deep.almost.equal(m0)
+
+        const m1 = mat4.fromValues(
+            0.99073744, -0.1041307, 0.08715574, 0.,
+            0.11032021, 0.9914638, -0.06949103, 0.,
+            -0.07917561, 0.07846241, 0.99376804, 0.,
+            0, 0, 0, 1
+        )
+        mat4.transpose(m1, m1)
+        expect(track[1]).deep.almost.equal(m1)
+
+        const m2 = mat4.fromValues(
+            0.9780762, -0.15491205, 0.1391731, 0.,
+            0.17202055, 0.977673, -0.12068332, 0.,
+            -0.11737048, 0.14197811, 0.98288673, 0.,
+            0, 0, 0, 1)
+        mat4.transpose(m2, m2)
+        expect(track[2]).deep.almost.equal(m2)
+
+        const m3 = mat4.fromValues(
+            0.9601763, -0.20409177, 0.190809, 0.,
+            0.23716263, 0.9563985, -0.17045777, 0.,
+            -0.1477004, 0.20892227, 0.9667141, 0.,
+            0, 0, 0, 1)
+        mat4.transpose(m3, m3)
+        expect(track[3]).deep.almost.equal(m3)
+    })
+
+    it("BVHJoint.calculateFrames()", function () {
+        const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY
 ROOT root
 {
     OFFSET 1 2 3
@@ -135,23 +206,22 @@ Frames: 2
 Frame Time: 0.041667
 1 2 3 4 5 6 7 9 10
 11 12 13 14 15 16 17 18 19 20`)
-            expect(bvh.rootJoint.rotOrder).to.equal("szyx")
-            const m0 = mat4.fromValues(
-                0.99073744, -0.1041307, 0.08715574, 0.,
-                0.11032021, 0.9914638, -0.06949103, 0.,
-                -0.07917561, 0.07846241, 0.99376804, 0.,
-                0, 0, 0, 1
-            )
-            mat4.transpose(m0, m0)
-            const m1 = mat4.fromValues(
-                0.9285075, -0.26624525, 0.25881904, 0.,
-                0.32763818, 0.9154494, -0.23367861, 0.,
-                -0.17471991, 0.30177134, 0.9372337, 0.,
-                0, 0, 0, 1
-            )
-            mat4.transpose(m1, m1)
-            expect(bvh.rootJoint.matrixPoses[0]).to.deep.almost.equal(m0)
-            expect(bvh.rootJoint.matrixPoses[1]).to.deep.almost.equal(m1)
-        })
+        expect(bvh.rootJoint.rotOrder).to.equal("szyx")
+        const m0 = mat4.fromValues(
+            0.99073744, -0.1041307, 0.08715574, 0.,
+            0.11032021, 0.9914638, -0.06949103, 0.,
+            -0.07917561, 0.07846241, 0.99376804, 0.,
+            0, 0, 0, 1
+        )
+        mat4.transpose(m0, m0)
+        const m1 = mat4.fromValues(
+            0.9285075, -0.26624525, 0.25881904, 0.,
+            0.32763818, 0.9154494, -0.23367861, 0.,
+            -0.17471991, 0.30177134, 0.9372337, 0.,
+            0, 0, 0, 1
+        )
+        mat4.transpose(m1, m1)
+        expect(bvh.rootJoint.matrixPoses[0]).to.deep.almost.equal(m0)
+        expect(bvh.rootJoint.matrixPoses[1]).to.deep.almost.equal(m1)
     })
 })

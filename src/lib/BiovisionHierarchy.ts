@@ -4,6 +4,7 @@
 
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { mat4 } from "gl-matrix"
+import { Skeleton } from "skeleton/Skeleton"
 import { StringToLine } from "./StringToLine"
 
 export type TranslationType = "all" | "onlyroot" | "none"
@@ -25,7 +26,7 @@ export class BiovisionHierarchy {
 
     lineNumber = 0
 
-    constructor(filename: string, allowTranslation: TranslationType="onlyroot", data?: string) {
+    constructor(filename: string, allowTranslation: TranslationType = "onlyroot", data?: string) {
         this.name = filename
         this.allowTranslation = allowTranslation
         if (data === undefined) {
@@ -205,6 +206,63 @@ export class BiovisionHierarchy {
             joint.position = [...offset]
             joint.parent.position.forEach((v, i) => joint.position[i] += v)
         }
+    }
+
+    createAnimationTrack(skel?: string[] | Skeleton, name?: string): mat4[] {
+
+        function _bvhJointName(boneName: string | undefined) {
+            // Remove the tail from duplicate bone names (added by the BVH parser)
+            if (boneName === undefined) {
+                return boneName
+            }
+            const r = boneName.match(/(.*)_\d+$/)
+            if (r !== null) {
+                return r[1]
+            }
+            return boneName
+        }
+
+        function _createAnimation(jointsData: mat4[], name: string, frameTime: number, nFrames: number) {
+            const nJoints = jointsData.length / nFrames
+            const result: mat4[] = Array(jointsData.length)
+            let out = 0
+            for(let f=0; f<nFrames; ++f) {
+                for(let j=0; j<nJoints; ++j) {
+                    result[out++] = jointsData[f + j * nJoints]
+                }
+            }
+            return result
+        }
+
+        if (name === undefined) {
+            name = this.name
+        }
+        if (skel === undefined) {
+            throw Error(`skel === undefined: not implemented yet`)
+        }
+        if (skel instanceof Array) {
+            throw Error(`skel === string[]: not implemented yet`)
+        }
+
+        // map matrixPoses to skel's breadth-first order bones list, one frame after another
+        let jointsData: mat4[] = []
+        for(const bone of skel.getBones()) {
+            if (bone.reference_bones.length > 0) {
+                throw Error(`bone with reference_bones not implemented yet`)
+            } else {
+                // Map bone to joint by bone name
+                const jointName = _bvhJointName(bone.name)!
+                const joint = this.getJointByCanonicalName(jointName)
+                if (joint !== undefined) {
+                    jointsData.push(...joint.matrixPoses)
+                } else {
+                    const emptyTrack = new Array(this.frameCount)
+                    emptyTrack.fill(mat4.create())
+                    jointsData.push(...emptyTrack)
+                }
+            }
+        }
+        return _createAnimation(jointsData, name, this.frameTime, this.frameCount)
     }
 
     getJoint(name: string): BVHJoint | undefined {

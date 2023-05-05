@@ -235,10 +235,6 @@ describe("expression", function () {
 
     })
 
-    it.only("BVH.createAnimationTrack()", function() {
-
-    })
-
     // plugins/2_posing_expression.py
     // def _load_pose_units(self):
     // def chooseExpression(self, filename):
@@ -248,7 +244,7 @@ describe("expression", function () {
     // def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
     //    this function calculates the values in the _IN array
     // jaw = -14.271322498,0,0
-    it("calculate", function () {
+    it.only("calculate", function () {
         // LOAD SKELETON
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
@@ -276,18 +272,6 @@ describe("expression", function () {
         // console.log(weight)
         // console.log(poses)
 
-        function _bvhJointName(boneName: string | undefined) {
-            // Remove the tail from duplicate bone names (added by the BVH parser)
-            if (boneName === undefined) {
-                return boneName
-            }
-            const r = boneName.match(/(.*)_\d+$/)
-            if (r !== null) {
-                return r[1]
-            }
-            return boneName    
-        }
-
         // 2_posing_expression.py
         //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
         //         def _load_pose_units(self):
@@ -309,31 +293,19 @@ describe("expression", function () {
         //     class PoseUnit(AnimationTrack):
         //         def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
         //             ...
-        const self = mgr.facePoseUnits
 
         // bvh.py: def createAnimationTrack(self, skel=None, name=None):
         // L198
-        const jointsData = []
-        for(const bone of skeleton.boneslist!) {
-            // L234
-            // Map bone to joint by bone name
-            const jointName = _bvhJointName(bone.name)!
-            // console.log(jointName)
-            const joint = self.getJointByCanonicalName(jointName)
-            if (joint !== undefined) {
-                // jointsData.push(...joint.matrixPoses)
-                // jointsData.append( joint.matrixPoses.copy() )
-            } else {
-            //     jointsData.append(animation.emptyTrack(self.frameCount))
-            }
-        }
+        const base_anim = mgr.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
 
         for (let b_idx = 0, pmIdx = 0; b_idx < skeleton.boneslist!.length; ++b_idx) {
             const expectPoseMat = mat4.create()
             for (let j = 0; j < 12; ++j) {
-                expectPoseMat[j] = laugh01_IN[pmIdx++]
+                expectPoseMat[j] = laugh01_IN[pmIdx++] // THIS MIGHT BE THE WRONG ARRAY
             }
             mat4.transpose(expectPoseMat, expectPoseMat)
+
+            expect(base_anim[b_idx], `base_anim[${b_idx}]`).to.deep.almost.equal(expectPoseMat)
         }
     })
 })
