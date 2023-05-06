@@ -20,15 +20,24 @@ export class BiovisionHierarchy {
 
     // Set to true to convert the coordinates from a Z-is-up coordinate system.
     // Most motion capture data uses Y-is-up, though.
-    convertFromZUp = false // TODO: set during load
+    convertFromZUp: boolean = false // TODO: set during load
     // joints to accept translation animation data for
     allowTranslation: TranslationType
 
     lineNumber = 0
 
-    constructor(filename: string, allowTranslation: TranslationType = "onlyroot", data?: string) {
+    constructor(filename: string, convertFromZUp: "auto" | true | false = "auto", allowTranslation: TranslationType = "onlyroot", data?: string) {
         this.name = filename
         this.allowTranslation = allowTranslation
+
+        let autoAxis
+        if (convertFromZUp === "auto") {
+            autoAxis = true
+        } else {
+            autoAxis = false
+            this.convertFromZUp = convertFromZUp
+        }
+
         if (data === undefined) {
             data = FileSystemAdapter.getInstance().readFile(filename)
         }
@@ -118,6 +127,13 @@ export class BiovisionHierarchy {
                     break
                 // MOTION
                 case 9:
+                    if (autoAxis) {
+                        this.convertFromZUp = this._autoGuessCoordinateSystem()
+                        // if (this.convertFromZUp) {
+                        //     // Conversion needed: convert from Z-up to Y-up
+                        //     throw Error(`Conversion needed: convert from Z-up to Y-up`)
+                        // }
+                    }
                     this.expect(tokens, 'MOTION', 0)
                     state = 10
                     break
@@ -198,6 +214,48 @@ export class BiovisionHierarchy {
         return joint
     }
 
+    /**
+     *  Guesses whether this BVH rig uses a Y-up or Z-up axis system, using the
+     * joint offsets of this rig (longest direction is expected to be the height).
+     * Requires joints of this BVH skeleton to be initialized.
+     * Returns False if no conversion is needed (BVH file uses Y-up coordinates),
+     * returns True if BVH uses Z-up coordinates and conversion is needed.
+     * Note that coordinate system is expected to be right-handed.
+     */
+    _autoGuessCoordinateSystem() {
+        let ref_joint = undefined
+        const ref_names = ['head', 'spine03', 'spine02', 'spine01', 'upperleg02.L', 'lowerleg02.L']
+        while(ref_joint === undefined && ref_names.length != 0) {
+            const joint_name = ref_names.pop()!
+            ref_joint = this.joints.get(joint_name)
+            if (ref_joint === undefined) {
+                ref_joint = this.joints.get(joint_name.substring(0,1).toUpperCase() + joint_name.substring(1))
+            }
+            if (ref_joint !== undefined && ref_joint.children.length === 0) {
+                console.log(`Cannot use reference joint ${ref_joint.name} for determining axis system, it is an end-effector (has no children)`)
+                ref_joint = undefined
+            }
+            if (ref_joint === undefined) {
+                console.log(`Could not auto guess axis system for BVH file ${this.name} because no known joint name is found. Using Y up as default axis orientation.`)
+                return false
+            }
+            const tail_joint = ref_joint.children[0]
+            const direction = [
+                0,
+                tail_joint.position[1] - ref_joint.position[1],
+                tail_joint.position[2] - ref_joint.position[2],
+            ]
+            if (Math.abs(direction[1]) > Math.abs(direction[2])) {
+                // Y-up
+                return false
+            } else {
+                // Z-up
+                return true
+            }
+        }
+        return true
+    }
+
     __calcPosition(joint: BVHJoint, offset: number[]) {
         joint.offset = offset
         if (joint.parent === undefined) {
@@ -225,10 +283,11 @@ export class BiovisionHierarchy {
         function _createAnimation(jointsData: mat4[], name: string, frameTime: number, nFrames: number) {
             const nJoints = jointsData.length / nFrames
             const result: mat4[] = Array(jointsData.length)
-            let out = 0
-            for(let f=0; f<nFrames; ++f) {
-                for(let j=0; j<nJoints; ++j) {
-                    result[out++] = jointsData[f + j * nJoints]
+            let outIdx = 0
+            for (let f = 0; f < nFrames; ++f) {
+                for (let j = 0; j < nJoints; ++j) {
+                    result[outIdx] = jointsData[f + j * nFrames]
+                    ++outIdx
                 }
             }
             return result
@@ -246,7 +305,7 @@ export class BiovisionHierarchy {
 
         // map matrixPoses to skel's breadth-first order bones list, one frame after another
         let jointsData: mat4[] = []
-        for(const bone of skel.getBones()) {
+        for (const bone of skel.getBones()) {
             if (bone.reference_bones.length > 0) {
                 throw Error(`bone with reference_bones not implemented yet`)
             } else {
@@ -254,6 +313,9 @@ export class BiovisionHierarchy {
                 const jointName = _bvhJointName(bone.name)!
                 const joint = this.getJointByCanonicalName(jointName)
                 if (joint !== undefined) {
+                    if (joint.matrixPoses.length !== this.frameCount) {
+                        throw Error("yikes")
+                    }
                     jointsData.push(...joint.matrixPoses)
                 } else {
                     const emptyTrack = new Array(this.frameCount)
@@ -393,6 +455,11 @@ export class BVHJoint {
             if (rotAngles.length >= 3) {
                 for (let frameIdx = 0; frameIdx < nFrames; ++frameIdx) {
                     this.matrixPoses[frameIdx] = euler_matrix(rotAngles[2][frameIdx], rotAngles[1][frameIdx], rotAngles[0][frameIdx], rotOrder)
+                    // if (this.name === "shoulder01.L" && frameIdx === 0) {
+                    //     console.log(`this.skeleton.convertFromZUp=${this.skeleton.convertFromZUp}`)
+                    //     console.log(`possible screw up for euler_matrix(${rotAngles[2][frameIdx]}, ${rotAngles[1][frameIdx]}, ${rotAngles[0][frameIdx]}, ${rotOrder})?`)
+                    //     console.log(this.matrixPoses[frameIdx])
+                    // }
                 }
             }
         }
@@ -437,7 +504,7 @@ export class BVHJoint {
 // https://github.com/cgohlke/transformations/blob/master/transformations/transformations.py
 // Copyright (c) 2006-2022, Christoph Gohlke
 
-function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz'): mat4 {
+export function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz'): mat4 {
     // Return homogeneous rotation matrix from Euler angles and axis sequence.
 
     // ai, aj, ak : Euler's roll, pitch and yaw angles
@@ -456,14 +523,19 @@ function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz')
     // ...    R = euler_matrix(ai, aj, ak, axes)
 
     // try:
-    const [firstaxis, parity, repetition, frame] = _AXES2TUPLE.get(axes)!
-    // except (AttributeError, KeyError):
-    //     _TUPLE2AXES[axes]  # noqa: validation
-    //     firstaxis, parity, repetition, frame = axes
+    // console.log(`euler_matrix(ai=${ai}, aj=${aj}, ak=${ak}, axes=${axes}`)
+
+    const tmp = _AXES2TUPLE.get(axes)
+    if (tmp === undefined) {
+        throw Error(`invalid axes of '{axes}'`)
+    }
+    const [firstaxis, parity, repetition, frame] = tmp
 
     let i = firstaxis
     let j = _NEXT_AXIS[i + parity]
     let k = _NEXT_AXIS[i - parity + 1]
+
+    // console.log(`i=${i}, j=${j}, k=${k}`)
 
     if (frame) {
         [ai, ak] = [ak, ai]
@@ -471,6 +543,8 @@ function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz')
     if (parity) {
         [ai, aj, ak] = [-ai, -aj, -ak]
     }
+
+    // console.log(`ai=${ai}, aj=${aj}, ak=${ak}`)
 
     let [si, sj, sk] = [Math.sin(ai), Math.sin(aj), Math.sin(ak)]
     let [ci, cj, ck] = [Math.cos(ai), Math.cos(aj), Math.cos(ak)]
@@ -483,6 +557,7 @@ function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz')
         M[col * 4 + row] = v
     }
     if (repetition) {
+        // console.log("repetition")
         set(i, i, cj)
         set(i, j, sj * si)
         set(i, k, sj * ci)
@@ -493,6 +568,7 @@ function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz')
         set(k, j, cj * sc + cs)
         set(k, k, cj * cc - ss)
     } else {
+        // console.log("no repetition")
         set(i, i, cj * ck)
         set(i, j, sj * sc - cs)
         set(i, k, sj * cc + ss)

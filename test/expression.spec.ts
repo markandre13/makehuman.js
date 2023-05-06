@@ -2,9 +2,9 @@ import { expect, use } from '@esm-bundle/chai'
 import { chaiString } from './chai/chaiString'
 use(chaiString)
 import { chaiAlmost } from "./chai/chaiAlmost"
-use(chaiAlmost())
+use(chaiAlmost(0.00001))
 
-import { mat4, vec3, vec4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 
 import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
@@ -12,9 +12,14 @@ import { loadSkeleton } from '../src/skeleton/loadSkeleton'
 import { Human } from '../src/modifier/Human'
 import { HumanMesh } from '../src/mesh/HumanMesh'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
-import { laugh01_IN, laugh01_mrg, laugh01_OUT } from '../src/laugh01'
 import { toEuler } from '../src/mesh/Collada'
 import { calcWebGL, ExpressionManager } from '../src/ExpressionManager'
+
+import { laugh01_IN, laugh01_mrg, laugh01_OUT } from '../src/laugh01'
+import { python_bvh } from '../src/python_bvh'
+import { base_anim_data } from '../src/base_anim_data'
+import { matrixPoses } from '../src/matrixPoses'
+import { euler_matrix } from '../src/lib/BiovisionHierarchy'
 
 describe("expression", function () {
 
@@ -167,7 +172,7 @@ describe("expression", function () {
         return matPose
     }
 
-    it("with real word data", async function () {
+    xit("with real word data", async function () {
         this.timeout(10000)
 
         // python's matRestGlobal for root is (but only when doing the expression!!!)
@@ -221,12 +226,12 @@ describe("expression", function () {
                 }
             }
 
-            console.log(`---------------------------------------- ${bone.name} ----------------------------------------`)
-            if (diff) {
-                console.log(`matRestGlobal differs for bone ${bone.name}`)
-            }
-            console.log(m2s(`bone  .matRestGlobal`, bone.matRestGlobal!))
-            console.log(m2s(`python.matRestGlobal`, mrg))
+            // console.log(`---------------------------------------- ${bone.name} ----------------------------------------`)
+            // if (diff) {
+            //     console.log(`matRestGlobal differs for bone ${bone.name}`)
+            // }
+            // console.log(m2s(`bone  .matRestGlobal`, bone.matRestGlobal!))
+            // console.log(m2s(`python.matRestGlobal`, mrg))
 
             // console.log(m2s(`my     poseMat`, out))
             // console.log(m2s(`python poseMat`, pout))
@@ -235,42 +240,92 @@ describe("expression", function () {
 
     })
 
-    // plugins/2_posing_expression.py
-    // def _load_pose_units(self):
-    // def chooseExpression(self, filename):
-    //     self.selectedPose = animation.poseFromUnitPose('expr-lib-pose', filename, self.base_anim)
-    //     self.applyToPose(self.selectedPose)
-    //     self.human.refreshPose()
-    // def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
-    //    this function calculates the values in the _IN array
-    // jaw = -14.271322498,0,0
-    it.only("calculate", function () {
-        // LOAD SKELETON
+    it("BVH.jointslists[].matrixPoses[]", function () {
+        const mgr = new ExpressionManager()
+
+        mgr.facePoseUnits.jointslist.forEach((joint, i) => {
+            expect(joint.name).to.equal(python_bvh[i].name)
+            expect(joint.frames, `frames for joint '${joint.name} at index ${i}'`).to.deep.almost.equal(python_bvh[i].frames)
+            joint.matrixPoses.forEach((m, j) => {
+                const a = python_bvh[i].matrixPoses[j] as number[]
+                const e = mat4.fromValues(
+                    a[0], a[1], a[2], a[3],
+                    a[4], a[5], a[6], a[7],
+                    a[8], a[9], a[10], a[11],
+                    a[12], a[13], a[14], a[15]
+                )
+                mat4.transpose(e, e)
+                expect(m, `matrixPoses mismatch for joint ${i} '${joint.name}', frame ${j}`).to.deep.almost.equal(e)
+            })
+        })
+    })
+
+    it.only("createAnimationTrack()", function () {
+        const mgr = new ExpressionManager()
+
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const scene = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
 
+        const boneCount = skeleton.boneslist!.length
+        const frameCount = mgr.facePoseUnits.frameCount
+
+        const base_anim: mat4[] = mgr.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+
+        let pythonIdx = 0, typescriptIdx = 0
+        for (let frame = 0; frame < frameCount; ++frame) {
+            for (let bone = 0; bone < boneCount; ++bone) {
+                const e = mat4.create()
+                for (let j = 0; j < 12; ++j) {
+                    e[j] = base_anim_data[pythonIdx++]
+                }
+                mat4.transpose(e,e)
+                const v = base_anim[typescriptIdx++]
+                expect(v, `bone ${bone} '${skeleton.boneslist![bone].name}', frame ${frame}`).to.deep.almost.equal(e)
+            }
+        }
+
+        // base_anim_data:
+        // frame -> rig -> matrix
+
+        // console.log(`base_anim_data.length = ${base_anim_data.length/skeleton.boneslist!.length/12}`)
+
+        // for(let frame = 0; frame<mgr.facePoseUnits.frameCount; ++frame) {
+        // for (let b_idx = 0, pmIdx = 0; b_idx < skeleton.boneslist!.length; ++b_idx) {
+        //     const expectPoseMat = mat4.create()
+        //     for (let j = 0; j < 12; ++j) {
+        //         expectPoseMat[j] = base_anim_data[pmIdx++]
+        //     }
+        //     mat4.transpose(expectPoseMat, expectPoseMat)
+
+        //     expect(base_anim[b_idx], m2s(`base_anim[${b_idx}]`, base_anim[b_idx]) + m2s(`\nexpectPoseMat`, expectPoseMat)).to.deep.almost.equal(expectPoseMat)
+        //     // console.log(m2s(`base_anim[${b_idx}]`, base_anim[b_idx]))
+        //     }
+        // }
+
         // const name = "boring01"
-        const name = "laugh01"
-        const mgr = new ExpressionManager()
+
         // const map = mgr.calculateExpression(
         //     mgr.expressions.findIndex((v) => v === name)
         // )
         // map.forEach( (value, key) => console.log(`${key} = ${value}`))
 
-        const unit_poses = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${name}.mhpose`))
-            .unit_poses as any
 
-        // poses & weight as in getBlendedPose(...)
-        const poses: number[] = []
-        const weight: number[] = []
-        for (let poseName of Object.getOwnPropertyNames(unit_poses)) {
-            poses.push(mgr.poseUnitName2Frame.get(poseName)!)
-            weight.push(unit_poses[poseName])
-        }
-        // console.log(weight)
-        // console.log(poses)
+
+        // const name = "laugh01"
+        // const unit_poses = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${name}.mhpose`))
+        //     .unit_poses as any
+
+        // // poses & weight as in getBlendedPose(...)
+        // const poses: number[] = []
+        // const weight: number[] = []
+        // for (let poseName of Object.getOwnPropertyNames(unit_poses)) {
+        //     poses.push(mgr.poseUnitName2Frame.get(poseName)!)
+        //     weight.push(unit_poses[poseName])
+        // }
+        // // console.log(weight)
+        // // console.log(poses)
 
         // 2_posing_expression.py
         //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
@@ -293,19 +348,5 @@ describe("expression", function () {
         //     class PoseUnit(AnimationTrack):
         //         def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
         //             ...
-
-        // bvh.py: def createAnimationTrack(self, skel=None, name=None):
-        // L198
-        const base_anim = mgr.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
-
-        for (let b_idx = 0, pmIdx = 0; b_idx < skeleton.boneslist!.length; ++b_idx) {
-            const expectPoseMat = mat4.create()
-            for (let j = 0; j < 12; ++j) {
-                expectPoseMat[j] = laugh01_IN[pmIdx++] // THIS MIGHT BE THE WRONG ARRAY
-            }
-            mat4.transpose(expectPoseMat, expectPoseMat)
-
-            expect(base_anim[b_idx], `base_anim[${b_idx}]`).to.deep.almost.equal(expectPoseMat)
-        }
     })
 })
