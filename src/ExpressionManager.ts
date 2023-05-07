@@ -1,58 +1,24 @@
 import { PoseNode } from 'ui/poseView'
 import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
-import { mat4 } from 'gl-matrix'
-import { toEuler } from 'mesh/Collada'
-import { laugh01_IN } from 'laugh01'
-import { boring01_IN } from 'boring01'
+import { mat4, quat2 } from 'gl-matrix'
+import { quaternion_slerp } from 'lib/quaternion_slerp'
+import { Skeleton } from 'skeleton/Skeleton'
 
-// MakeHuman 1.2 sets the pose 5 times when selecting a single pose...
-
-// plugins/2_posing_expression.py
-//   70  class ExpressionTaskView
-//  152      def applyToPose(self, pose):
-//  170          self.human.addAnimation(pose_)
-//  171          self.human.setActiveAnimation('expr-lib-pose')
-//  173          self.human.setPosed(True)
-//  174          self.human.refreshPose()
-
-//  178      def chooseExpression(self, filename): (1)
-//  203          self.selectedPose = animation.poseFromUnitPose('expr-lib-pose', filename, self.base_anim)
-//  204          self.applyToPose(self.selectedPose)
-//  205          self.human.refreshPose()
-
-// shared/animation.py
-//   57  class AnimationTrack
-//
-//  264  class Pose(AnimationTrack):
-//  287       def fromPoseUnit(self, filename, poseUnit):
-//  312  class PoseUnit
-//  422      def poseFromUnitPose(name, filename, poseUnit):
-//  431          return Pose(name, emptyPose()).fromPoseUnit(filename, poseUnit)
-//  818  class AnimatedMesh(object):
-//  993      def setPosed(self, posed):
-// 1034      def _pose()
-// 1064          self.getBaseSkeleton().setPose(poseState)
-// 1113      def refreshPose(self, updateIfInRest=False, syncSkeleton=True):
-
-// apps/human.py
-//   56  class Human(guicommon.Object, animation.AnimatedMesh)
-// 1439      def refreshPose(self, updateIfInRest=False):
-// 1445          super(Human, self).refreshPose(updateIfInRest)
-//
-// shared/skeleton.py
-//       class Skeleton(object):
-//  570      def setPose(self, poseMats):
 export class ExpressionManager {
-    facePoseUnits: BiovisionHierarchy               // base_bvh
-    // bas_anim
+    facePoseUnits: BiovisionHierarchy               // BVH file with face pose units
+    skeleton: Skeleton
+    base_anim: mat4[]                               // face pose units as mat4[] (joints x pose units)
     facePoseUnitsNames: string[]                    // poseunit_names
     poseUnitName2Frame = new Map<string, number>();
-    expressions: string[]
+    expressions: string[]                           // list of predefined expressions
 
-    constructor() {
+    constructor(skeleton: Skeleton) {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
         this.facePoseUnits = new BiovisionHierarchy('data/poseunits/face-poseunits.bvh', 'auto', 'none')
+        this.skeleton = skeleton
+        this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+
         this.facePoseUnitsNames = JSON
             .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
@@ -64,113 +30,178 @@ export class ExpressionManager {
             .map(filename => filename.substring(0, filename.length - 7))
     }
 
-    setExpression(expression: number, poseNodes: PoseNode) {
-        // const expressionName = this.expressions[expression]
-        // console.log(`=================== ${expressionName} ===================`)
-        // // console.log(`ExpressionManager::setExpression(${expressionName})`)
-        // expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
-        //     .unit_poses as any
-        this.applyExpression(expression, poseNodes)
+    setExpression(expression: number | string, poseNodes: PoseNode) {
+        this.fromPoseUnit(expression)
     }
 
-    calculateExpression(expression: number) {
+    fromPoseUnit(expression: number | string): mat4[] {
+        if (typeof expression === "string") {
+            const name = expression
+            expression = this.expressions.findIndex(e => e === name)
+            if (expression === -1) {
+                throw Error(`'${name} is not a known expression'`)
+            }
+        }
+
         const expressionName = this.expressions[expression]
         const unit_poses = expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
 
-        const facePose = new Map<string, number[]>()
-        for (let prop of Object.getOwnPropertyNames(unit_poses)) {
-            const value = unit_poses[prop]
-            const frame = this.poseUnitName2Frame.get(prop)!!
-            // console.log(`${prop} (${frame}) = ${value}`)
-            for (const joint of this.facePoseUnits.bvhJoints) {
-                if (joint.name === "End effector") {
-                    continue
-                }
-                const start = frame * joint.channels.length
-                const rotation = [
-                    value * joint.frames[start],
-                    value * joint.frames[start + 1],
-                    value * joint.frames[start + 2]
-                ] as number[]
-
-                let r = facePose.get(joint.name)
-                if (r === undefined) {
-                    r = [0, 0, 0]
-                    facePose.set(joint.name, r)
-                }
-                // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
-                r[0] -= rotation[0]
-                r[1] -= rotation[1]
-                r[2] -= rotation[2]
-            }
+        const poses: number[] = []
+        const weights: number[] = []
+        for (let poseName of Object.getOwnPropertyNames(unit_poses)) {
+            poses.push(this.poseUnitName2Frame.get(poseName)!)
+            weights.push(unit_poses[poseName])
         }
-        return facePose
+
+        return this.getBlendedPose(this.skeleton, this.base_anim, poses, weights)
     }
 
-    applyExpression(expression: number, poseNodes: PoseNode) {
-        //
-        // calculate face pose from expression
-        //
-        const facePose = this.calculateExpression(expression)
+    // PoseUnit(AnimationTrack): getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
+    getBlendedPose(
+        skeleton: Skeleton,
+        base_anim: mat4[],
+        poses: number[],
+        weights: number[],
+        additiveBlending = true
+    ): mat4[] {
+        const f_idxs = poses
+        const nBones = skeleton.boneslist!.length
 
-        //
-        // copy final rotation to pose
-        //
-        function d(num: number) {
-            return Math.round((num + Number.EPSILON) * 1000000) / 1000000
+        if (!additiveBlending) {
+            throw Error(`yikes`)
         }
 
-        function applyToPose(node: PoseNode | undefined) {
-            if (node === undefined) {
-                return
-            }
-            if (node.bone.name !== "head") {
-                let r = facePose.get(node.bone.name)
-                if (r === undefined) {
-                    r = [0, 0, 0]
+        const result: mat4[] = new Array(nBones)
+
+        if (f_idxs.length === 1) {
+            throw Error(`yikes`)
+        } else {
+
+            const REST_QUAT = quat2.create()
+
+            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
+                const m1 = base_anim[f_idxs[0] * nBones + b_idx]
+                const m2 = base_anim[f_idxs[1] * nBones + b_idx]
+
+                let q1 = quat2.fromMat4(quat2.create(), m1)
+                let q2 = quat2.fromMat4(quat2.create(), m2)
+
+                q1 = quaternion_slerp(REST_QUAT, q1, weights[0])
+                q2 = quaternion_slerp(REST_QUAT, q2, weights[1])
+
+                let quat = quat2.multiply(quat2.create(), q2, q1)
+
+                for (let i = 2; i < f_idxs.length; ++i) {
+                    const m = base_anim[f_idxs[i] * nBones + b_idx]
+                    let q = quat2.fromMat4(quat2.create(), m)
+                    q = quaternion_slerp(REST_QUAT, q, weights[i])
+                    quat = quat2.multiply(quat2.create(), q, quat)
                 }
-
-                // const pm = mat4.create()
-                // let pmIdx = node.bone.index * 12
-                // for (let j = 0; j < 12; ++j) {
-                //     pm[j] = laugh01_IN[pmIdx++]
-                // }
-                // mat4.transpose(pm, pm)
-                // let out = pm
-
-                let out = mat4.create()
-                let tmp = mat4.create()
-                mat4.multiply(out, out, mat4.fromXRotation(tmp, -r[0] / 360 * 2 * Math.PI))
-                mat4.multiply(out, out, mat4.fromYRotation(tmp, -r[1] / 360 * 2 * Math.PI))
-                mat4.multiply(out, out, mat4.fromZRotation(tmp, -r[2] / 360 * 2 * Math.PI))
-
-                let out2 = calcWebGL(out, node.bone.matRestGlobal!)
-                node.bone.matPose = out2
-
-                // const { x, y, z } = toEuler(out2)
-                // this.bone.matPose = out
-
-                // if (node.bone.name === "jaw") {
-                //     console.log("JAW")
-                //     console.log(mrg)
-                //     console.log(r)
-                //     console.log(out)
-                // }
-
-                // node.x.value = x / (2 * Math.PI) * 360
-                // node.y.value = y / (2 * Math.PI) * 360
-                // node.z.value = z / (2 * Math.PI) * 360
-                const e = 0.00003
-                // if (Math.abs(r[0]) > e || Math.abs(r[1]) > e || Math.abs(r[2]) > e) {
-                //     console.log(`${node.bone.name} := [${d(r[0])}, ${d(r[1])}, ${d(r[2])}] (${x}, ${y}, ${z})`)
-                // }
+                result[b_idx] = mat4.fromQuat2(mat4.create(), quat)
             }
-            applyToPose(node.next)
-            applyToPose(node.down)
         }
-        applyToPose(poseNodes.find("head"))
+        return result
     }
+
+    // calculateExpression(expression: number) {
+    //     const expressionName = this.expressions[expression]
+    //     const unit_poses = expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
+    //         .unit_poses as any
+
+    //     const facePose = new Map<string, number[]>()
+    //     for (let prop of Object.getOwnPropertyNames(unit_poses)) {
+    //         const value = unit_poses[prop]
+    //         const frame = this.poseUnitName2Frame.get(prop)!!
+    //         // console.log(`${prop} (${frame}) = ${value}`)
+    //         for (const joint of this.facePoseUnits.bvhJoints) {
+    //             if (joint.name === "End effector") {
+    //                 continue
+    //             }
+    //             const start = frame * joint.channels.length
+    //             const rotation = [
+    //                 value * joint.frames[start],
+    //                 value * joint.frames[start + 1],
+    //                 value * joint.frames[start + 2]
+    //             ] as number[]
+
+    //             let r = facePose.get(joint.name)
+    //             if (r === undefined) {
+    //                 r = [0, 0, 0]
+    //                 facePose.set(joint.name, r)
+    //             }
+    //             // console.log(`rotate joint ${joint.name} by [${rotation[0]}, ${rotation[1]}, ${rotation[2]}]`)
+    //             r[0] -= rotation[0]
+    //             r[1] -= rotation[1]
+    //             r[2] -= rotation[2]
+    //         }
+    //     }
+    //     return facePose
+    // }
+
+    // applyExpression(expression: number, poseNodes: PoseNode) {
+    //     //
+    //     // calculate face pose from expression
+    //     //
+    //     const facePose = this.calculateExpression(expression)
+
+    //     //
+    //     // copy final rotation to pose
+    //     //
+    //     function d(num: number) {
+    //         return Math.round((num + Number.EPSILON) * 1000000) / 1000000
+    //     }
+
+    //     function applyToPose(node: PoseNode | undefined) {
+    //         if (node === undefined) {
+    //             return
+    //         }
+    //         if (node.bone.name !== "head") {
+    //             let r = facePose.get(node.bone.name)
+    //             if (r === undefined) {
+    //                 r = [0, 0, 0]
+    //             }
+
+    //             // const pm = mat4.create()
+    //             // let pmIdx = node.bone.index * 12
+    //             // for (let j = 0; j < 12; ++j) {
+    //             //     pm[j] = laugh01_IN[pmIdx++]
+    //             // }
+    //             // mat4.transpose(pm, pm)
+    //             // let out = pm
+
+    //             let out = mat4.create()
+    //             let tmp = mat4.create()
+    //             mat4.multiply(out, out, mat4.fromXRotation(tmp, -r[0] / 360 * 2 * Math.PI))
+    //             mat4.multiply(out, out, mat4.fromYRotation(tmp, -r[1] / 360 * 2 * Math.PI))
+    //             mat4.multiply(out, out, mat4.fromZRotation(tmp, -r[2] / 360 * 2 * Math.PI))
+
+    //             let out2 = calcWebGL(out, node.bone.matRestGlobal!)
+    //             node.bone.matPose = out2
+
+    //             // const { x, y, z } = toEuler(out2)
+    //             // this.bone.matPose = out
+
+    //             // if (node.bone.name === "jaw") {
+    //             //     console.log("JAW")
+    //             //     console.log(mrg)
+    //             //     console.log(r)
+    //             //     console.log(out)
+    //             // }
+
+    //             // node.x.value = x / (2 * Math.PI) * 360
+    //             // node.y.value = y / (2 * Math.PI) * 360
+    //             // node.z.value = z / (2 * Math.PI) * 360
+    //             const e = 0.00003
+    //             // if (Math.abs(r[0]) > e || Math.abs(r[1]) > e || Math.abs(r[2]) > e) {
+    //             //     console.log(`${node.bone.name} := [${d(r[0])}, ${d(r[1])}, ${d(r[2])}] (${x}, ${y}, ${z})`)
+    //             // }
+    //         }
+    //         applyToPose(node.next)
+    //         applyToPose(node.down)
+    //     }
+    //     applyToPose(poseNodes.find("head"))
+    // }
 }
 
 export function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {

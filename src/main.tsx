@@ -3,6 +3,7 @@ import { TargetFactory } from './target/TargetFactory'
 import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
+import { WavefrontObj } from 'mesh/WavefrontObj'
 import { HumanMesh, Update } from './mesh/HumanMesh'
 import { RenderMode } from './render/RenderMode'
 import { exportCollada } from 'mesh/Collada'
@@ -24,11 +25,6 @@ import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { BooleanModel, Button, Checkbox, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { calcWebGL, ExpressionManager } from './ExpressionManager'
-
-import { laugh01_IN } from 'laugh01'
-import { mat4 } from 'gl-matrix'
-import { WavefrontObj } from 'mesh/WavefrontObj'
-import { boring01_IN } from 'boring01'
 
 window.onload = () => { main() }
 
@@ -146,13 +142,22 @@ function run() {
     // EXPRESSIONS
     //
 
-    const expressionManager = new ExpressionManager()
+    const expressionManager = new ExpressionManager(skeleton)
     const expressionModel = new StringArrayModel(expressionManager.expressions)
     const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
     selectedExpression.modified.add(() => {
-        expressionManager.setExpression(selectedExpression.row, poseNodes)
+        const pm = expressionManager.fromPoseUnit(selectedExpression.row)
+        for (let boneIdx = 0; boneIdx < skeleton.boneslist!.length; ++boneIdx) {
+            const bone = skeleton.boneslist![boneIdx]
+            const mrg = bone.matRestGlobal!
+            skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
+        }
         skeleton.update()
         scene.updateRequired = Update.POSE
+
+        // expressionManager.setExpression(selectedExpression.row, poseNodes)
+        // skeleton.update()
+        // scene.updateRequired = Update.POSE
     })
 
     console.log('everything is loaded...')
@@ -184,21 +189,7 @@ function run() {
     // })
 
     // might need use order from mat2txt
-    setTimeout(() => {
-        for (let k = 0, mrgIdx = 0, pmIdx = 0, outIdx = 0; k < skeleton.boneslist!.length; ++k) {
-            const bone = skeleton.boneslist![k]
-            const mrg = bone.matRestGlobal!
-            const pm = mat4.create()
-            for (let j = 0; j < 12; ++j) {
-                pm[j] = boring01_IN[pmIdx++]
-            }
-            mat4.transpose(pm, pm)
 
-            skeleton.boneslist![k].matPose = calcWebGL(pm, mrg)
-        }
-        skeleton.update()
-        scene.updateRequired = Update.POSE
-    }, 0)
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
     useBlenderProfile.enabled = false

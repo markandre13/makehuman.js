@@ -22,14 +22,13 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     const modelViewMatrix = mat4.create()
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -5.0]) // test cube
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -30.0]) // obj file face
-    mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -0.5]) // obj file face centered
+    mat4.translate(modelViewMatrix, modelViewMatrix, [0.2, 0, -0.5]) // obj file face centered
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -1.5]) // obj file face
     mat4.rotate(modelViewMatrix, modelViewMatrix, 0.0 * .7, [0, 1, 0])
 
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-
 
     // const mesh = new RenderMesh(gl, vertex, obj.fxyz, undefined, undefined, false)
     // test cube

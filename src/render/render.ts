@@ -215,7 +215,7 @@ export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasEl
 export function createModelViewMatrix(renderMode: RenderMode) {
     const modelViewMatrix = mat4.create()
     if (renderMode === RenderMode.DEBUG) {
-        mat4.translate(modelViewMatrix, modelViewMatrix, [1.0, -7.0, -5.0])
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0.5, -7.0, -5.0])
         mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 6, [0, 1, 0])
     } else {
         mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model (cube) away
