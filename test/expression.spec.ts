@@ -15,9 +15,9 @@ import { WavefrontObj } from '../src/mesh/WavefrontObj'
 import { toEuler } from '../src/mesh/Collada'
 import { calcWebGL, ExpressionManager } from '../src/ExpressionManager'
 
-import { laugh01_IN, laugh01_mrg, laugh01_OUT } from '../src/laugh01'
-import { python_bvh } from '../src/python_bvh'
-import { base_anim_data } from '../src/base_anim_data'
+import { laugh01_OUT } from './testdata/laugh01'
+import { python_bvh } from './testdata/python_bvh'
+import { base_anim_data } from './testdata/base_anim_data'
 
 // 2_posing_expression.py
 //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
@@ -192,74 +192,6 @@ describe("expression", function () {
         matPose[3] = matPose[7] = matPose[11] = 0
         return matPose
     }
-
-    xit("with real word data", async function () {
-        this.timeout(10000)
-
-        // python's matRestGlobal for root is (but only when doing the expression!!!)
-        //  [[ 1.0000000e+00  5.9630129e-10 -8.2031509e-10  0.0000000e+00]
-        //   [-8.5134000e-10  5.4039057e-02 -9.9853885e-01  5.1756668e-01]
-        //   [-5.5110094e-10  9.9853879e-01  5.4039061e-02 -6.4773333e-01]
-        //   [ 0.0000000e+00  0.0000000e+00  0.0000000e+00  1.0000000e+00]]
-
-        const human = new Human()
-        const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
-        // for (const bone of skeleton.boneslist!) {
-        //     if (bone.name === "root" || bone.name === "jaw" || bone.name === "spine05") {
-        //         console.log(m2s(`${bone.name}.matRestGlobal`, bone.matRestGlobal!))
-        //     }
-        // }
-
-        let boneIdx = 0
-        for (let mrgIdx = 0, pmIdx = 0, outIdx = 0; mrgIdx < laugh01_mrg.length;) {
-            const bone = skeleton.boneslist![boneIdx++]
-
-            // if (bone.name !== "root" && bone.name !== "spine05" && bone.name !== "jaw" && bone.name !== "head") {
-            //     continue
-            // }
-
-            const mrg = mat4.create()
-            for (let j = 0; j < 16; ++j) {
-                mrg[j] = laugh01_mrg[mrgIdx++]
-            }
-            mat4.transpose(mrg, mrg)
-
-            const pm = mat4.create()
-            for (let j = 0; j < 12; ++j) {
-                pm[j] = laugh01_IN[pmIdx++]
-            }
-            mat4.transpose(pm, pm)
-
-            const pout = mat4.create()
-            for (let j = 0; j < 16; ++j) {
-                pout[j] = laugh01_OUT[outIdx++]
-            }
-            mat4.transpose(pout, pout)
-            const out = calcWebGL(pm, mrg)
-
-            let diff = false
-            const epsilon = Number.EPSILON
-            for (let i = 0; i < 16; ++i) {
-                if (Math.abs(bone.matRestGlobal![i] - mrg[i]) >= epsilon) {
-                    diff = true
-                }
-            }
-
-            // console.log(`---------------------------------------- ${bone.name} ----------------------------------------`)
-            // if (diff) {
-            //     console.log(`matRestGlobal differs for bone ${bone.name}`)
-            // }
-            // console.log(m2s(`bone  .matRestGlobal`, bone.matRestGlobal!))
-            // console.log(m2s(`python.matRestGlobal`, mrg))
-
-            // console.log(m2s(`my     poseMat`, out))
-            // console.log(m2s(`python poseMat`, pout))
-
-        }
-
-    })
 
     it("BVH.jointslists[].matrixPoses[]", function () {
         const human = new Human()

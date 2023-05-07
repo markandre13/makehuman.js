@@ -1,3 +1,7 @@
+// expected result for
+// ExpressionManager.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+// generated with MakeHuman 1.2
+
 export const base_anim_data = [1.0,0.0,-0.0,0.0
 ,0.0,1.0,0.0,0.0
 ,0.0,-0.0,1.0,0.0
