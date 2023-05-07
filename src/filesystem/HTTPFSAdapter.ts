@@ -49,35 +49,34 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
                 this.listDir(pathname)
             }
             catch(e) {
-                console.log(`failed to load directory ${pathname}`)
-                HTTPFSAdapter.path2info.forEach( (value, key) => console.log(key, value))
-                throw Error()
+                throw Error(`HTTPFSAdapter.isFile('${pathname}')": failed to load directory ${pathname}`)
             }
             info = HTTPFSAdapter.path2info.get(pathname)
         }
         if (info === undefined) {
-            throw Error(`HTTPJSFSAdapter.isFile('${pathname}')`)
+            throw Error(`HTTPFSAdapter.isFile('${pathname}'): info === undefined`)
         }
         return !info.isDir
     }
     isDir(pathname: string): boolean {
-        // console.log(`HTTPJSFSAdapter.isDir('${pathname}')`)
+        // console.log(`HTTPFSAdapter.isDir('${pathname}')`)
         const info = HTTPFSAdapter.path2info.get(pathname)
         if (info === undefined) {
-            throw Error(`HTTPJSFSAdapter.isFile('${pathname}')`)
+            throw Error(`HTTPFSAdapter.isFile('${pathname}')`)
         }
         return info.isDir
     }
     listDir(pathname: string): string[] {
-        // console.log(`HTTPJSFSAdapter.listDir('${pathname}')`)
+        // console.log(`HTTPFSAdapter.listDir('${pathname}')`)
 
         let info = HTTPFSAdapter.path2info.get(pathname)
         if (info !== undefined && info.dir !== undefined) {
             return info.dir
         }
 
-        if (info === undefined)
+        if (info === undefined) {
             info = { file: '', isDir: true, dir: undefined }
+        }
 
         const d = this.readFile(`data/${pathname}/directory.json`)
         const j = JSON.parse(d)
@@ -86,19 +85,20 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
             const fullfile = `${pathname}/${x.file}`
             // console.log(`${pathname}/${x.file}`)
             info.dir.push(x.file)
-            if (!x.isDir)
+            if (!x.isDir) {
                 HTTPFSAdapter.path2info.set(fullfile, { file: x.file, isDir: false })
+            }
         }
         HTTPFSAdapter.path2info.set(pathname, info)
         return info.dir
     }
     realPath(pathname: string): string {
-        // console.log(`HTTPJSFSAdapter.realPath('${pathname}')`)
+        // console.log(`HTTPFSAdapter.realPath('${pathname}')`)
         // throw Error()
         return pathname
     }
     joinPath(pathname1: string, pathname2: string): string {
-        // console.log(`HTTPJSFSAdapter.joinPath('${pathname1}', '${pathname2}')`)
+        // console.log(`HTTPFSAdapter.joinPath('${pathname1}', '${pathname2}')`)
         return `${pathname1}/${pathname2}`
     }
 }
