@@ -8,9 +8,10 @@
 
 ## Current Status
 
-* Have a look at [build 2023-04-16](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
+* Have a look at [build 2023-05-07](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
 * Morph mesh
 * Pose skeleton and adjust mesh
+* Select one of 32 pre-defined facial expressions
 * Render a proxy mesh instead of the basemesh
 * Export the mesh with rig and texture coordinates as Collada for Blender
 * Nothing else... 😅
@@ -30,15 +31,17 @@ Currently working on:
 
 ## How does Makehuman work?
 
-Some links into the official MakeHuman documentation:
-* [Mesh Topology](http://www.makehumancommunity.org/wiki/Documentation:Professional_mesh_topology)
-* [Base Mesh and Rig](http://www.makehumancommunity.org/wiki/Documentation:Basemesh)
-
-### Morph Mesh
+### Morph
 
 #### Data
 
-* data/3dobjs/base.obj contains a 3d model of a human body, called the **base mesh**
+* data/3dobjs/base.obj contains a 3d model of a human body, called the **base mesh**.
+
+  It is completely made of quads, which well give good results when applying
+  a Catmul and Clark subdivision to it.
+
+  Further reading: [Mesh Topology](http://www.makehumancommunity.org/wiki/Documentation:Professional_mesh_topology).
+
 * data/target/ contains 1258 [morph targets](https://en.wikipedia.org/wiki/Morph_target_animation),
   which can deform the base mesh's shape, gender, age and ethnicity.
 
@@ -84,18 +87,34 @@ class Human {
 function loadSliders(filename: string)
 ```
 
-### Pose Mesh
+### Pose
 
 The skeleton aggregates bones and weights. Bones can be rotated.
 
+Posing the skeleton directly, especially those in the face, can be a bit tedious. Hence there are pre-defined _pose units_, e.g. "LipsKiss" or "HandBendOutLeft", which can control multiple bones at once while also restricting bone movement.
+
 #### Data
 
-* data/rigs/default.mhskel the bones making up the skeleton
+* Skeleton
 
-  for the actual bone positions little cubes within the mesh are referenced,
-  so when the mesh is morphed, the skeleton is morphed along with it.
+  * data/rigs/default.mhskel the bones making up the skeleton
+
+    For the actual bone positions little cubes within the mesh are referenced,
+    so when the mesh is morphed, the skeleton is morphed along with it.
+
+    Further reading: [Base Mesh and Rig](http://www.makehumancommunity.org/wiki/Documentation:Basemesh).
   
-* data/rigs/default_weights.mhw the weights each bone has on each vertex
+  * data/rigs/default_weights.mhw the weights each bone has on each vertex
+
+* Pose Units
+
+  * data/poseunits/body-poseunits.json defines 63 pose units for the body.
+
+  * data/poseunits/face-poseunits.bvh and face-poseunits.json defines 60
+    pose units for the face.
+
+  * data/expressions/*.mhpose defines 32 face expressions based upon pose
+    units, e.g. like "laugh01" or "fear02".
 
 #### Code
 
