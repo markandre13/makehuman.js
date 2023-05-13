@@ -80,7 +80,7 @@ export class RenderMesh {
 
     draw(programInfo: AbstractShader, mode: number) {
         this.bind(programInfo)
-        this.drawSubset(mode, 0, this.glData.indices.length)
+        this.gl.drawElements(mode, this.glData.indices.length, this.gl.UNSIGNED_SHORT, 0)
     }
 
     bind(programInfo: AbstractShader): void {
