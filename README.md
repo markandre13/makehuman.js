@@ -8,7 +8,7 @@
 
 ## Current Status
 
-* Have a look at [build 2023-05-07](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
+* Have a look at [build 2023-05-13](https://markandre13.github.io/makehuman.js/) with toad.js from master branch
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Select one of 32 pre-defined facial expressions
