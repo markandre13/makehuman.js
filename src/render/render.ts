@@ -25,20 +25,19 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
     const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
     // const texture = loadTexture(gl, "data/cubetexture.png")!
 
-    let then = 0
+    let lastRenderTime = 0
 
     // Draw the scene repeatedly
     function render(now: number) {
         now *= 0.001  // convert to seconds
-        const deltaTime = now - then
-        then = now
+        const deltaTime = now - lastRenderTime
+        lastRenderTime = now
 
         if (scene.updateRequired !== Update.NONE) {
             updateBuffers(scene, buffers)
         }
 
         drawScene(gl, programRGBA, programTex, texture, buffers, deltaTime, scene, mode.value)
-
         requestAnimationFrame(render)
     }
     requestAnimationFrame(render)
@@ -85,8 +84,8 @@ function drawScene(
         skin,
         [BaseMeshGroup.EYEBALL0, [0.0, 0.5, 1, 1], gl.TRIANGLES],
         [BaseMeshGroup.EYEBALL1, [0.0, 0.5, 1, 1], gl.TRIANGLES],
-        [BaseMeshGroup.TEETH_TOP, [1.0, 0.0, 0, 1], gl.TRIANGLES],
-        [BaseMeshGroup.TEETH_BOTTOM, [1.0, 0.0, 0, 1], gl.TRIANGLES],
+        [BaseMeshGroup.TEETH_TOP, [1.0, 1.0, 1, 1], gl.TRIANGLES],
+        [BaseMeshGroup.TEETH_BOTTOM, [1.0, 1.0, 1, 1], gl.TRIANGLES],
         [BaseMeshGroup.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         [BaseMeshGroup.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
@@ -94,11 +93,7 @@ function drawScene(
         const rgba = x[1] as number[]
         const mode = x[2] as number
 
-        if (idx === BaseMeshGroup.SKIN && renderMode === RenderMode.POLYGON) {
-            continue
-        }
-
-        if (idx === BaseMeshGroup.SKIN && buffers.proxies.has("Proxymeshes")) {
+        if (idx === BaseMeshGroup.SKIN && renderMode !== RenderMode.WIREFRAME) {
             continue
         }
         if ((idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1) && buffers.proxies.has("Eyes")) {
@@ -186,7 +181,6 @@ function drawScene(
         let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
         buffers.base.bind(programTex)
         buffers.base.drawSubset(gl.TRIANGLES, offset, length)
-        buffers.base.drawSubset(gl.TRIANGLES, 8000 * 4, 4)
     }
 
     // programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)

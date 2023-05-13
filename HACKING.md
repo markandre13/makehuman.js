@@ -16,6 +16,9 @@ Mesh of a human body, which can be adjusted using pre-defined morph targets.
 
 (data as text is about 127M, compressed with zlib about 37.7M)
 
+* Using zipped ASCII vs. zipped Uint32 & Float32 for the morph targets
+  only saves around 0.5M
+
 ### Code
 
 #### Control Flow
