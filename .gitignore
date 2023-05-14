@@ -2,8 +2,7 @@
 DEADJOE
 *~
 node_modules
+data
 dist
 build
 package-lock.json
-data/**/directory.json
-data/**/*.z

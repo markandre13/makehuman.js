@@ -23,10 +23,10 @@ import { zipForEach } from "lib/zipForEach"
 // teeth_base.mhclo
 // teeth_base.obj
 
+// the lowercase version of ProxyType matches the directory
 type ProxyType = 'Proxymeshes' | 'Clothes' | 'Hair' | 'Eyes' | 'Eyebrows' | 'Eyelashes' | 'Teeth' | 'Tongue'
-
-const SimpleProxyTypes = ['Hair', 'Eyes', 'Eyebrows', 'Eyelashes', 'Teeth', 'Tongue']
-const ProxyTypes = ['Proxymeshes', 'Clothes', ...SimpleProxyTypes]
+// const SimpleProxyTypes = ['Hair', 'Eyes', 'Eyebrows', 'Eyelashes', 'Teeth', 'Tongue']
+// const ProxyTypes = ['Proxymeshes', 'Clothes', ...SimpleProxyTypes]
 
 export class Proxy {
     name!: string
@@ -173,7 +173,6 @@ export class Proxy {
 }
 
 export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes"): Proxy {
-    // .mhpxy
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
     proxy.mesh = proxy.loadMeshAndObject()

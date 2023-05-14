@@ -1,7 +1,7 @@
 # makehuman.js
 
 <div style="text-align:npm center">
-  <img src="data/screenshot.png" />
+  <img src="screenshot.png" />
 
   A variation of [Makehuman](http://www.makehumancommunity.org) as a WebApp.
 </div>

@@ -17,7 +17,7 @@
     "build": "npm run build:data && npm run build:once && npm run build:chai",
     "build:once": "rollup --config rollup.config.mjs",
     "build:chai": "mkdir -p build/test/chai && cp test/chai/*\\.js test/chai/*\\.d\\.ts build/test/chai",
-    "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-directory-files.ts && mv -f dist/filesystem/build-directory-files.js dist/filesystem/build-directory-files.cjs && node dist/filesystem/build-directory-files.cjs ) ",
+    "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-data-dir.ts && mv -f dist/filesystem/build-data-dir.js dist/filesystem/build-data-dir.cjs && node dist/filesystem/build-data-dir.cjs ) ",
     "rebuild:data": "rm -f data/directory.json && npm run build:data",
     "build:watch": "rollup --config rollup.config.js --watch",
     "lint": "eslint src",
