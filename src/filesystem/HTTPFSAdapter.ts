@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'url'
 import { AbstractFileSystemAdapter } from './AbstractFileSystemAdapter'
 import { unzlibSync } from 'fflate'
 
@@ -10,7 +9,7 @@ interface FileInfo {
 
 export class HTTPFSAdapter implements AbstractFileSystemAdapter {
 
-    static path2info = new Map<string, FileInfo>()
+    static directoryCache = new Map<string, FileInfo>()
 
     readFile(pathname: string): string {
         if (pathname.endsWith(".z")) {
@@ -43,7 +42,7 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     }
     isFile(pathname: string): boolean {
         // console.log(`HTTPJSFSAdapter.isFile('${pathname}')`)
-        let info = HTTPFSAdapter.path2info.get(pathname)
+        let info = HTTPFSAdapter.directoryCache.get(pathname)
         if (info === undefined) {
             try {
                 this.listDir(pathname)
@@ -51,7 +50,7 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
             catch(e) {
                 throw Error(`HTTPFSAdapter.isFile('${pathname}')": failed to load directory ${pathname}`)
             }
-            info = HTTPFSAdapter.path2info.get(pathname)
+            info = HTTPFSAdapter.directoryCache.get(pathname)
         }
         if (info === undefined) {
             throw Error(`HTTPFSAdapter.isFile('${pathname}'): info === undefined`)
@@ -60,7 +59,7 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     }
     isDir(pathname: string): boolean {
         // console.log(`HTTPFSAdapter.isDir('${pathname}')`)
-        const info = HTTPFSAdapter.path2info.get(pathname)
+        const info = HTTPFSAdapter.directoryCache.get(pathname)
         if (info === undefined) {
             throw Error(`HTTPFSAdapter.isFile('${pathname}')`)
         }
@@ -69,7 +68,7 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
     listDir(pathname: string): string[] {
         // console.log(`HTTPFSAdapter.listDir('${pathname}')`)
 
-        let info = HTTPFSAdapter.path2info.get(pathname)
+        let info = HTTPFSAdapter.directoryCache.get(pathname)
         if (info !== undefined && info.dir !== undefined) {
             return info.dir
         }
@@ -86,10 +85,10 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
             // console.log(`${pathname}/${x.file}`)
             info.dir.push(x.file)
             if (!x.isDir) {
-                HTTPFSAdapter.path2info.set(fullfile, { file: x.file, isDir: false })
+                HTTPFSAdapter.directoryCache.set(fullfile, { file: x.file, isDir: false })
             }
         }
-        HTTPFSAdapter.path2info.set(pathname, info)
+        HTTPFSAdapter.directoryCache.set(pathname, info)
         return info.dir
     }
     realPath(pathname: string): string {

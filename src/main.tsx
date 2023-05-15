@@ -7,7 +7,7 @@ import { WavefrontObj } from 'mesh/WavefrontObj'
 import { HumanMesh, Update } from './mesh/HumanMesh'
 import { RenderMode } from './render/RenderMode'
 import { exportCollada } from 'mesh/Collada'
-import { loadProxy } from 'proxy/Proxy'
+import { loadProxy, ProxyType } from 'proxy/Proxy'
 
 import { PoseNode, PoseTreeAdapter } from 'ui/poseView'
 import { SliderTreeAdapter } from 'ui/morphView'
@@ -23,7 +23,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
-import { BooleanModel, Button, Checkbox, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
+import { BooleanModel, Button, Checkbox, OptionModel, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { calcWebGL, ExpressionManager } from './ExpressionManager'
 
 window.onload = () => { main() }
@@ -53,17 +53,17 @@ export function main() {
 //         data/poseunits/face-poseunits.json with names for each frame
 //         data/expressions/*.pose with percentage for each poseunit
 //     expressions are most expressive on old people with teeth, hair and eye brows
-//     [ ] load bvh
-//     [ ] load poseunits
-//     [ ] load expression
-//     [ ] add face page showing face, list of expression and list of poseunits
-//     [ ] apply expression
+//     [X] load bvh
+//     [X] load poseunits
+//     [X] load expression
+//     [X] add face page showing face, list of expression and list of poseunits
+//     [X] apply expression
 //     [ ] export expression as animation in collada file
 //     [ ] animate between expressions?
 //         http://www.makehumancommunity.org/wiki/Documentation:Basemesh
 //         dark helper bones: no deformation (of the skin), used to guide other bones
-
 // [ ] it seems we get normalized face landmarks, try to get the non-normalized ones
+//     coordinates are tripes with z == 0, is there 3d data somewhere available inside?
 // [ ] render makehuman head besides mediapipe head
 // [ ] try to animate the makehuman head from the mediapipe head
 //     (assume that the camera is mounted to the head)
@@ -71,7 +71,7 @@ export function main() {
 // [ ] have a look at shape keys
 //     http://www.makehumancommunity.org/wiki/Documentation:Corrective_shape_keys
 // [ ] add ability to reconnect (client & server)
-// [ ] put server side ws code into a separate thread to improve performance
+// [X] put server side ws code into a separate thread to improve performance
 // [ ] record to file
 // [ ] read file (either with frames dropped or precise)
 // [ ] try opencv motion tracking to track optional markers painted
@@ -108,6 +108,23 @@ export function runMediaPipe() {
     }
 }
 
+function loadProxyList() {
+    const data = new Map<string, OptionModel<string>>()
+    for (const type of Object.keys(ProxyType).filter(e => typeof ProxyType[e as any] === "number")) {
+        const model = new OptionModel<string>()
+        model.add("none", "none")
+        model.value = "none"
+        for (const file of FileSystemAdapter.getInstance().listDir(type.toLowerCase())) {
+            if (file === "materials") {
+                continue
+            }
+            model.add(file, file)
+        }
+        data.set(type, model)
+    }
+    return data
+}
+
 // core/mhmain.py
 //   class MHApplication
 //     startupSequence()
@@ -118,10 +135,12 @@ function run() {
     const scene = new HumanMesh(human, obj)
     human.scene = scene
 
+    const proxyList = loadProxyList()
+
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes"))
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes"))
     // scene.proxies.set("Eyes", loadProxy(human, "data/eyes/high-poly/high-poly.mhclo", "Eyes"))
-    scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth"))
+    scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth))
     // scene.proxies.set("Tongue", loadProxy(human, "data/tongue/tongue01/tongue01.mhclo", "Tongue"))
 
     human.modified.add(() => scene.updateRequired = Update.MORPH)
@@ -199,6 +218,19 @@ function run() {
     const refCanvas = new class { canvas!: HTMLCanvasElement }
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
+            <Tab label="Proxy" value="POLYGON">
+                <form class="tx-form" style={{ padding: "10px", paddingTop: "20px" }}>
+                    {...["Proxymeshes", "Eyes", "Eyelashes", "Eyebrows", "Teeth", "Tongue", "Hair", "Clothes"].map(id =>
+                        <div>
+                            <label class="tx-label" htmlFor={id}>{id}</label>
+                            <Select id={id} model={proxyList.get(id)} />
+                            {/* <div class="tx-helptext">
+                                Lorem ipsum dolor sit amet
+                            </div> */}
+                        </div>
+                    )}
+                </form>
+            </Tab>
             <Tab label="Expression" value="DEBUG">
                 <Table
                     model={expressionModel}

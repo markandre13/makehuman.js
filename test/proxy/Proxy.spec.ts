@@ -6,7 +6,7 @@ use(chaiAlmost(0.00001))
 
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { loadProxy, loadTextProxy, Proxy } from "../../src/proxy/Proxy"
+import { loadProxy, loadTextProxy, Proxy, ProxyType } from "../../src/proxy/Proxy"
 import { TMatrix } from '../../src/proxy/TMatrix'
 import { ProxyRefVert } from '../../src/proxy/ProxyRefVert'
 import { proxy741 } from "../testdata/proxy741"
@@ -32,7 +32,7 @@ describe("Proxy", function () {
     const human = {} as any
     // const filepath = "data/proxymeshes/female_generic/female_generic.proxy"
     const filepath = "data/proxymeshes/proxy741/proxy741.proxy"
-    const type = "Proxymeshes"
+    const type = ProxyType.Proxymeshes
 
     it("loading proxy741.proxy yields the same data as the python code from upstream", function () {
         const proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", type)
@@ -54,7 +54,7 @@ describe("Proxy", function () {
     })
 
     it("loading teeth_base.mhclo yields the same data as the python code from upstream", function () {
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Clothes)
 
         expect(proxy.weights.length).to.equal(proxy_teeth_base.weights.length)
         expect(proxy.ref_vIdxs.length).to.equal(proxy_teeth_base.ref_vIdxs.length)
@@ -71,7 +71,7 @@ describe("Proxy", function () {
 
     // okay, since this gives the same result, maybe either 
     xit("i feed makehuman.js basemesh into the teeth python proxy, check if makehuman.js gives the same result", function () {
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Clothes")
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Clothes)
         const coords = proxy.getCoords(new Float32Array(jaw_open_base_mesh))
         expect(coords.length).to.equal(jaw_open_proxy_teeth_base.length)
         expect(coords).to.deep.almost.equal(new Float32Array(jaw_open_proxy_teeth_base))
@@ -86,7 +86,7 @@ describe("Proxy", function () {
         const scene = new HumanMesh(human, obj)
         human.scene = scene
 
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
         scene.proxies.set("Teeth", proxy)
 
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
@@ -110,7 +110,7 @@ describe("Proxy", function () {
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const scene = new HumanMesh(human, obj)
         human.scene = scene
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", "Teeth")
+        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
         scene.proxies.set("Teeth", proxy)
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
         scene.skeleton = skeleton

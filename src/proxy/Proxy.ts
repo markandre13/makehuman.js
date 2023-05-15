@@ -24,7 +24,18 @@ import { zipForEach } from "lib/zipForEach"
 // teeth_base.obj
 
 // the lowercase version of ProxyType matches the directory
-type ProxyType = 'Proxymeshes' | 'Clothes' | 'Hair' | 'Eyes' | 'Eyebrows' | 'Eyelashes' | 'Teeth' | 'Tongue'
+export enum ProxyType {
+    Proxymeshes,
+    Clothes,
+    Hair,
+    Eyes,
+    Eyebrows,
+    Eyelashes,
+    Teeth,
+    Tongue
+}
+
+// type ProxyType = 'Proxymeshes' | 'Clothes' | 'Hair' | 'Eyes' | 'Eyebrows' | 'Eyelashes' | 'Teeth' | 'Tongue'
 // const SimpleProxyTypes = ['Hair', 'Eyes', 'Eyebrows', 'Eyelashes', 'Teeth', 'Tongue']
 // const ProxyTypes = ['Proxymeshes', 'Clothes', ...SimpleProxyTypes]
 
@@ -172,7 +183,7 @@ export class Proxy {
     }
 }
 
-export function loadProxy(human: Human, path: string, type: ProxyType = "Clothes"): Proxy {
+export function loadProxy(human: Human, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
     proxy.mesh = proxy.loadMeshAndObject()
@@ -183,7 +194,7 @@ const doRefVerts = 1
 const doWeights = 2
 const doDeleteVerts = 3
 
-export function loadTextProxy(human: Human, filepath: string, type: ProxyType = "Clothes", data: string | undefined = undefined): Proxy {
+export function loadTextProxy(human: Human, filepath: string, type: ProxyType = ProxyType.Clothes, data: string | undefined = undefined): Proxy {
     let lineNumber = 0
     if (data === undefined) {
         data = FileSystemAdapter.getInstance().readFile(filepath)
@@ -437,8 +448,8 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
     return proxy
 }
 
-function getAsciiFileExtension(proxyType: string) {
-    if (proxyType === "Proxymeshes") {
+function getAsciiFileExtension(proxyType: ProxyType) {
+    if (proxyType === ProxyType.Proxymeshes) {
         return ".proxy"
     } else {
         return ".mhclo"
