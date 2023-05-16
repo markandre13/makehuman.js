@@ -108,21 +108,56 @@ export function runMediaPipe() {
     }
 }
 
-function loadProxyList() {
-    const data = new Map<string, OptionModel<string>>()
-    for (const type of Object.keys(ProxyType).filter(e => typeof ProxyType[e as any] === "number")) {
-        const model = new OptionModel<string>()
-        model.add("none", "none")
-        model.value = "none"
-        for (const file of FileSystemAdapter.getInstance().listDir(type.toLowerCase())) {
-            if (file === "materials") {
-                continue
+class ProxyManager {
+    scene: HumanMesh
+    // list of all known proxies by type
+    list = new Map<ProxyType, OptionModel<string>>
+
+    allProxyTypes = [ProxyType.Proxymeshes,
+        ProxyType.Clothes,
+        ProxyType.Hair,
+        ProxyType.Eyes,
+        ProxyType.Eyebrows,
+        ProxyType.Eyelashes,
+        ProxyType.Teeth,
+        ProxyType.Tongue]
+
+    constructor(scene: HumanMesh) {
+        this.scene = scene
+        for (const type of this.allProxyTypes) {
+            const model = new OptionModel<string>()
+            model.modified.add( () => { 
+                console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
+                if (model.stringValue === "none") {
+                    scene.proxies.delete(ProxyType[type])
+                } else {
+                    const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
+                    const suffix = exists(`${prefix}.mhclo`) ? "mhclo" : "proxy"
+                    console.log(`try toad load '${prefix}.${suffix}'`)
+                    scene.proxies.set(ProxyType[type], loadProxy(scene.human, `${prefix}.${suffix}`, type))
+                }
+            })
+            model.add("none", "none")
+            model.value = "none"
+            for (const file of FileSystemAdapter.getInstance().listDir(ProxyType[type].toLowerCase())) {
+                if (file === "materials") {
+                    continue
+                }
+                model.add(file, file)
             }
-            model.add(file, file)
+            this.list.set(type, model)
         }
-        data.set(type, model)
     }
-    return data
+}
+
+function exists(path: string): boolean {
+    try {
+        FileSystemAdapter.getInstance().isFile(path)
+    }
+    catch(e) {
+        return false
+    }
+    return true
 }
 
 // core/mhmain.py
@@ -135,7 +170,7 @@ function run() {
     const scene = new HumanMesh(human, obj)
     human.scene = scene
 
-    const proxyList = loadProxyList()
+    const proxyManager = new ProxyManager(scene)
 
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes"))
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes"))
@@ -220,10 +255,10 @@ function run() {
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
             <Tab label="Proxy" value="POLYGON">
                 <form class="tx-form" style={{ padding: "10px", paddingTop: "20px" }}>
-                    {...["Proxymeshes", "Eyes", "Eyelashes", "Eyebrows", "Teeth", "Tongue", "Hair", "Clothes"].map(id =>
+                    {...proxyManager.allProxyTypes.map(pid =>
                         <div>
-                            <label class="tx-label" htmlFor={id}>{id}</label>
-                            <Select id={id} model={proxyList.get(id)} />
+                            <label class="tx-label" htmlFor={ProxyType[pid]}>{ProxyType[pid]}</label>
+                            <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
                             {/* <div class="tx-helptext">
                                 Lorem ipsum dolor sit amet
                             </div> */}

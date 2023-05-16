@@ -35,10 +35,6 @@ export enum ProxyType {
     Tongue
 }
 
-// type ProxyType = 'Proxymeshes' | 'Clothes' | 'Hair' | 'Eyes' | 'Eyebrows' | 'Eyelashes' | 'Teeth' | 'Tongue'
-// const SimpleProxyTypes = ['Hair', 'Eyes', 'Eyebrows', 'Eyelashes', 'Teeth', 'Tongue']
-// const ProxyTypes = ['Proxymeshes', 'Clothes', ...SimpleProxyTypes]
-
 export class Proxy {
     name!: string
     // license
