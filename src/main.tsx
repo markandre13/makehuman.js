@@ -129,13 +129,14 @@ class ProxyManager {
             model.modified.add( () => { 
                 console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
                 if (model.stringValue === "none") {
-                    scene.proxies.delete(ProxyType[type])
+                    scene.proxies.delete(type)
                 } else {
                     const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
                     const suffix = exists(`${prefix}.mhclo`) ? "mhclo" : "proxy"
                     console.log(`try toad load '${prefix}.${suffix}'`)
-                    scene.proxies.set(ProxyType[type], loadProxy(scene.human, `${prefix}.${suffix}`, type))
+                    scene.proxies.set(type, loadProxy(scene.human, `${prefix}.${suffix}`, type))
                 }
+                scene.changedProxy = type
             })
             model.add("none", "none")
             model.value = "none"
@@ -175,7 +176,7 @@ function run() {
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes"))
     // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes"))
     // scene.proxies.set("Eyes", loadProxy(human, "data/eyes/high-poly/high-poly.mhclo", "Eyes"))
-    scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth))
+    // scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth))
     // scene.proxies.set("Tongue", loadProxy(human, "data/tongue/tongue01/tongue01.mhclo", "Tongue"))
 
     human.modified.add(() => scene.updateRequired = Update.MORPH)

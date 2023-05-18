@@ -1,4 +1,4 @@
-import { Proxy } from 'proxy/Proxy'
+import { Proxy, ProxyType } from 'proxy/Proxy'
 import { Human } from '../modifier/Human'
 import { getTarget } from '../target/TargetFactory'
 import { Skeleton } from '../skeleton/Skeleton'
@@ -24,7 +24,8 @@ export class HumanMesh {
     vertexRigged: Float32Array
     skeleton!: Skeleton
 
-    proxies = new Map<string, Proxy>
+    proxies = new Map<ProxyType, Proxy>
+    changedProxy: ProxyType | undefined
 
     updateRequired = Update.NONE
 

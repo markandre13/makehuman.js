@@ -5,10 +5,37 @@ import { HumanMesh, Update } from '../mesh/HumanMesh'
 import { RenderMode } from './RenderMode'
 import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
-import { Buffers } from './Buffers'
 import { RenderMesh } from './RenderMesh'
+import { ProxyType } from 'proxy/Proxy'
 
 let cubeRotation = 0.0
+
+class RenderList {
+    gl: WebGL2RenderingContext
+    scene: HumanMesh
+    base: RenderMesh
+    proxies = new Map<ProxyType, RenderMesh>()
+    constructor(gl: WebGL2RenderingContext, scene: HumanMesh) {
+        this.gl = gl
+        this.scene = scene
+        this.base = new RenderMesh(gl, scene.vertexRigged, scene.baseMesh.fxyz, scene.baseMesh.uv, scene.baseMesh.fuv)
+        scene.proxies.forEach((proxy) => {
+            this.proxies.set(proxy.type, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz))
+        })
+    }
+
+    update() {
+        this.scene.update()
+        this.base.update(this.scene.vertexRigged)
+        this.proxies.forEach((renderMesh, type) => {
+            const proxy = this.scene.proxies.get(type)!
+            const vertexMorphed = proxy.getCoords(this.scene.vertexMorphed)
+            const vertexWeights = proxy.getVertexWeights(this.scene.skeleton.vertexWeights!)
+            const vertexRigged = this.scene.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
+            renderMesh.update(vertexRigged)
+        })
+    }
+}
 
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
@@ -21,7 +48,9 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
     const programRGBA = new RGBAShader(gl)
     const programTex = new TextureShader(gl)
 
-    const buffers = createAllBuffers(gl, scene)
+    // const texCube = createTexturedCubeRenderer(gl)
+    const renderList = new RenderList(gl, scene)
+
     const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
     // const texture = loadTexture(gl, "data/cubetexture.png")!
 
@@ -33,11 +62,23 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
         const deltaTime = now - lastRenderTime
         lastRenderTime = now
 
-        if (scene.updateRequired !== Update.NONE) {
-            updateBuffers(scene, buffers)
+        if (scene.changedProxy !== undefined) {
+            if (scene.proxies.has(scene.changedProxy)) {
+                const proxy = scene.proxies.get(scene.changedProxy)!
+                renderList.proxies.set(proxy.type, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz))
+            } else {
+                renderList.proxies.delete(scene.changedProxy)
+            }
+            scene.changedProxy = undefined
         }
 
-        drawScene(gl, programRGBA, programTex, texture, buffers, deltaTime, scene, mode.value)
+
+        if (scene.updateRequired !== Update.NONE) {
+            renderList.update()
+            // updateBuffers(scene, buffers)
+        }
+
+        drawScene(gl, programRGBA, programTex, texture, renderList, deltaTime, scene, mode.value)
         requestAnimationFrame(render)
     }
     requestAnimationFrame(render)
@@ -48,7 +89,7 @@ function drawScene(
     programRGBA: RGBAShader,
     programTex: TextureShader,
     texture: WebGLTexture,
-    buffers: Buffers,
+    renderList: RenderList,
     deltaTime: number,
     scene: HumanMesh,
     renderMode: RenderMode): void {
@@ -66,7 +107,7 @@ function drawScene(
     // BASEMESH
     //
 
-    buffers.base.bind(programRGBA)
+    renderList.base.bind(programRGBA)
     let skin
     switch (renderMode) {
         case RenderMode.POLYGON:
@@ -90,27 +131,31 @@ function drawScene(
         [BaseMeshGroup.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
         const idx = x[0] as number
-        const rgba = x[1] as number[]
-        const mode = x[2] as number
 
         if (idx === BaseMeshGroup.SKIN && renderMode !== RenderMode.WIREFRAME) {
             continue
         }
-        if ((idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1) && buffers.proxies.has("Eyes")) {
+
+        if (renderList.proxies.has(ProxyType.Proxymeshes) && idx === BaseMeshGroup.SKIN) {
             continue
         }
-        if ((idx === BaseMeshGroup.TEETH_TOP || idx === BaseMeshGroup.TEETH_BOTTOM) && buffers.proxies.has("Teeth")) {
+        if (renderList.proxies.has(ProxyType.Eyes) && (idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1)) {
             continue
         }
-        if (idx === BaseMeshGroup.TOUNGE && buffers.proxies.has("Tongue")) {
+        if (renderList.proxies.has(ProxyType.Teeth) && (idx === BaseMeshGroup.TEETH_TOP || idx === BaseMeshGroup.TEETH_BOTTOM)) {
+            continue
+        }
+        if (renderList.proxies.has(ProxyType.Tongue) && idx === BaseMeshGroup.TOUNGE) {
             continue
         }
 
+        const rgba = x[1] as number[]
         programRGBA.color(rgba)
         let offset = scene.baseMesh.groups[idx].startIndex * 2 // index is a word, hence 2 bytes
         let length = scene.baseMesh.groups[idx].length
 
-        buffers.base.drawSubset(mode, offset, length)
+        const mode = x[2] as number
+        renderList.base.drawSubset(mode, offset, length)
     }
 
     //
@@ -130,7 +175,7 @@ function drawScene(
         programRGBA.color([1, 1, 1, 1])
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
-        buffers.base.drawSubset(gl.TRIANGLES, offset, count)
+        renderList.base.drawSubset(gl.TRIANGLES, offset, count)
     }
 
     //
@@ -148,22 +193,34 @@ function drawScene(
             break
     }
 
-    buffers.proxies.forEach((renderMesh, name) => {
+    renderList.proxies.forEach((renderMesh, name) => {
         let rgba: number[] = [0.5, 0.5, 0.5, 1]
         switch (name) {
-            case "Proxymeshes":
+            case ProxyType.Proxymeshes:
                 rgba = [1.0, 0.8, 0.7, 1]
                 if (renderMode === RenderMode.WIREFRAME) {
                     rgba = [rgba[0] / 5, rgba[1] / 5, rgba[2] / 5, 1]
                 }
                 break
-            case "Eyes":
+            case ProxyType.Clothes:
+                rgba = [0.5, 0.5, 0.5, 1]
+                break
+            case ProxyType.Hair:
+                rgba = [0.2, 0.1, 0.1, 1]
+                break
+            case ProxyType.Eyes:
                 rgba = [0.0, 0.5, 1, 1]
                 break
-            case "Teeth":
+            case ProxyType.Eyebrows:
+                rgba = [0.0, 0.0, 0.0, 1]
+                break
+            case ProxyType.Eyelashes:
+                rgba = [0.0, 0.0, 0.0, 1]
+                break
+            case ProxyType.Teeth:
                 rgba = [1.0, 1.0, 1.0, 1]
                 break
-            case "Tongue":
+            case ProxyType.Tongue:
                 rgba = [1.0, 0.0, 0, 1]
                 break
         }
@@ -177,10 +234,14 @@ function drawScene(
     if (renderMode !== RenderMode.WIREFRAME) {
         programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programTex.texture(texture)
-        let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
-        let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
-        buffers.base.bind(programTex)
-        buffers.base.drawSubset(gl.TRIANGLES, offset, length)
+        if (renderList.proxies.has(ProxyType.Proxymeshes)) {
+
+        } else {
+            let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * 2 // index is a word, hence 2 bytes
+            let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
+            renderList.base.bind(programTex)
+            renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+        }
     }
 
     // programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
@@ -257,33 +318,6 @@ function renderSkeletonGlobal(scene: HumanMesh) {
         indices[ii + 1] = index * 2 + 1
     })
     return { vertex, indices }
-}
-
-function createAllBuffers(gl: WebGL2RenderingContext, scene: HumanMesh): Buffers {
-    const base = new RenderMesh(gl, scene.vertexRigged, scene.baseMesh.fxyz, scene.baseMesh.uv, scene.baseMesh.fuv)
-
-    // const texCube = createTexturedCubeRenderer(gl)
-
-    let proxies = new Map<string, RenderMesh>()
-    scene.proxies.forEach((proxy, name) => {
-        proxies.set(name, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz))
-    })
-
-    return { base, proxies }
-}
-
-function updateBuffers(scene: HumanMesh, buffers: Buffers) {
-    scene.update()
-
-    buffers.base.update(scene.vertexRigged)
-
-    buffers.proxies.forEach((renderMesh, name) => {
-        const proxy = scene.proxies.get(name)!
-        const vertexMorphed = proxy.getCoords(scene.vertexMorphed)
-        const vertexWeights = proxy.getVertexWeights(scene.skeleton.vertexWeights!)
-        const vertexRigged = scene.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
-        renderMesh.update(vertexRigged)
-    })
 }
 
 //
@@ -387,12 +421,12 @@ function createTexturedCubeRenderer(gl: WebGL2RenderingContext): RenderMesh {
         0.0, 0.0,
     ]
     const fuv = [
-        0,1,2,3,
-        0,1,2,3,
-        0,1,2,3,
-        0,1,2,3,
-        0,1,2,3,
-        0,1,2,3
+        0, 1, 2, 3,
+        0, 1, 2, 3,
+        0, 1, 2, 3,
+        0, 1, 2, 3,
+        0, 1, 2, 3,
+        0, 1, 2, 3
     ]
     return new RenderMesh(gl, new Float32Array(xyz), fxyz, new Float32Array(uv), fuv)
 }
