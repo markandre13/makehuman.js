@@ -4,6 +4,7 @@ import { Bone } from '../skeleton/Bone'
 import { vec4, mat4 } from 'gl-matrix'
 import { zipForEach } from 'lib/zipForEach'
 import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
+import { ProxyType } from 'proxy/Proxy'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
@@ -27,7 +28,7 @@ export function exportCollada(scene: HumanMesh) {
     // s = testCube
     const geometry = new Geometry()
 
-    const proxy = scene.proxies.get("Teeth")!
+    const proxy = scene.proxies.get(ProxyType.Teeth)!
 
     // TODO
     // [ ] combine this with the creation of RenderMesh!!!

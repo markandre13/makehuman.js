@@ -87,7 +87,7 @@ describe("Proxy", function () {
         human.scene = scene
 
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
-        scene.proxies.set("Teeth", proxy)
+        scene.proxies.set(ProxyType.Teeth, proxy)
 
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
         scene.skeleton = skeleton
@@ -111,7 +111,7 @@ describe("Proxy", function () {
         const scene = new HumanMesh(human, obj)
         human.scene = scene
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
-        scene.proxies.set("Teeth", proxy)
+        scene.proxies.set(ProxyType.Teeth, proxy)
         const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
         scene.skeleton = skeleton
         const weights = proxy._getVertexWeights(skeleton.vertexWeights!)

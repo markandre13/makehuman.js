@@ -27,7 +27,7 @@ export class WavefrontObj {
     constructor(filename: string, data?: string) {
         this.name = filename
         if (data === undefined) {
-            data = FileSystemAdapter.getInstance().readFile(filename)
+            data = FileSystemAdapter.readFile(filename)
         }
         this.groups = []
         this.material = []

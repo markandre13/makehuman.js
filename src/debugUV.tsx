@@ -22,7 +22,7 @@ import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 
 export function debugUV() {
     const filename = "data/makehuman.dae"
-    const data = new DOMParser().parseFromString(FileSystemAdapter.getInstance().readFile(filename), "text/xml")
+    const data = new DOMParser().parseFromString(FileSystemAdapter.readFile(filename), "text/xml")
     const uv = data
         .querySelector("#Human-mesh-texcoords-array")!
         .innerHTML

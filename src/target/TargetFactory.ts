@@ -78,14 +78,13 @@ export class TargetFactory {
     }
 
     private walkTargets(root: string, base: Component) {
-        const fs = FileSystemAdapter.getInstance()
-        const directoryPath = fs.realPath(root)
-        const dir = fs.listDir(directoryPath).sort()
+        const directoryPath = FileSystemAdapter.realPath(root)
+        const dir = FileSystemAdapter.listDir(directoryPath).sort()
         // console.log(`dir=${dir}`)
         for(const name of dir) {
             // console.log(`directoryPath='${directoryPath}', dir=${dir}, name='${name}'`)
-            const p = fs.joinPath(directoryPath, name)
-            if (fs.isFile(p) && ! p.toLowerCase().endsWith('.target')) {
+            const p = FileSystemAdapter.joinPath(directoryPath, name)
+            if (FileSystemAdapter.isFile(p) && ! p.toLowerCase().endsWith('.target')) {
                 if (p.toLowerCase().endsWith('.png')) {
                     this.images.set(name.toLowerCase(), p)
                 }
@@ -98,8 +97,8 @@ export class TargetFactory {
                     item.update(part[1])
                 }
 
-                if (fs.isDir(p)) {
-                    const nextRoot = fs.joinPath(root, name)
+                if (FileSystemAdapter.isDir(p)) {
+                    const nextRoot = FileSystemAdapter.joinPath(root, name)
                     this.walkTargets(nextRoot, item)
                 } else {
                     item.finish(`data/${root}/${name}`)

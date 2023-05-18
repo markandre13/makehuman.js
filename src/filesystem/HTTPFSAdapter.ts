@@ -40,6 +40,22 @@ export class HTTPFSAdapter implements AbstractFileSystemAdapter {
         }
         return this.readFile(`${pathname}.z`)
     }
+    exists(pathname: string): boolean {
+        let info = HTTPFSAdapter.directoryCache.get(pathname)
+        if (info === undefined) {
+            try {
+                this.listDir(pathname)
+            }
+            catch(e) {
+                return false
+            }
+            info = HTTPFSAdapter.directoryCache.get(pathname)
+        }
+        if (info === undefined) {
+            return false
+        }
+        return true
+    }
     isFile(pathname: string): boolean {
         // console.log(`HTTPJSFSAdapter.isFile('${pathname}')`)
         let info = HTTPFSAdapter.directoryCache.get(pathname)

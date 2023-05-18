@@ -17,6 +17,7 @@ declare global {
 
 export class ElectronFSAdapter implements AbstractFileSystemAdapter {
     readFile(pathname: string): string { return window.api.readFile(pathname) }
+    exists(pathname: string): boolean { throw Error("not implemented") }
     isFile(pathname: string): boolean { return window.api.isFile(pathname) }
     isDir(pathname: string): boolean { return window.api.isDir(pathname) }
     listDir(pathname: string): string[] { return window.api.listDir(pathname) }

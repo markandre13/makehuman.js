@@ -85,7 +85,7 @@ export function labelFromModifier(groupName: string, name: string): string {
 export function loadSliders(human: Human, filename: string): SliderNode {
     const root = parseSliders(
         human,
-        FileSystemAdapter.getInstance().readFile(filename),
+        FileSystemAdapter.readFile(filename),
         filename)
     console.log(`Loaded ${SliderNode.count} slider nodes from file ${filename}`)
     return root

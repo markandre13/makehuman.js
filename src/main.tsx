@@ -140,7 +140,7 @@ class ProxyManager {
             })
             model.add("none", "none")
             model.value = "none"
-            for (const file of FileSystemAdapter.getInstance().listDir(ProxyType[type].toLowerCase())) {
+            for (const file of FileSystemAdapter.listDir(ProxyType[type].toLowerCase())) {
                 if (file === "materials") {
                     continue
                 }
@@ -153,7 +153,7 @@ class ProxyManager {
 
 function exists(path: string): boolean {
     try {
-        FileSystemAdapter.getInstance().isFile(path)
+        FileSystemAdapter.isFile(path)
     }
     catch(e) {
         return false

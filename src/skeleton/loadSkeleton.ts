@@ -6,7 +6,7 @@ import { HumanMesh } from '../mesh/HumanMesh'
 export function loadSkeleton(scene: HumanMesh, filename: string) {
     const root = parseSkeleton(
         scene,
-        FileSystemAdapter.getInstance().readFile(filename),
+        FileSystemAdapter.readFile(filename),
         filename)
     console.log(`Loaded skeleton with ${root.bones.size} bones from file ${filename}`)
     return root

@@ -16,6 +16,7 @@ export class NodeJSFSAdapter implements AbstractFileSystemAdapter {
             throw e
         }
     }
+    exists(pathname: string): boolean { return fs.existsSync(pathname) }
     isFile(pathname: string): boolean { return fs.lstatSync(pathname).isFile() }
     isDir(pathname: string): boolean { return fs.lstatSync(pathname).isDirectory() }
     listDir(pathname: string): string[] {

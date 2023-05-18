@@ -40,7 +40,7 @@ export class BiovisionHierarchy {
         }
 
         if (data === undefined) {
-            data = FileSystemAdapter.getInstance().readFile(filename)
+            data = FileSystemAdapter.readFile(filename)
         }
 
         const reader = new StringToLine(data)

@@ -11,18 +11,6 @@ import { TMatrix } from "./TMatrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { zipForEach } from "lib/zipForEach"
 
-// proxy files .proxy, .mhclo
-// mesh    : .obj
-// material: .mhmat
-// weights : .jsonw
-// texture : .mhuv
-
-// female_generic.obj
-// female_generic.proxy
-
-// teeth_base.mhclo
-// teeth_base.obj
-
 // the lowercase version of ProxyType matches the directory
 export enum ProxyType {
     Proxymeshes,
@@ -193,7 +181,7 @@ const doDeleteVerts = 3
 export function loadTextProxy(human: Human, filepath: string, type: ProxyType = ProxyType.Clothes, data: string | undefined = undefined): Proxy {
     let lineNumber = 0
     if (data === undefined) {
-        data = FileSystemAdapter.getInstance().readFile(filepath)
+        data = FileSystemAdapter.readFile(filepath)
     }
     const reader = new StringToLine(data)
     const folder = filepath.substring(0, filepath.lastIndexOf("/"))
@@ -287,7 +275,7 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
             console.log(`loaded weights...`)
             proxy._vertexBoneWeights_file = _getFileName(folder, words[0], ".jsonw")
 
-            const data = FileSystemAdapter.getInstance().readFile(proxy._vertexBoneWeights_file)
+            const data = FileSystemAdapter.readFile(proxy._vertexBoneWeights_file)
             let json
             try {
                 json = JSON.parse(data)

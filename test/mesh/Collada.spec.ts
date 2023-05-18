@@ -41,7 +41,7 @@ describe("Collada", function () {
     })
 
     xit("load a valid collada and check it", function () {
-        const data = FileSystemAdapter.getInstance().readFile("test/testdata/test.dae")
+        const data = FileSystemAdapter.readFile("test/testdata/test.dae")
         checkCollada("data/test.dae", data)
     })
 

@@ -54,7 +54,7 @@ export class Target {
     }
 
     load(filename: string) {
-        const data = FileSystemAdapter.getInstance().readFile(filename)
+        const data = FileSystemAdapter.readFile(filename)
         // index x y, z
         const reader = new StringToLine(data)
         //  const reader = readline.createInterface(input)

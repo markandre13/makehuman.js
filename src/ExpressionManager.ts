@@ -20,11 +20,11 @@ export class ExpressionManager {
         this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
 
         this.facePoseUnitsNames = JSON
-            .parse(FileSystemAdapter.getInstance().readFile("data/poseunits/face-poseunits.json"))
+            .parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
         this.facePoseUnitsNames.forEach((name, index) => this.poseUnitName2Frame.set(name, index))
 
-        this.expressions = FileSystemAdapter.getInstance()
+        this.expressions = FileSystemAdapter
             .listDir("expressions")
             .filter(filename => filename.endsWith(".mhpose"))
             .map(filename => filename.substring(0, filename.length - 7))
@@ -44,7 +44,7 @@ export class ExpressionManager {
         }
 
         const expressionName = this.expressions[expression]
-        const unit_poses = expression = JSON.parse(FileSystemAdapter.getInstance().readFile(`data/expressions/${expressionName}.mhpose`))
+        const unit_poses = expression = JSON.parse(FileSystemAdapter.readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
 
         const poses: number[] = []

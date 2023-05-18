@@ -1,5 +1,6 @@
 export interface AbstractFileSystemAdapter {
     readFile(pathname: string): string
+    exists(pathname: string): boolean
     isFile(pathname: string): boolean
     isDir(pathname: string): boolean
     listDir(pathname: string): string[]

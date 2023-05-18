@@ -19,7 +19,7 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 export function loadModifiers(human: Human, filename: string): Modifier[] {
     return parseModifiers(
         human,
-        FileSystemAdapter.getInstance().readFile(filename),
+        FileSystemAdapter.readFile(filename),
         filename)
 }
 
