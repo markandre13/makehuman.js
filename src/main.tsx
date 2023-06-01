@@ -7,7 +7,7 @@ import { WavefrontObj } from 'mesh/WavefrontObj'
 import { HumanMesh, Update } from './mesh/HumanMesh'
 import { RenderMode } from './render/RenderMode'
 import { exportCollada } from 'mesh/Collada'
-import { loadProxy, ProxyType } from 'proxy/Proxy'
+import { ProxyType } from 'proxy/Proxy'
 
 import { PoseNode, PoseTreeAdapter } from 'ui/poseView'
 import { SliderTreeAdapter } from 'ui/morphView'
@@ -24,8 +24,9 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { Form, FormLabel, FormField } from 'toad.js/view/Form'
-import { BooleanModel, Button, Checkbox, OptionModel, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
+import { BooleanModel, Button, Checkbox, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { calcWebGL, ExpressionManager } from './ExpressionManager'
+import { ProxyManager } from './ProxyManager'
 
 window.onload = () => { main() }
 
@@ -108,59 +109,6 @@ export function runMediaPipe() {
         }
         socket.send(enc.encode("GET FACE"))
     }
-}
-
-class ProxyManager {
-    scene: HumanMesh
-    // list of all known proxies by type
-    list = new Map<ProxyType, OptionModel<string>>
-
-    allProxyTypes = [ProxyType.Proxymeshes,
-    ProxyType.Clothes,
-    ProxyType.Hair,
-    ProxyType.Eyes,
-    ProxyType.Eyebrows,
-    ProxyType.Eyelashes,
-    ProxyType.Teeth,
-    ProxyType.Tongue]
-
-    constructor(scene: HumanMesh) {
-        this.scene = scene
-        for (const type of this.allProxyTypes) {
-            const model = new OptionModel<string>()
-            model.modified.add(() => {
-                console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
-                if (model.stringValue === "none") {
-                    scene.proxies.delete(type)
-                } else {
-                    const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
-                    const suffix = exists(`${prefix}.mhclo`) ? "mhclo" : "proxy"
-                    console.log(`try toad load '${prefix}.${suffix}'`)
-                    scene.proxies.set(type, loadProxy(scene.human, `${prefix}.${suffix}`, type))
-                }
-                scene.changedProxy = type
-            })
-            model.add("none", "none")
-            model.value = "none"
-            for (const file of FileSystemAdapter.listDir(ProxyType[type].toLowerCase())) {
-                if (file === "materials") {
-                    continue
-                }
-                model.add(file, file)
-            }
-            this.list.set(type, model)
-        }
-    }
-}
-
-function exists(path: string): boolean {
-    try {
-        FileSystemAdapter.isFile(path)
-    }
-    catch (e) {
-        return false
-    }
-    return true
 }
 
 // core/mhmain.py
