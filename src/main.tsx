@@ -23,6 +23,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
+import { Form, FormLabel, FormField } from 'toad.js/view/Form'
 import { BooleanModel, Button, Checkbox, OptionModel, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { calcWebGL, ExpressionManager } from './ExpressionManager'
 
@@ -36,10 +37,11 @@ export function main() {
     }
     catch (e) {
         console.log(e)
-        if (e instanceof Error)
+        if (e instanceof Error) {
             alert(`${e.name}: ${e.message}`)
-        else
+        } else {
             alert(e)
+        }
     }
 }
 
@@ -114,19 +116,19 @@ class ProxyManager {
     list = new Map<ProxyType, OptionModel<string>>
 
     allProxyTypes = [ProxyType.Proxymeshes,
-        ProxyType.Clothes,
-        ProxyType.Hair,
-        ProxyType.Eyes,
-        ProxyType.Eyebrows,
-        ProxyType.Eyelashes,
-        ProxyType.Teeth,
-        ProxyType.Tongue]
+    ProxyType.Clothes,
+    ProxyType.Hair,
+    ProxyType.Eyes,
+    ProxyType.Eyebrows,
+    ProxyType.Eyelashes,
+    ProxyType.Teeth,
+    ProxyType.Tongue]
 
     constructor(scene: HumanMesh) {
         this.scene = scene
         for (const type of this.allProxyTypes) {
             const model = new OptionModel<string>()
-            model.modified.add( () => { 
+            model.modified.add(() => {
                 console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
                 if (model.stringValue === "none") {
                     scene.proxies.delete(type)
@@ -155,7 +157,7 @@ function exists(path: string): boolean {
     try {
         FileSystemAdapter.isFile(path)
     }
-    catch(e) {
+    catch (e) {
         return false
     }
     return true
@@ -252,20 +254,19 @@ function run() {
 
     const download = makeDownloadAnchor()
     const refCanvas = new class { canvas!: HTMLCanvasElement }
+    // htmlFor={ProxyType[pid]}
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
             <Tab label="Proxy" value="POLYGON">
-                <form class="tx-form" style={{ padding: "10px", paddingTop: "20px" }}>
-                    {...proxyManager.allProxyTypes.map(pid =>
-                        <div>
-                            <label class="tx-label" htmlFor={ProxyType[pid]}>{ProxyType[pid]}</label>
+                <Form variant="narrow">
+                    {proxyManager.allProxyTypes.map(pid => <>
+                        <FormLabel>{ProxyType[pid]}</FormLabel>
+                        <FormField>
                             <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
-                            {/* <div class="tx-helptext">
-                                Lorem ipsum dolor sit amet
-                            </div> */}
-                        </div>
+                        </FormField>
+                    </>
                     )}
-                </form>
+                </Form>
             </Tab>
             <Tab label="Expression" value="DEBUG">
                 <Table
