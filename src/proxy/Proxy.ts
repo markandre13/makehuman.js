@@ -170,7 +170,7 @@ export class Proxy {
 export function loadProxy(human: Human, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
-    proxy.mesh = proxy.loadMeshAndObject()
+    proxy.mesh = proxy.loadMeshAndObject() // separate to be able to test loadTextProxy without Obj file
     return proxy
 }
 
@@ -399,6 +399,11 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
         }
 
         if (status == doDeleteVerts) {
+            // * deleteVerts is used for clothes to remove parts of the body mesh
+            // * proxy.deleteVerts is an array of booleans the size of the meshes vertices
+            // * the data is a white space separated list of
+            //   * <vert>
+            //   * <startVert> - <endVert>
             //     sequence = False
             //     for v in words:
             //         if v == "-":
@@ -412,7 +417,7 @@ export function loadTextProxy(human: Human, filepath: string, type: ProxyType = 
             //             else:
             //                 proxy.deleteVerts[v1] = True
             //             v0 = v1
-            throw Error(`doDeleteVerts`)
+            // throw Error(`doDeleteVerts`)
         }
 
         console.warn(`Unknown keyword ${key} found in proxy file ${filepath}`)

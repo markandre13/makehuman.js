@@ -164,6 +164,18 @@ class Proxy {
 
 Building needs toad.js from the github master branch. See 'npm link' for further details.
 
+Building is currently done with [ttypescript](https://www.npmjs.com/package/ttypescript) without
+any bundler.
+
+Due some changes in typescript 5 neither ttypescript nor ts-patch work anymore.
+
+Here's the relevant discussion:
+
+* https://github.com/cevek/ttypescript/issues/140
+* https://github.com/nonara/ts-patch/issues/93
+* https://github.com/microsoft/TypeScript/issues/52826
+* https://github.com/microsoft/TypeScript/issues/52953
+
 ## Run single test
 
 npm run dev:test --file=build/test/skeleton.spec.js

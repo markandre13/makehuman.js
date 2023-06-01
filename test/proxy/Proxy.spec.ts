@@ -18,7 +18,6 @@ import { teeth_proxy_intermediate_weights } from "../testdata/teeth_proxy_interm
 import { Human } from '../../src/modifier/Human'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
-import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 
 // I am not quite sure how Proxy works, so the tests mostly compare the results of
