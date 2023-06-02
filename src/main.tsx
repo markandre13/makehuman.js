@@ -23,7 +23,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
-import { Form, FormLabel, FormField } from 'toad.js/view/Form'
+import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
 import { BooleanModel, Button, Checkbox, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { calcWebGL, ExpressionManager } from './ExpressionManager'
 import { ProxyManager } from './ProxyManager'
@@ -212,6 +212,7 @@ function run() {
                         <FormField>
                             <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
                         </FormField>
+                        <FormHelp model={proxyManager.list.get(pid) as any}/>
                     </>
                     )}
                 </Form>
