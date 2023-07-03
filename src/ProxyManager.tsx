@@ -31,10 +31,18 @@ export class ProxyManager {
     constructor(scene: HumanMesh) {
         this.scene = scene
         for (const type of this.allProxyTypes) {
-            const model = new OptionModel<string>()
+            const proxyList: string[] = ["none"]          
+            for (const file of FileSystemAdapter.listDir(ProxyType[type].toLowerCase())) {
+                if (file === "materials") {
+                    continue
+                }
+                // model.add(file, file)
+                proxyList.push(file)
+            }
+            const model = new OptionModel("none", proxyList)
             model.modified.add(() => {
                 console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
-                if (model.stringValue === "none") {
+                if (model.value === "none") {
                     scene.proxies.delete(type)
                 } else {
                     const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
@@ -44,14 +52,6 @@ export class ProxyManager {
                 }
                 scene.changedProxy = type
             })
-            model.add("none", "none")
-            model.value = "none"
-            for (const file of FileSystemAdapter.listDir(ProxyType[type].toLowerCase())) {
-                if (file === "materials") {
-                    continue
-                }
-                model.add(file, file)
-            }
             this.list.set(type, model)
         }
     }

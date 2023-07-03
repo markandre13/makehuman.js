@@ -171,7 +171,7 @@ function run() {
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
-    const renderMode = new EnumModel<RenderMode>(RenderMode, RenderMode.POLYGON)
+    const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
@@ -205,7 +205,7 @@ function run() {
     // htmlFor={ProxyType[pid]}
     const mainScreen = <>
         <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Proxy" value="POLYGON">
+            <Tab label="Proxy" value={RenderMode.POLYGON}>
                 <Form variant="narrow">
                     {proxyManager.allProxyTypes.map(pid => <>
                         <FormLabel>{ProxyType[pid]}</FormLabel>
@@ -217,7 +217,7 @@ function run() {
                     )}
                 </Form>
             </Tab>
-            <Tab label="Expression" value="DEBUG">
+            <Tab label="Expression" value={RenderMode.DEBUG}>
                 <Table
                     model={expressionModel}
                     selectionModel={selectedExpression}
@@ -226,10 +226,10 @@ function run() {
             <Tab label="Morph" value="POLYGON">
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
-            <Tab label="Pose" value="WIREFRAME">
+            <Tab label="Pose" value={RenderMode.WIREFRAME}>
                 <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
-            <Tab label="Export" value="WIREFRAME">
+            <Tab label="Export" value={RenderMode.WIREFRAME}>
                 <div style={{ padding: "10px" }}>
                     <p>
                         <Checkbox model={useBlenderProfile} title="Export additional Blender specific information (for material, shaders, bones, etc.)." /> Use Blender Profile
