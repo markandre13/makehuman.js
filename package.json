@@ -32,8 +32,8 @@
   "dependencies": {
     "fflate": "^0.8.0",
     "gl-matrix": "^3.4.3",
-    "toad.js": "0.0.24",
-    "toad.jsx": "^0.0.9"
+    "toad.js": "0.1.0",
+    "toad.jsx": "^0.0.10"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
@@ -45,14 +45,14 @@
     "@types/chai-string": "^1.4.2",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.3.3",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
-    "@typescript-eslint/parser": "^5.60.1",
-    "@web/dev-server": "^0.2.3",
+    "@typescript-eslint/eslint-plugin": "^5.61.0",
+    "@typescript-eslint/parser": "^5.61.0",
+    "@web/dev-server": "^0.2.5",
     "@web/test-runner": "^0.16.1",
     "chai": "^4.3.7",
     "eslint": "^8.44.0",
     "mocha": "^10.2.0",
-    "rollup": "^3.26.0",
+    "rollup": "^3.26.1",
     "rollup-plugin-typescript2": "^0.35.0",
     "ts-node": "^10.9.1",
     "ts-patch": "^3.0.1",
