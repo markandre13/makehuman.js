@@ -223,7 +223,7 @@ function run() {
                     selectionModel={selectedExpression}
                     style={{ width: '150px', height: '100%' }} />
             </Tab>
-            <Tab label="Morph" value="POLYGON">
+            <Tab label="Morph" value={RenderMode.POLYGON}>
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
             <Tab label="Pose" value={RenderMode.WIREFRAME}>
