@@ -46,6 +46,54 @@ export function main() {
     }
 }
 
+export enum TAB {
+    PROXY = "proxy",
+    EXPRESSION = "expression",
+    MORPH = "morph",
+    POSE = "pose",
+    EXPORT = "export",
+    MEDIAPIPE = "mediapipe",
+    CHORDATA = "chordata"
+}
+
+function makeUrl(tabModel: EnumModel<TAB>) {
+    return `${location.origin}${location.pathname}#${tabModel.value}`
+}
+
+export function initHistoryManager(tabModel: EnumModel<TAB>) {
+    if (location.hash.length > 1) {
+        const value = location.hash.substring(1) as any
+        // tabModel.value = parseInt(value)
+        if (tabModel.indexOf(value) === undefined) {
+            history.replaceState(undefined, "", makeUrl(tabModel))
+        } else {
+            tabModel.value = value
+        }
+    } else {
+        // set an initial hash so that we do not have to deal with an non-empty hash in the code
+        history.replaceState(undefined, "", makeUrl(tabModel))
+    }
+
+    // adjust state when moving back and forward
+    window.onpopstate = (ev: PopStateEvent) => {
+        // console.log(`POPSTATE MODEL := ${location.hash}`)
+        if (location.hash.length > 1) {
+            // tabModel.value = parseInt(location.hash.substring(1))
+            tabModel.value = location.hash.substring(1) as any
+        } else {
+            tabModel.value = TAB.PROXY
+        }
+    }
+
+    // push state when the user switches tabs
+    tabModel.modified.add((tab) => {
+        // console.log(`MODEL CHANGE, PUSHSTATE = ${location.hash}`)
+        if (location.hash !== `#${tab}`) {
+            history.pushState(undefined, "", makeUrl(tabModel))
+        }
+    })
+}
+
 // MEDIAPIPE INTEGRATION PLAYGROUND
 // [X] assuming that we receive the vertices, render the face
 // [ ] have a look at http://www.makehumancommunity.org/wiki/Documentation:Basemesh
@@ -172,6 +220,24 @@ function run() {
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
     const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
+    const tabModel = new EnumModel(TAB.PROXY, TAB)
+    tabModel.modified.add(() => {
+        switch(tabModel.value) {
+            case TAB.PROXY:
+            case TAB.MORPH:
+            case TAB.MEDIAPIPE:
+            case TAB.CHORDATA:
+                renderMode.value = RenderMode.POLYGON
+                break
+            case TAB.POSE:
+            case TAB.EXPORT:
+                renderMode.value = RenderMode.WIREFRAME
+            case TAB.EXPRESSION:
+                renderMode.value = RenderMode.DEBUG
+                break
+        }
+    })
+    initHistoryManager(tabModel)
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
@@ -204,8 +270,8 @@ function run() {
     const refCanvas = new class { canvas!: HTMLCanvasElement }
     // htmlFor={ProxyType[pid]}
     const mainScreen = <>
-        <Tabs model={renderMode} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Proxy" value={RenderMode.POLYGON}>
+        <Tabs model={tabModel} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
+            <Tab label="Proxy" value={TAB.PROXY}>
                 <Form variant="narrow">
                     {proxyManager.allProxyTypes.map(pid => <>
                         <FormLabel>{ProxyType[pid]}</FormLabel>
@@ -217,19 +283,19 @@ function run() {
                     )}
                 </Form>
             </Tab>
-            <Tab label="Expression" value={RenderMode.DEBUG}>
+            <Tab label="Expression" value={TAB.EXPRESSION}>
                 <Table
                     model={expressionModel}
                     selectionModel={selectedExpression}
                     style={{ width: '150px', height: '100%' }} />
             </Tab>
-            <Tab label="Morph" value={RenderMode.POLYGON}>
+            <Tab label="Morph" value={TAB.MORPH}>
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
-            <Tab label="Pose" value={RenderMode.WIREFRAME}>
+            <Tab label="Pose" value={TAB.POSE}>
                 <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
-            <Tab label="Export" value={RenderMode.WIREFRAME}>
+            <Tab label="Export" value={TAB.EXPORT}>
                 <div style={{ padding: "10px" }}>
                     <p>
                         <Checkbox model={useBlenderProfile} title="Export additional Blender specific information (for material, shaders, bones, etc.)." /> Use Blender Profile
@@ -248,6 +314,12 @@ function run() {
                     </p>
                     <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
                 </div>
+            </Tab>
+            <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
+                Mediapipe coming soon
+            </Tab>
+            <Tab label="Chordata" value={TAB.CHORDATA}>
+                Chordata coming soon
             </Tab>
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
