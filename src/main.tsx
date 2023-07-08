@@ -27,6 +27,8 @@ import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
 import { BooleanModel, Button, Checkbox, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
 import { calcWebGL, ExpressionManager } from './ExpressionManager'
 import { ProxyManager } from './ProxyManager'
+import chordata from 'ui/chordata'
+import { TAB, initHistoryManager } from 'HistoryManager'
 
 window.onload = () => { main() }
 
@@ -44,54 +46,6 @@ export function main() {
             alert(e)
         }
     }
-}
-
-export enum TAB {
-    PROXY = "proxy",
-    EXPRESSION = "expression",
-    MORPH = "morph",
-    POSE = "pose",
-    EXPORT = "export",
-    MEDIAPIPE = "mediapipe",
-    CHORDATA = "chordata"
-}
-
-function makeUrl(tabModel: EnumModel<TAB>) {
-    return `${location.origin}${location.pathname}#${tabModel.value}`
-}
-
-export function initHistoryManager(tabModel: EnumModel<TAB>) {
-    if (location.hash.length > 1) {
-        const value = location.hash.substring(1) as any
-        // tabModel.value = parseInt(value)
-        if (tabModel.indexOf(value) === undefined) {
-            history.replaceState(undefined, "", makeUrl(tabModel))
-        } else {
-            tabModel.value = value
-        }
-    } else {
-        // set an initial hash so that we do not have to deal with an non-empty hash in the code
-        history.replaceState(undefined, "", makeUrl(tabModel))
-    }
-
-    // adjust state when moving back and forward
-    window.onpopstate = (ev: PopStateEvent) => {
-        // console.log(`POPSTATE MODEL := ${location.hash}`)
-        if (location.hash.length > 1) {
-            // tabModel.value = parseInt(location.hash.substring(1))
-            tabModel.value = location.hash.substring(1) as any
-        } else {
-            tabModel.value = TAB.PROXY
-        }
-    }
-
-    // push state when the user switches tabs
-    tabModel.modified.add((tab) => {
-        // console.log(`MODEL CHANGE, PUSHSTATE = ${location.hash}`)
-        if (location.hash !== `#${tab}`) {
-            history.pushState(undefined, "", makeUrl(tabModel))
-        }
-    })
 }
 
 // MEDIAPIPE INTEGRATION PLAYGROUND
@@ -318,9 +272,7 @@ function run() {
             <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
                 Mediapipe coming soon
             </Tab>
-            <Tab label="Chordata" value={TAB.CHORDATA}>
-                Chordata coming soon
-            </Tab>
+            {chordata}
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
             <canvas set={ref(refCanvas, 'canvas')} style={{ width: '100%', height: '100%' }} />
