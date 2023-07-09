@@ -38,7 +38,7 @@ import { base_anim_data } from './testdata/base_anim_data'
 //         def getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
 //             ...
 
-describe("expression", function () {
+describe("`(face) expression", function () {
 
     this.beforeAll(function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
