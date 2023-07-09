@@ -180,7 +180,6 @@ function run() {
             case TAB.PROXY:
             case TAB.MORPH:
             case TAB.MEDIAPIPE:
-            case TAB.CHORDATA:
                 renderMode.value = RenderMode.POLYGON
                 break
             case TAB.POSE:
@@ -188,6 +187,9 @@ function run() {
                 renderMode.value = RenderMode.WIREFRAME
             case TAB.EXPRESSION:
                 renderMode.value = RenderMode.DEBUG
+                break
+            case TAB.CHORDATA:
+                renderMode.value = RenderMode.CHORDATA
                 break
         }
     })

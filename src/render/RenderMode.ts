@@ -1,5 +1,6 @@
 export enum RenderMode {
     DEBUG,
     POLYGON,
-    WIREFRAME
+    WIREFRAME,
+    CHORDATA
 }
