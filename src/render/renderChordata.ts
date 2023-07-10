@@ -2,6 +2,7 @@ import { mat4, quat } from "gl-matrix"
 import { RenderMesh } from "./RenderMesh"
 import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./render"
 import { RGBAShader } from "./shader/RGBAShader"
+import { span, text } from "toad.js"
 
 let cone: RenderMesh
 
@@ -25,9 +26,18 @@ const bones = new Map<string, number[]>([
 
 export function drawChordata(
     gl: WebGL2RenderingContext,
-    programRGBA: RGBAShader
+    programRGBA: RGBAShader,
+    overlay: HTMLElement
 ) {
     initCone(gl)
+    if (overlay.children.length === 0) {
+        const s = span(text("Hello"))
+        s.style.position = "absolute"
+        s.style.top = "320px"
+        s.style.left = "360px"
+        overlay.appendChild(s)
+    }
+
     const canvas = gl.canvas as HTMLCanvasElement
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
@@ -54,6 +64,7 @@ function initCone(gl: WebGL2RenderingContext) {
     if (cone !== undefined) {
         return
     }
+
     const xyz = [
         -1, 1, -2,
         1, 1, -2,

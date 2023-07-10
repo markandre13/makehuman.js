@@ -117,6 +117,11 @@ export function runMediaPipe() {
 //   class MHApplication
 //     startupSequence()
 function run() {
+    const references = new class { 
+        canvas!: HTMLCanvasElement
+        overlay!: HTMLElement
+    }
+
     console.log('loading assets...')
     const human = new Human()
     const obj = new WavefrontObj('data/3dobjs/base.obj')
@@ -176,6 +181,9 @@ function run() {
     const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
     const tabModel = new EnumModel(TAB.PROXY, TAB)
     tabModel.modified.add(() => {
+        if (references.overlay) {
+            references.overlay.replaceChildren()
+        }
         switch(tabModel.value) {
             case TAB.PROXY:
             case TAB.MORPH:
@@ -223,7 +231,7 @@ function run() {
     limitPrecision.enabled = false
 
     const download = makeDownloadAnchor()
-    const refCanvas = new class { canvas!: HTMLCanvasElement }
+
     // htmlFor={ProxyType[pid]}
     const mainScreen = <>
         <Tabs model={tabModel} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
@@ -277,11 +285,13 @@ function run() {
             {chordata}
         </Tabs>
         <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
-            <canvas set={ref(refCanvas, 'canvas')} style={{ width: '100%', height: '100%' }} />
+            <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
+            <div  set={ref(references, 'overlay')}  style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
+            </div>
         </div>
     </> as Fragment
     mainScreen.appendTo(document.body)
-    render(refCanvas.canvas, scene, renderMode)
+    render(references.canvas, references.overlay, scene, renderMode)
 }
 
 function makeDownloadAnchor() {

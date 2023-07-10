@@ -12,7 +12,7 @@ import { RenderList } from "./RenderList"
 
 let cubeRotation = 0.0
 
-export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
+export function render(canvas: HTMLCanvasElement, overlay: HTMLElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
     const gl = (canvas.getContext("webgl2") || canvas.getContext("experimental-webgl")) as WebGL2RenderingContext
     if (gl == null) {
         throw Error("Unable to initialize WebGL. Your browser or machine may not support it.")
@@ -55,7 +55,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
         }
         switch(mode.value) {
             case RenderMode.CHORDATA:
-                drawChordata(gl, programRGBA)
+                drawChordata(gl, programRGBA, overlay)
                 break
             default:
                 drawScene(gl, programRGBA, programTex, texture, renderList, deltaTime, scene, mode.value)
