@@ -7,6 +7,7 @@ import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
 import { RenderMesh } from "./RenderMesh"
 import { ProxyType } from "proxy/Proxy"
+import { drawChordata } from "./renderChordata"
 
 let cubeRotation = 0.0
 
@@ -37,46 +38,6 @@ class RenderList {
     }
 }
 
-let cone: RenderMesh
-
-function initCone(gl: WebGL2RenderingContext) {
-    const xyz = [
-        -1, 1, -2,
-        1, 1, -2,
-        -1, -1, -2,
-        1, -1, -2,
-
-        0, 0, 2,
-        -1, 1, -2,
-        1, 1, -2,
-
-        0, 0, 2,
-        -1, -1, -2,
-        1, -1, -2,
-
-        0, 0, 2,
-        -1, 1, -2,
-        -1, -1, -2,
-
-        0, 0, 2,
-        1, 1, -2,
-        1, -1, -2,
-    ]
-    const fxyz = [
-        0, 1, 3,
-        0, 3, 2,
-        4, 5, 6,
-        7, 8, 9,
-        10, 11, 12,
-        13, 14, 15
-        // 4, 3, 2,
-        // 4, 1, 3,
-        // 4, 0, 1,
-        // 4, 2, 0
-    ]
-    cone = new RenderMesh(gl, new Float32Array(xyz), fxyz, undefined, undefined, false)
-}
-
 export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
     const gl = (canvas.getContext("webgl2") || canvas.getContext("experimental-webgl")) as WebGL2RenderingContext
     if (gl == null) {
@@ -91,7 +52,7 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
 
     // const texCube = createTexturedCubeRenderer(gl)
     const renderList = new RenderList(gl, scene)
-    initCone(gl)
+    // initCone(gl)
 
     const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
     // const texture = loadTexture(gl, "data/cubetexture.png")!
@@ -118,7 +79,13 @@ export function render(canvas: HTMLCanvasElement, scene: HumanMesh, mode: EnumMo
             renderList.update()
             // updateBuffers(scene, buffers)
         }
-        drawScene(gl, programRGBA, programTex, texture, renderList, deltaTime, scene, mode.value)
+        switch(mode.value) {
+            case RenderMode.CHORDATA:
+                drawChordata(gl, programRGBA)
+                break
+            default:
+                drawScene(gl, programRGBA, programTex, texture, renderList, deltaTime, scene, mode.value)
+        }
         requestAnimationFrame(render)
     }
     requestAnimationFrame(render)
@@ -138,20 +105,6 @@ function drawScene(
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas)
-
-    if (renderMode === RenderMode.CHORDATA) {
-        const modelViewMatrix = mat4.create()
-        mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -25.0]) // move the model away
-        mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * 0.7, [0, 1, 0])
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
-   
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.color([0, 0, 1, 1])
-
-        cone.draw(programRGBA, gl.TRIANGLES)
-        cubeRotation += deltaTime
-        return
-    }
     const modelViewMatrix = createModelViewMatrix(renderMode)
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
