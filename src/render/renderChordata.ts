@@ -42,7 +42,7 @@ export function drawChordata(
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas)
 
-    let x = -10, y = -5
+    let x = -10, y = -5, idx = 0
 
     bones2.forEach((bone, name) => {
 
@@ -57,26 +57,20 @@ export function drawChordata(
         programRGBA.color([1, 0.5, 0, 1])
         cone.draw(programRGBA, gl.TRIANGLES)
 
+        // model -> MODEL MATRIX -> model in world -> PROJECTION MATRIX -> model in clipspace
+        // clipspace is (-1,-1,-1) to (1,1,1)
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
+
+        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+
+        const point = vec4.fromValues(0, 0, 2, 1) // this is the front top right corner
+        const clipspace = vec4.transformMat4(vec4.create(), point, m0)
+        clipspace[0] /= clipspace[3]
+        clipspace[1] /= clipspace[3]
+        const pixelX = (clipspace[0] *  0.5 + 0.5) * gl.canvas.width;
+        const pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height;
+
         if (overlay.children.length === 0) {
-            // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
-
-            // model -> MODEL MATRIX -> model in world -> PROJECTION MATRIX
-
-            // CLIPSPACE (-1,-1,-1) to (1,1,1)
-            // These composed matrices ultimately move the original model data around into a special
-            // coordinate space called clip space. This is a 2 unit wide cube, centered at (0,0,0), 
-            // and with corners that range from (-1,-1,-1) to (1,1,1). This clip space is compressed 
-            // down into a 2D space and rasterized into an image.
-
-            const m = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-
-            const point = vec4.fromValues(0, 0, 2, 1) // this is the front top right corner
-            const clipspace = vec4.transformMat4(vec4.create(), point, m)
-            clipspace[0] /= clipspace[3]
-            clipspace[1] /= clipspace[3]
-            const pixelX = (clipspace[0] *  0.5 + 0.5) * gl.canvas.width;
-            const pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height;
-
             const label = span(text(name))
             label.style.position = "absolute"
             label.style.color = "#08f"
@@ -84,6 +78,9 @@ export function drawChordata(
             label.style.left = `${pixelX}px`
             label.style.top = `${pixelY}px`
             overlayChildren.push(label)
+        } else {
+            (overlay.children[idx] as HTMLElement).style.left = `${pixelX}px`;
+            (overlay.children[idx] as HTMLElement).style.top = `${pixelY}px`
         }
 
         y += 5
@@ -91,6 +88,7 @@ export function drawChordata(
             y = -5
             x += 5
         }
+        ++idx
     })
 
     if (overlay.children.length === 0) {
