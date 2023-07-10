@@ -32,7 +32,7 @@
   "dependencies": {
     "fflate": "^0.8.0",
     "gl-matrix": "^3.4.3",
-    "toad.js": "0.1.0",
+    "toad.js": "0.1.2",
     "toad.jsx": "^0.0.10"
   },
   "devDependencies": {
@@ -45,8 +45,8 @@
     "@types/chai-string": "^1.4.2",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.4.1",
-    "@typescript-eslint/eslint-plugin": "^5.61.0",
-    "@typescript-eslint/parser": "^5.61.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "@web/dev-server": "^0.2.5",
     "@web/test-runner": "^0.16.1",
     "chai": "^4.3.7",
