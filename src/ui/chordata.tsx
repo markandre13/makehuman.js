@@ -46,10 +46,21 @@ function runChordata() {
                 console.log("neither blob nor arraybuffer")
                 return
             }
-            // console.log(`got ${arrayBuffer.byteLength} octets of chordata`)
+            // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
             const decoder = new COOPDecoder(arrayBuffer)
-            setBones(decoder.decode())
-            client!.send(enc.encode("GET CHORDATA"))
+            try {
+                setBones(decoder.decode())
+                client!.send(enc.encode("GET CHORDATA"))
+            }
+            catch(error) {
+                start.enabled = true
+                stop.enabled = false
+                client!.close()
+                socket = undefined
+                console.log(`failed to decode chordata`)
+                hexdump(decoder.bytes)
+                // client!.send(enc.encode("GET CHORDATA"))
+            }
         }
         // console.log("REQUEST CHORDATA")
         client!.send(enc.encode("GET CHORDATA"))
