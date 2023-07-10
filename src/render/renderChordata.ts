@@ -23,6 +23,11 @@ const bones = new Map<string, number[]>([
     ["/%/kc_0x41branch1", [-0.392768, -0.498948, 0.532651, -0.559524]],
     ["/%/kc_0x40branch1", [-0.428276, -0.163105, 0.552124, -0.696517]],
 ]);
+const bones2 = new Map<string, number[]>()        
+bones.forEach((value, key) => {
+    // /%/kc_0x42branch6
+    bones2.set(`${key.substring(16,17)}/${key.substring(8,10)}`, value)
+})
 
 export function drawChordata(
     gl: WebGL2RenderingContext,
@@ -30,56 +35,67 @@ export function drawChordata(
     overlay: HTMLElement
 ) {
     initCone(gl)
+    const overlayChildren: HTMLElement[] = []
 
     const canvas = gl.canvas as HTMLCanvasElement
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas)
 
-    const modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [-10.0, -5.0, -25.0]) // move the model away
+    let x = -10, y = -5
 
-    const bone = bones.get("/%/kc_0x42branch6")!
-    const q = quat.fromValues(bone[0], bone[1], bone[2], bone[3])
-    const m = mat4.fromQuat(mat4.create(), q)
-    mat4.multiply(modelViewMatrix, modelViewMatrix, m)
+    bones2.forEach((bone, name) => {
+
+        const modelViewMatrix = mat4.create()
+        mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
+
+        const q = quat.fromValues(bone[0], bone[1], bone[2], bone[3])
+        const m = mat4.fromQuat(mat4.create(), q)
+        mat4.multiply(modelViewMatrix, modelViewMatrix, m)
+        const normalMatrix = createNormalMatrix(modelViewMatrix)
+        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.color([1, 0.5, 0, 1])
+        cone.draw(programRGBA, gl.TRIANGLES)
+
+        if (overlay.children.length === 0) {
+            // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
+
+            // model -> MODEL MATRIX -> model in world -> PROJECTION MATRIX
+
+            // CLIPSPACE (-1,-1,-1) to (1,1,1)
+            // These composed matrices ultimately move the original model data around into a special
+            // coordinate space called clip space. This is a 2 unit wide cube, centered at (0,0,0), 
+            // and with corners that range from (-1,-1,-1) to (1,1,1). This clip space is compressed 
+            // down into a 2D space and rasterized into an image.
+
+            const m = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+
+            const point = vec4.fromValues(0, 0, 2, 1) // this is the front top right corner
+            const clipspace = vec4.transformMat4(vec4.create(), point, m)
+            clipspace[0] /= clipspace[3]
+            clipspace[1] /= clipspace[3]
+            const pixelX = (clipspace[0] *  0.5 + 0.5) * gl.canvas.width;
+            const pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height;
+
+            const label = span(text(name))
+            label.style.position = "absolute"
+            label.style.color = "#08f"
+            label.style.fontWeight = "bold"
+            label.style.left = `${pixelX}px`
+            label.style.top = `${pixelY}px`
+            overlayChildren.push(label)
+        }
+
+        y += 5
+        if (y >= 10) {
+            y = -5
+            x += 5
+        }
+    })
 
     if (overlay.children.length === 0) {
-        // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
-
-        // model -> MODEL MATRIX -> model in world -> PROJECTION MATRIX
-
-        // CLIPSPACE (-1,-1,-1) to (1,1,1)
-        // These composed matrices ultimately move the original model data around into a special
-        // coordinate space called clip space. This is a 2 unit wide cube, centered at (0,0,0), 
-        // and with corners that range from (-1,-1,-1) to (1,1,1). This clip space is compressed 
-        // down into a 2D space and rasterized into an image.
-
-        const m = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-
-        const point = vec4.fromValues(0, 0, 2, 1) // this is the front top right corner
-        const clipspace = vec4.transformMat4(vec4.create(), point, m)
-        clipspace[0] /= clipspace[3]
-        clipspace[1] /= clipspace[3]
-        const pixelX = (clipspace[0] *  0.5 + 0.5) * gl.canvas.width;
-        const pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height;
-
-        const s = span(text("/%/kc_0x42branch6"))
-        s.style.position = "absolute"
-        s.style.left = `${pixelX}px`
-        s.style.top = `${pixelY}px`
-        overlay.replaceChildren(s)
-
-        console.log(`place text at (${pixelX},${pixelY})`)
+        overlay.replaceChildren(...overlayChildren)
     }
-
-    // mat4.rotate(modelViewMatrix, modelViewMatrix, 0.7, [0, 1, 0])
-    const normalMatrix = createNormalMatrix(modelViewMatrix)
-
-    programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    programRGBA.color([1, 1, 1, 1])
-
-    cone.draw(programRGBA, gl.TRIANGLES)
 }
 
 function initCone(gl: WebGL2RenderingContext) {
