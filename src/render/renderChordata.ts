@@ -6,7 +6,17 @@ import { span, text } from "toad.js"
 
 let cone: RenderMesh
 
-const bones = new Map<string, number[]>([
+const bones = new Map<string, number[]>()
+
+export function setBones(newBones: Map<string, number[]>) {
+    bones.clear()
+    newBones.forEach((value, key) => {
+        // /%/kc_0x42branch6
+        bones.set(`${key.substring(16,17)}/${key.substring(8,10)}`, value)
+    })
+}
+
+setBones(new Map<string, number[]>([
     ["/%/kc_0x42branch6", [-0.0116586, 0.351683, 0.928858, -0.115784]],
     ["/%/kc_0x41branch6", [-0.0157049, 0.612659, 0.789144, -0.0406618]],
     ["/%/kc_0x40branch6", [-0.0206191, 0.282804, 0.95885, -0.0142731]],
@@ -22,12 +32,7 @@ const bones = new Map<string, number[]>([
     ["/%/kc_0x42branch1", [0.113668, 0.315253, 0.921183, -0.197781]],
     ["/%/kc_0x41branch1", [-0.392768, -0.498948, 0.532651, -0.559524]],
     ["/%/kc_0x40branch1", [-0.428276, -0.163105, 0.552124, -0.696517]],
-]);
-const bones2 = new Map<string, number[]>()        
-bones.forEach((value, key) => {
-    // /%/kc_0x42branch6
-    bones2.set(`${key.substring(16,17)}/${key.substring(8,10)}`, value)
-})
+]))
 
 export function drawChordata(
     gl: WebGL2RenderingContext,
@@ -42,9 +47,9 @@ export function drawChordata(
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas)
 
-    let x = -10, y = -5, idx = 0
+    let x = 10, y = -5, idx = 0
 
-    bones2.forEach((bone, name) => {
+    bones.forEach((bone, name) => {
 
         const modelViewMatrix = mat4.create()
         mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
@@ -86,7 +91,7 @@ export function drawChordata(
         y += 5
         if (y >= 10) {
             y = -5
-            x += 5
+            x -= 5
         }
         ++idx
     })

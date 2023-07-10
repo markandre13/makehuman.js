@@ -1,5 +1,6 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
+import { setBones } from "render/renderChordata"
 import { Action } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
@@ -22,14 +23,6 @@ const stop = new Action(() => {
 stop.enabled = false
 
 function runChordata() {
-    const refCanvas = new (class {
-        canvas!: HTMLCanvasElement
-    })()
-    // document.body.replaceChildren(...<>
-    //     <canvas set={ref(refCanvas, 'canvas')} style={{ width: '480px', height: '480px', border: "1px #fff solid" }} />
-    // </>)
-    // const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
-
     const enc = new TextEncoder()
     const host = "localhost"
     const port = 9001
@@ -55,16 +48,10 @@ function runChordata() {
             }
             // console.log(`got ${arrayBuffer.byteLength} octets of chordata`)
             const decoder = new COOPDecoder(arrayBuffer)
-            const bones =  decoder.decode()
-            bones.forEach( (value, key) => {
-                console.log(`${key} ${value}`)
-            })
-            console.log(`-------------------------------------`)
-            // hexdump(new Uint8Array(arrayBuffer))
-            // renderFace(refCanvas.canvas, arrayBuffer)
+            setBones(decoder.decode())
             client!.send(enc.encode("GET CHORDATA"))
         }
-        console.log("REQUEST CHORDATA")
+        // console.log("REQUEST CHORDATA")
         client!.send(enc.encode("GET CHORDATA"))
     }
     return client
