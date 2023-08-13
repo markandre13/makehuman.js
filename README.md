@@ -18,11 +18,19 @@
 
 Currently working on:
 
-* pose/animate the face with Google's [MediaPipe](https://developers.google.com/mediapipe) which will require building some C++ code from
-  [mediapipe_cpp_lib](https://github.com/markandre13/mediapipe_cpp_lib) and
-  [mediapipe_daemon](https://github.com/markandre13/mediapipe_daemon)
+* pose/animate the face with Google's [MediaPipe](https://developers.google.com/mediapipe) 
+* pose/animate the body with [Chordata](https://chordata.cc)
 
-* export pose/animation via Collada
+both will require building some C++ code from
+[mediapipe_cpp_lib](https://github.com/markandre13/mediapipe_cpp_lib) and
+[mediapipe_daemon](https://github.com/markandre13/mediapipe_daemon)
+
+Build steps are currently:
+
+* npm install
+* npm run dev:prepare
+* npm run dev:build
+* npm run dev:serve (in another terminal)
 
 ## Why?
 
