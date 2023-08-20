@@ -201,11 +201,14 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
-[X] the the other meshes/proxy meshes
-[X] export UV
-[ ] export multiple meshes
-    (e.g. for clothing; or to separate skin/teeth/tounge/eyes for better Blender compability)
-[ ] load expression (e.g. data/expressions/laugh01.mhpose) ?
+expressions: 3 stages: expression -> poseunit -> bone (start with 3 lists)
+[ ] show the poseunits
+[ ] when expression is clicked, set poseunits
+[ ] indicate poseunit set via expression with color
+[ ] indicate poseunit differing from expression with color
+[ ] indicate poseunit not set by expression (is there such a thing?)
+[ ] save/load custom expressions/poseunits/bones?
+
 [ ] load pose (eg. data/poses/sit01.bvh) ?
 [ ] export animation
 [ ] select proxy, ...

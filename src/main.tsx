@@ -24,11 +24,11 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
-import { BooleanModel, Button, Checkbox, Select, SelectionModel, Signal, TableAdapter, TableEditMode, TableModel, TablePos, text } from 'toad.js'
-import { calcWebGL, ExpressionManager } from './ExpressionManager'
+import { BooleanModel, Button, Checkbox, Select, Signal } from 'toad.js'
 import { ProxyManager } from './ProxyManager'
 import chordata from 'ui/chordata'
 import { TAB, initHistoryManager } from 'HistoryManager'
+import expression from 'ui/expression'
 
 window.onload = () => { main() }
 
@@ -150,31 +150,8 @@ function run() {
 
     loadMacroTargets()
 
-    //
-    // EXPRESSIONS
-    //
-
-    const expressionManager = new ExpressionManager(skeleton)
-    const expressionModel = new StringArrayModel(expressionManager.expressions)
-    const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
-    selectedExpression.modified.add(() => {
-        const pm = expressionManager.fromPoseUnit(selectedExpression.row)
-        for (let boneIdx = 0; boneIdx < skeleton.boneslist!.length; ++boneIdx) {
-            const bone = skeleton.boneslist![boneIdx]
-            const mrg = bone.matRestGlobal!
-            skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
-        }
-        skeleton.update()
-        scene.updateRequired = Update.POSE
-
-        // expressionManager.setExpression(selectedExpression.row, poseNodes)
-        // skeleton.update()
-        // scene.updateRequired = Update.POSE
-    })
-
     console.log('everything is loaded...')
 
-    TableAdapter.register(StringArrayAdapter, StringArrayModel)
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
@@ -247,12 +224,7 @@ function run() {
                     )}
                 </Form>
             </Tab>
-            <Tab label="Expression" value={TAB.EXPRESSION}>
-                <Table
-                    model={expressionModel}
-                    selectionModel={selectedExpression}
-                    style={{ width: '150px', height: '100%' }} />
-            </Tab>
+           {expression(scene, skeleton)}
             <Tab label="Morph" value={TAB.MORPH}>
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
@@ -323,23 +295,3 @@ function loadMacroTargets() {
     }
 }
 
-class StringArrayModel extends TableModel {
-    protected data: string[]
-    constructor(data: string[]) {
-        super()
-        this.data = data
-    }
-    override get colCount() { return 1 }
-    override get rowCount() { return this.data.length }
-    get(row: number) {
-        return this.data[row]
-    }
-}
-
-class StringArrayAdapter extends TableAdapter<StringArrayModel> {
-    override showCell(pos: TablePos, cell: HTMLSpanElement): void {
-        cell.replaceChildren(
-            text(this.model!.get(pos.row))
-        )
-    }
-}
