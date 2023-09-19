@@ -1,11 +1,1 @@
-[
-  {"file": "images", "isDir": true},
-  {"file": "stomach-navel-down.target", "isDir": false},
-  {"file": "stomach-navel-in.target", "isDir": false},
-  {"file": "stomach-navel-out.target", "isDir": false},
-  {"file": "stomach-navel-up.target", "isDir": false},
-  {"file": "stomach-pregnant-decr.target", "isDir": false},
-  {"file": "stomach-pregnant-incr.target", "isDir": false},
-  {"file": "stomach-tone-decr.target", "isDir": false},
-  {"file": "stomach-tone-incr.target", "isDir": false}
-]
+[{"file":"stomach-navel-down.target","isDir":false},{"file":"stomach-navel-in.target","isDir":false},{"file":"stomach-navel-out.target","isDir":false},{"file":"stomach-navel-up.target","isDir":false},{"file":"stomach-pregnant-decr.target","isDir":false},{"file":"stomach-pregnant-incr.target","isDir":false},{"file":"stomach-tone-decr.target","isDir":false},{"file":"stomach-tone-incr.target","isDir":false}]

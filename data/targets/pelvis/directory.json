@@ -1,7 +1,1 @@
-[
-  {"file": "bulge-decr.target", "isDir": false},
-  {"file": "bulge-incr.target", "isDir": false},
-  {"file": "images", "isDir": true},
-  {"file": "pelvis-tone-decr.target", "isDir": false},
-  {"file": "pelvis-tone-incr.target", "isDir": false}
-]
+[{"file":"bulge-decr.target","isDir":false},{"file":"bulge-incr.target","isDir":false},{"file":"pelvis-tone-decr.target","isDir":false},{"file":"pelvis-tone-incr.target","isDir":false}]

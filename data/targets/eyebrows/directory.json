@@ -1,9 +1,1 @@
-[
-  {"file": "eyebrows-angle-down.target", "isDir": false},
-  {"file": "eyebrows-angle-up.target", "isDir": false},
-  {"file": "eyebrows-trans-backward.target", "isDir": false},
-  {"file": "eyebrows-trans-down.target", "isDir": false},
-  {"file": "eyebrows-trans-forward.target", "isDir": false},
-  {"file": "eyebrows-trans-up.target", "isDir": false},
-  {"file": "images", "isDir": true}
-]
+[{"file":"eyebrows-angle-down.target","isDir":false},{"file":"eyebrows-angle-up.target","isDir":false},{"file":"eyebrows-trans-backward.target","isDir":false},{"file":"eyebrows-trans-down.target","isDir":false},{"file":"eyebrows-trans-forward.target","isDir":false},{"file":"eyebrows-trans-up.target","isDir":false}]

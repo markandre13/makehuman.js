@@ -1,5 +1,1 @@
-[
-  {"file": "default.mhskel", "isDir": false},
-  {"file": "default.thumb", "isDir": false},
-  {"file": "default_weights.mhw", "isDir": false}
-]
+[{"file":"default.mhskel","isDir":false},{"file":"default_weights.mhw","isDir":false},{"file":"cmu_mb.mhskel","isDir":false},{"file":"default_no_toes.mhskel","isDir":false},{"file":"game_engine.mhskel","isDir":false}]

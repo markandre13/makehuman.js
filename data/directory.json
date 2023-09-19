@@ -1,15 +1,1 @@
-[
-  {"file": "3dobjs", "isDir": true},
-  {"file": "canonical_face_model.obj", "isDir": false},
-  {"file": "canonical_face_model.obj.z", "isDir": false},
-  {"file": "expressions", "isDir": true},
-  {"file": "eyes", "isDir": true},
-  {"file": "modifiers", "isDir": true},
-  {"file": "poseunits", "isDir": true},
-  {"file": "proxymeshes", "isDir": true},
-  {"file": "rigs", "isDir": true},
-  {"file": "skins", "isDir": true},
-  {"file": "targets", "isDir": true},
-  {"file": "teeth", "isDir": true},
-  {"file": "tongue", "isDir": true}
-]
+[{"file":"3dobjs","isDir":true},{"file":"eyes","isDir":true},{"file":"modifiers","isDir":true},{"file":"poseunits","isDir":true},{"file":"rigs","isDir":true},{"file":"targets","isDir":true},{"file":"clothes","isDir":true},{"file":"expressions","isDir":true},{"file":"eyebrows","isDir":true},{"file":"eyelashes","isDir":true},{"file":"hair","isDir":true},{"file":"litspheres","isDir":true},{"file":"poses","isDir":true},{"file":"proxymeshes","isDir":true},{"file":"skins","isDir":true},{"file":"teeth","isDir":true},{"file":"tongue","isDir":true}]

@@ -1,17 +1,1 @@
-[
-  {"file": "hip-scale-depth-decr.target", "isDir": false},
-  {"file": "hip-scale-depth-incr.target", "isDir": false},
-  {"file": "hip-scale-horiz-decr.target", "isDir": false},
-  {"file": "hip-scale-horiz-incr.target", "isDir": false},
-  {"file": "hip-scale-vert-decr.target", "isDir": false},
-  {"file": "hip-scale-vert-incr.target", "isDir": false},
-  {"file": "hip-trans-backward.target", "isDir": false},
-  {"file": "hip-trans-down.target", "isDir": false},
-  {"file": "hip-trans-forward.target", "isDir": false},
-  {"file": "hip-trans-in.target", "isDir": false},
-  {"file": "hip-trans-out.target", "isDir": false},
-  {"file": "hip-trans-up.target", "isDir": false},
-  {"file": "hip-waist-down.target", "isDir": false},
-  {"file": "hip-waist-up.target", "isDir": false},
-  {"file": "images", "isDir": true}
-]
+[{"file":"hip-scale-depth-decr.target","isDir":false},{"file":"hip-scale-depth-incr.target","isDir":false},{"file":"hip-scale-horiz-decr.target","isDir":false},{"file":"hip-scale-horiz-incr.target","isDir":false},{"file":"hip-scale-vert-decr.target","isDir":false},{"file":"hip-scale-vert-incr.target","isDir":false},{"file":"hip-trans-backward.target","isDir":false},{"file":"hip-trans-down.target","isDir":false},{"file":"hip-trans-forward.target","isDir":false},{"file":"hip-trans-in.target","isDir":false},{"file":"hip-trans-out.target","isDir":false},{"file":"hip-trans-up.target","isDir":false},{"file":"hip-waist-down.target","isDir":false},{"file":"hip-waist-up.target","isDir":false}]

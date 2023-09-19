@@ -1,11 +1,1 @@
-[
-  {"file": "forehead-nubian-decr.target", "isDir": false},
-  {"file": "forehead-nubian-incr.target", "isDir": false},
-  {"file": "forehead-scale-vert-decr.target", "isDir": false},
-  {"file": "forehead-scale-vert-incr.target", "isDir": false},
-  {"file": "forehead-temple-decr.target", "isDir": false},
-  {"file": "forehead-temple-incr.target", "isDir": false},
-  {"file": "forehead-trans-backward.target", "isDir": false},
-  {"file": "forehead-trans-forward.target", "isDir": false},
-  {"file": "images", "isDir": true}
-]
+[{"file":"forehead-nubian-decr.target","isDir":false},{"file":"forehead-nubian-incr.target","isDir":false},{"file":"forehead-scale-vert-decr.target","isDir":false},{"file":"forehead-scale-vert-incr.target","isDir":false},{"file":"forehead-temple-decr.target","isDir":false},{"file":"forehead-temple-incr.target","isDir":false},{"file":"forehead-trans-backward.target","isDir":false},{"file":"forehead-trans-forward.target","isDir":false}]
