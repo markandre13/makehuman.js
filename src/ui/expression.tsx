@@ -1,6 +1,6 @@
 import { ExpressionManager, calcWebGL } from "ExpressionManager"
 import { TAB } from "HistoryManager"
-import { HumanMesh, Update } from "mesh/HumanMesh"
+import { HumanMesh, Update, isZero } from "mesh/HumanMesh"
 import { Skeleton } from "skeleton/Skeleton"
 import { NumberModel, SelectionModel, TableAdapter, TableEditMode, TableModel, TablePos } from "toad.js"
 import { Table } from "toad.js/table/Table"
@@ -10,6 +10,7 @@ import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { Tab } from "toad.js/view/Tab"
 import { Text } from "toad.js/view/Text"
 import { NumberModelOptions } from "toad.js/model/NumberModel"
+import { Bone } from "skeleton/Bone"
 
 class NumberRelModel extends NumberModel {
     constructor(value: number, options?: NumberModelOptions) {
@@ -79,85 +80,57 @@ class ExpressionModel extends TableModel {
     poseUnit: NumberRelModel[] = []
     bone: NumberRelModel[] = []
 
-    constructor() {
+    constructor(expressionManager: ExpressionManager) {
         super()
-        const smile05 = {
-            lowerLipDown: 0.177,
-            RightCheekUp: 0.749,
-            lowerLipBackward: 0.472,
-            NasolabialDeepener: 0.839,
-            UpperLipStretched: 0.658,
-            LeftCheekUp: 0.759,
-            RightLowerLidUp: 0.201,
-            LeftLowerLidUp: 0.256,
-            lowerLipUp: 0.01,
-        } as any
-        obj2arr(smile05, this.poseUnit)
+
+        // pose units
+        // some pairs like LeftEyeDown, LeftEyeUp seem to suggest modifiers,
+        // especially as we seem to have as many pose units for the face expressions
+        // as bones
+
+        // console.log(expressionManager)
+
+        for (let name of expressionManager.facePoseUnitsNames.sort()) {
+            const value = 0
+            this.poseUnit.push(
+                new NumberRelModel(
+                    0,
+                    new NumberRelModel(value, {
+                        label: name,
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        default: value,
+                    })
+                )
+            )
+        }
 
         // all face expression bones
-        const head = {
-            "eye.L": 0.0,
-            "eye.R": 0.0,
-            jaw: 0.0,
-            "levator02.L": 0.0,
-            "levator02.R": 0.0,
-            "levator03.L": 0.0,
-            "levator03.R": 0.0,
-            "levator04.L": 0.0,
-            "levator04.R": 0.0,
-            "levator05.L": 0.0,
-            "levator05.R": 0.0,
-            "levator06.L": 0.0,
-            "levator06.R": 0.0,
-            "oculi01.L": 0.0,
-            "oculi01.R": 0.0,
-            "oculi02.L": 0.0,
-            "oculi02.R": 0.0,
-            "orbicularis03.L": 0.0,
-            "orbicularis03.R": 0.0,
-            "orbicularis04.L": 0.0,
-            "orbicularis04.R": 0.0,
-            oris01: 0.0,
-            oris02: 0.0,
-            "oris03.L": 0.0,
-            "oris03.R": 0.0,
-            "oris04.L": 0.0,
-            "oris04.R": 0.0,
-            oris05: 0.0,
-            oris06: 0.0,
-            "oris06.L": 0.0,
-            "oris06.R": 0.0,
-            "oris07.L": 0.0,
-            "oris07.R": 0.0,
-            "risorius02.L": 0.0,
-            "risorius02.R": 0.0,
-            "risorius03.L": 0.0,
-            "risorius03.R": 0.0,
-            special01: 0.0,
-            special03: 0.0,
-            special04: 0.0,
-            "special05.L": 0.0,
-            "special05.R": 0.0,
-            "special06.L": 0.0,
-            "special06.R": 0.0,
-            "temporalis01.L": 0.0,
-            "temporalis01.R": 0.0,
-            "temporalis02.L": 0.0,
-            "temporalis02.R": 0.0,
-            tongue00: 0.0,
-            tongue01: 0.0,
-            tongue02: 0.0,
-            tongue03: 0.0,
-            tongue04: 0.0,
-            "tongue05.L": 0.0,
-            "tongue05.R": 0.0,
-            "tongue06.L": 0.0,
-            "tongue06.R": 0.0,
-            "tongue07.L": 0.0,
-            "tongue07.R": 0.0,
-        } as any
-        obj2arr(head, this.bone)
+        // (we have to use all below 'head' as face-poseunits.bvh also affects toes, which is a bug i guess)
+        const faceBones = new Set<string>()
+        foo(expressionManager.skeleton.bones.get("head")!)
+        function foo(bone: Bone) {
+            faceBones.add(bone.name)
+            bone.children.forEach((child) => foo(child))
+        }
+        Array.from(faceBones).sort().forEach((name) => {
+            const value = 0
+            this.bone.push(
+                new NumberRelModel(
+                    0,
+                    new NumberRelModel(value, {
+                        label: name,
+                        min: 0,
+                        max: 1,
+                        step: 0.01,
+                        default: value,
+                    })
+                )
+            )
+        })
 
+        // calculate depenndencies from pose unit to bone
         this.poseUnit[0].observe(this.bone[0])
         this.poseUnit[0].observe(this.bone[1])
     }
@@ -168,7 +141,6 @@ class ExpressionModel extends TableModel {
         return Math.max(this.poseUnit.length, this.bone.length)
     }
 }
-
 
 class ExpressionAdapter extends TableAdapter<ExpressionModel> {
     override get colCount(): number {
@@ -211,13 +183,12 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
 TableAdapter.register(StringArrayAdapter, StringArrayModel)
 TableAdapter.register(ExpressionAdapter, ExpressionModel)
 
-
 export default function (scene: HumanMesh, skeleton: Skeleton) {
     const expressionManager = new ExpressionManager(skeleton)
     const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
     const expressionModel = new StringArrayModel(expressionManager.expressions)
-    const expressionModel2 = new ExpressionModel()
-   
+    const expressionModel2 = new ExpressionModel(expressionManager)
+
     selectedExpression.modified.add(() => {
         const pm = expressionManager.fromPoseUnit(selectedExpression.row)
         for (let boneIdx = 0; boneIdx < skeleton.boneslist!.length; ++boneIdx) {

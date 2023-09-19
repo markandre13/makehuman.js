@@ -149,6 +149,7 @@ export class BiovisionHierarchy {
                     state = 12
                     break
                 case 12: {
+                    // one line per frame; each frame has ( number of bones x number of channel ) entries
                     if (tokens.length === 1 && tokens[0].length === 0) {
                         state = 13
                         break

@@ -62,8 +62,8 @@ export class ExpressionManager {
     getBlendedPose(
         skeleton: Skeleton,
         base_anim: mat4[],
-        poses: number[],
-        weights: number[],
+        poses: number[], // frame from the bvh file (?)
+        weights: number[], // how much of the frame to apply to the bones (?)
         additiveBlending = true
     ): mat4[] {
         const f_idxs = poses
@@ -81,7 +81,7 @@ export class ExpressionManager {
 
             const REST_QUAT = quat2.create()
 
-            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
+            for (let b_idx = 0; b_idx < nBones; ++b_idx) { // iterate over all bones in the skeleton
                 const m1 = base_anim[f_idxs[0] * nBones + b_idx]
                 const m2 = base_anim[f_idxs[1] * nBones + b_idx]
 
