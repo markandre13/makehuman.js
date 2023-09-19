@@ -168,21 +168,19 @@ class Proxy {
 }
 ```
 
-## Build
+## Development
 
-Building needs toad.js from the github master branch. See 'npm link' for further details.
+    # install packages
+    npm install
 
-Building is currently done with [ttypescript](https://www.npmjs.com/package/ttypescript) without
-any bundler.
+    # populate data directory
+    # (I run this outside the Visual Studio Code terminal, to get access to my
+    # local Makehuman installation to avoid downloading all assets from the net.)
+    npm run dev:prepare
 
-Due some changes in typescript 5 neither ttypescript nor ts-patch work anymore.
-
-Here's the relevant discussion:
-
-* https://github.com/cevek/ttypescript/issues/140
-* https://github.com/nonara/ts-patch/issues/93
-* https://github.com/microsoft/TypeScript/issues/52826
-* https://github.com/microsoft/TypeScript/issues/52953
+    # run (in separate terminals)
+    npm run dev:build
+    npm run dev:serve
 
 ## Run single test
 
