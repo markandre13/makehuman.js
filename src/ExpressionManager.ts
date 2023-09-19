@@ -34,6 +34,7 @@ export class ExpressionManager {
         this.fromPoseUnit(expression)
     }
 
+    // OO: do not return a value (pose name and weight is what we want to display)
     fromPoseUnit(expression: number | string): mat4[] {
         if (typeof expression === "string") {
             const name = expression
