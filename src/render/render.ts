@@ -148,7 +148,7 @@ function drawScene(
     //
     // SKELETON
     //
-    // if (renderMode !== RenderMode.POLYGON) {
+    // if (renderMode === RenderMode.WIREFRAME) {
     //     programRGBA.color([1, 1, 1, 1])
     //     const offset = buffers.skeletonIndex
     //     const count = scene.skeleton.boneslist!.length * 2

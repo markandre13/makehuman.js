@@ -170,6 +170,7 @@ function run() {
             case TAB.POSE:
             case TAB.EXPORT:
                 renderMode.value = RenderMode.WIREFRAME
+                break
             case TAB.EXPRESSION:
                 renderMode.value = RenderMode.DEBUG
                 break
