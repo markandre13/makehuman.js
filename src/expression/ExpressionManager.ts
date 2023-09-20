@@ -1,9 +1,10 @@
 import { PoseNode } from 'ui/poseView'
-import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
+import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
 import { mat4, quat2 } from 'gl-matrix'
 import { quaternion_slerp } from 'lib/quaternion_slerp'
 import { Skeleton } from 'skeleton/Skeleton'
+import { ExpressionModel } from './ExpressionModel'
 
 export class ExpressionManager {
     facePoseUnits: BiovisionHierarchy               // BVH file with face pose units
@@ -12,6 +13,8 @@ export class ExpressionManager {
     facePoseUnitsNames: string[]                    // poseunit_names
     poseUnitName2Frame = new Map<string, number>();
     expressions: string[]                           // list of predefined expressions
+
+    model: ExpressionModel
 
     constructor(skeleton: Skeleton) {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
@@ -28,14 +31,22 @@ export class ExpressionManager {
             .listDir("expressions")
             .filter(filename => filename.endsWith(".mhpose"))
             .map(filename => filename.substring(0, filename.length - 7))
+
+        this.model = new ExpressionModel(this)
     }
 
-    setExpression(expression: number | string, poseNodes: PoseNode) {
-        this.fromPoseUnit(expression)
+    setExpression(expression: number) {
+        const pm = this.fromPoseUnit(expression)
+        
+        for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
+            const bone = this.skeleton.boneslist![boneIdx]
+            const mrg = bone.matRestGlobal!
+            this.skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
+        }
+        this.skeleton.update()
     }
 
-    // OO: do not return a value (pose name and weight is what we want to display)
-    fromPoseUnit(expression: number | string): mat4[] {
+    protected fromPoseUnit(expression: number | string): mat4[] {
         if (typeof expression === "string") {
             const name = expression
             expression = this.expressions.findIndex(e => e === name)
@@ -106,7 +117,7 @@ export class ExpressionManager {
     }
 }
 
-export function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
+function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
     let matPose = mat4.fromValues(
         poseMat[0], poseMat[1], poseMat[2], 0,
         poseMat[4], poseMat[5], poseMat[6], 0,
