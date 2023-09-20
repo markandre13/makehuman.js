@@ -65,4 +65,20 @@ export class ExpressionModel extends TableModel {
     override get rowCount() {
         return Math.max(this.poseUnit.length, this.bone.length)
     }
+
+    clear() {
+        for(let pu of this.poseUnit) {
+            pu.value = 0
+            pu.default = 0
+        }
+    }
+
+    setPoseUnit(name: string, weight: number) {
+        for(let pu of this.poseUnit) {
+            if (pu.label === name) {
+                pu.value = pu.default = weight
+                break
+            }
+        }
+    }
 }

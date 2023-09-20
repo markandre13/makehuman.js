@@ -48,4 +48,17 @@ export class NumberRelModel extends NumberModel {
     override get value(): number {
         return super.value
     }
+
+    // TODO: move into NumberModel or even deeper
+    set default(min: number | undefined) {
+        if (this.options?.default === min) return
+        if (this.options === undefined) {
+            this.options = {}
+        }
+        this.options.default = min
+        this.modified.trigger(undefined as any)
+    }
+    get default(): number | undefined {
+        return this.options?.default
+    }
 }

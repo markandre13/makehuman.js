@@ -59,11 +59,15 @@ export class ExpressionManager {
         const unit_poses = expression = JSON.parse(FileSystemAdapter.readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
 
+        this.model.clear()
+
         const poses: number[] = []
         const weights: number[] = []
-        for (let poseName of Object.getOwnPropertyNames(unit_poses)) {
-            poses.push(this.poseUnitName2Frame.get(poseName)!)
-            weights.push(unit_poses[poseName])
+        for (let poseUnitName of Object.getOwnPropertyNames(unit_poses)) {
+            const weight = unit_poses[poseUnitName]
+            this.model.setPoseUnit(poseUnitName, weight)
+            poses.push(this.poseUnitName2Frame.get(poseUnitName)!)
+            weights.push(weight)
         }
 
         return this.getBlendedPose(this.skeleton, this.base_anim, poses, weights)
