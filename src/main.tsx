@@ -9,7 +9,8 @@ import { RenderMode } from './render/RenderMode'
 import { exportCollada } from 'mesh/Collada'
 import { ProxyType } from 'proxy/Proxy'
 
-import { PoseNode, PoseTreeAdapter } from 'ui/poseView'
+import { PoseTreeAdapter } from 'ui/poseView'
+import { PoseNode } from 'expression/PoseNode'
 import { SliderTreeAdapter } from 'ui/morphView'
 import { render } from './render/render'
 import { renderFace } from 'render/renderFace'
@@ -183,15 +184,13 @@ function run() {
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
-    const poseChanged = new Signal<PoseNode>()
-    poseChanged.add((poseNode) => {
+    skeleton.poseChanged.add((poseNode) => {
         // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
         if (scene.updateRequired === Update.NONE) {
             scene.updateRequired = Update.POSE
         }
     })
-    const poseNodes = new PoseNode(skeleton.roots[0], poseChanged)
-    const poseControls = new TreeNodeModel(PoseNode, poseNodes)
+    const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
 
     // const teethProxy = new BooleanModel(true)
     // const toungeProxy = new BooleanModel(false)

@@ -4,8 +4,13 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { VertexBoneWeights, VertexBoneMapping } from './VertexBoneWeights'
 import { vec3 } from 'gl-matrix'
 import { HumanMesh } from '../mesh/HumanMesh'
+import { PoseNode } from 'expression/PoseNode'
+import { Signal } from 'toad.js/Signal'
 
 export class Skeleton {
+    poseNodes: PoseNode
+    poseChanged = new Signal<PoseNode>()
+
     scene: HumanMesh
 
     info: FileInformation
@@ -136,6 +141,7 @@ export class Skeleton {
             //     self.vertexWeights = VertexBoneWeights.fromFile(weights_file, mesh.getVertexCount() if mesh else None, rootBone=self.roots[0].name)
             //     self.has_custom_weights = True
         }
+        this.poseNodes = new PoseNode(this.roots[0], this.poseChanged)
     }
 
     // line 122: toFile(self, filename, ref_weights=None)

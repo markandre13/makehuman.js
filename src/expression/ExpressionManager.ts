@@ -1,4 +1,4 @@
-import { PoseNode } from 'ui/poseView'
+import { PoseNode } from 'expression/PoseNode'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
 import { mat4, quat2 } from 'gl-matrix'
@@ -38,6 +38,7 @@ export class ExpressionManager {
     setExpression(expression: number) {
         const pm = this.fromPoseUnit(expression)
         
+        // copy pm to skeleton
         for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
             const bone = this.skeleton.boneslist![boneIdx]
             const mrg = bone.matRestGlobal!
@@ -47,6 +48,7 @@ export class ExpressionManager {
     }
 
     protected fromPoseUnit(expression: number | string): mat4[] {
+        // expressionName2Index()
         if (typeof expression === "string") {
             const name = expression
             expression = this.expressions.findIndex(e => e === name)
@@ -55,21 +57,23 @@ export class ExpressionManager {
             }
         }
 
+        // loadExpression()
         const expressionName = this.expressions[expression]
-        const unit_poses = expression = JSON.parse(FileSystemAdapter.readFile(`data/expressions/${expressionName}.mhpose`))
+        const poseUnit2Weight = JSON.parse(FileSystemAdapter.readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
 
         this.model.clear()
 
         const poses: number[] = []
         const weights: number[] = []
-        for (let poseUnitName of Object.getOwnPropertyNames(unit_poses)) {
-            const weight = unit_poses[poseUnitName]
+        for (let poseUnitName of Object.getOwnPropertyNames(poseUnit2Weight)) {
+            const weight = poseUnit2Weight[poseUnitName]
             this.model.setPoseUnit(poseUnitName, weight)
             poses.push(this.poseUnitName2Frame.get(poseUnitName)!)
             weights.push(weight)
         }
 
+        // 
         return this.getBlendedPose(this.skeleton, this.base_anim, poses, weights)
     }
 
