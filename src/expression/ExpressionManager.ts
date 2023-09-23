@@ -35,7 +35,7 @@ export class ExpressionManager {
         this.model = new ExpressionModel(this)
     }
 
-    setExpression(expression: number) {
+    setExpression(expression: number | string) {
         const pm = this.fromPoseUnit(expression)
         
         // copy pm to skeleton
@@ -47,7 +47,7 @@ export class ExpressionManager {
         this.skeleton.update()
     }
 
-    protected fromPoseUnit(expression: number | string): mat4[] {
+    fromPoseUnit(expression: number | string): mat4[] {
         // expressionName2Index()
         if (typeof expression === "string") {
             const name = expression
@@ -125,7 +125,7 @@ export class ExpressionManager {
     }
 }
 
-function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
+export function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
     let matPose = mat4.fromValues(
         poseMat[0], poseMat[1], poseMat[2], 0,
         poseMat[4], poseMat[5], poseMat[6], 0,

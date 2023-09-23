@@ -4,8 +4,8 @@ import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
 
 export class ExpressionModel extends TableModel {
-    poseUnit: NumberRelModel[] = [];
-    bone: NumberRelModel[] = [];
+    poseUnit: NumberRelModel[] = []
+    bone: NumberRelModel[] = []
 
     constructor(expressionManager: ExpressionManager) {
         super()
@@ -17,18 +17,17 @@ export class ExpressionModel extends TableModel {
         // console.log(expressionManager)
         for (let name of expressionManager.facePoseUnitsNames.sort()) {
             const value = 0
-            this.poseUnit.push(
-                new NumberRelModel(
-                    0,
-                    new NumberRelModel(value, {
-                        label: name,
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        default: value,
-                    })
-                )
-            )
+            const poseUnitModel = new NumberRelModel(value, {
+                label: name,
+                min: 0,
+                max: 1,
+                step: 0.01,
+                default: value,
+            })
+            poseUnitModel.modified.add(() => {
+                // ...
+            })
+            this.poseUnit.push(poseUnitModel)
         }
 
         // all face expression bones
@@ -39,25 +38,21 @@ export class ExpressionModel extends TableModel {
             faceBones.add(bone.name)
             bone.children.forEach((child) => foo(child))
         }
-        Array.from(faceBones).sort().forEach((name) => {
-            const value = 0
-            this.bone.push(
-                new NumberRelModel(
-                    0,
-                    new NumberRelModel(value, {
-                        label: name,
-                        min: 0,
-                        max: 1,
-                        step: 0.01,
-                        default: value,
-                    })
-                )
-            )
-        })
+        Array.from(faceBones)
+            .sort()
+            .forEach((name) => {
+                const node = expressionManager.skeleton.poseNodes.find(name)
+                if (node === undefined) {
+                    console.log(`failed to find node for '${name}'`)
+                } else {
+                    node.x.label = name
+                    this.bone.push(node.x)
+                }
+            })
 
         // calculate depenndencies from pose unit to bone
-        this.poseUnit[0].observe(this.bone[0])
-        this.poseUnit[0].observe(this.bone[1])
+        // this.poseUnit[0].observe(this.bone[0])
+        // this.poseUnit[0].observe(this.bone[1])
     }
     override get colCount() {
         return 2
@@ -67,14 +62,14 @@ export class ExpressionModel extends TableModel {
     }
 
     clear() {
-        for(let pu of this.poseUnit) {
+        for (let pu of this.poseUnit) {
             pu.value = 0
             pu.default = 0
         }
     }
 
     setPoseUnit(name: string, weight: number) {
-        for(let pu of this.poseUnit) {
+        for (let pu of this.poseUnit) {
             if (pu.label === name) {
                 pu.value = pu.default = weight
                 break

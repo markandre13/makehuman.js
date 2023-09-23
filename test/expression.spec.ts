@@ -13,7 +13,7 @@ import { Human } from '../src/modifier/Human'
 import { HumanMesh } from '../src/mesh/HumanMesh'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
 import { toEuler } from '../src/mesh/Collada'
-import { calcWebGL, ExpressionManager } from '../src/ExpressionManager'
+import { calcWebGL, ExpressionManager } from '../src/expression/ExpressionManager'
 
 import { laugh01_OUT } from './testdata/laugh01'
 import { python_bvh } from './testdata/python_bvh'

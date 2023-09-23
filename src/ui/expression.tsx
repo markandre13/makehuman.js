@@ -2,7 +2,7 @@ import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
 import { HumanMesh, Update } from "mesh/HumanMesh"
 import { Skeleton } from "skeleton/Skeleton"
-import { SelectionModel, TableAdapter, TableEditMode, TablePos } from "toad.js"
+import { OptionModel, Select, SelectionModel, TableAdapter, TableEditMode, TablePos } from "toad.js"
 import { Table } from "toad.js/table/Table"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
@@ -38,7 +38,10 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 break
             case 2:
                 if (pos.row < this.model.bone.length) {
-                    cell.replaceChildren(...(<>{this.model.bone[pos.row].label}</>))
+                    const label = this.model.bone[pos.row].label
+                    if (label !== undefined) {
+                        cell.replaceChildren(...(<>{this.model.bone[pos.row].label}</>))
+                    }
                 }
                 break
             case 3:
@@ -54,22 +57,15 @@ TableAdapter.register(ExpressionAdapter, ExpressionModel)
 
 export default function (scene: HumanMesh, skeleton: Skeleton) {
     const expressionManager = new ExpressionManager(skeleton)
-    const selectedExpression = new SelectionModel(TableEditMode.SELECT_ROW)
-    const expressionModel = new StringArrayModel(expressionManager.expressions)
-    const expressionModel2 = expressionManager.model
-
-    selectedExpression.modified.add(() => {
-        expressionManager.setExpression(selectedExpression.row)
+    const model = new OptionModel(expressionManager.expressions[0], expressionManager.expressions)
+    model.modified.add((expression) => {
+        expressionManager.setExpression(expression)
         scene.updateRequired = Update.POSE
     })
-
+    const expressionModel2 = expressionManager.model
     return (
         <Tab label="Expression" value={TAB.EXPRESSION} style={{ overflow: "none" }}>
-            <Table
-                model={expressionModel}
-                selectionModel={selectedExpression}
-                style={{ width: "100px", height: "100%" }}
-            />
+            Expression <Select model={model}/><br/>
             <Table model={expressionModel2} style={{ width: "350px", height: "100%" }} />
         </Tab>
     )

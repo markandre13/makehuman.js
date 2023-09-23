@@ -1,8 +1,8 @@
 import { TreeNode } from 'toad.js/table/model/TreeNode'
 import { Bone } from "../skeleton/Bone"
-import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
 import { mat4 } from 'gl-matrix'
+import { NumberRelModel } from './NumberRelModel'
 
 export class PoseNode implements TreeNode {
     static count = 0;
@@ -10,9 +10,9 @@ export class PoseNode implements TreeNode {
     next?: PoseNode
     down?: PoseNode
 
-    x: NumberModel
-    y: NumberModel
-    z: NumberModel
+    x: NumberRelModel
+    y: NumberRelModel
+    z: NumberRelModel
 
     updateBone() {
         let out = mat4.create()
@@ -43,9 +43,9 @@ export class PoseNode implements TreeNode {
     }
 
     constructor(bone: Bone | undefined = undefined, signal: Signal<PoseNode> | undefined = undefined) {
-        this.x = new NumberModel(0, { min: -180, max: 180, step: 5 })
-        this.y = new NumberModel(0, { min: -180, max: 180, step: 5 })
-        this.z = new NumberModel(0, { min: -180, max: 180, step: 5 })
+        this.x = new NumberRelModel(0, { min: -180, max: 180, step: 5, default: 0 })
+        this.y = new NumberRelModel(0, { min: -180, max: 180, step: 5, default: 0 })
+        this.z = new NumberRelModel(0, { min: -180, max: 180, step: 5, default: 0 })
 
         if (bone === undefined || signal === undefined) {
             return
