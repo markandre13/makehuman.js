@@ -3,7 +3,7 @@ import { FileInformation } from './loadSkeleton'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { VertexBoneWeights, VertexBoneMapping } from './VertexBoneWeights'
 import { vec3 } from 'gl-matrix'
-import { HumanMesh } from '../mesh/HumanMesh'
+import { HumanMesh, Update } from '../mesh/HumanMesh'
 import { PoseNode } from 'expression/PoseNode'
 import { Signal } from 'toad.js/Signal'
 
@@ -206,6 +206,7 @@ export class Skeleton {
         for (const bone of this.getBones()) {
             bone.update()
         }
+        this.scene.updateRequired = Update.POSE
     }
 
     updateJoints() {

@@ -1,6 +1,6 @@
 import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
-import { HumanMesh, Update } from "mesh/HumanMesh"
+import { HumanMesh } from "mesh/HumanMesh"
 import { Skeleton } from "skeleton/Skeleton"
 import { OptionModel, Select, SelectionModel, TableAdapter, TableEditMode, TablePos } from "toad.js"
 import { Table } from "toad.js/table/Table"
@@ -60,7 +60,6 @@ export default function (scene: HumanMesh, skeleton: Skeleton) {
     const model = new OptionModel(expressionManager.expressions[0], expressionManager.expressions)
     model.modified.add((expression) => {
         expressionManager.setExpression(expression)
-        scene.updateRequired = Update.POSE
     })
     const expressionModel2 = expressionManager.model
     return (
