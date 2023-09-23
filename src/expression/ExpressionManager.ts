@@ -33,22 +33,32 @@ export class ExpressionManager {
             .map(filename => filename.substring(0, filename.length - 7))
 
         this.model = new ExpressionModel(this)
+        this.model.modified.add( () => {
+            console.log(`ExpressionManager: model changed, update skeleton`)
+            const pm = this.getBlendedPose()
+            for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
+                const bone = this.skeleton.boneslist![boneIdx]
+                const mrg = bone.matRestGlobal!
+                this.skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
+            }
+            this.skeleton.update()
+        })
     }
 
     setExpression(expression: number | string) {
-        const pm = this.fromPoseUnit(expression)
+        this.fromPoseUnit(expression)
         
-        // copy pm to skeleton
-        for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
-            const bone = this.skeleton.boneslist![boneIdx]
-            const mrg = bone.matRestGlobal!
-            this.skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
-        }
-        this.skeleton.update()
+        // update skeleton
+        // const pm = this.getBlendedPose()
+        // for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
+        //     const bone = this.skeleton.boneslist![boneIdx]
+        //     const mrg = bone.matRestGlobal!
+        //     this.skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
+        // }
+        // this.skeleton.update()
     }
 
-    fromPoseUnit(expression: number | string): mat4[] {
-        // expressionName2Index()
+    fromPoseUnit(expression: number | string) {
         if (typeof expression === "string") {
             const name = expression
             expression = this.expressions.findIndex(e => e === name)
@@ -62,13 +72,13 @@ export class ExpressionManager {
         const poseUnit2Weight = JSON.parse(FileSystemAdapter.readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
 
-        this.model.clear()
-
-        for (let poseUnitName of Object.getOwnPropertyNames(poseUnit2Weight)) {
-            const weight = poseUnit2Weight[poseUnitName]
-            this.model.setPoseUnit(poseUnitName, weight)
-        }
-        return this.getBlendedPose(/*this.skeleton, this.base_anim, poses, weights*/)
+        this.model.modified.withLock( () => {
+            this.model.clear()
+            for (let poseUnitName of Object.getOwnPropertyNames(poseUnit2Weight)) {
+                const weight = poseUnit2Weight[poseUnitName]
+                this.model.setPoseUnit(poseUnitName, weight)
+            }    
+        })
     }
 
     // PoseUnit(AnimationTrack): getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
@@ -82,6 +92,9 @@ export class ExpressionManager {
         for(const p of this.model.poseUnit) {
             poses.push(this.poseUnitName2Frame.get(p.label!)!)
             weights.push(p.value)
+            if(p.label === "CheeksPump") {
+                console.log(`ExpressionManager.getBlendedPost(): ${p.label} -> ${p.value}`)
+            }
         }
 
         const f_idxs = poses

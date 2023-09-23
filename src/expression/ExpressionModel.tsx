@@ -1,5 +1,5 @@
 import { ExpressionManager } from "expression/ExpressionManager"
-import { TableModel } from "toad.js"
+import { TableEvent, TableEventType, TableModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
 
@@ -21,11 +21,12 @@ export class ExpressionModel extends TableModel {
                 label: name,
                 min: 0,
                 max: 1,
-                step: 0.01,
+                step: 0.05,
                 default: value,
             })
             poseUnitModel.modified.add(() => {
-                // ...
+                // console.log(`poseUnitModel ${name} has changed`)
+                this.modified.trigger(new TableEvent(TableEventType.CHANGED, 0, 0))
             })
             this.poseUnit.push(poseUnitModel)
         }
