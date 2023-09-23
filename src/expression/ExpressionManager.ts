@@ -64,27 +64,26 @@ export class ExpressionManager {
 
         this.model.clear()
 
-        const poses: number[] = []
-        const weights: number[] = []
         for (let poseUnitName of Object.getOwnPropertyNames(poseUnit2Weight)) {
             const weight = poseUnit2Weight[poseUnitName]
             this.model.setPoseUnit(poseUnitName, weight)
-            poses.push(this.poseUnitName2Frame.get(poseUnitName)!)
-            weights.push(weight)
         }
-
-        // 
-        return this.getBlendedPose(this.skeleton, this.base_anim, poses, weights)
+        return this.getBlendedPose(/*this.skeleton, this.base_anim, poses, weights*/)
     }
 
     // PoseUnit(AnimationTrack): getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
-    getBlendedPose(
-        skeleton: Skeleton,
-        base_anim: mat4[],
-        poses: number[], // frame from the bvh file (?)
-        weights: number[], // how much of the frame to apply to the bones (?)
-        additiveBlending = true
-    ): mat4[] {
+    getBlendedPose(): mat4[] {
+        const skeleton = this.skeleton
+        const base_anim = this.base_anim
+        const poses: number[] = []
+        const weights: number[] = []
+        const additiveBlending = true
+
+        for(const p of this.model.poseUnit) {
+            poses.push(this.poseUnitName2Frame.get(p.label!)!)
+            weights.push(p.value)
+        }
+
         const f_idxs = poses
         const nBones = skeleton.boneslist!.length
 
