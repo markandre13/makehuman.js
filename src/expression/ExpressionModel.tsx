@@ -1,7 +1,8 @@
 import { ExpressionManager } from "expression/ExpressionManager"
-import { TableEvent, TableEventType, TableModel } from "toad.js"
+import { TableModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
+import { ModelReason } from "toad.js/model/Model"
 
 export class ExpressionModel extends TableModel {
     poseUnit: NumberRelModel[] = []
@@ -24,9 +25,10 @@ export class ExpressionModel extends TableModel {
                 step: 0.05,
                 default: value,
             })
-            poseUnitModel.modified.add(() => {
-                // console.log(`poseUnitModel ${name} has changed`)
-                this.modified.trigger(new TableEvent(TableEventType.CHANGED, 0, 0))
+            poseUnitModel.modified.add((reason) => {
+                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
+                    this.modified.trigger(reason)
+                }
             })
             this.poseUnit.push(poseUnitModel)
         }

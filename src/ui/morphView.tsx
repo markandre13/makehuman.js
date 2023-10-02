@@ -2,7 +2,7 @@ import { TablePos } from 'toad.js/table/TablePos'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
-import { Text } from 'toad.js/view/Text'
+import { TextField } from 'toad.js/view/TextField'
 import { Slider } from 'toad.js/view/Slider'
 import { Fragment } from "toad.jsx"
 
@@ -32,7 +32,7 @@ export class SliderTreeAdapter extends TreeAdapter<SliderNode> {
             case 1:
                 if (node.model) {
                     const x = <>
-                        <Text model={node.model} style={{ width: '50px' }} />
+                        <TextField model={node.model} style={{ width: '50px' }} />
                         <Slider model={node.model} style={{width: '200px' }}/>
                     </> as Fragment
                     cell.replaceChildren(...x)

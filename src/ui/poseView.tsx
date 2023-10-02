@@ -2,7 +2,7 @@ import { TablePos } from 'toad.js/table/TablePos'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
-import { Text } from "toad.js/view/Text"
+import { TextField } from "toad.js/view/TextField"
 import { Fragment } from 'toad.jsx/lib/jsx-runtime'
 import { PoseNode } from '../expression/PoseNode'
 
@@ -30,9 +30,9 @@ export class PoseTreeAdapter extends TreeAdapter<PoseNode> {
                 break
             case 1:
                 const x = <>
-                    <Text model={node.x} style={{ width: '50px' }} />
-                    <Text model={node.y} style={{ width: '50px' }} />
-                    <Text model={node.z} style={{ width: '50px' }} />
+                    <TextField model={node.x} style={{ width: '50px' }} />
+                    <TextField model={node.y} style={{ width: '50px' }} />
+                    <TextField model={node.z} style={{ width: '50px' }} />
                 </> as Fragment
                 cell.replaceChildren(...x)
                 break

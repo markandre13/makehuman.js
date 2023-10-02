@@ -1,4 +1,3 @@
-import { PoseNode } from 'expression/PoseNode'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { BiovisionHierarchy } from 'lib/BiovisionHierarchy'
 import { mat4, quat2 } from 'gl-matrix'
@@ -33,8 +32,8 @@ export class ExpressionManager {
             .map(filename => filename.substring(0, filename.length - 7))
 
         this.model = new ExpressionModel(this)
-        this.model.modified.add( () => {
-            console.log(`ExpressionManager: model changed, update skeleton`)
+        this.model.modified.add( (reason) => {
+            // console.log(`ExpressionManager: model changed ${reason}, update skeleton`)
             const pm = this.getBlendedPose()
             for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
                 const bone = this.skeleton.boneslist![boneIdx]
@@ -46,19 +45,8 @@ export class ExpressionManager {
     }
 
     setExpression(expression: number | string) {
-        this.fromPoseUnit(expression)
-        
-        // update skeleton
-        // const pm = this.getBlendedPose()
-        // for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
-        //     const bone = this.skeleton.boneslist![boneIdx]
-        //     const mrg = bone.matRestGlobal!
-        //     this.skeleton.boneslist![boneIdx].matPose = calcWebGL(pm[boneIdx], mrg)
-        // }
-        // this.skeleton.update()
-    }
+        // console.log(`ExpressionManager.setExpression(): START`)
 
-    fromPoseUnit(expression: number | string) {
         if (typeof expression === "string") {
             const name = expression
             expression = this.expressions.findIndex(e => e === name)
@@ -79,10 +67,14 @@ export class ExpressionManager {
                 this.model.setPoseUnit(poseUnitName, weight)
             }    
         })
+
+        // console.log(`ExpressionManager.setExpression(): END`)
     }
 
     // PoseUnit(AnimationTrack): getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
     getBlendedPose(): mat4[] {
+        // console.log(`ExpressionManager.getBlendedPose()`)
+
         const skeleton = this.skeleton
         const base_anim = this.base_anim
         const poses: number[] = []
@@ -92,9 +84,6 @@ export class ExpressionManager {
         for(const p of this.model.poseUnit) {
             poses.push(this.poseUnitName2Frame.get(p.label!)!)
             weights.push(p.value)
-            if(p.label === "CheeksPump") {
-                console.log(`ExpressionManager.getBlendedPost(): ${p.label} -> ${p.value}`)
-            }
         }
 
         const f_idxs = poses

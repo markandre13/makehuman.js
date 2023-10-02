@@ -73,8 +73,21 @@ export class Bone {
         this.matPose = mat4.identity(mat4.create()) // not posed yet
     }
 
+    // FIXME: WTF???
     get planes(): Map<string, Array<string>> {
         return this.skeleton.planes
+    }
+
+    hasChild(name: string) {
+        for(const child of this.children) {
+            if (this.name === name) {
+                return true
+            }   
+            if (child.hasChild(name)) {
+                return true
+            }
+        }
+        return false
     }
 
     // line 768

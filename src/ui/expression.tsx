@@ -8,7 +8,7 @@ import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 
 import { Tab } from "toad.js/view/Tab"
-import { Text } from "toad.js/view/Text"
+import { TextField } from "toad.js/view/TextField"
 import { ExpressionModel } from "../expression/ExpressionModel"
 
 class ExpressionAdapter extends TableAdapter<ExpressionModel> {
@@ -33,7 +33,7 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 break
             case 1:
                 if (pos.row < this.model.poseUnit.length) {
-                    cell.replaceChildren(<Text style={{ width: "60px" }} model={this.model.poseUnit[pos.row]} />)
+                    cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.poseUnit[pos.row]} />)
                 }
                 break
             case 2:
@@ -46,7 +46,7 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 break
             case 3:
                 if (pos.row < this.model.bone.length) {
-                    cell.replaceChildren(<Text style={{ width: "60px" }} model={this.model.bone[pos.row]} />)
+                    cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row]} />)
                 }
                 break
         }
@@ -58,8 +58,8 @@ TableAdapter.register(ExpressionAdapter, ExpressionModel)
 export default function (scene: HumanMesh, skeleton: Skeleton) {
     const expressionManager = new ExpressionManager(skeleton)
     const model = new OptionModel(expressionManager.expressions[0], expressionManager.expressions)
-    model.modified.add((expression) => {
-        expressionManager.setExpression(expression)
+    model.modified.add(() => {
+        expressionManager.setExpression(model.value)
     })
     const expressionModel2 = expressionManager.model
     return (
