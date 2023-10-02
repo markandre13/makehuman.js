@@ -187,6 +187,7 @@ function run() {
     skeleton.poseChanged.add((poseNode) => {
         // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
         if (scene.updateRequired === Update.NONE) {
+            // console.log(`scene.updateRequired := Update.POSE`)
             scene.updateRequired = Update.POSE
         }
     })

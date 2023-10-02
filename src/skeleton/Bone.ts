@@ -141,6 +141,7 @@ export class Bone {
 
     // calculate matPoseGlobal & matPoseVerts
     update() {
+        // console.log()
         if (this.parent !== undefined) {
             this.matPoseGlobal =
                 mat4.multiply(mat4.create(), this.parent.matPoseGlobal!,
