@@ -2,7 +2,7 @@ import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Skeleton } from "skeleton/Skeleton"
-import { OptionModel, Select, SelectionModel, TableAdapter, TableEditMode, TablePos } from "toad.js"
+import { BooleanModel, OptionModel, Select, SelectionModel, Switch, TableAdapter, TableEditMode, TablePos } from "toad.js"
 import { Table } from "toad.js/table/Table"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
@@ -10,6 +10,7 @@ import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { Tab } from "toad.js/view/Tab"
 import { TextField } from "toad.js/view/TextField"
 import { ExpressionModel } from "../expression/ExpressionModel"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 
 class ExpressionAdapter extends TableAdapter<ExpressionModel> {
     override get colCount(): number {
@@ -57,15 +58,30 @@ TableAdapter.register(ExpressionAdapter, ExpressionModel)
 
 export default function (scene: HumanMesh, skeleton: Skeleton) {
     const expressionManager = new ExpressionManager(skeleton)
-    const model = new OptionModel(expressionManager.expressions[0], expressionManager.expressions)
-    model.modified.add(() => {
-        expressionManager.setExpression(model.value)
+    const expressionList = new OptionModel(expressionManager.expressions[0], expressionManager.expressions, {
+        label: "Expression",
     })
-    const expressionModel2 = expressionManager.model
+    expressionList.modified.add(() => {
+        expressionManager.setExpression(expressionList.value)
+    })
+
     return (
         <Tab label="Expression" value={TAB.EXPRESSION} style={{ overflow: "none" }}>
-            Expression <Select model={model}/><br/>
-            <Table model={expressionModel2} style={{ width: "350px", height: "100%" }} />
+            <Form>
+                <FormLabel model={expressionList} />
+                <FormField>
+                    <Select model={expressionList} />
+                </FormField>
+                <FormHelp model={expressionList} />
+
+                <FormLabel model={scene.wireframe} />
+                <FormField>
+                    <Switch model={scene.wireframe} />
+                </FormField>
+                <FormHelp model={scene.wireframe} />
+            </Form>
+            <br />
+            <Table model={expressionManager.model} style={{ width: "350px", height: "100%" }} />
         </Tab>
     )
 }

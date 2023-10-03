@@ -20,7 +20,7 @@ export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasEl
 
 export function createModelViewMatrix(renderMode: RenderMode, cubeRotation: number) {
     const modelViewMatrix = mat4.create()
-    if (renderMode === RenderMode.DEBUG) {
+    if (renderMode === RenderMode.EXPRESSION) {
         mat4.translate(modelViewMatrix, modelViewMatrix, [0.5, -7, -5])
         mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 6, [0, 1, 0])
     } else {

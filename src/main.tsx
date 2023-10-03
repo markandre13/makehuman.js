@@ -173,7 +173,7 @@ function run() {
                 renderMode.value = RenderMode.WIREFRAME
                 break
             case TAB.EXPRESSION:
-                renderMode.value = RenderMode.DEBUG
+                renderMode.value = RenderMode.EXPRESSION
                 break
             case TAB.CHORDATA:
                 renderMode.value = RenderMode.CHORDATA

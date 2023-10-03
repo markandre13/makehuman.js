@@ -31,12 +31,14 @@ export function render(canvas: HTMLCanvasElement, overlay: HTMLElement, scene: H
     // const texture = loadTexture(gl, "data/cubetexture.png")!
 
     let lastRenderTime = 0
-
+    
     // draw the scene repeatedly
     function renderFrame(now: number) {
         now *= 0.001 // convert to seconds
         const deltaTime = now - lastRenderTime
         lastRenderTime = now
+        
+        const wireframe = mode.value === RenderMode.WIREFRAME || (mode.value === RenderMode.EXPRESSION && scene.wireframe.value)
 
         if (scene.changedProxy !== undefined) {
             if (scene.proxies.has(scene.changedProxy)) {
@@ -57,7 +59,7 @@ export function render(canvas: HTMLCanvasElement, overlay: HTMLElement, scene: H
                 renderChordata(gl, programRGBA, overlay)
                 break
             default:
-                renderHuman(gl, programRGBA, programTex, texture, renderList, deltaTime, scene, mode.value)
+                renderHuman(gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
                 cubeRotation += deltaTime
         }
         requestAnimationFrame(renderFrame)

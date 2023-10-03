@@ -3,6 +3,7 @@ import { Human } from '../modifier/Human'
 import { getTarget } from '../target/TargetFactory'
 import { Skeleton } from '../skeleton/Skeleton'
 import { WavefrontObj } from './WavefrontObj'
+import { BooleanModel } from 'toad.js'
 
 let epsilon = 0.000000001
 
@@ -28,6 +29,7 @@ export class HumanMesh {
     changedProxy: ProxyType | undefined
 
     updateRequired = Update.NONE
+    wireframe = new BooleanModel(false, {label: "Wireframe"})
 
     constructor(human: Human, obj: WavefrontObj) {
         this.human = human

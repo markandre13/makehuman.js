@@ -14,10 +14,12 @@ export function renderHuman(
     programTex: TextureShader,
     texture: WebGLTexture,
     renderList: RenderList,
-    deltaTime: number,
     scene: HumanMesh,
-    renderMode: RenderMode
+    renderMode: RenderMode,
+    wireframe: boolean
 ): void {
+    
+
     const WORD_LENGTH = 2
 
     const canvas = gl.canvas as HTMLCanvasElement
@@ -34,16 +36,10 @@ export function renderHuman(
     //
     renderList.base.bind(programRGBA)
     let skin
-    switch (renderMode) {
-        case RenderMode.POLYGON:
-        case RenderMode.DEBUG:
-            skin = [BaseMeshGroup.SKIN, [1, 0.8, 0.7, 1], gl.TRIANGLES]
-            break
-        case RenderMode.WIREFRAME:
-            skin = [BaseMeshGroup.SKIN, [1 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
-            break
-        default:
-            throw Error(`Illegal render mode ${renderMode}`)
+    if (wireframe) {
+        skin = [BaseMeshGroup.SKIN, [1 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
+    } else {
+        skin = [BaseMeshGroup.SKIN, [1, 0.8, 0.7, 1], gl.TRIANGLES]
     }
 
     const MESH_GROUP_INDEX = 0
@@ -61,7 +57,7 @@ export function renderHuman(
         const idx = x[MESH_GROUP_INDEX] as number
 
         // skip rendering skin when in wireframe mode
-        if (idx === BaseMeshGroup.SKIN && renderMode !== RenderMode.WIREFRAME) {
+        if (idx === BaseMeshGroup.SKIN && !wireframe) {
             continue
         }
 
@@ -94,7 +90,7 @@ export function renderHuman(
     //
     // JOINTS AND SKELETON
     //
-    if (renderMode === RenderMode.WIREFRAME) {
+    if (wireframe) {
         const NUMBER_OF_JOINTS = 124
         const offset = scene.baseMesh.groups[2].startIndex * WORD_LENGTH
         const count = scene.baseMesh.groups[2].length * NUMBER_OF_JOINTS
@@ -107,23 +103,14 @@ export function renderHuman(
     //
     // PROXIES
     //
-    let glMode: number
-    switch (renderMode) {
-        case RenderMode.POLYGON:
-        case RenderMode.DEBUG:
-            glMode = gl.TRIANGLES
-            break
-        case RenderMode.WIREFRAME:
-            glMode = gl.LINES
-            break
-    }
+    let glMode = wireframe ? gl.LINES : gl.TRIANGLES
 
     renderList.proxies.forEach((renderMesh, name) => {
         let rgba: number[] = [0.5, 0.5, 0.5, 1]
         switch (name) {
             case ProxyType.Proxymeshes:
                 rgba = [1, 0.8, 0.7, 1]
-                if (renderMode === RenderMode.WIREFRAME) {
+                if (wireframe) {
                     rgba = [rgba[0] / 5, rgba[1] / 5, rgba[2] / 5, 1]
                 }
                 break
@@ -156,7 +143,7 @@ export function renderHuman(
     //
     // TEXTURED SKIN
     //
-    if (renderMode !== RenderMode.WIREFRAME) {
+    if (!wireframe) {
         programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programTex.texture(texture)
         if (renderList.proxies.has(ProxyType.Proxymeshes)) {
