@@ -59,7 +59,7 @@ export function drawChordata(
         mat4.multiply(modelViewMatrix, modelViewMatrix, m)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.color([1, 0.5, 0, 1])
+        programRGBA.setColor([1, 0.5, 0, 1])
         cone.draw(programRGBA, gl.TRIANGLES)
 
         // model -> MODEL MATRIX -> model in world -> PROJECTION MATRIX -> model in clipspace

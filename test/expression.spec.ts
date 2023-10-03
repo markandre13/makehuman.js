@@ -56,6 +56,10 @@ describe("`(face) expression", function () {
         return `${name} = [${q[0]}, ${q[1]}, ${q[2]}, ${q[3]}, ${q[4]}, ${q[5]}, ${q[6]}, ${q[7]}]`
     }
 
+    it("pose unit analysis", async function() {
+        
+    })
+
     it("python matrix order", function () {
         const poseMats = mat4.fromValues(
             0.36235777, 0., 0.9320391, 10.,

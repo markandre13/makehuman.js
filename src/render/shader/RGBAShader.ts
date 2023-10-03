@@ -7,7 +7,7 @@ export class RGBAShader extends AbstractShader {
         this._color = AbstractShader.getUniformLocation(gl, this.program, 'uColor')
     }
     // set RGBA color
-    color(rgba: number[]) {
+    setColor(rgba: number[]) {
         this.gl.uniform4fv(this._color, rgba)
     }
 }

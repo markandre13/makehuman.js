@@ -75,11 +75,11 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     // console.log(l)
 
     const mesh = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
-    programRGBA.color([10.0, 8, 7, 1])
+    programRGBA.setColor([10.0, 8, 7, 1])
     mesh.bind(programRGBA)
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 
-    programRGBA.color([0.0, 1.8, 0.0, 1])
+    programRGBA.setColor([0.0, 1.8, 0.0, 1])
     const lineStrips = [[
         // RING 0
         10, 338, 297, 332, 284, 251, 389, 356,
@@ -246,7 +246,7 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
         mesh0.bind(programRGBA)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
         if (line[0] === 34) {
-            programRGBA.color([8.0, 0.0, 0.0, 1])
+            programRGBA.setColor([8.0, 0.0, 0.0, 1])
         }
     }
 }

@@ -1,4 +1,4 @@
-import { mat4, vec4 } from "gl-matrix"
+import { mat4 } from "gl-matrix"
 import { EnumModel } from "toad.js"
 import { BaseMeshGroup } from "../mesh/BaseMeshGroup"
 import { HumanMesh, Update } from "../mesh/HumanMesh"
@@ -102,6 +102,9 @@ function drawScene(
             throw Error(`Illegal render mode ${renderMode}`)
     }
 
+    const MESH_GROUP_INDEX = 0
+    const COLOR_INDEX = 1
+    const GLMODE_INDEX = 2
     for (let x of [
         skin,
         [BaseMeshGroup.EYEBALL0, [0.0, 0.5, 1, 1], gl.TRIANGLES],
@@ -111,7 +114,7 @@ function drawScene(
         [BaseMeshGroup.TOUNGE, [1.0, 0.0, 0, 1], gl.TRIANGLES],
         [BaseMeshGroup.CUBE, [1.0, 0.0, 0.5, 1], gl.LINE_STRIP],
     ]) {
-        const idx = x[0] as number
+        const idx = x[MESH_GROUP_INDEX] as number
 
         if (idx === BaseMeshGroup.SKIN && renderMode !== RenderMode.WIREFRAME) {
             continue
@@ -136,30 +139,28 @@ function drawScene(
             continue
         }
 
-        const rgba = x[1] as number[]
-        programRGBA.color(rgba)
+        const rgba = x[COLOR_INDEX] as number[]
+        programRGBA.setColor(rgba)
         let offset = scene.baseMesh.groups[idx].startIndex * 2 // index is a word, hence 2 bytes
         let length = scene.baseMesh.groups[idx].length
 
-        const mode = x[2] as number
+        const mode = x[GLMODE_INDEX] as number
         renderList.base.drawSubset(mode, offset, length)
     }
 
     //
     // SKELETON
     //
-    // if (renderMode === RenderMode.WIREFRAME) {
-    //     programRGBA.color([1, 1, 1, 1])
-    //     const offset = buffers.skeletonIndex
-    //     const count = scene.skeleton.boneslist!.length * 2
-    //     buffers.base.drawSubset(gl.LINES, offset, count)
-    // }
+    if (renderMode === RenderMode.WIREFRAME) {
+        programRGBA.setColor([1, 1, 1, 1])
+        renderList.skeleton.draw(programRGBA, gl.LINES)
+    }
 
     //
     // JOINTS
     //
     if (renderMode === RenderMode.WIREFRAME) {
-        programRGBA.color([1, 1, 1, 1])
+        programRGBA.setColor([1, 1, 1, 1])
         const offset = scene.baseMesh.groups[2].startIndex * 2
         const count = scene.baseMesh.groups[2].length * 124
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
@@ -211,7 +212,7 @@ function drawScene(
                 rgba = [1.0, 0.0, 0, 1]
                 break
         }
-        programRGBA.color(rgba)
+        programRGBA.setColor(rgba)
         renderMesh.draw(programRGBA, glMode)
     })
 
@@ -280,30 +281,6 @@ export function createNormalMatrix(modelViewMatrix: mat4) {
     mat4.invert(normalMatrix, modelViewMatrix)
     mat4.transpose(normalMatrix, normalMatrix)
     return normalMatrix
-}
-
-// render the skeleton using matRestGlobal
-function renderSkeletonGlobal(scene: HumanMesh) {
-    const skel = scene.skeleton
-    const v = vec4.fromValues(0, 0, 0, 1)
-    const vertex = new Array<number>(skel.boneslist!.length * 6)
-    const indices = new Array<number>(skel.boneslist!.length * 2)
-    skel.boneslist!.forEach((bone, index) => {
-        const m = bone.matPoseGlobal ? bone.matPoseGlobal : bone.matRestGlobal!
-        const a = vec4.transformMat4(vec4.create(), v, m)
-        const b = vec4.transformMat4(vec4.create(), bone.yvector4!, m)
-        const vi = index * 6
-        const ii = index * 2
-        vertex[vi] = a[0]
-        vertex[vi + 1] = a[1]
-        vertex[vi + 2] = a[2]
-        vertex[vi + 3] = b[0]
-        vertex[vi + 4] = b[1]
-        vertex[vi + 5] = b[2]
-        indices[ii] = index * 2
-        indices[ii + 1] = index * 2 + 1
-    })
-    return { vertex, indices }
 }
 
 //
