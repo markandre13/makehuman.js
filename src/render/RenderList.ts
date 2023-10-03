@@ -19,7 +19,7 @@ export class RenderList {
             this.proxies.set(proxy.type, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz))
         })
         const skel = renderSkeletonGlobal(scene)
-        this.skeleton = new RenderMesh(gl, new Float32Array(skel.vertex), skel.indices, undefined, undefined, false)
+        this.skeleton = new RenderMesh(gl, skel.vertex, skel.indices, undefined, undefined, false)
     }
 
     update() {
@@ -32,6 +32,8 @@ export class RenderList {
             const vertexRigged = this.scene.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
             renderMesh.update(vertexRigged)
         })
+        const skel = renderSkeletonGlobal(this.scene)
+        this.skeleton.update(skel.vertex)
     }
 }
 
@@ -39,7 +41,7 @@ export class RenderList {
 function renderSkeletonGlobal(scene: HumanMesh) {
     const skel = scene.skeleton
     const v = vec4.fromValues(0, 0, 0, 1)
-    const vertex = new Array<number>(skel.boneslist!.length * 6)
+    const vertex = new Float32Array(skel.boneslist!.length * 6)
     const indices = new Array<number>(skel.boneslist!.length * 2)
     skel.boneslist!.forEach((bone, index) => {
         const m = bone.matPoseGlobal ? bone.matPoseGlobal : bone.matRestGlobal!
