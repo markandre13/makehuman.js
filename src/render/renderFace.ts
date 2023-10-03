@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix"
-import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./render"
+import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./util"
 import { RenderMesh } from "./RenderMesh"
 import { RGBAShader } from "./shader/RGBAShader"
 

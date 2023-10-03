@@ -1,6 +1,6 @@
 import { mat4, quat, vec4 } from "gl-matrix"
 import { RenderMesh } from "./RenderMesh"
-import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./render"
+import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./util"
 import { RGBAShader } from "./shader/RGBAShader"
 import { span, text } from "toad.js"
 
@@ -34,7 +34,7 @@ setBones(new Map<string, number[]>([
     ["/%/kc_0x40branch1", [-0.428276, -0.163105, 0.552124, -0.696517]],
 ]))
 
-export function drawChordata(
+export function renderChordata(
     gl: WebGL2RenderingContext,
     programRGBA: RGBAShader,
     overlay: HTMLElement
