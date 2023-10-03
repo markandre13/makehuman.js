@@ -60,10 +60,12 @@ export function renderHuman(
     ]) {
         const idx = x[MESH_GROUP_INDEX] as number
 
+        // skip rendering skin when in wireframe mode
         if (idx === BaseMeshGroup.SKIN && renderMode !== RenderMode.WIREFRAME) {
             continue
         }
 
+        // skip rendering base mesh when there is a proxy
         if (renderList.proxies.has(ProxyType.Proxymeshes) && idx === BaseMeshGroup.SKIN) {
             continue
         }
@@ -79,6 +81,7 @@ export function renderHuman(
             continue
         }
 
+        // render
         const rgba = x[COLOR_INDEX] as number[]
         programRGBA.setColor(rgba)
         let offset = scene.baseMesh.groups[idx].startIndex * WORD_LENGTH
@@ -89,22 +92,16 @@ export function renderHuman(
     }
 
     //
-    // SKELETON
+    // JOINTS AND SKELETON
     //
     if (renderMode === RenderMode.WIREFRAME) {
-        programRGBA.setColor([1, 1, 1, 1])
-        renderList.skeleton.draw(programRGBA, gl.LINES)
-    }
-
-    //
-    // JOINTS
-    //
-    if (renderMode === RenderMode.WIREFRAME) {
-        programRGBA.setColor([1, 1, 1, 1])
+        const NUMBER_OF_JOINTS = 124
         const offset = scene.baseMesh.groups[2].startIndex * WORD_LENGTH
-        const count = scene.baseMesh.groups[2].length * 124
-        // console.log(`draw joints: offset=${offset}, count=${count}`)
+        const count = scene.baseMesh.groups[2].length * NUMBER_OF_JOINTS
+
+        programRGBA.setColor([1, 1, 1, 1])
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
+        renderList.skeleton.draw(programRGBA, gl.LINES)
     }
 
     //
