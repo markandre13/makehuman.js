@@ -8,16 +8,17 @@
 
 ## Current Status
 
-* Have a look at [build 2023-09-19](https://markandre13.github.io/makehuman.js/)
+* Have a look at [build 2023-10-04](https://markandre13.github.io/makehuman.js/)
 * Morph mesh
 * Pose skeleton and adjust mesh
-* Select one of 32 pre-defined facial expressions
-* Render a proxy mesh instead of the basemesh
+* Select one of 32 pre-defined facial expressions and/org edit facial pose units
+* Render various proxy meshes instead of the basemesh
 * Export the mesh with rig and texture coordinates as Collada for Blender
 * Nothing else... 😅
 
 Currently working on:
 
+* pose/animate via pose units (pose units affect multiple bones)
 * pose/animate the face with Google's [MediaPipe](https://developers.google.com/mediapipe) 
 * pose/animate the body with [Chordata](https://chordata.cc)
 
