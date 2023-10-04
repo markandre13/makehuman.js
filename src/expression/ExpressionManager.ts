@@ -5,7 +5,7 @@ import { quaternion_slerp } from "lib/quaternion_slerp"
 import { Skeleton } from "skeleton/Skeleton"
 import { ExpressionModel } from "./ExpressionModel"
 import { toEuler } from "lib/toEuler"
-import { euler_matrix } from "lib/euler_matrix"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export class ExpressionManager {
     facePoseUnits: BiovisionHierarchy // BVH file with face pose units
@@ -45,54 +45,33 @@ export class ExpressionManager {
                     bone.matPose = m
                 } else {
                     // FIXME: some expressions look out of whack... but close enough
-                    // const e = toEuler(m)
                     // FIXME: each poseNode.(x|y|z).value := ... will trigger an update
-                    // poseNode.x.value = (e.x * 360) / (2 * Math.PI)
-                    // poseNode.y.value = (e.y * 360) / (2 * Math.PI)
-                    // poseNode.z.value = (e.z * 360) / (2 * Math.PI)
 
                     // MATRIX TO EULER (WOULD HAPPEN HERE)
-                    const e = toEuler(m)
-                    const x = (e.x * 360) / (2 * Math.PI)
-                    const y = (e.y * 360) / (2 * Math.PI)
-                    const z = (e.z * 360) / (2 * Math.PI)
-
-                    // EULER TO MATRIX (FROM POSENODE)
-                    let out = mat4.create()
-                    let tmp = mat4.create()
-                    mat4.fromXRotation(out, (x / 360) * 2 * Math.PI)
-                    mat4.fromYRotation(tmp, (y / 360) * 2 * Math.PI)
-                    mat4.multiply(out, out, tmp)
-                    mat4.fromZRotation(tmp, (z / 360) * 2 * Math.PI)
-                    mat4.multiply(out, out, tmp)
-
-                    // const out = euler_matrix(x,y,z,"sxyz") // this doesn't work at all...
-
-                    const epsilon = 0.1
-
-                    function isZero(a: number): boolean {
-                        return Math.abs(a) <= epsilon
+                    let {x,y,z} = euler_from_matrix(m)
+                    if (isZero(x)) {
+                        x = 0
                     }
-                    function isEqual(a: number, b: number) {
-                        return isZero(a - b)
+                    if (isZero(y)) {
+                        y = 0
                     }
-                    function eql(a: mat4, b: mat4) {
-                        for (let i = 0; i < a.length; ++i) {
-                            if (!isEqual(a[i], b[i])) {
-                                return false
-                            }
-                        }
-                        return true
+                    if (isZero(z)) {
+                        z = 0
                     }
+
+                    poseNode.x.value = (x * 360) / (2 * Math.PI)
+                    poseNode.y.value = (y * 360) / (2 * Math.PI)
+                    poseNode.z.value = (z * 360) / (2 * Math.PI)
+
+                    const out = euler_matrix(x, y, z)
+
 
                     if (!eql(m, out)) {
                         console.log(`poseNode ${x}, ${y}, ${z} didn't set matPose properly for ${bone.name}`)
                         console.log(m)
                         console.log(out)
-                    } else {
-                        // console.log(`poseNode ${x}, ${y}, ${z} did set matPose properly for ${bone.name}`)
                     }
-                    bone.matPose = m
+                    // bone.matPose = m
                 }
             }
             this.skeleton.update()
@@ -207,4 +186,21 @@ export function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
     mat4.multiply(matPose, m0, matRestGlobal)
     matPose[12] = matPose[13] = matPose[14] = 0
     return matPose
+}
+
+const epsilon = 0.00001
+
+function isZero(a: number): boolean {
+    return Math.abs(a) <= epsilon
+}
+function isEqual(a: number, b: number) {
+    return isZero(a - b)
+}
+function eql(a: mat4, b: mat4) {
+    for (let i = 0; i < a.length; ++i) {
+        if (!isEqual(a[i], b[i])) {
+            return false
+        }
+    }
+    return true
 }
