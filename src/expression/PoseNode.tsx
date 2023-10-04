@@ -14,34 +14,6 @@ export class PoseNode implements TreeNode {
     y: NumberRelModel
     z: NumberRelModel
 
-    updateBone() {
-        let out = mat4.create()
-        let tmp = mat4.create()
-        mat4.fromXRotation(out, this.x.value / 360 * 2 * Math.PI)
-        mat4.fromYRotation(tmp, this.y.value / 360 * 2 * Math.PI)
-        mat4.multiply(out, out, tmp)
-        mat4.fromZRotation(tmp, this.z.value / 360 * 2 * Math.PI)
-        mat4.multiply(out, out, tmp)
-        this.bone.matPose = out
-        // this.bone.update()
-        this.bone.skeleton.boneslist!.forEach(bone => bone.update())
-    }
-
-    find(boneName: string): PoseNode | undefined {
-        if (this.bone.name === boneName) {
-            return this
-        }
-        const next = this.next?.find(boneName)
-        if (next) {
-            return next
-        }
-        const down = this.down?.find(boneName)
-        if (down) {
-            return down
-        }
-        return undefined
-    }
-
     constructor(bone: Bone | undefined = undefined, signal: Signal<PoseNode> | undefined = undefined) {
         this.x = new NumberRelModel(0, { min: -180, max: 180, step: 5, default: 0 })
         this.y = new NumberRelModel(0, { min: -180, max: 180, step: 5, default: 0 })
@@ -52,7 +24,8 @@ export class PoseNode implements TreeNode {
         }
 
         const update = () => {
-            this.updateBone()
+            this.updateBonesMatPoseRecursivly()
+            // this.updateBonesMatPose()
             signal.trigger(this)
         }
 
@@ -94,5 +67,36 @@ export class PoseNode implements TreeNode {
                 this.down.next = next
             }
         })
+    }
+
+    updateBonesMatPose() {
+        let out = mat4.create()
+        let tmp = mat4.create()
+        mat4.fromXRotation(out, this.x.value / 360 * 2 * Math.PI)
+        mat4.fromYRotation(tmp, this.y.value / 360 * 2 * Math.PI)
+        mat4.multiply(out, out, tmp)
+        mat4.fromZRotation(tmp, this.z.value / 360 * 2 * Math.PI)
+        mat4.multiply(out, out, tmp)
+        this.bone.matPose = out   
+    }
+
+    updateBonesMatPoseRecursivly() {
+        this.updateBonesMatPose()
+        this.bone.skeleton.boneslist!.forEach(bone => bone.update())
+    }
+
+    find(boneName: string): PoseNode | undefined {
+        if (this.bone.name === boneName) {
+            return this
+        }
+        const next = this.next?.find(boneName)
+        if (next) {
+            return next
+        }
+        const down = this.down?.find(boneName)
+        if (down) {
+            return down
+        }
+        return undefined
     }
 }

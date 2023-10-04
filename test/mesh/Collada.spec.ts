@@ -18,9 +18,10 @@ import {
     prepareControllerInit,
     prepareControllers,
     prepareMesh,
-    toEuler
 } from "../../src/mesh/Collada"
+import {toEuler} from "../../src/lib/toEuler"
 import { testCube } from "../../src/mesh/testCube"
+
 
 import { parseXML, Tag, Text } from "./xml"
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'

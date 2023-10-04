@@ -34,15 +34,14 @@
 import { mat4 } from "gl-matrix"
 /**
  * Return homogeneous rotation matrix from Euler angles and axis sequence.
- * 
+ *
  * ai, aj, ak : Euler's roll, pitch and yaw angles
  * axes : One of 24 axis sequences as string or encoded tuple
  */
-export function euler_matrix(ai: number, aj: number, ak: number, axes: string = 'sxyz'): mat4 {
-
+export function euler_matrix(ai: number, aj: number, ak: number, axes: string = "sxyz"): mat4 {
     const tmp = _AXES2TUPLE.get(axes)
     if (tmp === undefined) {
-        throw Error(`invalid axes of '{axes}'`)
+        throw Error(`invalid axes of '${axes}'`)
     }
     const [firstaxis, parity, repetition, frame] = tmp
 
@@ -51,10 +50,10 @@ export function euler_matrix(ai: number, aj: number, ak: number, axes: string = 
     let k = _NEXT_AXIS[i - parity + 1]
 
     if (frame) {
-        [ai, ak] = [ak, ai]
+        ;[ai, ak] = [ak, ai]
     }
     if (parity) {
-        [ai, aj, ak] = [-ai, -aj, -ak]
+        ;[ai, aj, ak] = [-ai, -aj, -ak]
     }
 
     let [si, sj, sk] = [Math.sin(ai), Math.sin(aj), Math.sin(ak)]
@@ -91,34 +90,90 @@ export function euler_matrix(ai: number, aj: number, ak: number, axes: string = 
     return M
 }
 
+/**
+ * Return Euler angles from rotation matrix for specified axis sequence.
+ *
+ * Note that many Euler angle triplets can describe one matrix.
+ * 
+ * @param matrix
+ * @param axes One of 24 axis sequences as string or encoded tuple
+ */
+export function euler_from_matrix(M: mat4, axes = "sxyz") {
+    const tmp = _AXES2TUPLE.get(axes)
+    if (tmp === undefined) {
+        throw Error(`invalid axes of '${axes}'`)
+    }
+    const [firstaxis, parity, repetition, frame] = tmp
+
+    const i = firstaxis
+    const j = _NEXT_AXIS[i + parity]
+    const k = _NEXT_AXIS[i - parity + 1]
+
+    function get(M: mat4, row: number, col: number) {
+        return M[col * 4 + row]
+    }
+
+    let x, y, z
+    if (repetition) {
+        const sy = Math.sqrt(get(M, i, j) * get(M, i, j) + get(M, i, k) * get(M, i, k))
+        if (sy > Number.EPSILON) {
+            x = Math.atan2(get(M, i, j), get(M, i, k))
+            y = Math.atan2(sy, get(M, i, i))
+            z = Math.atan2(get(M, j, i), -get(M, k, i))
+        } else {
+            x = Math.atan2(-get(M, j, k), get(M, j, j))
+            y = Math.atan2(sy, get(M, i, i))
+            z = 0.0
+        }
+    } else {
+        const cy = Math.sqrt(get(M, i, i) * get(M, i, i) + get(M, j, i) * get(M, j, i))
+        if (cy > Number.EPSILON) {
+            x = Math.atan2(get(M, k, j), get(M, k, k))
+            y = Math.atan2(-get(M, k, i), cy)
+            z = Math.atan2(get(M, j, i), get(M, i, i))
+        } else {
+            x = Math.atan2(-get(M, j, k), get(M, j, j))
+            y = Math.atan2(-get(M, k, i), cy)
+            z = 0.0
+        }
+    }
+    if (parity) {
+        [x, y, z] = [-x, -y, -z]
+    }
+    if (frame) {
+        [x, z] = [z, x]
+    }
+    return { x, y, z }
+}
+
 // axis sequences for Euler angles
 const _NEXT_AXIS = [1, 2, 0, 1]
 
 // map axes strings to/from tuples of inner axis, parity, repetition, frame
 const _AXES2TUPLE = new Map([
-    ['sxyz', [0, 0, 0, 0]],
-    ['sxyx', [0, 0, 1, 0]],
-    ['sxzy', [0, 1, 0, 0]],
-    ['sxzx', [0, 1, 1, 0]],
-    ['syzx', [1, 0, 0, 0]],
-    ['syzy', [1, 0, 1, 0]],
-    ['syxz', [1, 1, 0, 0]],
-    ['syxy', [1, 1, 1, 0]],
-    ['szxy', [2, 0, 0, 0]],
-    ['szxz', [2, 0, 1, 0]],
-    ['szyx', [2, 1, 0, 0]],
-    ['szyz', [2, 1, 1, 0]],
+    ["sxyz", [0, 0, 0, 0]],
+    ["sxyx", [0, 0, 1, 0]],
+    ["sxzy", [0, 1, 0, 0]],
+    ["sxzx", [0, 1, 1, 0]],
+    ["syzx", [1, 0, 0, 0]],
+    ["syzy", [1, 0, 1, 0]],
+    ["syxz", [1, 1, 0, 0]],
+    ["syxy", [1, 1, 1, 0]],
+    ["szxy", [2, 0, 0, 0]],
+    ["szxz", [2, 0, 1, 0]],
+    ["szyx", [2, 1, 0, 0]],
+    ["szyz", [2, 1, 1, 0]],
 
-    ['rzyx', [0, 0, 0, 1]],
-    ['rxyx', [0, 0, 1, 1]],
-    ['ryzx', [0, 1, 0, 1]],
-    ['rxzx', [0, 1, 1, 1]],
-    ['rxzy', [1, 0, 0, 1]],
-    ['ryzy', [1, 0, 1, 1]],
-    ['rzxy', [1, 1, 0, 1]],
-    ['ryxy', [1, 1, 1, 1]],
-    ['ryxz', [2, 0, 0, 1]],
-    ['rzxz', [2, 0, 1, 1]],
-    ['rxyz', [2, 1, 0, 1]],
-    ['rzyz', [2, 1, 1, 1]],
+    ["rzyx", [0, 0, 0, 1]],
+    ["rxyx", [0, 0, 1, 1]],
+    ["ryzx", [0, 1, 0, 1]],
+    ["rxzx", [0, 1, 1, 1]],
+    ["rxzy", [1, 0, 0, 1]],
+    ["ryzy", [1, 0, 1, 1]],
+    ["rzxy", [1, 1, 0, 1]],
+    ["ryxy", [1, 1, 1, 1]],
+    ["ryxz", [2, 0, 0, 1]],
+    ["rzxz", [2, 0, 1, 1]],
+    ["rxyz", [2, 1, 0, 1]],
+    ["rzyz", [2, 1, 1, 1]],
 ])

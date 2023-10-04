@@ -5,6 +5,7 @@ import { vec4, mat4 } from 'gl-matrix'
 import { zipForEach } from 'lib/zipForEach'
 import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
 import { ProxyType } from 'proxy/Proxy'
+import { toEuler } from 'lib/toEuler'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
@@ -693,47 +694,3 @@ function indentToString(indent: number): string {
     return indentStr
 }
 
-// rotation matrix to euler angles
-// https://learnopencv.com/rotation-matrix-to-euler-angles/
-
-function almost(left: number, right: number) {
-    return Math.abs(left - right) <= 1e-6
-}
-
-function isRotation(m: mat4): boolean {
-    let mT = mat4.transpose(mat4.create(), m)
-    let mI = mat4.invert(mat4.create(), m)
-    if (!mat4.equals(mT, mI)) {
-        return false
-    }
-    let d = mat4.determinant(m)
-    if (!almost(d, 1.0)) {
-        return false
-    }
-    return true
-}
-
-function at(m: mat4, a: number, b: number) {
-    return m[a + b * 4]
-}
-
-export function toEuler(m: mat4) {
-    // if (!isRotation(m)) {
-    //     throw Error(`matrix is not rotation with translation`)
-    // }
-
-    const sy = at(m, 0, 0) * at(m, 0, 0) + at(m, 0, 1) * at(m, 0, 1)
-    const singular = sy < Number.EPSILON
-
-    let x, y, z
-    if (!singular) {
-        x = Math.atan2(at(m, 2, 1), at(m, 2, 2))
-        y = Math.atan2(-at(m, 2, 0), sy)
-        z = Math.atan2(at(m, 1, 0), at(m, 0, 0))
-    } else {
-        x = Math.atan2(-at(m, 1, 2), at(m, 1, 1))
-        y = Math.atan2(-at(m, 2, 0), sy)
-        z = 0
-    }
-    return {x,y,z}
-}
