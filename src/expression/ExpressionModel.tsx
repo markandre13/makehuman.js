@@ -1,4 +1,5 @@
 import { ExpressionManager } from "expression/ExpressionManager"
+import { PoseNode } from "expression/PoseNode"
 import { TableModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
@@ -6,7 +7,7 @@ import { ModelReason } from "toad.js/model/Model"
 
 export class ExpressionModel extends TableModel {
     poseUnit: NumberRelModel[] = []
-    bone: NumberRelModel[] = []
+    bone: PoseNode[] = []
 
     constructor(expressionManager: ExpressionManager) {
         super()
@@ -48,8 +49,8 @@ export class ExpressionModel extends TableModel {
                 if (node === undefined) {
                     console.log(`failed to find node for '${name}'`)
                 } else {
-                    node.x.label = name
-                    this.bone.push(node.x)
+                    node.x.label = node.y.label = node.z.label = name
+                    this.bone.push(node)
                 }
             })
 

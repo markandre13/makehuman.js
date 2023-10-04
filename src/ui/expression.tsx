@@ -2,7 +2,16 @@ import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Skeleton } from "skeleton/Skeleton"
-import { BooleanModel, OptionModel, Select, SelectionModel, Switch, TableAdapter, TableEditMode, TablePos } from "toad.js"
+import {
+    BooleanModel,
+    OptionModel,
+    Select,
+    SelectionModel,
+    Switch,
+    TableAdapter,
+    TableEditMode,
+    TablePos,
+} from "toad.js"
 import { Table } from "toad.js/table/Table"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
@@ -14,7 +23,7 @@ import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 
 class ExpressionAdapter extends TableAdapter<ExpressionModel> {
     override get colCount(): number {
-        return 4
+        return 6
     }
     override getColumnHead(col: number) {
         switch (col) {
@@ -22,6 +31,12 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 return <>Pose Unit</>
             case 2:
                 return <>Bone</>
+            case 3:
+                return <>X</>
+            case 4:
+                return <>Y</>
+            case 5:
+                return <>Z</>
         }
         return <>Value</>
     }
@@ -39,15 +54,25 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 break
             case 2:
                 if (pos.row < this.model.bone.length) {
-                    const label = this.model.bone[pos.row].label
+                    const label = this.model.bone[pos.row].x.label
                     if (label !== undefined) {
-                        cell.replaceChildren(...(<>{this.model.bone[pos.row].label}</>))
+                        cell.replaceChildren(...(<>{label}</>))
                     }
                 }
                 break
             case 3:
                 if (pos.row < this.model.bone.length) {
-                    cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row]} />)
+                    cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row].x} />)
+                }
+                break
+            case 4:
+                if (pos.row < this.model.bone.length) {
+                    cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row].y} />)
+                }
+                break
+            case 5:
+                if (pos.row < this.model.bone.length) {
+                    cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row].z} />)
                 }
                 break
         }
@@ -81,7 +106,7 @@ export default function (scene: HumanMesh, skeleton: Skeleton) {
                 <FormHelp model={scene.wireframe} />
             </Form>
             <br />
-            <Table model={expressionManager.model} style={{ width: "350px", height: "100%" }} />
+            <Table model={expressionManager.model} style={{ width: "487px", height: "100%" }} />
         </Tab>
     )
 }
