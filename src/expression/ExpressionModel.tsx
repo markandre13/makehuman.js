@@ -4,6 +4,7 @@ import { TableModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
 import { ModelReason } from "toad.js/model/Model"
+import { mat4 } from "gl-matrix"
 
 export class ExpressionModel extends TableModel {
     poseUnit: NumberRelModel[] = []
@@ -54,9 +55,22 @@ export class ExpressionModel extends TableModel {
                 }
             })
 
-        // calculate depenndencies from pose unit to bone
-        // this.poseUnit[0].observe(this.bone[0])
-        // this.poseUnit[0].observe(this.bone[1])
+        // register dependencies from pose unit to bone
+        const identity = mat4.create()
+        const nBones = expressionManager.skeleton.boneslist!.length
+        for(const pu of this.poseUnit) {
+            const frame = expressionManager.poseUnitName2Frame.get(pu.label!)!         
+            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
+                const m = expressionManager.base_anim[frame * nBones + b_idx]
+                if (!mat4.equals(m, identity)) {
+                    const bone = expressionManager.skeleton.boneslist![b_idx]!
+                    const node = expressionManager.skeleton.poseNodes.find(bone.name)!
+                    pu.observe(node.x)
+                    pu.observe(node.y)
+                    pu.observe(node.z)
+                }
+            }
+        }
     }
     override get colCount() {
         return 2

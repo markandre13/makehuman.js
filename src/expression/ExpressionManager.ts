@@ -4,7 +4,6 @@ import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { Skeleton } from "skeleton/Skeleton"
 import { ExpressionModel } from "./ExpressionModel"
-import { toEuler } from "lib/toEuler"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export class ExpressionManager {
@@ -19,19 +18,19 @@ export class ExpressionManager {
 
     constructor(skeleton: Skeleton) {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
-        this.facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
         this.skeleton = skeleton
-        this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
 
+        this.facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none") 
+        console.log(this.facePoseUnits)
+        this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
         this.facePoseUnitsNames = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
         this.facePoseUnitsNames.forEach((name, index) => this.poseUnitName2Frame.set(name, index))
-
         this.expressions = FileSystemAdapter.listDir("expressions")
             .filter((filename) => filename.endsWith(".mhpose"))
             .map((filename) => filename.substring(0, filename.length - 7))
-
         this.model = new ExpressionModel(this)
+
         this.model.modified.add((reason) => {
             // console.log(`ExpressionManager: model changed ${reason}, update skeleton`)
             const pm = this.getBlendedPose()
@@ -58,19 +57,16 @@ export class ExpressionManager {
                     if (isZero(z)) {
                         z = 0
                     }
-
                     poseNode.x.value = (x * 360) / (2 * Math.PI)
                     poseNode.y.value = (y * 360) / (2 * Math.PI)
                     poseNode.z.value = (z * 360) / (2 * Math.PI)
 
-                    const out = euler_matrix(x, y, z)
-
-
-                    if (!eql(m, out)) {
-                        console.log(`poseNode ${x}, ${y}, ${z} didn't set matPose properly for ${bone.name}`)
-                        console.log(m)
-                        console.log(out)
-                    }
+                    // const out = euler_matrix(x, y, z)
+                    // if (!eql(m, out)) {
+                    //     console.log(`poseNode ${x}, ${y}, ${z} didn't set matPose properly for ${bone.name}`)
+                    //     console.log(m)
+                    //     console.log(out)
+                    // }
                     // bone.matPose = m
                 }
             }
@@ -152,7 +148,7 @@ export class ExpressionManager {
                     const m = base_anim[f_idxs[i] * nBones + b_idx]
                     let q = quat2.fromMat4(quat2.create(), m)
                     q = quaternion_slerp(REST_QUAT, q, weights[i])
-                    quat = quat2.multiply(quat2.create(), q, quat)
+                    quat2.multiply(quat, q, quat)
                 }
                 result[b_idx] = mat4.fromQuat2(mat4.create(), quat)
             }
