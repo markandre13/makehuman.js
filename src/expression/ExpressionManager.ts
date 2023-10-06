@@ -57,9 +57,9 @@ export class ExpressionManager {
                     if (isZero(z)) {
                         z = 0
                     }
-                    poseNode.x.value = (x * 360) / (2 * Math.PI)
-                    poseNode.y.value = (y * 360) / (2 * Math.PI)
-                    poseNode.z.value = (z * 360) / (2 * Math.PI)
+                    poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
+                    poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
+                    poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
 
                     // const out = euler_matrix(x, y, z)
                     // if (!eql(m, out)) {
