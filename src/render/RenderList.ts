@@ -23,7 +23,7 @@ export class RenderList {
     }
 
     update() {
-        this.scene.update()
+        // this.scene.update()
         this.base.update(this.scene.vertexRigged)
         this.proxies.forEach((renderMesh, type) => {
             const proxy = this.scene.proxies.get(type)!

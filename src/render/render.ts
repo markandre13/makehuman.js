@@ -8,10 +8,17 @@ import { renderChordata } from "./renderChordata"
 import { RenderList } from "./RenderList"
 import { renderHuman } from "./renderHuman"
 import { loadTexture } from "./util"
+import { UpdateManager } from "UpdateManager"
 
 export let cubeRotation = 0.0
 
-export function render(canvas: HTMLCanvasElement, overlay: HTMLElement, scene: HumanMesh, mode: EnumModel<RenderMode>): void {
+export function render(
+    canvas: HTMLCanvasElement,
+    overlay: HTMLElement,
+    scene: HumanMesh,
+    mode: EnumModel<RenderMode>,
+    updateManager: UpdateManager
+    ): void {
     const gl = (canvas.getContext("webgl2") || canvas.getContext("experimental-webgl")) as WebGL2RenderingContext
     if (gl == null) {
         throw Error("Unable to initialize WebGL. Your browser or machine may not support it.")
@@ -25,6 +32,7 @@ export function render(canvas: HTMLCanvasElement, overlay: HTMLElement, scene: H
 
     // const texCube = createTexturedCubeRenderer(gl)
     const renderList = new RenderList(gl, scene)
+    updateManager.setRenderList(renderList)
     // initCone(gl)
 
     const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
@@ -50,10 +58,12 @@ export function render(canvas: HTMLCanvasElement, overlay: HTMLElement, scene: H
             scene.changedProxy = undefined
         }
 
-        if (scene.updateRequired !== Update.NONE) {
-            renderList.update()
-            // updateBuffers(scene, buffers)
-        }
+        updateManager.updateIt()
+
+        // if (scene.updateRequired !== Update.NONE) {
+        //     renderList.update()
+        //     // updateBuffers(scene, buffers)
+        // }
         switch(mode.value) {
             case RenderMode.CHORDATA:
                 renderChordata(gl, programRGBA, overlay)

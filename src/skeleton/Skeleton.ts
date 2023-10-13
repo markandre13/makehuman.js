@@ -191,6 +191,12 @@ export class Skeleton {
         // return _getHumanJointPosition(human, joint_name, rest_coord)
     }
 
+    updateJoints() {
+        for (const bone of this.getBones()) {
+            bone.updateJointPositions()
+        }
+    }
+
     // makehuman/shared/skeleton.py:518
     // Rebuild bone rest matrices and determine local bone orientation
     // (roll or bone normal). Pass a ref_skel to copy the bone orientation from
@@ -206,14 +212,9 @@ export class Skeleton {
         for (const bone of this.getBones()) {
             bone.update()
         }
-        this.scene.updateRequired = Update.POSE
+        // this.scene.setUpdate(Update.POSE)
     }
 
-    updateJoints() {
-        for (const bone of this.getBones()) {
-            bone.updateJointPositions()
-        }
-    }
 
     // line 631
     // Returns linear list of all bones in breadth-first order.

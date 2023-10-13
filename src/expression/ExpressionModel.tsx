@@ -1,6 +1,6 @@
 import { ExpressionManager } from "expression/ExpressionManager"
 import { PoseNode } from "expression/PoseNode"
-import { TableModel } from "toad.js"
+import { TableEvent, TableEventType, TableModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
 import { ModelReason } from "toad.js/model/Model"
@@ -12,6 +12,7 @@ export class ExpressionModel extends TableModel {
 
     constructor(expressionManager: ExpressionManager) {
         super()
+
 
         // pose units
         // some pairs like LeftEyeDown, LeftEyeUp seem to suggest modifiers,
@@ -27,9 +28,10 @@ export class ExpressionModel extends TableModel {
                 step: 0.05,
                 default: value,
             })
+            const row = this.poseUnit.length
             poseUnitModel.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    this.modified.trigger(reason)
+                    this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 1, row))
                 }
             })
             this.poseUnit.push(poseUnitModel)
@@ -43,6 +45,7 @@ export class ExpressionModel extends TableModel {
             faceBones.add(bone.name)
             bone.children.forEach((child) => foo(child))
         }
+       
         Array.from(faceBones)
             .sort()
             .forEach((name) => {
@@ -51,15 +54,26 @@ export class ExpressionModel extends TableModel {
                     console.log(`failed to find node for '${name}'`)
                 } else {
                     node.x.label = node.y.label = node.z.label = name
+                    const row = this.bone.length
                     this.bone.push(node)
+                    node.x.modified.add(() => {
+                        this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 3, row)) 
+                    })
+                    node.y.modified.add(() => {
+                        this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 4, row))
+                    })
+                    node.z.modified.add(() => {
+                        this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 5, row))
+                    })
                 }
             })
 
+        // ALSO GENERATE OWN CHANGE NOTIFICATION WHEN THOSE MODELS CHANGE!!!
         // register dependencies from pose unit to bone
         const identity = mat4.create()
         const nBones = expressionManager.skeleton.boneslist!.length
-        for(const pu of this.poseUnit) {
-            const frame = expressionManager.poseUnitName2Frame.get(pu.label!)!         
+        for (const pu of this.poseUnit) {
+            const frame = expressionManager.poseUnitName2Frame.get(pu.label!)!
             for (let b_idx = 0; b_idx < nBones; ++b_idx) {
                 const m = expressionManager.base_anim[frame * nBones + b_idx]
                 if (!mat4.equals(m, identity)) {

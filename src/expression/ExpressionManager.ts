@@ -4,7 +4,7 @@ import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { Skeleton } from "skeleton/Skeleton"
 import { ExpressionModel } from "./ExpressionModel"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { euler_from_matrix } from "lib/euler_matrix"
 
 export class ExpressionManager {
     facePoseUnits: BiovisionHierarchy // BVH file with face pose units
@@ -20,7 +20,7 @@ export class ExpressionManager {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
         this.skeleton = skeleton
 
-        this.facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none") 
+        this.facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
         console.log(this.facePoseUnits)
         this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
         this.facePoseUnitsNames = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))
@@ -30,54 +30,38 @@ export class ExpressionManager {
             .filter((filename) => filename.endsWith(".mhpose"))
             .map((filename) => filename.substring(0, filename.length - 7))
         this.model = new ExpressionModel(this)
+    }
 
-        this.model.modified.add((reason) => {
-            // console.log(`ExpressionManager: model changed ${reason}, update skeleton`)
-            const pm = this.getBlendedPose()
-            for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
-                const bone = this.skeleton.boneslist![boneIdx]
-                const mrg = bone.matRestGlobal!
-                const m = calcWebGL(pm[boneIdx], mrg) // i think this is the relative pose?
-                const poseNode = this.skeleton.poseNodes.find(bone.name)
-                if (!poseNode) {
-                    console.log(`ExpressionManager: node pose node found for bone ${bone.name}`)
-                    bone.matPose = m
-                } else {
-                    // FIXME: some expressions look out of whack... but close enough
-                    // FIXME: each poseNode.(x|y|z).value := ... will trigger an update
-
-                    // MATRIX TO EULER (WOULD HAPPEN HERE)
-                    let {x,y,z} = euler_from_matrix(m)
-                    if (isZero(x)) {
-                        x = 0
-                    }
-                    if (isZero(y)) {
-                        y = 0
-                    }
-                    if (isZero(z)) {
-                        z = 0
-                    }
-                    poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
-                    poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
-                    poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
-
-                    // const out = euler_matrix(x, y, z)
-                    // if (!eql(m, out)) {
-                    //     console.log(`poseNode ${x}, ${y}, ${z} didn't set matPose properly for ${bone.name}`)
-                    //     console.log(m)
-                    //     console.log(out)
-                    // }
-                    // bone.matPose = m
-                }
+    poseUnitsToPoseNodes() {
+        const pm = this.getBlendedPose()
+        for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
+            const bone = this.skeleton.boneslist![boneIdx]
+            const mrg = bone.matRestGlobal!
+            const m = calcWebGL(pm[boneIdx], mrg)
+            const poseNode = this.skeleton.poseNodes.find(bone.name)
+            if (!poseNode) {
+                console.log(`ExpressionManager: no pose node found for bone ${bone.name}`)
+                return
             }
-            this.skeleton.update()
-            // this.skeleton.scene.updateRequired = Update.POSE
-        })
+
+            let { x, y, z } = euler_from_matrix(m)
+            if (isZero(x)) {
+                x = 0
+            }
+            if (isZero(y)) {
+                y = 0
+            }
+            if (isZero(z)) {
+                z = 0
+            }
+
+            poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
+            poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
+            poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
+        }
     }
 
     setExpression(expression: number | string) {
-        // console.log(`ExpressionManager.setExpression(): START`)
-
         if (typeof expression === "string") {
             const name = expression
             expression = this.expressions.findIndex((e) => e === name)
@@ -86,20 +70,15 @@ export class ExpressionManager {
             }
         }
 
-        // loadExpression()
         const expressionName = this.expressions[expression]
         const poseUnit2Weight = JSON.parse(FileSystemAdapter.readFile(`data/expressions/${expressionName}.mhpose`))
             .unit_poses as any
 
-        this.model.modified.withLock(() => {
-            this.model.clear()
-            for (let poseUnitName of Object.getOwnPropertyNames(poseUnit2Weight)) {
-                const weight = poseUnit2Weight[poseUnitName]
-                this.model.setPoseUnit(poseUnitName, weight)
-            }
-        })
-
-        // console.log(`ExpressionManager.setExpression(): END`)
+        this.model.clear()
+        for (let poseUnitName of Object.getOwnPropertyNames(poseUnit2Weight)) {
+            const weight = poseUnit2Weight[poseUnitName]
+            this.model.setPoseUnit(poseUnitName, weight)
+        }
     }
 
     // PoseUnit(AnimationTrack): getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):

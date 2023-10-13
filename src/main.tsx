@@ -4,7 +4,7 @@ import { loadSkeleton } from './skeleton/loadSkeleton'
 import { loadModifiers } from './modifier/loadModifiers'
 import { loadSliders, SliderNode } from './modifier/loadSliders'
 import { WavefrontObj } from 'mesh/WavefrontObj'
-import { HumanMesh, Update } from './mesh/HumanMesh'
+import { HumanMesh } from './mesh/HumanMesh'
 import { RenderMode } from './render/RenderMode'
 import { exportCollada } from 'mesh/Collada'
 import { ProxyType } from 'proxy/Proxy'
@@ -25,11 +25,13 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Fragment, ref } from "toad.jsx"
 import { Tab, Tabs } from 'toad.js/view/Tab'
 import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
-import { BooleanModel, Button, Checkbox, Select, Signal } from 'toad.js'
+import { BooleanModel, Button, Checkbox, Select } from 'toad.js'
 import { ProxyManager } from './ProxyManager'
 import chordata from 'ui/chordata'
 import { TAB, initHistoryManager } from 'HistoryManager'
 import expression from 'ui/expression'
+import { ExpressionManager } from 'expression/ExpressionManager'
+import { UpdateManager } from 'UpdateManager'
 
 window.onload = () => { main() }
 
@@ -137,7 +139,7 @@ function run() {
     // scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth))
     // scene.proxies.set("Tongue", loadProxy(human, "data/tongue/tongue01/tongue01.mhclo", "Tongue"))
 
-    human.modified.add(() => scene.updateRequired = Update.MORPH)
+    // human.modified.add(() => scene.updateRequired = Update.MORPH)
 
     const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
     scene.skeleton = skeleton
@@ -184,24 +186,17 @@ function run() {
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
 
-    skeleton.poseChanged.add((poseNode) => {
-        // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
-        if (scene.updateRequired === Update.NONE) {
-            // console.log(`scene.updateRequired := Update.POSE`)
-            scene.updateRequired = Update.POSE
-        }
-    })
+    // skeleton.poseChanged.add((poseNode) => {
+    //     // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
+    //     if (scene.updateRequired === Update.NONE) {
+    //         // console.log(`scene.updateRequired := Update.POSE`)
+    //         scene.updateRequired = Update.POSE
+    //     }
+    // })
     const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
 
-    // const teethProxy = new BooleanModel(true)
-    // const toungeProxy = new BooleanModel(false)
-    // const eyesProxy = new BooleanModel(true)
-    // const skinProxy = new BooleanModel(true)
-    // teethProxy.modified.add(() => {
-    //     console.log(`teeth proxy changed to ${teethProxy.value}`)
-    // })
-
-    // might need use order from mat2txt
+    const expressionManager = new ExpressionManager(skeleton)
+    const updateManager = new UpdateManager(expressionManager, sliderNodes)
 
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
@@ -225,7 +220,7 @@ function run() {
                     )}
                 </Form>
             </Tab>
-           {expression(scene, skeleton)}
+           {expression(expressionManager, scene)}
             <Tab label="Morph" value={TAB.MORPH}>
                 <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
             </Tab>
@@ -264,7 +259,7 @@ function run() {
         </div>
     </> as Fragment
     mainScreen.appendTo(document.body)
-    render(references.canvas, references.overlay, scene, renderMode)
+    render(references.canvas, references.overlay, scene, renderMode, updateManager)
 }
 
 function makeDownloadAnchor() {

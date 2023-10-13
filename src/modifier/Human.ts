@@ -12,7 +12,7 @@ export class Human {
 
     modified = new Signal()
 
-    private modifiers: Map<string, Modifier>
+    modifiers: Map<string, Modifier>
     private modifierGroups: Map<string, Modifier[]>
 
     // for now HumanMesh is our quick'n dirty friend

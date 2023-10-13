@@ -1,7 +1,6 @@
 import { TreeNode } from "toad.js/table/model/TreeNode"
 import { Bone } from "../skeleton/Bone"
 import { Signal } from "toad.js/Signal"
-import { mat4 } from "gl-matrix"
 import { NumberRelModel } from "./NumberRelModel"
 import { euler_matrix } from "lib/euler_matrix"
 
@@ -23,16 +22,6 @@ export class PoseNode implements TreeNode {
         if (bone === undefined || signal === undefined) {
             return
         }
-
-        const update = () => {
-            this.updateBonesMatPoseRecursivly()
-            // this.updateBonesMatPose()
-            signal.trigger(this)
-        }
-
-        this.x.modified.add(update)
-        this.y.modified.add(update)
-        this.z.modified.add(update)
 
         this.bone = bone
 
@@ -71,24 +60,12 @@ export class PoseNode implements TreeNode {
     }
 
     updateBonesMatPose() {
-        // let out = mat4.create()
-        // let tmp = mat4.create()
-        // mat4.fromXRotation(out, this.x.value / 360 * 2 * Math.PI)
-        // mat4.fromYRotation(tmp, this.y.value / 360 * 2 * Math.PI)
-        // mat4.multiply(out, out, tmp)
-        // mat4.fromZRotation(tmp, this.z.value / 360 * 2 * Math.PI)
-        // mat4.multiply(out, out, tmp)
-        // this.bone.matPose = out
         this.bone.matPose = euler_matrix(
             (this.x.value / 360) * 2 * Math.PI,
             (this.y.value / 360) * 2 * Math.PI,
             (this.z.value / 360) * 2 * Math.PI
         )
-    }
-
-    updateBonesMatPoseRecursivly() {
-        this.updateBonesMatPose()
-        this.bone.skeleton.boneslist!.forEach((bone) => bone.update())
+        // console.log(`PoseNode(${this.bone.name}) ${this.x.value}, ${this.y.value}, ${this.z.value} -> Bone.matPose`)
     }
 
     find(boneName: string): PoseNode | undefined {

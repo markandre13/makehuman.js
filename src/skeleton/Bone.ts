@@ -1,30 +1,30 @@
-import { vec3, mat4, vec4 } from 'gl-matrix'
-import { getMatrix, get_normal } from './loadSkeleton'
+import { vec3, mat4, vec4 } from "gl-matrix"
+import { getMatrix, get_normal } from "./loadSkeleton"
 import { Skeleton } from "./Skeleton"
 
 export class Bone {
     skeleton: Skeleton
     name: string
-    index: number = -1;
+    index: number = -1 // index within Skeleton.boneslist
     headJoint: string
     tailJoint: string
-    headPos = [0, 0, 0];
-    tailPos = [0, 0, 0];
+    headPos = [0, 0, 0]
+    tailPos = [0, 0, 0]
     roll: string | Array<string>
-    length = 0;
+    length = 0
     yvector4?: vec4 // direction vector of this bone
 
     parent?: Bone
-    children: Bone[] = [];
+    children: Bone[] = []
 
     level: number
-    reference_bones = [];
+    reference_bones = []
 
     // user defined value
     matPose: mat4
 
     // calculated rest position
-    matRestGlobal?: mat4   // bone relative to world
+    matRestGlobal?: mat4 // bone relative to world
     matRestRelative?: mat4 // bone relative to parent
     // calculated pose positions
     matPoseGlobal?: mat4 // relative to world
@@ -39,7 +39,8 @@ export class Bone {
         tailJoint: string,
         roll: string,
         reference_bones?: any,
-        weight_reference_bones?: any) {
+        weight_reference_bones?: any
+    ) {
         this.skeleton = skeleton
         this.name = name
         this.headJoint = headJoint
@@ -79,10 +80,10 @@ export class Bone {
     }
 
     hasChild(name: string) {
-        for(const child of this.children) {
+        for (const child of this.children) {
             if (this.name === name) {
                 return true
-            }   
+            }
             if (child.hasChild(name)) {
                 return true
             }
@@ -129,28 +130,32 @@ export class Bone {
         if (this.parent === undefined) {
             this.matRestRelative = this.matRestGlobal
         } else {
-            this.matRestRelative =
-                mat4.mul(
-                    mat4.create(),
-                    mat4.invert(mat4.create(), this.parent.matRestGlobal!),
-                    this.matRestGlobal
-                )
+            this.matRestRelative = mat4.mul(
+                mat4.create(),
+                mat4.invert(mat4.create(), this.parent.matRestGlobal!),
+                this.matRestGlobal
+            )
         }
         this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
     }
 
     // calculate matPoseGlobal & matPoseVerts
     update() {
-        // console.log()
+        // console.log(`Bone.update() ${this.name}`)
         if (this.parent !== undefined) {
-            this.matPoseGlobal =
-                mat4.multiply(mat4.create(), this.parent.matPoseGlobal!,
-                    mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!))
+            this.matPoseGlobal = mat4.multiply(
+                mat4.create(),
+                this.parent.matPoseGlobal!,
+                mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!)
+            )
         } else {
             this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!)
         }
-        this.matPoseVerts = mat4.multiply(mat4.create(), this.matPoseGlobal,
-            mat4.invert(mat4.create(), this.matRestGlobal!))
+        this.matPoseVerts = mat4.multiply(
+            mat4.create(),
+            this.matPoseGlobal,
+            mat4.invert(mat4.create(), this.matRestGlobal!)
+        )
     }
 
     get_normal(): vec3 {
@@ -169,8 +174,7 @@ export class Bone {
             //     normal /= count
             // else:
             //     normal = np.asarray([0.0, 1.0, 0.0], dtype=np.float32)
-        }
-        else if (typeof this.roll === "string") {
+        } else if (typeof this.roll === "string") {
             const plane_name = this.roll // TODO ugly.. why not call this something else than "roll"?
             normal = get_normal(this.skeleton, plane_name, this.planes)
             // if np.allclose(normal, np.zeros(3), atol=1e-05):

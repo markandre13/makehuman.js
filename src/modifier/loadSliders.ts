@@ -2,6 +2,7 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { Human } from './Human'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { TreeNode } from 'toad.js/table/model/TreeNode'
+import { Modifier } from './Modifier'
 
 export interface Category {
     sortOrder: number
@@ -23,6 +24,7 @@ export class SliderNode implements TreeNode {
     label: string
     category?: Category
     modifierSpec?: ModifierSpec
+    modifier?: Modifier
     model?: NumberModel
     next?: SliderNode
     down?: SliderNode
@@ -41,14 +43,15 @@ export class SliderNode implements TreeNode {
             // in apps/gui/guimodifier.py loadModifierTaskViews
 
             // class Modifier has getMin() & getMax() to get the range
-            const modifier = human!.getModifier(modifierSpec.mod)
-            if (modifier !== undefined) {
-                this.model = modifier.getModel()
+            this.modifier = human!.getModifier(modifierSpec.mod)
+            if (this.modifier !== undefined) {
+                const modifier = this.modifier
+                this.model = this.modifier.getModel()
                 this.model.modified.add(() => {
                     // modifier.setValue(this.model!.value)
-                    modifier.updateValue(this.model!.value)
+                    // modifier.updateValue(this.model!.value)
                     // self.modifier.updateValue(value, G.app.getSetting('realtimeNormalUpdates'))
-                    human!.updateProxyMesh(true)
+                    // human!.updateProxyMesh(true)
                 })
                 // } else {
                 //     console.log(`SliderNode(): no modifier '${modifierSpec.mod}' found for slider`)
