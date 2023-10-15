@@ -1,17 +1,7 @@
 import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
 import { HumanMesh } from "mesh/HumanMesh"
-import { Skeleton } from "skeleton/Skeleton"
-import {
-    Button,
-    OptionModel,
-    Select,
-    SelectionModel,
-    Switch,
-    TableAdapter,
-    TableEditMode,
-    TablePos,
-} from "toad.js"
+import { OptionModel, Select, SelectionModel, Switch, TableAdapter, TableEditMode, TablePos } from "toad.js"
 import { Table } from "toad.js/table/Table"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
@@ -19,7 +9,6 @@ import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { Tab } from "toad.js/view/Tab"
 import { ExpressionModel } from "../expression/ExpressionModel"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
-import { UpdateManager } from "UpdateManager"
 
 class ExpressionAdapter extends TableAdapter<ExpressionModel> {
     constructor(model: ExpressionModel) {
@@ -50,7 +39,6 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
             case 0:
                 if (pos.row < this.model.poseUnit.length) {
                     cell.innerText = this.model.poseUnit[pos.row].label!
-                    // cell.replaceChildren(...(<>{this.model.poseUnit[pos.row].label}</>))
                 }
                 break
             case 1:
@@ -58,14 +46,12 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.poseUnit[pos.row].value.toString()
-                    // cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.poseUnit[pos.row]} />)
                 }
                 break
             case 2:
                 if (pos.row < this.model.bone.length) {
                     const label = this.model.bone[pos.row].x.label
                     if (label !== undefined) {
-                        // cell.replaceChildren(...(<>{label}</>))
                         cell.innerText = label
                     }
                 }
@@ -75,7 +61,6 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.bone[pos.row].x.value.toString()
-                    // cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row].x} />)
                 }
                 break
             case 4:
@@ -83,7 +68,6 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.bone[pos.row].y.value.toString()
-                    // cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row].y} />)
                 }
                 break
             case 5:
@@ -91,19 +75,24 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.bone[pos.row].z.value.toString()
-                    // cell.replaceChildren(<TextField style={{ width: "60px" }} model={this.model.bone[pos.row].z} />)
                 }
                 break
         }
     }
     // override editCell(pos: TablePos, cell: HTMLSpanElement): void {
-        
+
     // }
     override saveCell(pos: TablePos, cell: HTMLSpanElement): void {
         console.log(`saveCell ${pos.col}, ${pos.row} := ${cell.innerText}`)
         switch (pos.col) {
             case 3:
                 this.model.bone[pos.row].x.value = parseFloat(cell.innerText)
+                break
+            case 4:
+                this.model.bone[pos.row].y.value = parseFloat(cell.innerText)
+                break
+            case 5:
+                this.model.bone[pos.row].z.value = parseFloat(cell.innerText)
                 break
         }
     }
@@ -112,7 +101,6 @@ TableAdapter.register(StringArrayAdapter, StringArrayModel)
 TableAdapter.register(ExpressionAdapter, ExpressionModel)
 
 export default function (expressionManager: ExpressionManager, scene: HumanMesh) {
-
     const expressionList = new OptionModel(expressionManager.expressions[0], expressionManager.expressions, {
         label: "Expression",
     })
@@ -138,13 +126,6 @@ export default function (expressionManager: ExpressionManager, scene: HumanMesh)
                 </FormField>
                 <FormHelp model={scene.wireframe} />
             </Form>
-            <Button action={() => {
-                const head = scene.skeleton.poseNodes.find("head")!
-                const x = head.x.value + 5
-                console.log(`update head.x to ${x}`)
-                head.x.value = x
-                console.log(head.x.value)
-            }}>Test</Button>
             <Table selectionModel={sm} model={expressionManager.model} style={{ width: "487px", height: "100%" }} />
         </Tab>
     )
