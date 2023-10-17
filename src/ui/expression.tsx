@@ -1,7 +1,16 @@
 import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
 import { HumanMesh } from "mesh/HumanMesh"
-import { Model, OptionModel, Select, SelectionModel, Switch, TableAdapter, TableEditMode, TablePos } from "toad.js"
+import {
+    NumberModel,
+    OptionModel,
+    Select,
+    SelectionModel,
+    Switch,
+    TableAdapter,
+    TableEditMode,
+    TablePos,
+} from "toad.js"
 import { Table } from "toad.js/table/Table"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
@@ -34,6 +43,17 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
         return <>Value</>
     }
 
+    protected static wheel(model: NumberModel, e: WheelEvent) {
+        // console.log(`wheel event for model ${model.label}`)
+        e.preventDefault()
+        if (e.deltaY > 0) {
+            model.decrement()
+        }
+        if (e.deltaY < 0) {
+            model.increment()
+        }
+    }
+
     override showCell(pos: TablePos, cell: HTMLSpanElement) {
         // cell.style.padding = "1px" // DON'T: this breaks Table's layout algorithm
         switch (pos.col) {
@@ -48,7 +68,10 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = poseUnit.value.toString()
-                    this.model.poseUnits[pos.row].applyStyle(cell)
+                    const model = this.model.poseUnits[pos.row]
+                    model.applyStyle(cell)
+                    cell.onwheel = (event: WheelEvent) => ExpressionAdapter.wheel(this.model.poseUnits[pos.row], event)
+                    cell.ondblclick = () => model.resetToDefault()
                 }
                 break
             case 2:
@@ -63,24 +86,33 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 if (pos.row < this.model.bone.length) {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
-                    cell.innerText = this.model.bone[pos.row].x.value.toString()
-                    this.model.bone[pos.row].x.applyStyle(cell)
+                    const model = this.model.bone[pos.row].x
+                    cell.innerText = model.value.toString()
+                    model.applyStyle(cell)
+                    cell.onwheel = (event: WheelEvent) => ExpressionAdapter.wheel(model, event)
+                    cell.ondblclick = () => model.resetToDefault()
                 }
                 break
             case 4:
                 if (pos.row < this.model.bone.length) {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
-                    cell.innerText = this.model.bone[pos.row].y.value.toString()
-                    this.model.bone[pos.row].y.applyStyle(cell)
+                    const model = this.model.bone[pos.row].y
+                    cell.innerText = model.value.toString()
+                    model.applyStyle(cell)
+                    cell.onwheel = (event: WheelEvent) => ExpressionAdapter.wheel(model, event)
+                    cell.ondblclick = () => model.resetToDefault()
                 }
                 break
             case 5:
                 if (pos.row < this.model.bone.length) {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
-                    cell.innerText = this.model.bone[pos.row].z.value.toString()
-                    this.model.bone[pos.row].z.applyStyle(cell)
+                    const model = this.model.bone[pos.row].z
+                    cell.innerText = model.value.toString()
+                    model.applyStyle(cell)
+                    cell.onwheel = (event: WheelEvent) => ExpressionAdapter.wheel(model, event)
+                    cell.ondblclick = () => model.resetToDefault()
                 }
                 break
         }
@@ -94,15 +126,27 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                 this.model.poseUnits[pos.row].value = parseFloat(cell.innerText)
                 break
             case 3:
-                console.log(`saveCell ${pos.col}, ${pos.row}, x from ${this.model.bone[pos.row].x.value} to ${parseFloat(cell.innerText)})`)
+                // console.log(
+                //     `saveCell ${pos.col}, ${pos.row}, x from ${this.model.bone[pos.row].x.value} to ${parseFloat(
+                //         cell.innerText
+                //     )})`
+                // )
                 this.model.bone[pos.row].x.value = parseFloat(cell.innerText)
                 break
             case 4:
-                console.log(`saveCell ${pos.col}, ${pos.row}, y from ${this.model.bone[pos.row].y.value} to ${parseFloat(cell.innerText)})`)
+                // console.log(
+                //     `saveCell ${pos.col}, ${pos.row}, y from ${this.model.bone[pos.row].y.value} to ${parseFloat(
+                //         cell.innerText
+                //     )})`
+                // )
                 this.model.bone[pos.row].y.value = parseFloat(cell.innerText)
                 break
             case 5:
-                console.log(`saveCell ${pos.col}, ${pos.row}, z from ${this.model.bone[pos.row].z.value} to ${parseFloat(cell.innerText)})`)
+                // console.log(
+                //     `saveCell ${pos.col}, ${pos.row}, z from ${this.model.bone[pos.row].z.value} to ${parseFloat(
+                //         cell.innerText
+                //     )})`
+                // )
                 this.model.bone[pos.row].z.value = parseFloat(cell.innerText)
                 break
         }
