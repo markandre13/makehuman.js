@@ -91,9 +91,9 @@ export class ExpressionManager {
         const weights: number[] = []
         const additiveBlending = true
 
-        for (const p of this.model.poseUnit) {
-            poses.push(this.poseUnitName2Frame.get(p.label!)!)
-            weights.push(p.value)
+        for (const poseUnit of this.model.poseUnits) {
+            poses.push(this.poseUnitName2Frame.get(poseUnit.label!)!)
+            weights.push(poseUnit.value)
         }
 
         const f_idxs = poses

@@ -34,7 +34,7 @@ export class UpdateManager {
        
 
         // console.log(`UpdateManager: observe ${expressionManager.model.poseUnit.length} pose units`)
-        expressionManager.model.poseUnit.forEach( poseUnit => {
+        expressionManager.model.poseUnits.forEach( poseUnit => {
             poseUnit.modified.add( () => {
                 // console.log(`UpdateManager: face pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
                 this.modifiedPoseUnits.add(poseUnit)

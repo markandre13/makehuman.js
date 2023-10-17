@@ -7,13 +7,11 @@ import { ModelReason } from "toad.js/model/Model"
 import { mat4 } from "gl-matrix"
 
 export class ExpressionModel extends TableModel {
-    poseUnit: NumberRelModel[] = []
+    poseUnits: NumberRelModel[] = []
     bone: PoseNode[] = []
 
     constructor(expressionManager: ExpressionManager) {
         super()
-
-
         // pose units
         // some pairs like LeftEyeDown, LeftEyeUp seem to suggest modifiers,
         // especially as we seem to have as many pose units for the face expressions
@@ -28,13 +26,12 @@ export class ExpressionModel extends TableModel {
                 step: 0.05,
                 default: value,
             })
-            const row = this.poseUnit.length
+            const row = this.poseUnits.length
             poseUnitModel.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 1, row))
-                }
+                // FIXME: propagate the reason
+                this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 1, row))
             })
-            this.poseUnit.push(poseUnitModel)
+            this.poseUnits.push(poseUnitModel)
         }
 
         // all face expression bones
@@ -72,7 +69,7 @@ export class ExpressionModel extends TableModel {
         // register dependencies from pose unit to bone
         const identity = mat4.create()
         const nBones = expressionManager.skeleton.boneslist!.length
-        for (const pu of this.poseUnit) {
+        for (const pu of this.poseUnits) {
             const frame = expressionManager.poseUnitName2Frame.get(pu.label!)!
             for (let b_idx = 0; b_idx < nBones; ++b_idx) {
                 const m = expressionManager.base_anim[frame * nBones + b_idx]
@@ -90,18 +87,18 @@ export class ExpressionModel extends TableModel {
         return 2
     }
     override get rowCount() {
-        return Math.max(this.poseUnit.length, this.bone.length)
+        return Math.max(this.poseUnits.length, this.bone.length)
     }
 
     clear() {
-        for (let pu of this.poseUnit) {
-            pu.value = 0
-            pu.default = 0
+        for (let poseUnit of this.poseUnits) {
+            poseUnit.value = 0
+            poseUnit.default = 0
         }
     }
 
     setPoseUnit(name: string, weight: number) {
-        for (let pu of this.poseUnit) {
+        for (let pu of this.poseUnits) {
             if (pu.label === name) {
                 pu.value = pu.default = weight
                 break

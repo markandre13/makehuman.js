@@ -1,7 +1,7 @@
 import { ExpressionManager } from "expression/ExpressionManager"
 import { TAB } from "HistoryManager"
 import { HumanMesh } from "mesh/HumanMesh"
-import { OptionModel, Select, SelectionModel, Switch, TableAdapter, TableEditMode, TablePos } from "toad.js"
+import { Model, OptionModel, Select, SelectionModel, Switch, TableAdapter, TableEditMode, TablePos } from "toad.js"
 import { Table } from "toad.js/table/Table"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
@@ -33,19 +33,22 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
         }
         return <>Value</>
     }
+
     override showCell(pos: TablePos, cell: HTMLSpanElement) {
-        // cell.style.padding = "2px"
+        cell.style.padding = "1px"
         switch (pos.col) {
             case 0:
-                if (pos.row < this.model.poseUnit.length) {
-                    cell.innerText = this.model.poseUnit[pos.row].label!
+                if (pos.row < this.model.poseUnits.length) {
+                    cell.innerText = this.model.poseUnits[pos.row].label!
                 }
                 break
             case 1:
-                if (pos.row < this.model.poseUnit.length) {
+                if (pos.row < this.model.poseUnits.length) {
+                    const poseUnit = this.model.poseUnits[pos.row]
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
-                    cell.innerText = this.model.poseUnit[pos.row].value.toString()
+                    cell.innerText = poseUnit.value.toString()
+                    this.model.poseUnits[pos.row].applyStyle(cell)
                 }
                 break
             case 2:
@@ -61,6 +64,7 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.bone[pos.row].x.value.toString()
+                    this.model.bone[pos.row].x.applyStyle(cell)
                 }
                 break
             case 4:
@@ -68,6 +72,7 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.bone[pos.row].y.value.toString()
+                    this.model.bone[pos.row].y.applyStyle(cell)
                 }
                 break
             case 5:
@@ -75,6 +80,7 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     cell.style.width = "50px"
                     cell.style.textAlign = "right"
                     cell.innerText = this.model.bone[pos.row].z.value.toString()
+                    this.model.bone[pos.row].z.applyStyle(cell)
                 }
                 break
         }
