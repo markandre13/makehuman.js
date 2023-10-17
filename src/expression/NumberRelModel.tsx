@@ -43,16 +43,9 @@ export class NumberRelModel extends NumberModel {
         if (this._value === value) {
             return
         }
-        if (this.label === "head") {
-            console.log(`NumberRelModel(head) := ${value}`)
-            if (value === 0) {
-                console.trace("SET TO NULL")
-            }
-        }
-        // this.modified.withLock(() => {
-            super.value = value
-            this.change()
-        // })
+        // console.log(`NumberRelModel(${this.label}) set to ${value}`)
+        super.value = value
+        this.change()
     }
     override get value(): number {
         return super.value

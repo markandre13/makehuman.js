@@ -89,15 +89,20 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
 
     // }
     override saveCell(pos: TablePos, cell: HTMLSpanElement): void {
-        console.log(`saveCell ${pos.col}, ${pos.row} := ${cell.innerText}`)
         switch (pos.col) {
+            case 1:
+                this.model.poseUnits[pos.row].value = parseFloat(cell.innerText)
+                break
             case 3:
+                console.log(`saveCell ${pos.col}, ${pos.row}, x from ${this.model.bone[pos.row].x.value} to ${parseFloat(cell.innerText)})`)
                 this.model.bone[pos.row].x.value = parseFloat(cell.innerText)
                 break
             case 4:
+                console.log(`saveCell ${pos.col}, ${pos.row}, y from ${this.model.bone[pos.row].y.value} to ${parseFloat(cell.innerText)})`)
                 this.model.bone[pos.row].y.value = parseFloat(cell.innerText)
                 break
             case 5:
+                console.log(`saveCell ${pos.col}, ${pos.row}, z from ${this.model.bone[pos.row].z.value} to ${parseFloat(cell.innerText)})`)
                 this.model.bone[pos.row].z.value = parseFloat(cell.innerText)
                 break
         }
