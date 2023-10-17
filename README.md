@@ -8,7 +8,7 @@
 
 ## Current Status
 
-* Have a look at [build 2023-10-04](https://markandre13.github.io/makehuman.js/)
+* Have a look at [build 2023-10-17](https://markandre13.github.io/makehuman.js/)
 * Morph mesh
 * Pose skeleton and adjust mesh
 * Select one of 32 pre-defined facial expressions and/org edit facial pose units
