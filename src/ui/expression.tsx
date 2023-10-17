@@ -35,7 +35,7 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
     }
 
     override showCell(pos: TablePos, cell: HTMLSpanElement) {
-        cell.style.padding = "1px"
+        // cell.style.padding = "1px" // DON'T: this breaks Table's layout algorithm
         switch (pos.col) {
             case 0:
                 if (pos.row < this.model.poseUnits.length) {
