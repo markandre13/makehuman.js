@@ -21,7 +21,7 @@ export class NumberRelModel extends NumberModel {
     change() {
         let changed = false
         for (let observed of this.observed) {
-            if (observed.value !== observed.options?.default) {
+            if (observed.value !== observed.default) {
                 changed = true
                 break
             }
@@ -29,7 +29,7 @@ export class NumberRelModel extends NumberModel {
         if (changed) {
             this.color = "italic"
         } else {
-            if (this.value === this.options?.default) {
+            if (this.value === this.default) {
                 // this.color = ""
                 this.color = "bold"
             } else {
@@ -43,7 +43,6 @@ export class NumberRelModel extends NumberModel {
         if (this._value === value) {
             return
         }
-        // console.log(`NumberRelModel(${this.label}) set to ${value}`)
         super.value = value
         this.change()
     }
