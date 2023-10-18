@@ -1,47 +1,64 @@
-import { Human } from './modifier/Human'
-import { TargetFactory } from './target/TargetFactory'
-import { loadSkeleton } from './skeleton/loadSkeleton'
-import { loadModifiers } from './modifier/loadModifiers'
-import { loadSliders, SliderNode } from './modifier/loadSliders'
-import { WavefrontObj } from 'mesh/WavefrontObj'
-import { HumanMesh } from './mesh/HumanMesh'
-import { RenderMode } from './render/RenderMode'
-import { exportCollada } from 'mesh/Collada'
-import { ProxyType } from 'proxy/Proxy'
+import { Human } from "./modifier/Human"
+import { TargetFactory } from "./target/TargetFactory"
+import { loadSkeleton } from "./skeleton/loadSkeleton"
+import { loadModifiers } from "./modifier/loadModifiers"
+import { loadSliders, SliderNode } from "./modifier/loadSliders"
+import { WavefrontObj } from "mesh/WavefrontObj"
+import { HumanMesh } from "./mesh/HumanMesh"
+import { RenderMode } from "./render/RenderMode"
+import { exportCollada } from "mesh/Collada"
+import { ProxyType } from "proxy/Proxy"
 
-import { PoseTreeAdapter } from 'ui/poseView'
-import { PoseNode } from 'expression/PoseNode'
-import { SliderTreeAdapter } from 'ui/morphView'
-import { render } from './render/render'
-import { renderFace } from 'render/renderFace'
+import { PoseTreeAdapter } from "ui/poseView"
+import { PoseNode } from "expression/PoseNode"
+import { SliderTreeAdapter } from "ui/morphView"
+import { render } from "./render/render"
+import { renderFace } from "render/renderFace"
 
-import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
-import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
+import { FileSystemAdapter } from "./filesystem/FileSystemAdapter"
+import { HTTPFSAdapter } from "./filesystem/HTTPFSAdapter"
 
-import { Table } from 'toad.js/table/Table'
-import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
+import { Table } from "toad.js/table/Table"
+import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
 import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
-import { Fragment, ref } from "toad.jsx"
-import { Tab, Tabs } from 'toad.js/view/Tab'
-import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
-import { BooleanModel, Button, Checkbox, Select } from 'toad.js'
-import { ProxyManager } from './ProxyManager'
-import chordata from 'ui/chordata'
-import { TAB, initHistoryManager } from 'HistoryManager'
-import expression from 'ui/expression'
-import { ExpressionManager } from 'expression/ExpressionManager'
-import { UpdateManager } from 'UpdateManager'
+import { Tab, Tabs } from "toad.js/view/Tab"
+import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
+import { BooleanModel, Button, Checkbox, ref, Select } from "toad.js"
+import { ProxyManager } from "./ProxyManager"
+import chordata from "ui/chordata"
+import { TAB, initHistoryManager } from "HistoryManager"
+import expression from "ui/expression"
+import { ExpressionManager } from "expression/ExpressionManager"
+import { UpdateManager } from "UpdateManager"
 
-window.onload = () => { main() }
+document.body.replaceChildren(
+    <div
+        style={{
+            display: "flex",
+            position: "absolute",
+            left: 0,
+            top: 0,
+            margin: 0,
+            backgroundColor: "#444",
+            width: "100vw",
+            height: "100vh",
+            alignItems: "center",
+            justifyContent: "center",
+        }}
+    >
+        makehuman.js is loading...
+    </div>
+)
+
+window.onload = () => main()
 
 export function main() {
     try {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
         run()
         // runMediaPipe()
-    }
-    catch (e) {
+    } catch (e) {
         console.log(e)
         if (e instanceof Error) {
             alert(`${e.name}: ${e.message}`)
@@ -85,10 +102,19 @@ export function main() {
 // [ ] try opencv motion tracking to track optional markers painted
 //     on the real face
 export function runMediaPipe() {
-    const refCanvas = new class { canvas!: HTMLCanvasElement }
-    document.body.replaceChildren(...<>
-        <canvas set={ref(refCanvas, 'canvas')} style={{ width: '480px', height: '480px', border: "1px #fff solid" }} />
-    </>)
+    const refCanvas = new (class {
+        canvas!: HTMLCanvasElement
+    })()
+    document.body.replaceChildren(
+        ...(
+            <>
+                <canvas
+                    set={ref(refCanvas, "canvas")}
+                    style={{ width: "480px", height: "480px", border: "1px #fff solid" }}
+                />
+            </>
+        )
+    )
     // const obj = new WavefrontObj('data/canonical_face_model.obj') // uh! not quads
 
     const enc = new TextEncoder()
@@ -102,13 +128,12 @@ export function runMediaPipe() {
             let arrayBuffer: ArrayBuffer
             if (msg.data instanceof Blob) {
                 arrayBuffer = await msg.data.arrayBuffer()
-            } else
-                if (msg.data instanceof ArrayBuffer) {
-                    arrayBuffer = msg.data
-                } else {
-                    console.log("neither blob nor arraybuffer")
-                    return
-                }
+            } else if (msg.data instanceof ArrayBuffer) {
+                arrayBuffer = msg.data
+            } else {
+                console.log("neither blob nor arraybuffer")
+                return
+            }
             renderFace(refCanvas.canvas, arrayBuffer)
             socket.send(enc.encode("GET FACE"))
         }
@@ -120,14 +145,14 @@ export function runMediaPipe() {
 //   class MHApplication
 //     startupSequence()
 function run() {
-    const references = new class { 
+    const references = new (class {
         canvas!: HTMLCanvasElement
         overlay!: HTMLElement
-    }
+    })()
 
-    console.log('loading assets...')
+    console.log("loading assets...")
     const human = new Human()
-    const obj = new WavefrontObj('data/3dobjs/base.obj')
+    const obj = new WavefrontObj("data/3dobjs/base.obj")
     const scene = new HumanMesh(human, obj)
     human.scene = scene
 
@@ -141,19 +166,19 @@ function run() {
 
     // human.modified.add(() => scene.updateRequired = Update.MORPH)
 
-    const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
+    const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
     scene.skeleton = skeleton
 
     // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
-    loadModifiers(human, 'data/modifiers/modeling_modifiers.json')
-    loadModifiers(human, 'data/modifiers/measurement_modifiers.json')
+    loadModifiers(human, "data/modifiers/modeling_modifiers.json")
+    loadModifiers(human, "data/modifiers/measurement_modifiers.json")
 
     // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
-    const sliderNodes = loadSliders(human, 'data/modifiers/modeling_sliders.json')
+    const sliderNodes = loadSliders(human, "data/modifiers/modeling_sliders.json")
 
     loadMacroTargets()
 
-    console.log('everything is loaded...')
+    console.log("everything is loaded...")
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
@@ -164,7 +189,7 @@ function run() {
         if (references.overlay) {
             references.overlay.replaceChildren()
         }
-        switch(tabModel.value) {
+        switch (tabModel.value) {
             case TAB.PROXY:
             case TAB.MORPH:
             case TAB.MEDIAPIPE:
@@ -205,60 +230,73 @@ function run() {
 
     const download = makeDownloadAnchor()
 
-    // htmlFor={ProxyType[pid]}
-    const mainScreen = <>
-        <Tabs model={tabModel} style={{ position: 'absolute', left: 0, width: '500px', top: 0, bottom: 0 }}>
-            <Tab label="Proxy" value={TAB.PROXY}>
-                <Form variant="narrow">
-                    {proxyManager.allProxyTypes.map(pid => <>
-                        <FormLabel>{ProxyType[pid]}</FormLabel>
-                        <FormField>
-                            <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
-                        </FormField>
-                        <FormHelp model={proxyManager.list.get(pid) as any}/>
-                    </>
-                    )}
-                </Form>
-            </Tab>
-           {expression(expressionManager, scene)}
-            <Tab label="Morph" value={TAB.MORPH}>
-                <Table model={morphControls} style={{ width: '100%', height: '100%' }} />
-            </Tab>
-            <Tab label="Pose" value={TAB.POSE}>
-                <Table model={poseControls} style={{ width: '100%', height: '100%' }} />
-            </Tab>
-            <Tab label="Export" value={TAB.EXPORT}>
-                <div style={{ padding: "10px" }}>
-                    <p>
-                        <Checkbox model={useBlenderProfile} title="Export additional Blender specific information (for material, shaders, bones, etc.)." /> Use Blender Profile
-                    </p>
-                    <p>
-                        <Checkbox model={limitPrecision} title="Reduce the precision of the exported data to 6 digits." /> Limit Precision
-                    </p>
-                    <p>
-                        <u>NOTE</u>: When importing into Blender, only the first material may look correct
-                        in the UV editor while rendering will still be okay.
-                        A workaround is to separate the mesh by material after import. (Edit Mode, P).
-                    </p>
-                    <p>
-                        <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded
-                        animation of the jaw.
-                    </p>
-                    <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
+    document.body.replaceChildren(
+        ...(
+            <>
+                <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
+                    <Tab label="Proxy" value={TAB.PROXY}>
+                        <Form variant="narrow">
+                            {proxyManager.allProxyTypes.map((pid) => (
+                                <>
+                                    <FormLabel>{ProxyType[pid]}</FormLabel>
+                                    <FormField>
+                                        <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
+                                    </FormField>
+                                    <FormHelp model={proxyManager.list.get(pid) as any} />
+                                </>
+                            ))}
+                        </Form>
+                    </Tab>
+                    {expression(expressionManager, scene)}
+                    <Tab label="Morph" value={TAB.MORPH}>
+                        <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
+                    </Tab>
+                    <Tab label="Pose" value={TAB.POSE}>
+                        <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
+                    </Tab>
+                    <Tab label="Export" value={TAB.EXPORT}>
+                        <div style={{ padding: "10px" }}>
+                            <p>
+                                <Checkbox
+                                    model={useBlenderProfile}
+                                    title="Export additional Blender specific information (for material, shaders, bones, etc.)."
+                                />{" "}
+                                Use Blender Profile
+                            </p>
+                            <p>
+                                <Checkbox
+                                    model={limitPrecision}
+                                    title="Reduce the precision of the exported data to 6 digits."
+                                />{" "}
+                                Limit Precision
+                            </p>
+                            <p>
+                                <u>NOTE</u>: When importing into Blender, only the first material may look correct in
+                                the UV editor while rendering will still be okay. A workaround is to separate the mesh
+                                by material after import. (Edit Mode, P).
+                            </p>
+                            <p>
+                                <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded
+                                animation of the jaw.
+                            </p>
+                            <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
+                        </div>
+                    </Tab>
+                    <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
+                        Mediapipe coming soon
+                    </Tab>
+                    {chordata}
+                </Tabs>
+                <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
+                    <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
+                    <div
+                        set={ref(references, "overlay")}
+                        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" }}
+                    ></div>
                 </div>
-            </Tab>
-            <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
-                Mediapipe coming soon
-            </Tab>
-            {chordata}
-        </Tabs>
-        <div style={{ position: 'absolute', left: '500px', right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
-            <canvas set={ref(references, 'canvas')} style={{ width: '100%', height: '100%' }} />
-            <div  set={ref(references, 'overlay')}  style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
-            </div>
-        </div>
-    </> as Fragment
-    mainScreen.appendTo(document.body)
+            </>
+        )
+    )
     render(references.canvas, references.overlay, scene, renderMode, updateManager)
 }
 
@@ -272,7 +310,7 @@ function makeDownloadAnchor() {
 
 function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
     download.download = "makehuman.dae"
-    download.href = URL.createObjectURL(new Blob([exportCollada(scene)], { type: 'text/plain' }))
+    download.href = URL.createObjectURL(new Blob([exportCollada(scene)], { type: "text/plain" }))
     download.dispatchEvent(new MouseEvent("click"))
 }
 
@@ -283,11 +321,10 @@ function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
 function loadMacroTargets() {
     const targetFactory = TargetFactory.getInstance()
     // for target in targets.getTargets().findTargets('macrodetails'):
-    for (const target of targetFactory.findTargets('macrodetails')) {
+    for (const target of targetFactory.findTargets("macrodetails")) {
         //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
         //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
         // console.log(target.path)
         // target.getTarget()
     }
 }
-
