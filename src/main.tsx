@@ -32,25 +32,6 @@ import expression from "ui/expression"
 import { ExpressionManager } from "expression/ExpressionManager"
 import { UpdateManager } from "UpdateManager"
 
-document.body.replaceChildren(
-    <div
-        style={{
-            display: "flex",
-            position: "absolute",
-            left: 0,
-            top: 0,
-            margin: 0,
-            backgroundColor: "#444",
-            width: "100vw",
-            height: "100vh",
-            alignItems: "center",
-            justifyContent: "center",
-        }}
-    >
-        makehuman.js is loading...
-    </div>
-)
-
 window.onload = () => main()
 
 export function main() {
