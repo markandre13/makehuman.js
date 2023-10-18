@@ -56,8 +56,71 @@ describe("`(face) expression", function () {
         return `${name} = [${q[0]}, ${q[1]}, ${q[2]}, ${q[3]}, ${q[4]}, ${q[5]}, ${q[6]}, ${q[7]}]`
     }
 
-    it("pose unit analysis", async function() {
-        
+    xit("pose unit analysis", async function() {
+        // Pump Suck
+        // Left Right
+        // Down Up
+        const map = new Map<string, string[]>()
+        const poseunitNames: string[] = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json")).framemapping
+
+        for(const name of poseunitNames) {
+            let key: string | undefined
+            if (name === "LeftInnerBrowUp" || name === "LeftOuterBrowUp" || name === "LeftBrowDown") {
+                key = "LeftBrow"
+            } else
+            if (name === "RightInnerBrowUp" || name === "RightOuterBrowUp" || name === "RightBrowDown") {
+                key = "RightBrow"
+            } else
+            if (name.endsWith("Open")) {
+                key = name.substring(0, name.length - 4)
+            } else
+            if (name.endsWith("Closed")) {
+                key = name.substring(0, name.length - 6)
+            } else
+            if (name.endsWith("Left")) {
+                key = name.substring(0, name.length - 4)
+            } else
+            if (name.endsWith("Right")) {
+                key = name.substring(0, name.length - 5)
+            } else
+            if (name.endsWith("Up")) {
+                key = name.substring(0, name.length - 2) + "UpDown"
+            } else
+            if (name.endsWith("Down")) {
+                key = name.substring(0, name.length - 4) + "UpDown"
+            } else
+            if (name.endsWith("Forward")) {
+                key = name.substring(0, name.length - 7)
+            } else
+            if (name.endsWith("Backward")) {
+                key = name.substring(0, name.length - 8)
+            } else
+            if (name.endsWith("Pump")) {
+                key = name.substring(0, name.length - 4)
+            } else
+            if (name.endsWith("Suck")) {
+                key = name.substring(0, name.length - 4)
+            } else
+            if (name.startsWith("Left")) {
+                key = name.substring(4)
+            } else
+            if (name.startsWith("Right")) {
+                key = name.substring(5)
+            } else {
+                key = name
+            }
+            let a = map.get(key)
+            if (a === undefined) {
+                a = []
+                map.set(key, a)
+            }
+            a.push(name)
+        }
+        map.forEach((it, key) => {
+            console.log(`${key}: ${it.join(" ")}`)
+        })
+        console.log(map.size)
+        console.log(poseunitNames.length)
     })
 
     it("python matrix order", function () {
