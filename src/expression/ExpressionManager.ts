@@ -36,6 +36,9 @@ export class ExpressionManager {
         const pm = this.getBlendedPose()
         for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
             const bone = this.skeleton.boneslist![boneIdx]
+            if (bone.name === "head") {
+                continue
+            }
             const mrg = bone.matRestGlobal!
             const m = calcWebGL(pm[boneIdx], mrg)
             const poseNode = this.skeleton.poseNodes.find(bone.name)
