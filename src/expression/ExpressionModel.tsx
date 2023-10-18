@@ -42,7 +42,7 @@ export class ExpressionModel extends TableModel {
             faceBones.add(bone.name)
             bone.children.forEach((child) => foo(child))
         }
-       
+
         Array.from(faceBones)
             .sort()
             .forEach((name) => {
@@ -54,7 +54,7 @@ export class ExpressionModel extends TableModel {
                     const row = this.bone.length
                     this.bone.push(node)
                     node.x.modified.add(() => {
-                        this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 3, row)) 
+                        this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 3, row))
                     })
                     node.y.modified.add(() => {
                         this.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 4, row))

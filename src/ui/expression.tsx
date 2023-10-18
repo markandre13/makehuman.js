@@ -72,6 +72,8 @@ class ExpressionAdapter extends TableAdapter<ExpressionModel> {
                     model.applyStyle(cell)
                     cell.onwheel = (event: WheelEvent) => ExpressionAdapter.wheel(this.model.poseUnits[pos.row], event)
                     cell.ondblclick = () => model.resetToDefault()
+                    cell.onpointerenter = () => model.focus(true)
+                    cell.onpointerleave = () => model.focus(false)
                 }
                 break
             case 2:

@@ -1,4 +1,5 @@
 import { NumberModel } from "toad.js"
+import { ModelReason } from "toad.js/model/Model"
 import { NumberModelOptions } from "toad.js/model/NumberModel"
 
 export class NumberRelModel extends NumberModel {
@@ -29,6 +30,9 @@ export class NumberRelModel extends NumberModel {
         if (changed) {
             this.color = "italic"
         } else {
+            if (this.hasFocus) {
+                this.color = "var(--tx-orange-400)"
+            } else
             if (this.value === this.default) {
                 // this.color = ""
                 this.color = "bold"
@@ -37,6 +41,19 @@ export class NumberRelModel extends NumberModel {
                 this.color = ""
             }
         }
+    }
+    hasFocus = false
+    focus(flag: boolean) {
+        if (flag === this.hasFocus) {
+            return
+        }
+        this.hasFocus = flag
+        this.change()
+        this.observed.forEach(it => {
+            if (it instanceof NumberRelModel) {
+                it.focus(flag)
+            }
+        })
     }
 
     override set value(value: number | string) {
