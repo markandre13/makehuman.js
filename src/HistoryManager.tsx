@@ -6,6 +6,7 @@ export enum TAB {
     EXPRESSION = "expression",
     MORPH = "morph",
     POSE = "pose",
+    POSE2 = "pose2",
     EXPORT = "export",
     MEDIAPIPE = "mediapipe",
     CHORDATA = "chordata"

@@ -22,7 +22,6 @@ export class ExpressionManager {
         // the BVH contains an animation frame for each pose unit ()
         const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
         // the BVH as all matrices for all bones for all animation frames: (frame0, bone0), (frame0, bone1), ... , (frame0, boneX), (frame1, bone0), ...
-        // TODO: improve: most the matrices will be the identity matrix which we could (?) skip during the calculation
         this.base_anim = facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
         // pose unit names for each frame
         this.facePoseUnitsNames = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))

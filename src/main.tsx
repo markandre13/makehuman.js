@@ -211,10 +211,36 @@ function run() {
 
     const download = makeDownloadAnchor()
 
+    // The official Makehuman 1.2 menu structure and how it maps to makehuman.js:
+    //
+    // Files
+    //   Load
+    //   Save
+    //   Export -> Export
+    // Modelling -> Morph
+    // Geometries -> Proxy
+    // Materials -> TBD as part of Proxy
+    // Pose/Animate
+    //    Skeleton -> nope, only the full/default skeleton for now
+    //    Pose -> err... that's only loading predefined poses, not posing
+    //    Expression -> Expression
+    //    Animations
+    // Rendering -> nope
+    // Settings
+    // Utilities
+    //   ...
+    //   Expression mixer -> part of Expression
+    //   ...
+    //   Targets -> TBD as part of Morph
+    // Help
+
     document.body.replaceChildren(
         ...(
             <>
                 <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
+                    <Tab label="Morph" value={TAB.MORPH}>
+                        <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
+                    </Tab>
                     <Tab label="Proxy" value={TAB.PROXY}>
                         <Form variant="narrow">
                             {proxyManager.allProxyTypes.map((pid) => (
@@ -228,13 +254,13 @@ function run() {
                             ))}
                         </Form>
                     </Tab>
-                    {expression(expressionManager, scene)}
-                    <Tab label="Morph" value={TAB.MORPH}>
-                        <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
-                    </Tab>
                     <Tab label="Pose" value={TAB.POSE}>
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
+                    <Tab label="Pose2" value={TAB.POSE2}>
+                        {/* <Table model={poseControls} style={{ width: "100%", height: "100%" }} /> */}
+                    </Tab>
+                    {expression(expressionManager, scene)}
                     <Tab label="Export" value={TAB.EXPORT}>
                         <div style={{ padding: "10px" }}>
                             <p>
