@@ -1,24 +1,24 @@
 import { expect, use } from '@esm-bundle/chai'
-import { chaiString } from './chai/chaiString'
+import { chaiString } from '../chai/chaiString'
 use(chaiString)
-import { chaiAlmost } from "./chai/chaiAlmost"
+import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost(0.00001))
 
 import { mat4, vec3, quat2 } from 'gl-matrix'
 
-import { FileSystemAdapter } from '../src/filesystem/FileSystemAdapter'
-import { HTTPFSAdapter } from '../src/filesystem/HTTPFSAdapter'
-import { loadSkeleton } from '../src/skeleton/loadSkeleton'
-import { Human } from '../src/modifier/Human'
-import { HumanMesh } from '../src/mesh/HumanMesh'
-import { WavefrontObj } from '../src/mesh/WavefrontObj'
-import { ExpressionManager, calcWebGL } from '../src/expression/ExpressionManager'
-import { BiovisionHierarchy } from "../src/lib/BiovisionHierarchy"
-import { toEuler } from "../src/lib/toEuler"
+import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
+import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
+import { Human } from '../../src/modifier/Human'
+import { HumanMesh } from '../../src/mesh/HumanMesh'
+import { WavefrontObj } from '../../src/mesh/WavefrontObj'
+import { ExpressionManager, calcWebGL } from '../../src/expression/ExpressionManager'
+import { BiovisionHierarchy } from "../../src/lib/BiovisionHierarchy"
+import { toEuler } from "../../src/lib/toEuler"
 
-import { laugh01_OUT } from './testdata/laugh01'
-import { python_bvh } from './testdata/python_bvh'
-import { base_anim_data } from './testdata/base_anim_data'
+import { laugh01_OUT } from '../testdata/laugh01'
+import { python_bvh } from '../testdata/python_bvh'
+import { base_anim_data } from '../testdata/base_anim_data'
 
 // 2_posing_expression.py
 //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
