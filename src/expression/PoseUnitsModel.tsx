@@ -3,10 +3,9 @@ import { PoseNode } from "expression/PoseNode"
 import { TableEvent, TableEventType, TableModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { NumberRelModel } from "./NumberRelModel"
-import { ModelReason } from "toad.js/model/Model"
 import { mat4 } from "gl-matrix"
 
-export class ExpressionModel extends TableModel {
+export class PoseUnitsModel extends TableModel {
     poseUnits: NumberRelModel[] = []
     bone: PoseNode[] = []
 

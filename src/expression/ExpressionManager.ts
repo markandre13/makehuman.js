@@ -3,7 +3,7 @@ import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { Skeleton } from "skeleton/Skeleton"
-import { ExpressionModel } from "./ExpressionModel"
+import { PoseUnitsModel } from "./PoseUnitsModel"
 import { euler_from_matrix } from "lib/euler_matrix"
 
 export class ExpressionManager {
@@ -13,7 +13,7 @@ export class ExpressionManager {
     poseUnitName2Frame = new Map<string, number>()
     expressions: string[] // list of predefined expressions
 
-    model: ExpressionModel
+    model: PoseUnitsModel
 
     constructor(skeleton: Skeleton) {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
@@ -33,7 +33,7 @@ export class ExpressionManager {
             .filter((filename) => filename.endsWith(".mhpose"))
             .map((filename) => filename.substring(0, filename.length - 7))
 
-        this.model = new ExpressionModel(this)
+        this.model = new PoseUnitsModel(this)
     }
 
     // set the face expression pose units from on of the pre-defined expressions

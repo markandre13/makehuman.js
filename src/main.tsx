@@ -26,11 +26,13 @@ import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
 import { BooleanModel, Button, Checkbox, ref, Select } from "toad.js"
 import { ProxyManager } from "./ProxyManager"
-import chordata from "ui/chordata"
-import { TAB, initHistoryManager } from "HistoryManager"
-import expression from "ui/expression"
 import { ExpressionManager } from "expression/ExpressionManager"
 import { UpdateManager } from "UpdateManager"
+
+import { TAB, initHistoryManager } from "HistoryManager"
+import expressionTab from "ui/expression"
+import poseTab from "ui/pose"
+import chordataTab from "ui/chordata"
 
 window.onload = () => main()
 
@@ -258,9 +260,9 @@ function run() {
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
                     <Tab label="Pose2" value={TAB.POSE2}>
-                        {/* <Table model={poseControls} style={{ width: "100%", height: "100%" }} /> */}
+                        {poseTab()}
                     </Tab>
-                    {expression(expressionManager, scene)}
+                    {expressionTab(expressionManager, scene)}
                     <Tab label="Export" value={TAB.EXPORT}>
                         <div style={{ padding: "10px" }}>
                             <p>
@@ -292,7 +294,7 @@ function run() {
                     <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
                         Mediapipe coming soon
                     </Tab>
-                    {chordata}
+                    {chordataTab}
                 </Tabs>
                 <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
                     <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
