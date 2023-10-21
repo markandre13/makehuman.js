@@ -3,11 +3,13 @@ import { TableEvent, TableEventType, TableModel } from "toad.js"
 import { NumberRelModel } from "./NumberRelModel"
 import { Skeleton } from "skeleton/Skeleton"
 
-export abstract class PoseUnitsModel extends TableModel {
+export class PoseUnitsModel extends TableModel {
     poseUnits: NumberRelModel[] = []
     bone: PoseNode[] = []
 
-    abstract getRelevantBones(skeleton: Skeleton): Set<string>
+    getRelevantBones(skeleton: Skeleton): Set<string> {
+        throw Error("not implemented")
+    }
 
     clear() {
         for (let poseUnit of this.poseUnits) {

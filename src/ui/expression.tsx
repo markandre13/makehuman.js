@@ -6,20 +6,12 @@ import {
     Select,
     SelectionModel,
     Switch,
-    TableAdapter,
     TableEditMode,
 } from "toad.js"
 import { Table } from "toad.js/table/Table"
-import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
-import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 
 import { Tab } from "toad.js/view/Tab"
-import { ExpressionModel } from "expression/ExpressionModel"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
-import { PoseUnitsAdapter } from "./PoseUnitsAdapter"
-
-TableAdapter.register(StringArrayAdapter, StringArrayModel)
-TableAdapter.register(PoseUnitsAdapter, ExpressionModel)
 
 export default function (expressionManager: ExpressionManager, scene: HumanMesh) {
     const expressionList = new OptionModel(expressionManager.expressions[0], expressionManager.expressions, {

@@ -24,7 +24,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { BooleanModel, Button, Checkbox, ref, Select } from "toad.js"
+import { BooleanModel, Button, Checkbox, ref, Select, TableAdapter } from "toad.js"
 import { ProxyManager } from "./ProxyManager"
 import { ExpressionManager } from "expression/ExpressionManager"
 import { UpdateManager } from "UpdateManager"
@@ -33,6 +33,11 @@ import { TAB, initHistoryManager } from "HistoryManager"
 import expressionTab from "ui/expression"
 import poseTab from "ui/pose"
 import chordataTab from "ui/chordata"
+import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
+import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
+import { PoseModel } from "pose/PoseModel"
+import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
+import { PoseUnitsModel } from "expression/PoseUnitsModel"
 
 window.onload = () => main()
 
@@ -166,6 +171,9 @@ function run() {
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
+    TableAdapter.register(StringArrayAdapter, StringArrayModel)
+    TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel)
+
     const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
     const tabModel = new EnumModel(TAB.PROXY, TAB)
     tabModel.modified.add(() => {
@@ -181,6 +189,9 @@ function run() {
             case TAB.POSE:
             case TAB.EXPORT:
                 renderMode.value = RenderMode.WIREFRAME
+                break
+            case TAB.POSE2:
+                renderMode.value = RenderMode.POSE
                 break
             case TAB.EXPRESSION:
                 renderMode.value = RenderMode.EXPRESSION
@@ -259,9 +270,7 @@ function run() {
                     <Tab label="Pose" value={TAB.POSE}>
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
-                    <Tab label="Pose2" value={TAB.POSE2}>
-                        {poseTab()}
-                    </Tab>
+                    {poseTab(scene)}
                     {expressionTab(expressionManager, scene)}
                     <Tab label="Export" value={TAB.EXPORT}>
                         <div style={{ padding: "10px" }}>

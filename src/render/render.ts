@@ -1,5 +1,5 @@
 import { EnumModel } from "toad.js"
-import { HumanMesh, Update } from "../mesh/HumanMesh"
+import { HumanMesh } from "../mesh/HumanMesh"
 import { RenderMode } from "./RenderMode"
 import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
@@ -46,7 +46,9 @@ export function render(
         const deltaTime = now - lastRenderTime
         lastRenderTime = now
         
-        const wireframe = mode.value === RenderMode.WIREFRAME || (mode.value === RenderMode.EXPRESSION && scene.wireframe.value)
+        const wireframe = mode.value === RenderMode.WIREFRAME || (
+            (mode.value === RenderMode.EXPRESSION || mode.value === RenderMode.POSE)
+            && scene.wireframe.value)
 
         if (scene.changedProxy !== undefined) {
             if (scene.proxies.has(scene.changedProxy)) {

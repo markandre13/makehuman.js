@@ -11,14 +11,6 @@ export function isZero(a: number): boolean {
     return Math.abs(a) <= epsilon
 }
 
-// FIXME: the name doesn't tell enough, alternatives(?): HowMuchToUpdate, WhatsChanged, ChangeType, ModelChangeExtend...
-// the updates with higher numbers include all other updates with lower numbers
-export enum Update {
-    NONE,
-    POSE,
-    MORPH,
-}
-
 export class HumanMesh {
     human: Human
     baseMesh: WavefrontObj

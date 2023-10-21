@@ -18,8 +18,6 @@ export function renderHuman(
     renderMode: RenderMode,
     wireframe: boolean
 ): void {
-    
-
     const WORD_LENGTH = 2
 
     const canvas = gl.canvas as HTMLCanvasElement

@@ -1,3 +1,25 @@
-export default function() {
-    return <>Under Construction</>
+import { TAB } from "HistoryManager"
+import { HumanMesh } from "mesh/HumanMesh"
+import { PoseModel } from "pose/PoseModel"
+import { SelectionModel, Switch, Table, TableEditMode } from "toad.js"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
+import { Tab } from "toad.js/view/Tab"
+
+export default function (scene: HumanMesh) {
+    // FIXME: TableEditMode shouldn't be part of SelectionModel
+    // FIXME: also: this was a pain to find... :(
+    const pm = new PoseModel(scene.skeleton)
+    const sm = new SelectionModel(TableEditMode.EDIT_CELL)
+    return (
+        <Tab label="Pose2" value={TAB.POSE2} style={{ overflow: "none" }}>
+            <Form>
+                <FormLabel model={scene.wireframe} />
+                <FormField>
+                    <Switch model={scene.wireframe} />
+                </FormField>
+                <FormHelp model={scene.wireframe} />
+            </Form>
+            <Table selectionModel={sm} model={pm} style={{ width: "487px", height: "100%" }} />
+        </Tab>
+    )
 }

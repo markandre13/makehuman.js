@@ -4,7 +4,6 @@ import { mat4 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { PoseUnitsModel } from "./PoseUnitsModel"
 
-
 export class ExpressionModel extends PoseUnitsModel {
     constructor(expressionManager: ExpressionManager) {
         super()
