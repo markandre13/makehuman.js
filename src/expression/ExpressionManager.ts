@@ -21,7 +21,6 @@ export class ExpressionManager {
         this.skeleton = skeleton
 
         this.facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
-        console.log(this.facePoseUnits)
         this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
         this.facePoseUnitsNames = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
@@ -140,25 +139,12 @@ export class ExpressionManager {
 }
 
 export function calcWebGL(poseMat: mat4, matRestGlobal: mat4) {
-    // return poseMat
+    // prettier-ignore
     let matPose = mat4.fromValues(
-        poseMat[0],
-        poseMat[1],
-        poseMat[2],
-        0,
-        poseMat[4],
-        poseMat[5],
-        poseMat[6],
-        0,
-        poseMat[8],
-        poseMat[9],
-        poseMat[10],
-        0,
-        0,
-        0,
-        0,
-        1
-    )
+        poseMat[0], poseMat[1], poseMat[2],  0,
+        poseMat[4], poseMat[5], poseMat[6],  0,
+        poseMat[8], poseMat[9], poseMat[10], 0,
+        0,          0,          0,           1  )
     const invRest = mat4.invert(mat4.create(), matRestGlobal)
     const m0 = mat4.multiply(mat4.create(), invRest, matPose)
     mat4.multiply(matPose, m0, matRestGlobal)
