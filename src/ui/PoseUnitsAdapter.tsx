@@ -1,8 +1,8 @@
 import { NumberModel, TableAdapter, TablePos } from "toad.js"
-import { PoseUnitsModel } from "../expression/PoseUnitsModel"
+import { ExpressionModel } from "expression/ExpressionModel"
 
-export class PoseUnitsAdapter extends TableAdapter<PoseUnitsModel> {
-    constructor(model: PoseUnitsModel) {
+export class PoseUnitsAdapter extends TableAdapter<ExpressionModel> {
+    constructor(model: ExpressionModel) {
         super(model)
         // this.config.editMode = EditMode.EDIT_ON_ENTER
     }
