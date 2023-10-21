@@ -7,7 +7,6 @@ import { ExpressionModel } from "./ExpressionModel"
 import { euler_from_matrix } from "lib/euler_matrix"
 
 export class ExpressionManager {
-    facePoseUnits: BiovisionHierarchy // BVH file with face pose units
     skeleton: Skeleton
     base_anim: mat4[] // face pose units as mat4[] (joints x pose units)
     facePoseUnitsNames: string[] // poseunit_names
@@ -20,49 +19,24 @@ export class ExpressionManager {
         // TODO: check if some of the json files contain some of the filenames being hardcoded here
         this.skeleton = skeleton
 
-        this.facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
-        this.base_anim = this.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+        // the BVH contains an animation frame for each pose unit ()
+        const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
+        // the BVH as all matrices for all bones for all animation frames: (frame0, bone0), (frame0, bone1), ... , (frame0, boneX), (frame1, bone0), ...
+        this.base_anim = facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+        // pose unit names for each frame
         this.facePoseUnitsNames = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))
             .framemapping as string[]
         this.facePoseUnitsNames.forEach((name, index) => this.poseUnitName2Frame.set(name, index))
+
+        // predefines expressions using the face pose units
         this.expressions = FileSystemAdapter.listDir("expressions")
             .filter((filename) => filename.endsWith(".mhpose"))
             .map((filename) => filename.substring(0, filename.length - 7))
+
         this.model = new ExpressionModel(this)
     }
 
-    poseUnitsToPoseNodes() {
-        const pm = this.getBlendedPose()
-        for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
-            const bone = this.skeleton.boneslist![boneIdx]
-            if (bone.name === "head") {
-                continue
-            }
-            const mrg = bone.matRestGlobal!
-            const m = calcWebGL(pm[boneIdx], mrg)
-            const poseNode = this.skeleton.poseNodes.find(bone.name)
-            if (!poseNode) {
-                console.log(`ExpressionManager: no pose node found for bone ${bone.name}`)
-                return
-            }
-
-            let { x, y, z } = euler_from_matrix(m)
-            if (isZero(x)) {
-                x = 0
-            }
-            if (isZero(y)) {
-                y = 0
-            }
-            if (isZero(z)) {
-                z = 0
-            }
-
-            poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
-            poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
-            poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
-        }
-    }
-
+    // set the face expression pose units from on of the pre-defined expressions
     setExpression(expression: number | string) {
         if (typeof expression === "string") {
             const name = expression
@@ -83,6 +57,12 @@ export class ExpressionManager {
         }
     }
 
+    // take the current face expression pose units and apply them to the skeleton's bone pose nodes
+    poseUnitsToPoseNodes() {
+        this.applyPoseToPoseUnits(this.getBlendedPose())
+    }
+
+    // calculate the blended (combined) pose from all the pose units
     // PoseUnit(AnimationTrack): getBlendedPose(self, poses, weights, additiveBlending=True, only_data=False):
     getBlendedPose(): mat4[] {
         // console.log(`ExpressionManager.getBlendedPose()`)
@@ -112,8 +92,9 @@ export class ExpressionManager {
         } else {
             const REST_QUAT = quat2.create()
 
+            // iterate over all bones in the skeleton
             for (let b_idx = 0; b_idx < nBones; ++b_idx) {
-                // iterate over all bones in the skeleton
+                // begin with frame 0 and 1
                 const m1 = base_anim[f_idxs[0] * nBones + b_idx]
                 const m2 = base_anim[f_idxs[1] * nBones + b_idx]
 
@@ -125,6 +106,7 @@ export class ExpressionManager {
 
                 let quat = quat2.multiply(quat2.create(), q2, q1)
 
+                // continue with frame 2 onward
                 for (let i = 2; i < f_idxs.length; ++i) {
                     const m = base_anim[f_idxs[i] * nBones + b_idx]
                     let q = quat2.fromMat4(quat2.create(), m)
@@ -135,6 +117,38 @@ export class ExpressionManager {
             }
         }
         return result
+    }
+
+    applyPoseToPoseUnits(blendedPose: mat4[]) {
+        for (let boneIdx = 0; boneIdx < this.skeleton.boneslist!.length; ++boneIdx) {
+            const bone = this.skeleton.boneslist![boneIdx]
+            if (bone.name === "head") {
+                continue
+            }
+            const mrg = bone.matRestGlobal!
+            const m = calcWebGL(blendedPose[boneIdx], mrg)
+            const poseNode = this.skeleton.poseNodes.find(bone.name)
+            if (!poseNode) {
+                console.log(`ExpressionManager: no pose node found for bone ${bone.name}`)
+                return
+            }
+
+            let { x, y, z } = euler_from_matrix(m)
+            // enforce zero: looks nicer in the ui and also avoid the math going crazy in some situations
+            if (isZero(x)) {
+                x = 0
+            }
+            if (isZero(y)) {
+                y = 0
+            }
+            if (isZero(z)) {
+                z = 0
+            }
+
+            poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
+            poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
+            poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
+        }
     }
 }
 

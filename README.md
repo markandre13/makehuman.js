@@ -200,12 +200,20 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
-expressions: 3 stages: expression -> poseunit -> bone (start with 3 lists)
-[ ] show the poseunits
-[ ] when expression is clicked, set poseunits
-[ ] indicate poseunit set via expression with color
-[ ] indicate poseunit differing from expression with color
-[ ] indicate poseunit not set by expression (is there such a thing?)
+[ ] pose units for the body
+
+    base/poseunits/body-poseunits.json
+    * no code, but this looks like quaternions, and then same approach as for facial expressions
+    * some discussion http://www.makehumancommunity.org/forum/viewtopic.php?f=7&t=12167
+    * makehuman-0.9.1-rc1a.tar.gz had it, i have it in virtual box 'Debian Desktop'
+      ~/upstream/makehuman/makehuman-0.9.1.rc1a/makehuman
+      not sure what the data format is, but, e.g. raising the arm would also raise
+      the breast because of the skin and tissue pulling it upwards
+
+      but: i guess it's no point re-using that. instead try to make sens of
+      body-poseunits.json and similar as planed for the facial expressions, also bring this
+      data into the ui to be tweaked be the user
+
 [ ] save/load custom expressions/poseunits/bones?
 
 [ ] load pose (eg. data/poses/sit01.bvh) ?

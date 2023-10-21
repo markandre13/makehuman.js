@@ -13,6 +13,7 @@ import { Human } from '../src/modifier/Human'
 import { HumanMesh } from '../src/mesh/HumanMesh'
 import { WavefrontObj } from '../src/mesh/WavefrontObj'
 import { ExpressionManager, calcWebGL } from '../src/expression/ExpressionManager'
+import { BiovisionHierarchy } from "../src/lib/BiovisionHierarchy"
 import { toEuler } from "../src/lib/toEuler"
 
 import { laugh01_OUT } from './testdata/laugh01'
@@ -261,14 +262,9 @@ describe("`(face) expression", function () {
     }
 
     it("BVH.jointslists[].matrixPoses[]", function () {
-        const human = new Human()
-        const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+        const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
 
-        const mgr = new ExpressionManager(skeleton)
-
-        mgr.facePoseUnits.jointslist.forEach((joint, i) => {
+        facePoseUnits.jointslist.forEach((joint, i) => {
             expect(joint.name).to.equal(python_bvh[i].name)
             expect(joint.frames, `frames for joint '${joint.name} at index ${i}'`).to.deep.almost.equal(python_bvh[i].frames)
             joint.matrixPoses.forEach((m, j) => {
@@ -293,13 +289,13 @@ describe("`(face) expression", function () {
         const scene = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
 
-        const mgr = new ExpressionManager(skeleton)
+        const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
 
         const boneCount = skeleton.boneslist!.length
-        const frameCount = mgr.facePoseUnits.frameCount
+        const frameCount = facePoseUnits.frameCount
 
         // WHEN createAnimationTrack()
-        const base_anim: mat4[] = mgr.facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+        const base_anim: mat4[] = facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
 
         // THEN it's the same as in MH 1.2 (Python)
         let pythonIdx = 0, typescriptIdx = 0
