@@ -7,6 +7,8 @@ import { ExpressionModel } from "./ExpressionModel"
 import { euler_from_matrix } from "lib/euler_matrix"
 
 export class ExpressionManager {
+    // FIXME: move the data into the model
+
     skeleton: Skeleton
     base_anim: mat4[] // face pose units as mat4[] (joints x pose units)
     facePoseUnitsNames: string[] // poseunit_names

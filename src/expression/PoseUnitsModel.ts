@@ -27,6 +27,7 @@ export class PoseUnitsModel extends TableModel {
         }
     }
 
+    // set poseUnits from facePoseUnitsNames
     protected createPoseUnits(facePoseUnitsNames: string[]) {
         for (let name of facePoseUnitsNames.sort()) {
             const value = 0
