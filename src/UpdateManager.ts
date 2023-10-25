@@ -2,6 +2,7 @@ import { ExpressionManager } from "expression/ExpressionManager"
 import { NumberRelModel } from "expression/NumberRelModel"
 import { PoseNode } from "expression/PoseNode"
 import { SliderNode } from "modifier/loadSliders"
+import { PoseModel } from "pose/PoseModel"
 import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 
@@ -11,12 +12,19 @@ import { ModelReason } from "toad.js/model/Model"
  */
 export class UpdateManager {
     expressionManager: ExpressionManager
+    poseModel: PoseModel
     modifiedMorphNodes = new Set<SliderNode>()
-    modifiedPoseUnits = new Set<NumberRelModel>()
+    modifiedExpressionPoseUnits = new Set<NumberRelModel>()
+    modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
 
-    constructor(expressionManager: ExpressionManager, sliderNodes: SliderNode) {
+    constructor(
+        expressionManager: ExpressionManager,
+        poseModel: PoseModel,
+        sliderNodes: SliderNode
+    ) {
         this.expressionManager = expressionManager
+        this.poseModel = poseModel
 
         // observe morph slider
         function forEachMorphSliderNode(node: SliderNode | undefined, cb: (node: SliderNode) => void) {
@@ -40,8 +48,18 @@ export class UpdateManager {
         expressionManager.model.poseUnits.forEach((poseUnit) => {
             poseUnit.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.trace(`UpdateManager: face pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
-                    this.modifiedPoseUnits.add(poseUnit)
+                    // console.log(`UpdateManager: face pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
+                    this.modifiedExpressionPoseUnits.add(poseUnit)
+                }
+            })
+        })
+
+        // observe pose pose units
+        poseModel.poseUnits.forEach((poseUnit) => {
+            poseUnit.modified.add((reason) => {
+                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
+                    // console.log(`UpdateManager: body pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
+                    this.modifiedPosePoseUnits.add(poseUnit)
                 }
             })
         })
@@ -111,10 +129,16 @@ export class UpdateManager {
 
         // SET_POSE_UNITS
         // from all pose units to PoseNode.(x|y|z)
-        if (this.modifiedPoseUnits.size > 0) {
+        if (this.modifiedExpressionPoseUnits.size > 0) {
             // console.log(`UpdateManager::update(): pose units have changed`)
             this.expressionManager.poseUnitsToPoseNodes()
-            this.modifiedPoseUnits.clear()
+            this.modifiedExpressionPoseUnits.clear()
+        }
+
+        if (this.modifiedPosePoseUnits.size > 0) {
+            // console.log(`UpdateManager::update(): pose units have changed`)
+            this.poseModel.poseUnitsToPoseNodes()
+            this.modifiedPosePoseUnits.clear()
         }
 
         // SET_POSE_MATRIX

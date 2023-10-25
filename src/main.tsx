@@ -172,7 +172,7 @@ function run() {
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
-    TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel)
+    TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: WTF???
 
     const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
     const tabModel = new EnumModel(TAB.PROXY, TAB)
@@ -215,7 +215,8 @@ function run() {
     const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
 
     const expressionManager = new ExpressionManager(skeleton)
-    const updateManager = new UpdateManager(expressionManager, sliderNodes)
+    const poseModel = new PoseModel(scene.skeleton)
+    const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
 
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
@@ -270,7 +271,7 @@ function run() {
                     <Tab label="Pose" value={TAB.POSE}>
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
-                    {poseTab(scene)}
+                    {poseTab(scene, poseModel)}
                     {expressionTab(expressionManager, scene)}
                     <Tab label="Export" value={TAB.EXPORT}>
                         <div style={{ padding: "10px" }}>

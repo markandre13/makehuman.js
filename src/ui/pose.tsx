@@ -5,10 +5,9 @@ import { SelectionModel, Switch, Table, TableEditMode } from "toad.js"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { Tab } from "toad.js/view/Tab"
 
-export default function (scene: HumanMesh) {
+export default function (scene: HumanMesh, pm: PoseModel) {
     // FIXME: TableEditMode shouldn't be part of SelectionModel
     // FIXME: also: this was a pain to find... :(
-    const pm = new PoseModel(scene.skeleton)
     const sm = new SelectionModel(TableEditMode.EDIT_CELL)
     return (
         <Tab label="Pose2" value={TAB.POSE2} style={{ overflow: "none" }}>
