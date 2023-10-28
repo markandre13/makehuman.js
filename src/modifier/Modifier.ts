@@ -58,11 +58,13 @@ export abstract class Modifier {
         const clampedValue = this.clampValue(value)
         const factors = this.getFactors(clampedValue)
         const tWeights = getTargetWeights(this.targets, factors, clampedValue)
-        for(let x of tWeights)
+        for(let x of tWeights) {
             this.human!.setDetail(x[0], x[1])
+        }
 
-        if (skipDependencies)
+        if (skipDependencies) {
             return
+        }
 
         // Update dependent modifiers
         this.propagateUpdate(false)
@@ -75,7 +77,7 @@ export abstract class Modifier {
     }
 
     propagateUpdate(realtime = false) {
-        console.log('please note: Modifier.propagateUpdate is not implemented')
+        // console.log('please note: Modifier.propagateUpdate is not implemented')
         // let f
         // if (realtime)
         //     f = realtimeDependencyUpdates

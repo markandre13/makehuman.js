@@ -42,6 +42,7 @@ import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
+import { ModelReason } from "toad.js/model/Model"
 
 window.onload = () => main()
 
@@ -168,8 +169,6 @@ function run() {
     // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
     const sliderNodes = loadSliders(human, "data/modifiers/modeling_sliders.json")
 
-    loadMacroTargets()
-
     console.log("everything is loaded...")
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
@@ -208,19 +207,16 @@ function run() {
     initHistoryManager(tabModel)
 
     const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
-
-    // skeleton.poseChanged.add((poseNode) => {
-    //     // console.log(`Bone ${poseNode.bone.name} changed to ${poseNode.x.value}, ${poseNode.y.value}, ${poseNode.z.value}`)
-    //     if (scene.updateRequired === Update.NONE) {
-    //         // console.log(`scene.updateRequired := Update.POSE`)
-    //         scene.updateRequired = Update.POSE
-    //     }
-    // })
     const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
 
     const expressionManager = new ExpressionManager(skeleton)
     const poseModel = new PoseModel(scene.skeleton)
     const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
+
+    // some modifiers already have non-null values, hence we mark all modifiers as dirty
+    human.modifiers.forEach(modifer => {
+        modifer.getModel().modified.trigger(ModelReason.VALUE)
+    })
 
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
@@ -464,19 +460,4 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
         }
     }
     upload.dispatchEvent(new MouseEvent("click"))
-}
-
-//
-// more makehuman stuff i need to figure out:
-//
-
-function loadMacroTargets() {
-    const targetFactory = TargetFactory.getInstance()
-    // for target in targets.getTargets().findTargets('macrodetails'):
-    for (const target of targetFactory.findTargets("macrodetails")) {
-        //         #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
-        //         algos3d.getTarget(self.selectedHuman.meshData, target.path)
-        // console.log(target.path)
-        // target.getTarget()
-    }
 }

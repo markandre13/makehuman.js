@@ -200,10 +200,6 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
-[X] load/save *.mhm (that's the textfile )
-    e.g. /Users/mark/Documents/MakeHuman/v1py3/models/mark-test001.mhm
-[ ] there are some morph targets which need to be applied even if the user
-    hasn't changed anything yet. find out which and implement that.
 [ ] load/save pose via bvh file
 [ ] select view (manual, rotate, front, top, ...)
 [ ] adjust camera automatically
@@ -222,10 +218,8 @@ TODO
       body-poseunits.json and similar as planed for the facial expressions, also bring this
       data into the ui to be tweaked be the user
 [ ] save/load custom expressions/poseunits/bones?
-[ ] load pose (eg. data/poses/sit01.bvh) ?
 [ ] export animation
-[ ] select proxy, ...
-[ ] export normals
+[ ] evaluate using glTF 2.0 to replace collada as per suggestion in MH forum
 [ ] ...
 
 -----

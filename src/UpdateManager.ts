@@ -38,7 +38,7 @@ export class UpdateManager {
         forEachMorphSliderNode(sliderNodes, (node) =>
             node.model?.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: face pose unit '${node.model?.label}' has changed to ${node.model?.value}`)
+                    // console.log(`UpdateManager: slider node '${node.label}' has changed to ${node.model?.value}`)
                     this.modifiedMorphNodes.add(node)
                 }
             })

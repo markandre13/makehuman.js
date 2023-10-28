@@ -33,6 +33,7 @@ export class HumanMesh {
     }
 
     calculateVertexMorphed() {
+        // console.log(`HumanMesh.calculateVertexMorphed()`)
         this.vertexMorphed = new Float32Array(this.baseMesh.vertex)
         this.human.targetsDetailStack.forEach((value, targetName) => {
             if (isNaN(value)) {
@@ -41,7 +42,7 @@ export class HumanMesh {
             }
 
             if (isZero(value) || isNaN(value)) return
-            // console.log(`HumanMesh.update(): apply target ${targetName} with value ${value}`)
+            // console.log(`    apply target ${targetName} with value ${value}`)
             const target = getTarget(targetName)
             target.apply(this.vertexMorphed, value)
         })

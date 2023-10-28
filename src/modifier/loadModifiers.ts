@@ -79,7 +79,6 @@ export function parseModifiers(human: Human, data: string, filename = 'memory'):
         }
     }
 
-
     for (const modifier of modifiers) {
         modifier.setHuman(human)
     }

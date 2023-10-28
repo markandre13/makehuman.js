@@ -1,7 +1,7 @@
 import { Modifier } from './Modifier'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { Signal } from 'toad.js/Signal'
-import { HumanMesh } from 'mesh/HumanMesh'
+import { HumanMesh, isZero } from 'mesh/HumanMesh'
 
 // apps/human.py class Human
 /**
@@ -151,8 +151,8 @@ export class Human {
 
     setDetail(targetName: string, value: number | undefined) {
         // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
-        // console.log(`Human.setDetail('${name}', ${value})`)
-        if (value !== undefined) { // TODO: check if '&& isZero(value)' is a valid optimization
+        if (value !== undefined && !isZero(value)) { // TODO: check if '&& isZero(value)' is a valid optimization
+            // console.log(`Human.setDetail('${targetName}', ${value})`)
             this.targetsDetailStack.set(targetName, value)
         } else {
             this.targetsDetailStack.delete(targetName)
