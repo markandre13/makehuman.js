@@ -39,7 +39,9 @@ import { PoseModel } from "pose/PoseModel"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { PoseUnitsModel } from "expression/PoseUnitsModel"
 import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
-import { euler_from_matrix } from "lib/euler_matrix"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { mat4, quat2 } from "gl-matrix"
+import { quaternion_slerp } from "lib/quaternion_slerp"
 
 window.onload = () => main()
 
@@ -418,11 +420,13 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
             const buffer = await file.arrayBuffer()
             const te = new TextDecoder()
             const content = te.decode(buffer)
-            const bvh = new BiovisionHierarchy(file.name, "auto", undefined, content)
+            const bvh = new BiovisionHierarchy(file.name, "auto", "onlyroot", content)
 
             const base_anim = bvh.createAnimationTrack(scene.skeleton)
-
+            
             // FIXME: copied'n tweaked from PoseModel.applyPoseToPoseUnits(blendedPose: mat4[])
+            // but it doesn't quite give the same results as in Makehuman...
+            // the issue might be that our input is global but we need local pose matrix??? nope...
             for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
                 const bone = scene.skeleton.boneslist![boneIdx]
                 const poseNode = scene.skeleton.poseNodes.find(bone.name)
@@ -431,7 +435,9 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
                     return
                 }
 
-                let { x, y, z } = euler_from_matrix(base_anim[boneIdx])
+                const m = base_anim[boneIdx]
+
+                let { x, y, z } = euler_from_matrix(m)
                 // enforce zero: looks nicer in the ui and also avoid the math going crazy in some situations
                 if (isZero(x)) {
                     x = 0
@@ -441,6 +447,11 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
                 }
                 if (isZero(z)) {
                     z = 0
+                }
+
+                const check = euler_matrix(x,y,z)
+                if (!mat4.equals(check, m)) {
+                    console.log(`failed to set bone ${bone.name}`) 
                 }
 
                 poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
