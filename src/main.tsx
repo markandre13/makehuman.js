@@ -26,7 +26,7 @@ import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
 import { BooleanModel, Button, Checkbox, ref, Select, TableAdapter } from "toad.js"
 import { ProxyManager } from "./ProxyManager"
-import { ExpressionManager } from "expression/ExpressionManager"
+import { calcWebGL, ExpressionManager } from "expression/ExpressionManager"
 import { UpdateManager } from "UpdateManager"
 
 import { TAB, initHistoryManager } from "HistoryManager"
@@ -38,6 +38,8 @@ import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
 import { PoseModel } from "pose/PoseModel"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { PoseUnitsModel } from "expression/PoseUnitsModel"
+import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
+import { euler_from_matrix } from "lib/euler_matrix"
 
 window.onload = () => main()
 
@@ -254,9 +256,8 @@ function run() {
             <>
                 <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
                     <Tab label="File" value={TAB.EXPORT}>
-                        
                         <div style={{ padding: "10px" }}>
-                            <h1>MHM (Make Human Morph)</h1>
+                            <h1>Morph</h1>
 
                             <p>
                                 <u>NOTE</u>: Only MakeHuman 1.1 and 1.2 files are supported.
@@ -264,6 +265,9 @@ function run() {
 
                             <Button action={() => loadMHM(scene, upload)}>Load MHM</Button>
                             <Button action={() => saveMHM(scene, download)}>Save MHM</Button>
+
+                            <h1>Pose</h1>
+                            <Button action={() => loadBVH(scene, upload)}>Load BVH</Button>
 
                             <h1>Collada</h1>
 
@@ -400,6 +404,52 @@ function loadMHM(scene: HumanMesh, upload: HTMLInputElement) {
                     }
                 }
             }
+        }
+    }
+    upload.dispatchEvent(new MouseEvent("click"))
+}
+
+function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
+    upload.accept = ".bvh"
+    upload.onchange = async () => {
+        if (upload.files?.length === 1) {
+            const file = upload.files[0]
+            console.log(`file: "${file.name}", size ${file.size} bytes`)
+            const buffer = await file.arrayBuffer()
+            const te = new TextDecoder()
+            const content = te.decode(buffer)
+            const bvh = new BiovisionHierarchy(file.name, "auto", undefined, content)
+
+            const base_anim = bvh.createAnimationTrack(scene.skeleton)
+
+            // FIXME: copied'n tweaked from PoseModel.applyPoseToPoseUnits(blendedPose: mat4[])
+            for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
+                const bone = scene.skeleton.boneslist![boneIdx]
+                const poseNode = scene.skeleton.poseNodes.find(bone.name)
+                if (!poseNode) {
+                    console.log(`ExpressionManager: no pose node found for bone ${bone.name}`)
+                    return
+                }
+
+                let { x, y, z } = euler_from_matrix(base_anim[boneIdx])
+                // enforce zero: looks nicer in the ui and also avoid the math going crazy in some situations
+                if (isZero(x)) {
+                    x = 0
+                }
+                if (isZero(y)) {
+                    y = 0
+                }
+                if (isZero(z)) {
+                    z = 0
+                }
+
+                poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
+                poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
+                poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
+            }
+
+            // console.log(bvh)
+            // setPoseFromBVH() for testing, just do this on application start
         }
     }
     upload.dispatchEvent(new MouseEvent("click"))
