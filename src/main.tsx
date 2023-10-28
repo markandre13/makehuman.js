@@ -223,7 +223,8 @@ function run() {
     useBlenderProfile.enabled = false
     limitPrecision.enabled = false
 
-    const download = makeDownloadAnchor()
+    const download = makeDownloadElement()
+    const upload = makeUploadElement()
 
     // The official Makehuman 1.2 menu structure and how it maps to makehuman.js:
     //
@@ -252,29 +253,20 @@ function run() {
         ...(
             <>
                 <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
-                    <Tab label="Morph" value={TAB.MORPH}>
-                        <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
-                    </Tab>
-                    <Tab label="Proxy" value={TAB.PROXY}>
-                        <Form variant="narrow">
-                            {proxyManager.allProxyTypes.map((pid) => (
-                                <>
-                                    <FormLabel>{ProxyType[pid]}</FormLabel>
-                                    <FormField>
-                                        <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
-                                    </FormField>
-                                    <FormHelp model={proxyManager.list.get(pid) as any} />
-                                </>
-                            ))}
-                        </Form>
-                    </Tab>
-                    <Tab label="Pose" value={TAB.POSE}>
-                        <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
-                    </Tab>
-                    {poseTab(scene, poseModel)}
-                    {expressionTab(expressionManager, scene)}
-                    <Tab label="Export" value={TAB.EXPORT}>
+                    <Tab label="File" value={TAB.EXPORT}>
+                        
                         <div style={{ padding: "10px" }}>
+                            <h1>MHM (Make Human Morph)</h1>
+
+                            <p>
+                                <u>NOTE</u>: Only MakeHuman 1.1 and 1.2 files are supported.
+                            </p>
+
+                            <Button action={() => loadMHM(scene, upload)}>Load MHM</Button>
+                            <Button action={() => saveMHM(scene, download)}>Save MHM</Button>
+
+                            <h1>Collada</h1>
+
                             <p>
                                 <Checkbox
                                     model={useBlenderProfile}
@@ -298,10 +290,30 @@ function run() {
                                 <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded
                                 animation of the jaw.
                             </p>
-                            <Button action={() => saveMHM(scene, download)}>Save MHM</Button>
                             <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
                         </div>
                     </Tab>
+                    <Tab label="Morph" value={TAB.MORPH}>
+                        <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
+                    </Tab>
+                    <Tab label="Proxy" value={TAB.PROXY}>
+                        <Form variant="narrow">
+                            {proxyManager.allProxyTypes.map((pid) => (
+                                <>
+                                    <FormLabel>{ProxyType[pid]}</FormLabel>
+                                    <FormField>
+                                        <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
+                                    </FormField>
+                                    <FormHelp model={proxyManager.list.get(pid) as any} />
+                                </>
+                            ))}
+                        </Form>
+                    </Tab>
+                    <Tab label="Pose" value={TAB.POSE}>
+                        <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
+                    </Tab>
+                    {poseTab(scene, poseModel)}
+                    {expressionTab(expressionManager, scene)}
                     <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
                         Mediapipe coming soon
                     </Tab>
@@ -320,12 +332,19 @@ function run() {
     render(references.canvas, references.overlay, scene, renderMode, updateManager)
 }
 
-function makeDownloadAnchor() {
+function makeDownloadElement() {
     const download = document.createElement("a")
     download.type = "text/plain"
     download.style.display = "hidden"
     download.download = "makehuman.dae"
     return download
+}
+
+function makeUploadElement() {
+    const upload = document.createElement("input")
+    upload.type = "file"
+    upload.style.display = "none"
+    return upload
 }
 
 function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
@@ -356,6 +375,34 @@ function saveMHM(scene: HumanMesh, download: HTMLAnchorElement) {
     download.download = "makehuman.mhm"
     download.href = URL.createObjectURL(new Blob([out], { type: "text/plain" }))
     download.dispatchEvent(new MouseEvent("click"))
+}
+
+function loadMHM(scene: HumanMesh, upload: HTMLInputElement) {
+    upload.accept = ".mhm"
+    upload.onchange = async () => {
+        if (upload.files?.length === 1) {
+            const file = upload.files[0]
+            console.log(`file: "${file.name}", size ${file.size} bytes`)
+            const buffer = await file.arrayBuffer()
+            const te = new TextDecoder()
+            const content = te.decode(buffer)
+            scene.human.modifiers.forEach((modifier) => {
+                modifier.getModel().value = modifier.getDefaultValue()
+            })
+            for (const line of content.split("\n")) {
+                const token = line.split(" ")
+                if (token[0] === "modifier") {
+                    const modifier = scene.human.modifiers.get(token[1])
+                    if (modifier === undefined) {
+                        console.log(`unknown modifier '${token[1]}' in file`)
+                    } else {
+                        modifier.getModel().value = parseFloat(token[2])
+                    }
+                }
+            }
+        }
+    }
+    upload.dispatchEvent(new MouseEvent("click"))
 }
 
 //

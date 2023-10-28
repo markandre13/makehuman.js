@@ -200,10 +200,11 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
-[ ] load/save *.mhm (that's the textfile )
+[X] load/save *.mhm (that's the textfile )
     e.g. /Users/mark/Documents/MakeHuman/v1py3/models/mark-test001.mhm
 [ ] there are some morph targets which need to be applied even if the user
     hasn't changed anything yet. find out which and implement that.
+[ ] load/save pose via bvh file
 [ ] select view (manual, rotate, front, top, ...)
 [ ] adjust camera automatically
 
