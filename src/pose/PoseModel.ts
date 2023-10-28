@@ -53,6 +53,11 @@ export class PoseModel extends PoseUnitsModel {
             const frameIndex = this.base_anim.length
             this.base_anim.push(...new Array(skeleton.getBones().length).fill(identity)) // TODO: maybe without face bones?
 
+            // rather do it the other way around, we seem to have bone names in body-postunit.json which
+            // are not in the skeleton, e.g. heel instead of foot? platysma03.L?
+
+            // could find out the history of it, tweak it or just come up with my own solution
+
             for (const bone of skeleton.getBones()) {
                 const xyzw: number[] = pose[bone.name]
                 if (xyzw === undefined) {

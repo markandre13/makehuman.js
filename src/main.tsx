@@ -4,7 +4,7 @@ import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { HumanMesh } from "./mesh/HumanMesh"
+import { HumanMesh, isZero } from "./mesh/HumanMesh"
 import { RenderMode } from "./render/RenderMode"
 import { exportCollada } from "mesh/Collada"
 import { ProxyType } from "proxy/Proxy"
@@ -298,6 +298,7 @@ function run() {
                                 <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded
                                 animation of the jaw.
                             </p>
+                            <Button action={() => saveMHM(scene, download)}>Save MHM</Button>
                             <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
                         </div>
                     </Tab>
@@ -330,6 +331,30 @@ function makeDownloadAnchor() {
 function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
     download.download = "makehuman.dae"
     download.href = URL.createObjectURL(new Blob([exportCollada(scene)], { type: "text/plain" }))
+    download.dispatchEvent(new MouseEvent("click"))
+}
+
+function saveMHM(scene: HumanMesh, download: HTMLAnchorElement) {
+    console.log(`saveMHM`)
+
+    let out = `version v1.2.0\n`
+    out += `name makehuman.js\n`
+    out += `camera 0.0 0.0 0.0 0.0 0.0 1.0\n`
+
+    scene.human.modifiers.forEach((modifer, name) => {
+        const value = modifer.getValue()
+        if (!isZero(value)) {
+            out += `modifier ${name} ${value.toPrecision(6)}\n`
+        }
+    })
+    // out += `eyes HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6\n`
+    out += `clothesHideFaces True\n`
+    // out += `skinMaterial skins/default.mhmat\n`
+    // out += `material HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6 eyes/materials/brown.mhmat\n`
+    out += `subdivide False\n`
+
+    download.download = "makehuman.mhm"
+    download.href = URL.createObjectURL(new Blob([out], { type: "text/plain" }))
     download.dispatchEvent(new MouseEvent("click"))
 }
 

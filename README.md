@@ -200,6 +200,13 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
+[ ] load/save *.mhm (that's the textfile )
+    e.g. /Users/mark/Documents/MakeHuman/v1py3/models/mark-test001.mhm
+[ ] there are some morph targets which need to be applied even if the user
+    hasn't changed anything yet. find out which and implement that.
+[ ] select view (manual, rotate, front, top, ...)
+[ ] adjust camera automatically
+
 [ ] pose units for the body
 
     base/poseunits/body-poseunits.json
@@ -213,13 +220,10 @@ TODO
       but: i guess it's no point re-using that. instead try to make sens of
       body-poseunits.json and similar as planed for the facial expressions, also bring this
       data into the ui to be tweaked be the user
-
 [ ] save/load custom expressions/poseunits/bones?
-
 [ ] load pose (eg. data/poses/sit01.bvh) ?
 [ ] export animation
 [ ] select proxy, ...
-[ ] load/save *.mhm (that's the textfile )
 [ ] export normals
 [ ] ...
 
