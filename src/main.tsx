@@ -1,5 +1,4 @@
 import { Human } from "./modifier/Human"
-import { TargetFactory } from "./target/TargetFactory"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
@@ -26,7 +25,7 @@ import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
 import { BooleanModel, Button, Checkbox, ref, Select, TableAdapter } from "toad.js"
 import { ProxyManager } from "./ProxyManager"
-import { calcWebGL, ExpressionManager } from "expression/ExpressionManager"
+import { ExpressionManager } from "expression/ExpressionManager"
 import { UpdateManager } from "UpdateManager"
 
 import { TAB, initHistoryManager } from "HistoryManager"
@@ -40,8 +39,7 @@ import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { PoseUnitsModel } from "expression/PoseUnitsModel"
 import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { mat4, quat2 } from "gl-matrix"
-import { quaternion_slerp } from "lib/quaternion_slerp"
+import { mat4, vec3 } from "gl-matrix"
 import { ModelReason } from "toad.js/model/Model"
 
 window.onload = () => main()
@@ -214,7 +212,7 @@ function run() {
     const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
 
     // some modifiers already have non-null values, hence we mark all modifiers as dirty
-    human.modifiers.forEach(modifer => {
+    human.modifiers.forEach((modifer) => {
         modifer.getModel().modified.trigger(ModelReason.VALUE)
     })
 
@@ -416,13 +414,75 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
             const buffer = await file.arrayBuffer()
             const te = new TextDecoder()
             const content = te.decode(buffer)
-            const bvh = new BiovisionHierarchy(file.name, "auto", "onlyroot", content)
 
-            const base_anim = bvh.createAnimationTrack(scene.skeleton)
-            
-            // FIXME: copied'n tweaked from PoseModel.applyPoseToPoseUnits(blendedPose: mat4[])
-            // but it doesn't quite give the same results as in Makehuman...
-            // the issue might be that our input is global but we need local pose matrix??? nope...
+            // from plugins/3_libraries_pose.py: loadBvh()
+            const COMPARE_BONE = "upperleg02.L"
+            const bvh_file = new BiovisionHierarchy(file.name, "auto", "onlyroot", content)
+            if (!bvh_file.joints.has(COMPARE_BONE)) {
+                throw Error(`The pose file cannot be loaded. It uses a different rig then MakeHuman's default rig`)
+            }
+            const anim = bvh_file.createAnimationTrack(scene.skeleton)
+
+            let bvh_root_translation: vec3
+            if (bvh_file.joints.has("root")) {
+                const root_bone = anim[0]
+                bvh_root_translation = vec3.fromValues(root_bone[12], root_bone[13], root_bone[14])
+            } else {
+                bvh_root_translation = vec3.create()
+            }
+
+            function calculateBvhBoneLength(bvh_file: BiovisionHierarchy) {
+                const bvh_joint = bvh_file.joints.get(COMPARE_BONE)
+                const j0 = bvh_joint!.children[0].position
+                const j1 = bvh_joint!.position
+                const v0 = vec3.fromValues(j0[0], j0[1], j0[2])
+                const v1 = vec3.fromValues(j1[0], j1[1], j1[2])
+                const joint_length = vec3.len(vec3.sub(v0, v0, v1))
+                console.log(`joint_length = ${joint_length}`)
+                return joint_length
+            }
+            const bvh_bone_length = calculateBvhBoneLength(bvh_file)
+
+            /**
+             * Auto scale BVH translations by comparing upper leg length to make the
+             * human stand on the ground plane, independent of body length.
+             */
+            function autoScaleAnim() {
+                const bone = scene.skeleton.getBone(COMPARE_BONE)
+                console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
+                const scale_factor = bone.length / bvh_bone_length
+                const trans = vec3.scale(vec3.create(), bvh_root_translation, scale_factor)
+                console.log(`Scaling animation with factor ${scale_factor}`)
+                // It's possible to use anim.scale() as well, but by repeated scaling we accumulate error
+                // It's easier to simply set the translation, as poses only have a translation on
+                // root joint
+
+                // Set pose root bone translation
+                // root_bone_idx = 0
+                // posedata = anim.getAtFramePos(0, noBake=True)
+                // posedata[root_bone_idx, :3, 3] = trans
+                // anim.resetBaked()
+            }
+            autoScaleAnim()
+
+            // PYTHON
+            // joint_length = 3.228637218475342
+            // bone.length=3.415726664182774, bvh_bone_length=3.228637218475342
+            // Scaling animation run01 with factor 1.0579468775980292
+
+            // TYPESCRIPT
+            // joint_length = 3.228636702652367 (main.js, line 317)
+            // bone.length=3.155047920856258, bvh_bone_length=3.228636702652367 (main.js, line 328)
+            // Scaling animation with factor 0.9772074752988917 (main.js, line 331)
+
+            // => bone length differs
+
+            // self.human.addAnimation(anim)
+            // self.human.setActiveAnimation(anim.name)
+            // self.human.setToFrame(0, update=False)
+            // if apply_pose:
+            //     self.human.setPosed(True)
+
             for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
                 const bone = scene.skeleton.boneslist![boneIdx]
                 const poseNode = scene.skeleton.poseNodes.find(bone.name)
@@ -431,7 +491,7 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
                     return
                 }
 
-                const m = base_anim[boneIdx]
+                const m = anim[boneIdx]
 
                 let { x, y, z } = euler_from_matrix(m)
                 // enforce zero: looks nicer in the ui and also avoid the math going crazy in some situations
@@ -445,9 +505,9 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
                     z = 0
                 }
 
-                const check = euler_matrix(x,y,z)
+                const check = euler_matrix(x, y, z)
                 if (!mat4.equals(check, m)) {
-                    console.log(`failed to set bone ${bone.name}`) 
+                    console.log(`failed to set bone ${bone.name}`)
                 }
 
                 poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
