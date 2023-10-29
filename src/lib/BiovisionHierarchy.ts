@@ -457,11 +457,6 @@ export class BVHJoint {
             if (rotAngles.length >= 3) {
                 for (let frameIdx = 0; frameIdx < nFrames; ++frameIdx) {
                     this.matrixPoses[frameIdx] = euler_matrix(rotAngles[2][frameIdx], rotAngles[1][frameIdx], rotAngles[0][frameIdx], rotOrder)
-                    // if (this.name === "shoulder01.L" && frameIdx === 0) {
-                    //     console.log(`this.skeleton.convertFromZUp=${this.skeleton.convertFromZUp}`)
-                    //     console.log(`possible screw up for euler_matrix(${rotAngles[2][frameIdx]}, ${rotAngles[1][frameIdx]}, ${rotAngles[0][frameIdx]}, ${rotOrder})?`)
-                    //     console.log(this.matrixPoses[frameIdx])
-                    // }
                 }
             }
         }
@@ -494,11 +489,10 @@ export class BVHJoint {
                 rZs.fill(0)
             }
             this.matrixPoses.forEach((m, i) => {
-                m[3] = rXs![i]
-                m[7] = rYs![i]
-                m[11] = rZs![i]
+                m[12] = rXs![i]
+                m[13] = rYs![i]
+                m[14] = rZs![i]
             })
         }
     }
 }
-
