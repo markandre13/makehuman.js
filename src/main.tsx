@@ -42,7 +42,8 @@ import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, vec3 } from "gl-matrix"
 import { ModelReason } from "toad.js/model/Model"
 
-window.onload = () => main()
+
+main()
 
 export function main() {
     try {
