@@ -242,7 +242,7 @@ Frame Time: 0.041667
         expect(bvh.rootJoint.matrixPoses[1]).to.deep.almost.equal(m1)
     })
 
-    it.only("load pose", function () {
+    it("load pose", function () {
         const bvh = new BiovisionHierarchy("data/poses/run01.bvh", "auto")
 
         // check that all joints at frame 0 have the correct pose matrix
@@ -255,7 +255,7 @@ Frame Time: 0.041667
             }
         })
 
-        // now check the created animation track
+        // check createAnimationTrack()
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const scene = new HumanMesh(human, obj)
@@ -274,6 +274,63 @@ Frame Time: 0.041667
             )
             expect(m0, `matrix ${i}`).to.deep.almost.equal(m1)
         }
+    })
+
+    it.only("xxx", function () {
+        const COMPARE_BONE = "upperleg02.L"
+
+        const bvh_file = new BiovisionHierarchy("data/poses/run01.bvh", "auto")
+        const human = new Human()
+        const obj = new WavefrontObj("data/3dobjs/base.obj")
+        const scene = new HumanMesh(human, obj)
+        const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
+        scene.skeleton = skel
+        const anim = bvh_file.createAnimationTrack(skel)
+
+        let bvh_root_translation: vec3
+        if (bvh_file.joints.has("root")) {
+            const root_bone = anim[0]
+            bvh_root_translation = vec3.fromValues(root_bone[12], root_bone[13], root_bone[14])
+        } else {
+            bvh_root_translation = vec3.create()
+        }
+
+        function calculateBvhBoneLength(bvh_file: BiovisionHierarchy) {
+            const bvh_joint = bvh_file.joints.get(COMPARE_BONE)
+            const j0 = bvh_joint!.children[0].position
+            const j1 = bvh_joint!.position
+            const v0 = vec3.fromValues(j0[0], j0[1], j0[2])
+            const v1 = vec3.fromValues(j1[0], j1[1], j1[2])
+            const joint_length = vec3.len(vec3.sub(v0, v0, v1))
+            console.log(`joint_length = ${joint_length}`)
+            return joint_length
+        }
+        const bvh_bone_length = calculateBvhBoneLength(bvh_file)
+        expect(bvh_bone_length).to.almost.equal(3.228637218475342)
+
+        /**
+         * Auto scale BVH translations by comparing upper leg length to make the
+         * human stand on the ground plane, independent of body length.
+         */
+        function autoScaleAnim() {
+            const bone = scene.skeleton.getBone(COMPARE_BONE)
+            console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
+            expect(bone.length).to.almost.equal(3.415726664182774)
+            const scale_factor = bone.length / bvh_bone_length
+            expect(scale_factor).to.almost.equal(1.0579468775980292)
+            const trans = vec3.scale(vec3.create(), bvh_root_translation, scale_factor)
+            console.log(`Scaling animation with factor ${scale_factor}`)
+            // It's possible to use anim.scale() as well, but by repeated scaling we accumulate error
+            // It's easier to simply set the translation, as poses only have a translation on
+            // root joint
+
+            // Set pose root bone translation
+            // root_bone_idx = 0
+            // posedata = anim.getAtFramePos(0, noBake=True)
+            // posedata[root_bone_idx, :3, 3] = trans
+            // anim.resetBaked()
+        }
+        autoScaleAnim()
     })
 })
 

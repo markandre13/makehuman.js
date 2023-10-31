@@ -312,7 +312,7 @@ function run() {
                     <Tab label="Pose" value={TAB.POSE}>
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
-                    {poseTab(scene, poseModel)}
+                    {/* {poseTab(scene, poseModel)} */}
                     {expressionTab(expressionManager, scene)}
                     <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
                         Mediapipe coming soon
@@ -470,18 +470,12 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
             // bone.length=3.415726664182774, bvh_bone_length=3.228637218475342
             // Scaling animation run01 with factor 1.0579468775980292
 
-            // TYPESCRIPT
+            // TYPESCRIPT (in the test setup the numbers are correct...)
             // joint_length = 3.228636702652367 (main.js, line 317)
             // bone.length=3.155047920856258, bvh_bone_length=3.228636702652367 (main.js, line 328)
             // Scaling animation with factor 0.9772074752988917 (main.js, line 331)
 
             // => bone length differs
-
-            // self.human.addAnimation(anim)
-            // self.human.setActiveAnimation(anim.name)
-            // self.human.setToFrame(0, update=False)
-            // if apply_pose:
-            //     self.human.setPosed(True)
 
             for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
                 const bone = scene.skeleton.boneslist![boneIdx]
@@ -491,7 +485,12 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
                     return
                 }
 
-                const m = anim[boneIdx]
+                let m = anim[boneIdx]
+
+                // from Skeleton.setPose(poseMats)
+                const invRest = mat4.invert(mat4.create(), bone.matRestGlobal!)
+                m = mat4.mul(mat4.create(), mat4.mul(mat4.create(), invRest, m), bone.matPoseGlobal!)
+                // missing: translation
 
                 let { x, y, z } = euler_from_matrix(m)
                 // enforce zero: looks nicer in the ui and also avoid the math going crazy in some situations
