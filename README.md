@@ -8,9 +8,9 @@
 
 ## Current Status
 
-* Have a look at [build 2023-10-17](https://markandre13.github.io/makehuman.js/)
-* Morph mesh
-* Pose skeleton and adjust mesh
+* Have a look at [build 2023-10-31](https://markandre13.github.io/makehuman.js/)
+* Edit, load and save morph
+* Pose and load pose
 * Select one of 32 pre-defined facial expressions and/org edit facial pose units
 * Render various proxy meshes instead of the basemesh
 * Export the mesh with rig and texture coordinates as Collada for Blender
