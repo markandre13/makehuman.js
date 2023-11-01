@@ -476,6 +476,70 @@ export class BiovisionHierarchy {
 
         return this
     }
+
+    getJointsBVHOrder() {
+        return this.bvhJoints
+    }
+
+    writeToFile() {
+        let out = ""
+
+        // write structure
+        out += `HIERARCHY\n`
+        out += this._writeJoint(this.rootJoint)
+
+        // write animation
+        out += 'MOTION\n'
+        out += `Frames: ${this.frameCount}\n`
+        out += `Frame Time: ${this.frameTime}\n`
+
+        const allJoints = this.getJointsBVHOrder().filter(joint => !joint.isEndConnector())
+        // const jointsData = allJoints.map(joint => joint.matrixPoses).flat()
+        // const nJoints = jointsData.length
+        // const nFrames = jointsData[0].length
+        // const totalChannels = allJoints.map(joint => joint.channels.length).reduce((a,b) => a + b)
+        for(let fIdx=0; fIdx<this.frameCount; ++fIdx) {
+            let frameData = []
+            for(const joint of allJoints) {
+                console.log(joint.name)
+                const offset = fIdx * joint.channels.length
+                for(let i = offset ; i < offset + joint.channels.length; ++i) {
+                    frameData.push(joint.frames[i])
+                }
+            }
+            out += frameData.join(" ") + "\n"
+        }
+
+        return out
+    }
+
+    _writeJoint(joint: BVHJoint, ident: number = 0) {
+        let out = ""
+        if (joint.name === "End effector") {
+            const offset = joint.offset
+            out += "\t".repeat(ident + 1) + "End Site\n"
+            out += "\t".repeat(ident + 1) + "{\n"
+            out += "\t".repeat(ident + 2) + `OFFSET\t${offset[0]}\t${offset[1]}\t${offset[2]}\n`
+            out += "\t".repeat(ident + 1) + "}\n"
+        } else {
+            if (joint.isRoot()) {
+                out += `ROOT ${joint.name}\n`
+                out += `{\n`
+            } else {
+                out += "\t".repeat(ident) + `JOINT ${joint.name}\n`
+                out += "\t".repeat(ident) + "{\n"
+            }
+            const offset = joint.offset
+            out += "\t".repeat(ident + 1) + `OFFSET\t${offset[0]}  ${offset[0]}  ${offset[0]}\n`
+            out += "\t".repeat(ident + 1) + `CHANNELS ${joint.channels.length} ${joint.channels.join(" ")}\n`
+
+            for (const child of joint.children) {
+                out += this._writeJoint(child, ident + 1)
+            }
+            out += "\t".repeat(ident) + "}\n"
+        }
+        return out
+    }
 }
 
 export class BVHJoint {
@@ -494,7 +558,7 @@ export class BVHJoint {
     matrixPoses: mat4[] = [] // list of 4x4 pose matrices for n frames, relative parent and own rest pose
 
     channels!: string[]
-    frames: any[] = []
+    frames: number[] = []
 
     constructor(name: string, skeleton: BiovisionHierarchy) {
         this.name = name
@@ -504,6 +568,14 @@ export class BVHJoint {
     addChild(joint: BVHJoint) {
         this.children.push(joint)
         joint.parent = this
+    }
+
+    hasParent(): boolean {
+        return this.parent != undefined
+    }
+
+    isRoot(): boolean {
+        return !this.hasParent()
     }
 
     hasChildren() {

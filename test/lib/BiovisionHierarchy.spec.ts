@@ -283,7 +283,7 @@ Frame Time: 0.041667
         }
     })
 
-    it.only("fromSkeleton", function () {
+    it("fromSkeleton", function () {
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const scene = new HumanMesh(human, obj)
@@ -325,14 +325,17 @@ Frame Time: 0.041667
         // bvh.bvhJoints.forEach( (it, idx) => console.log(`${idx} ${it.name}`))
     })
 
-    // it("write", function() {
-    //     //
-    //     // shared/bvh.py:
-    //     //    fromSkeleton(skel: Skeleton, animationTrack: mat4[] | undefined, dummyJoints=true)
-    //     //    writeToFile(filename)
-    //     // this should be able to write a previously read file
-    //     // it get's the data from bvh.animationTrack
-    // })
+    it.only("writeToFile", function() {
+        const human = new Human()
+        const obj = new WavefrontObj("data/3dobjs/base.obj")
+        const scene = new HumanMesh(human, obj)
+        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+
+        const bvh = new BiovisionHierarchy()
+        bvh.fromSkeleton(skeleton)
+        // bvh.writeToFile()
+        console.log(bvh.writeToFile())
+    })
 
     it.skip("xxx", function () {
         const COMPARE_BONE = "upperleg02.L"
