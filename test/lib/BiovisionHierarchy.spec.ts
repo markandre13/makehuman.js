@@ -298,15 +298,19 @@ Frame Time: 0.041667
         expect(bvh.bvhJoints[0].name).to.equal("root")
         // prettier-ignore
         expect(bvh.bvhJoints[0].channels).to.deep.equal(["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"])
+        expect(bvh.bvhJoints[0].frames).to.deep.almost.equal([0, 0, 0, 0, 0, 0])
         expect(bvh.bvhJoints[0].position).to.deep.almost.equal([0, 0.5639, -0.7609])
         expect(bvh.bvhJoints[0].offset).to.deep.almost.equal([0, 0.5639, -0.7609])
 
         expect(bvh.bvhJoints[1].name).to.equal("spine05")
         expect(bvh.bvhJoints[1].channels).to.deep.equal(["Zrotation", "Xrotation", "Yrotation"])
+        expect(bvh.bvhJoints[1].frames).to.deep.almost.equal([0, 0, 0])
         expect(bvh.bvhJoints[1].position).to.deep.almost.equal([0, 0.72685003, 0.14450002])
         expect(bvh.bvhJoints[1].offset).to.deep.almost.equal([0, 0.16295004, 0.90540004])
 
         expect(bvh.bvhJoints[6].name).to.equal("End effector")
+        expect(bvh.bvhJoints[6].channels).to.deep.equal([])
+        expect(bvh.bvhJoints[6].frames).to.deep.almost.equal([])
         expect(bvh.bvhJoints[6].position).to.deep.almost.equal([0.7943, 3.8213, 1.5846])
         expect(bvh.bvhJoints[6].offset).to.deep.almost.equal([0.7943, -0.50724936, 1.6558499])
 

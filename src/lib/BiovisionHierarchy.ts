@@ -196,13 +196,7 @@ export class BiovisionHierarchy {
             }
         }
 
-        // create breadth first array of joints
-        this.jointslist = [this.rootJoint]
-        let queueIdx = 0
-        while (queueIdx < this.jointslist.length) {
-            const joint = this.jointslist[queueIdx++]
-            this.jointslist.push(...joint.children)
-        }
+        this.__cacheGetJoints()
 
         // transform frame data into transformation matrices for all joints
         for (const joint of this.jointslist) {
@@ -210,6 +204,16 @@ export class BiovisionHierarchy {
         }
 
         return this
+    }
+
+    // this.jointslist := breadth first array of joints
+    __cacheGetJoints() {
+        this.jointslist = [this.rootJoint]
+        let queueIdx = 0
+        while (queueIdx < this.jointslist.length) {
+            const joint = this.jointslist[queueIdx++]
+            this.jointslist.push(...joint.children)
+        }
     }
 
     expect(tokens: string[], keyword: string, nargs: number | undefined = undefined) {
@@ -443,24 +447,33 @@ export class BiovisionHierarchy {
 
             this.__calcPosition(joint, [offset[0], offset[1], offset[2]])
             if (!bone.hasChildren()) {
-                const endJoint = this.addJoint(jointName, 'End effector')
+                const endJoint = this.addJoint(jointName, "End effector")
+                endJoint.channels = []
                 offset = vec3.sub(vec3.create(), bone.getRestTailPos(), bone.getRestHeadPos())
-                this.__calcPosition(endJoint,  [offset[0], offset[1], offset[2]])
-            }
-
-            // self.__cacheGetJoints()
-            // nonEndJoints = [ joint for joint in self.getJoints() if not joint.isEndConnector() ]
-    
-            // if (animationTrack != undefined) {
-            //     throw Error("not implemented yet")
-            // } else {
-            //     throw Error("not implemented yet")
-            // }
-
-            for(let joint of this.getJoints()) {
-                joint.calculateFrames()
+                this.__calcPosition(endJoint, [offset[0], offset[1], offset[2]])
             }
         }
+        this.__cacheGetJoints()
+        const nonEndJoints = this.getJoints().filter((joint) => !joint.isEndConnector())
+
+        if (animationTrack !== undefined) {
+            throw Error("not implemented yet")
+        } else {
+            this.frameCount = 1
+            this.frameTime = 1.0
+            nonEndJoints.forEach((joint, index) => {
+                if (joint.channels.length === 6) {
+                    joint.frames.push(...[0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+                } else {
+                    joint.frames.push(...[0.0, 0.0, 0.0])
+                }
+            })
+        }
+
+        for (let joint of this.getJoints()) {
+            joint.calculateFrames()
+        }
+
         return this
     }
 }
@@ -493,7 +506,19 @@ export class BVHJoint {
         joint.parent = this
     }
 
+    hasChildren() {
+        return this.children.length > 0
+    }
+
+    isEndConnector() {
+        return !this.hasChildren()
+    }
+
     calculateFrames() {
+        if (this.channels === undefined) {
+            throw Error(`no channels in ${this.name}`)
+        }
+
         const nChannels = this.channels.length
         const nFrames = this.skeleton.frameCount
         const dataLen = nFrames * nChannels
