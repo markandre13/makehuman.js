@@ -262,7 +262,7 @@ describe("`(face) expression", function () {
     }
 
     it("BVH.jointslists[].matrixPoses[]", function () {
-        const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
+        const facePoseUnits = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh", "auto", "none")
 
         facePoseUnits.jointslist.forEach((joint, i) => {
             expect(joint.name).to.equal(python_bvh[i].name)
@@ -289,7 +289,7 @@ describe("`(face) expression", function () {
         const scene = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
 
-        const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh", "auto", "none")
+        const facePoseUnits = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh", "auto", "none")
 
         const boneCount = skeleton.boneslist!.length
         const frameCount = facePoseUnits.frameCount

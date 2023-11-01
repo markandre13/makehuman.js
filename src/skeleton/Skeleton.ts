@@ -1,11 +1,11 @@
-import { Bone } from './Bone'
-import { FileInformation } from './loadSkeleton'
-import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { VertexBoneWeights, VertexBoneMapping } from './VertexBoneWeights'
-import { vec3 } from 'gl-matrix'
-import { HumanMesh } from '../mesh/HumanMesh'
-import { PoseNode } from 'expression/PoseNode'
-import { Signal } from 'toad.js/Signal'
+import { Bone } from "./Bone"
+import { FileInformation } from "./loadSkeleton"
+import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
+import { VertexBoneWeights, VertexBoneMapping } from "./VertexBoneWeights"
+import { vec3 } from "gl-matrix"
+import { HumanMesh } from "../mesh/HumanMesh"
+import { PoseNode } from "expression/PoseNode"
+import { Signal } from "toad.js/Signal"
 
 export class Skeleton {
     poseNodes: PoseNode
@@ -15,19 +15,19 @@ export class Skeleton {
 
     info: FileInformation
 
-    bones = new Map<string, Bone>(); // Bone lookup list by name
+    bones = new Map<string, Bone>() // Bone lookup list by name
     boneslist?: Bone[] // Breadth-first ordered list of all bones
-    roots: Bone[] = []; // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
+    roots: Bone[] = [] // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
 
-    joint_pos_idxs = new Map<string, Array<number>>(); // Lookup by joint name referencing vertex indices on the human, to determine joint position
-    planes = new Map<string, string[]>(); // Named planes defined between joints, used for calculating bone roll angle
-    plane_map_strategy?: number = 3; // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
+    joint_pos_idxs = new Map<string, Array<number>>() // Lookup by joint name referencing vertex indices on the human, to determine joint position
+    planes = new Map<string, string[]>() // Named planes defined between joints, used for calculating bone roll angle
+    plane_map_strategy?: number = 3 // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
 
     vertexWeights?: VertexBoneWeights
     // Source vertex weights, defined on the basemesh, for this skeleton
-    has_custom_weights = false; // True if this skeleton has its own .mhw file
+    has_custom_weights = false // True if this skeleton has its own .mhw file
 
-    scale: number = 1;
+    scale: number = 1
 
     // makehuman/shared/skeleton.py:88 fromFile()
     constructor(scene: HumanMesh, filename: string, data: any) {
@@ -74,11 +74,12 @@ export class Skeleton {
                         console.log(`Bone '${bone_name}' has invalid parent '${parent}'`)
                         continue
                     }
-                    if (parent === null) { // root bone
+                    if (parent === null) {
+                        // root bone
                         breadthfirst_bones_set.add(bone_name)
                         breadthfirst_bones.push(bone_name)
-                    }
-                    else if (breadthfirst_bones_set.has(parent)) { // parent has already been added
+                    } else if (breadthfirst_bones_set.has(parent)) {
+                        // parent has already been added
                         breadthfirst_bones_set.add(bone_name)
                         breadthfirst_bones.push(bone_name)
                     }
@@ -92,7 +93,9 @@ export class Skeleton {
                     missing.push(bname)
                 }
             }
-            console.log(`Some bones defined in file '${filename}' could not be added to skeleton '${this.info.name}', because they have an invalid parent bone (${missing})`)
+            console.log(
+                `Some bones defined in file '${filename}' could not be added to skeleton '${this.info.name}', because they have an invalid parent bone (${missing})`
+            )
         }
 
         console.log(`breadthfirst_bones.length: ${breadthfirst_bones.length}`)
@@ -107,16 +110,28 @@ export class Skeleton {
         for (let bone_name of breadthfirst_bones) {
             const bone_defs = data.bones[bone_name]
             let rotation_plane = bone_defs.rotation_plane
-            // This data was intended to be filled by hand in file exported with 
+            // This data was intended to be filled by hand in file exported with
             //   https://github.com/makehumancommunity/makehuman-utils/blob/master/io_mhrigging_mhskel/export_mh_rigging.py
             // from Blender
             // if rotation_plane == [None, None, None]
             if (typeof rotation_plane !== "string") {
-                console.log(`Invalid rotation plane '${JSON.stringify(rotation_plane)}' specified for bone ${bone_name}. Please make sure that you edited the .mhskel file by hand to include roll plane joints."`)
+                console.log(
+                    `Invalid rotation plane '${JSON.stringify(
+                        rotation_plane
+                    )}' specified for bone ${bone_name}. Please make sure that you edited the .mhskel file by hand to include roll plane joints."`
+                )
                 rotation_plane = null
             }
             // console.log(`${bone_name}, parent=${bone_defs.parent}, head=${bone_defs.head}, tail=${bone_defs.tail}, rotation_plane=${rotation_plane}, reference=${bone_defs.reference}, weights_reference=${bone_defs.reference}`)
-            this.addBone(bone_name, bone_defs.parent, bone_defs.head, bone_defs.tail, rotation_plane, bone_defs.reference, bone_defs.weights_reference)
+            this.addBone(
+                bone_name,
+                bone_defs.parent,
+                bone_defs.head,
+                bone_defs.tail,
+                rotation_plane,
+                bone_defs.reference,
+                bone_defs.weights_reference
+            )
         }
 
         this.build()
@@ -129,8 +144,7 @@ export class Skeleton {
             let json
             try {
                 json = JSON.parse(data)
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(`Failed to parse JSON in ${filename}:\n${data.substring(0, 256)}`)
                 throw error
             }
@@ -160,11 +174,11 @@ export class Skeleton {
         if (this.joint_pos_idxs.has(joint_name)) {
             // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from skeleton`)
             const v_idx = this.joint_pos_idxs.get(joint_name)!
-            // 
+            //
             let verts
             if (rest_coord) {
                 const meshCoords = this.scene.getRestposeCoordinates()
-                verts = v_idx.map(i => {
+                verts = v_idx.map((i) => {
                     i = i * 3
                     return [meshCoords[i], meshCoords[i + 1], meshCoords[i + 2]]
                 })
@@ -175,8 +189,10 @@ export class Skeleton {
                 // verts = human.meshData.getCoords(v_idx)
             }
             // return verts.mean(axis=0)
-            let x = 0, y = 0, z = 0
-            verts.forEach(v => {
+            let x = 0,
+                y = 0,
+                z = 0
+            verts.forEach((v) => {
                 x += v[0]
                 y += v[1]
                 z += v[2]
@@ -215,7 +231,6 @@ export class Skeleton {
         // this.scene.setUpdate(Update.POSE)
     }
 
-
     // line 631
     // Returns linear list of all bones in breadth-first order.
     getBones(): Bone[] {
@@ -246,7 +261,8 @@ export class Skeleton {
         tailJoint: string,
         roll: string,
         reference_bones?: any,
-        weight_reference_bones?: any) {
+        weight_reference_bones?: any
+    ) {
         // if name in list(self.bones.keys()):
         //     raise RuntimeError("The skeleton %s already contains a bone named %s." % (self.__repr__(), name))
         // bone = Bone(self, name, parentName, headJoint, tailJoint, roll, reference_bones, weight_reference_bones)
@@ -257,7 +273,16 @@ export class Skeleton {
         if (name in this.bones) {
             throw Error(`The skeleton ${this.info.name} already contains a bone named ${name}.`)
         }
-        const bone = new Bone(this, name, parentName, headJoint, tailJoint, roll, reference_bones, weight_reference_bones)
+        const bone = new Bone(
+            this,
+            name,
+            parentName,
+            headJoint,
+            tailJoint,
+            roll,
+            reference_bones,
+            weight_reference_bones
+        )
         this.bones.set(name, bone)
         if (!parentName) {
             this.roots.push(bone)
@@ -286,12 +311,36 @@ export class Skeleton {
                 const vec = vec3.transformMat4(
                     vec3.create(),
                     vec3.fromValues(meshCoords[vert], meshCoords[vert + 1], meshCoords[vert + 2]),
-                    bone.matPoseVerts!)
+                    bone.matPoseVerts!
+                )
                 coords[vert] += vec[0] * weight
-                coords[vert+1] += vec[1] * weight
-                coords[vert+2] += vec[2] * weight
+                coords[vert + 1] += vec[1] * weight
+                coords[vert + 2] += vec[2] * weight
             }
         }
         return coords
+    }
+
+    /**
+     *
+     * @returns a list of all joints defining the bone positions (minus end
+     * effectors for leaf bones). The names are the same as the corresponding
+     * bones in this skeleton.
+     *
+     * List is in depth-first order (usually the order of joints in a BVH file).
+     *
+     * Which is NOT the same as a breadth-first ordered list of all bones.
+     *
+     */
+    getJointNames(): string[] {
+        return this._retrieveJointNames(this.roots[0])
+    }
+
+    protected _retrieveJointNames(parentBone: Bone): string[] {
+        const result = [parentBone.name]
+        for (const child of parentBone.children) {
+            result.push(...this._retrieveJointNames(child))
+        }
+        return result
     }
 }

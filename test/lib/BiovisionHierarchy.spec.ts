@@ -22,7 +22,8 @@ describe("class BiovisionHierarchy", function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
     it("load data/poseunits/face-poseunits.bvh", function () {
-        const facePoseUnits = new BiovisionHierarchy("data/poseunits/face-poseunits.bvh")
+        const facePoseUnits = new BiovisionHierarchy()
+        facePoseUnits.fromFile("data/poseunits/face-poseunits.bvh")
         expect(facePoseUnits.joints.get("toe4-3.R")?.frames).to.deep.almost.equal([
             3e-6, 1e-6, -1e-6, 3e-6, 1e-6, -1e-6, -0, -0, 0, 3e-6, 1e-6, -1e-6, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0,
             0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0,
@@ -42,17 +43,21 @@ describe("class BiovisionHierarchy", function () {
     })
     it("first entry must be HIERARCHY", function () {
         // new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT root`)
-        expect(() => new BiovisionHierarchy("biohazard.bvh", "auto", "none", `THE DOCTOR`)).to.throw()
-        expect(() => new BiovisionHierarchy("biohazard.bvh", "auto", "none", `HIERARCHY VS THE DOCTOR`)).to.throw()
+        expect(() => new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "none", `THE DOCTOR`)).to.throw()
+        expect(() =>
+            new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "none", `HIERARCHY VS THE DOCTOR`)
+        ).to.throw()
     })
     it("second entry must be ROOT <rootname>", function () {
         // const bvh = new BiovisionHierarchy("biohazard.bvh", "none", `HIERARCHY\nROOT enoch`)
         // expect(bvh.rootJoint.name).to.equal("enoch")
-        expect(() => new BiovisionHierarchy("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT`)).to.throw()
-        expect(() => new BiovisionHierarchy("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT VS SQUARE`)).to.throw()
+        expect(() => new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT`)).to.throw()
+        expect(() =>
+            new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT VS SQUARE`)
+        ).to.throw()
     })
     it("third entry must be joint data", function () {
-        const bvh = new BiovisionHierarchy(
+        const bvh = new BiovisionHierarchy().fromFile(
             "biohazard.bvh",
             "auto",
             "none",
@@ -121,11 +126,13 @@ Frame Time: 0.041667
         expect(bvh.frameCount).to.equal(2)
         expect(bvh.frameTime).to.equal(0.041667)
 
-        expect(() => new BiovisionHierarchy("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT root\nNOPE`)).to.throw()
+        expect(() =>
+            new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT root\nNOPE`)
+        ).to.throw()
     })
 
     it("createAnimationTrack(skel, name)", function () {
-        const bvh = new BiovisionHierarchy(
+        const bvh = new BiovisionHierarchy().fromFile(
             "biohazard.bvh",
             "auto",
             "none",
@@ -201,7 +208,7 @@ Frame Time: 0.041667
     })
 
     it("BVHJoint.calculateFrames()", function () {
-        const bvh = new BiovisionHierarchy(
+        const bvh = new BiovisionHierarchy().fromFile(
             "biohazard.bvh",
             "auto",
             "none",
@@ -243,7 +250,7 @@ Frame Time: 0.041667
     })
 
     it("load pose", function () {
-        const bvh = new BiovisionHierarchy("data/poses/run01.bvh", "auto")
+        const bvh = new BiovisionHierarchy().fromFile("data/poses/run01.bvh", "auto")
 
         // check that all joints at frame 0 have the correct pose matrix
         let index = 0
@@ -276,10 +283,58 @@ Frame Time: 0.041667
         }
     })
 
-    it.only("xxx", function () {
+    it.only("fromSkeleton", function () {
+        const human = new Human()
+        const obj = new WavefrontObj("data/3dobjs/base.obj")
+        const scene = new HumanMesh(human, obj)
+        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+
+        const bvh = new BiovisionHierarchy()
+
+        bvh.fromSkeleton(skeleton)
+
+        expect(bvh.bvhJoints.length).to.equal(241)
+
+        expect(bvh.bvhJoints[0].name).to.equal("root")
+        // prettier-ignore
+        expect(bvh.bvhJoints[0].channels).to.deep.equal(["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"])
+        expect(bvh.bvhJoints[0].position).to.deep.almost.equal([0, 0.5639, -0.7609])
+        expect(bvh.bvhJoints[0].offset).to.deep.almost.equal([0, 0.5639, -0.7609])
+
+        expect(bvh.bvhJoints[1].name).to.equal("spine05")
+        expect(bvh.bvhJoints[1].channels).to.deep.equal(["Zrotation", "Xrotation", "Yrotation"])
+        expect(bvh.bvhJoints[1].position).to.deep.almost.equal([0, 0.72685003, 0.14450002])
+        expect(bvh.bvhJoints[1].offset).to.deep.almost.equal([0, 0.16295004, 0.90540004])
+
+        expect(bvh.bvhJoints[6].name).to.equal("End effector")
+        expect(bvh.bvhJoints[6].position).to.deep.almost.equal([0.7943, 3.8213, 1.5846])
+        expect(bvh.bvhJoints[6].offset).to.deep.almost.equal([0.7943, -0.50724936, 1.6558499])
+
+        expect(bvh.bvhJoints[10].name).to.equal("__clavicle.L")
+        expect(bvh.bvhJoints[10].position).to.deep.almost.equal([0, 5.8902493, 0.06805])
+        expect(bvh.bvhJoints[10].offset).to.deep.almost.equal([0, 1.5616999, 0.13929999])
+
+        expect(bvh.bvhJoints[11].name).to.equal("clavicle.L")
+        expect(bvh.bvhJoints[11].position).to.deep.almost.equal([0.26555, 5.19135, 0.6942501])
+        expect(bvh.bvhJoints[11].offset).to.deep.almost.equal([0.26555, -0.69889927, 0.6262001])
+
+        // bvh.bvhJoints.forEach( (it, idx) => console.log(`${idx} ${it.name}`))
+    })
+
+    // it("write", function() {
+    //     //
+    //     // shared/bvh.py:
+    //     //    fromSkeleton(skel: Skeleton, animationTrack: mat4[] | undefined, dummyJoints=true)
+    //     //    writeToFile(filename)
+    //     // this should be able to write a previously read file
+    //     // it get's the data from bvh.animationTrack
+    // })
+
+    it.skip("xxx", function () {
         const COMPARE_BONE = "upperleg02.L"
 
-        const bvh_file = new BiovisionHierarchy("data/poses/run01.bvh", "auto")
+        const bvh_file = new BiovisionHierarchy().fromFile("data/poses/run01.bvh", "auto")
+
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const scene = new HumanMesh(human, obj)

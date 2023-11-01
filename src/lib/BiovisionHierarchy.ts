@@ -1,17 +1,17 @@
-
 // Import Biovision Hierarchy character animation file
 // https://en.wikipedia.org/wiki/Biovision_Hierarchy
 
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
-import { mat4 } from "gl-matrix"
+import { mat4, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { euler_matrix } from "./euler_matrix"
 import { StringToLine } from "./StringToLine"
+import { off } from "process"
 
 export type TranslationType = "all" | "onlyroot" | "none"
 
 export class BiovisionHierarchy {
-    name: string
+    name: string = ""
     bvhJoints: BVHJoint[] = [] // joints in order of definition, used for parsing the motion data
     joints = new Map<string, BVHJoint>() // joint name to joint
     jointslist: BVHJoint[] = [] // breadth-first list of all joints
@@ -23,11 +23,18 @@ export class BiovisionHierarchy {
     // Most motion capture data uses Y-is-up, though.
     convertFromZUp: boolean = false // TODO: set during load
     // joints to accept translation animation data for
-    allowTranslation: TranslationType
+    allowTranslation!: TranslationType
 
     lineNumber = 0
 
-    constructor(filename: string, convertFromZUp: "auto" | true | false = "auto", allowTranslation: TranslationType = "onlyroot", data?: string) {
+    constructor() {}
+
+    fromFile(
+        filename: string,
+        convertFromZUp: "auto" | true | false = "auto",
+        allowTranslation: TranslationType = "onlyroot",
+        data?: string
+    ): BiovisionHierarchy {
         this.name = filename
         this.allowTranslation = allowTranslation
 
@@ -56,43 +63,47 @@ export class BiovisionHierarchy {
             // console.log(tokens)
             switch (state) {
                 case 0:
-                    this.expect(tokens, 'HIERARCHY', 0)
+                    this.expect(tokens, "HIERARCHY", 0)
                     state = 1
                     break
                 case 1:
-                    this.expect(tokens, 'ROOT', 1)
+                    this.expect(tokens, "ROOT", 1)
                     joint = this.addRootJoint(tokens[1])
                     state = 2
                     break
                 case 2: // start joint
-                    this.expect(tokens, '{', 0)
+                    this.expect(tokens, "{", 0)
                     state = 3
                     break
                 case 3:
-                    this.expect(tokens, 'OFFSET', 3)
+                    this.expect(tokens, "OFFSET", 3)
                     this.__calcPosition(joint, [parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
                     state = 4
                     break
                 case 4:
-                    this.expect(tokens, 'CHANNELS')
+                    this.expect(tokens, "CHANNELS")
                     const nChannels = parseInt(tokens[1])
                     joint.channels = tokens.slice(2)
                     if (nChannels !== joint.channels.length) {
-                        throw Error(`Expected ${nChannels} but got ${joint.channels.length} at line ${this.lineNumber}.`)
+                        throw Error(
+                            `Expected ${nChannels} but got ${joint.channels.length} at line ${this.lineNumber}.`
+                        )
                     }
                     state = 5
                     break
                 case 5:
                     switch (tokens[0]) {
-                        case "JOINT": {
-                            const child = new BVHJoint(tokens[1], this)
-                            this.bvhJoints.push(child)
-                            this.joints.set(child.name, child)
-                            joint.children.push(child)
-                            child.parent = joint
-                            joint = child
-                            state = 2
-                        } break
+                        case "JOINT":
+                            {
+                                const child = new BVHJoint(tokens[1], this)
+                                this.bvhJoints.push(child)
+                                this.joints.set(child.name, child)
+                                joint.children.push(child)
+                                child.parent = joint
+                                joint = child
+                                state = 2
+                            }
+                            break
                         case "End": // Site
                             state = 6
                             break
@@ -105,25 +116,33 @@ export class BiovisionHierarchy {
                             break
                         default:
                             // console.log(tokens)
-                            throw Error(`Expected keywords 'JOINT', 'End' or '}' in BVH file at line ${this.lineNumber}.`)
+                            throw Error(
+                                `Expected keywords 'JOINT', 'End' or '}' in BVH file at line ${this.lineNumber}.`
+                            )
                     }
                     break
                 case 6:
-                    this.expect(tokens, '{', 0)
+                    this.expect(tokens, "{", 0)
                     state = 7
                     break
-                case 7: {
-                    this.expect(tokens, 'OFFSET', 3)
-                    const child = new BVHJoint("End effector", this)
-                    this.bvhJoints.push(child)
-                    joint.children.push(child)
-                    child.parent = joint
-                    child.channels = []
-                    this.__calcPosition(child, [parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
-                    state = 8
-                } break
+                case 7:
+                    {
+                        this.expect(tokens, "OFFSET", 3)
+                        const child = new BVHJoint("End effector", this)
+                        this.bvhJoints.push(child)
+                        joint.children.push(child)
+                        child.parent = joint
+                        child.channels = []
+                        this.__calcPosition(child, [
+                            parseFloat(tokens[1]),
+                            parseFloat(tokens[2]),
+                            parseFloat(tokens[3]),
+                        ])
+                        state = 8
+                    }
+                    break
                 case 8:
-                    this.expect(tokens, '}', 0)
+                    this.expect(tokens, "}", 0)
                     state = 5
                     break
                 // MOTION
@@ -135,39 +154,41 @@ export class BiovisionHierarchy {
                         //     throw Error(`Conversion needed: convert from Z-up to Y-up`)
                         // }
                     }
-                    this.expect(tokens, 'MOTION', 0)
+                    this.expect(tokens, "MOTION", 0)
                     state = 10
                     break
                 case 10:
-                    this.expect(tokens, 'Frames:', 1)
+                    this.expect(tokens, "Frames:", 1)
                     this.frameCount = parseInt(tokens[1])
                     state = 11
                     break
                 case 11:
-                    this.expect(tokens, 'Frame', 2) // Time:
+                    this.expect(tokens, "Frame", 2) // Time:
                     this.frameTime = parseFloat(tokens[2])
                     state = 12
                     break
-                case 12: {
-                    // one line per frame; each frame has ( number of bones x number of channel ) entries
-                    if (tokens.length === 1 && tokens[0].length === 0) {
-                        state = 13
-                        break
-                    }
-                    if (tokens.length === 0) {
-                        state = 13
-                        break
-                    }
-                    let idx = 0
-                    for (const joint of this.bvhJoints) {
-                        for (let j = 0; j < joint.channels.length; ++j) {
-                            if (idx >= tokens.length) {
-                                throw Error(`Not enough MOTION entries in line ${this.lineNumber}.`)
+                case 12:
+                    {
+                        // one line per frame; each frame has ( number of bones x number of channel ) entries
+                        if (tokens.length === 1 && tokens[0].length === 0) {
+                            state = 13
+                            break
+                        }
+                        if (tokens.length === 0) {
+                            state = 13
+                            break
+                        }
+                        let idx = 0
+                        for (const joint of this.bvhJoints) {
+                            for (let j = 0; j < joint.channels.length; ++j) {
+                                if (idx >= tokens.length) {
+                                    throw Error(`Not enough MOTION entries in line ${this.lineNumber}.`)
+                                }
+                                joint.frames.push(parseFloat(tokens[idx++]))
                             }
-                            joint.frames.push(parseFloat(tokens[idx++]))
                         }
                     }
-                } break
+                    break
                 case 13:
                     break
                 default:
@@ -187,6 +208,8 @@ export class BiovisionHierarchy {
         for (const joint of this.jointslist) {
             joint.calculateFrames() // TODO we don't need to calculate pose matrices for end effectors
         }
+
+        return this
     }
 
     expect(tokens: string[], keyword: string, nargs: number | undefined = undefined) {
@@ -203,8 +226,17 @@ export class BiovisionHierarchy {
         return this.rootJoint
     }
 
-    addJoint(name: string) {
-        return
+    addJoint(parentName: string, name: string) {
+        const origName = name
+        let i = 1
+        while (name in this.joints.keys()) {
+            name = `${origName}_${i}`
+            i += 1
+        }
+        const parent = this.getJoint(parentName)
+        const joint = this.__addJoint(name)
+        parent!.addChild(joint)
+        return joint
     }
 
     __addJoint(name: string) {
@@ -226,19 +258,23 @@ export class BiovisionHierarchy {
      */
     _autoGuessCoordinateSystem() {
         let ref_joint = undefined
-        const ref_names = ['head', 'spine03', 'spine02', 'spine01', 'upperleg02.L', 'lowerleg02.L']
-        while(ref_joint === undefined && ref_names.length != 0) {
+        const ref_names = ["head", "spine03", "spine02", "spine01", "upperleg02.L", "lowerleg02.L"]
+        while (ref_joint === undefined && ref_names.length != 0) {
             const joint_name = ref_names.pop()!
             ref_joint = this.joints.get(joint_name)
             if (ref_joint === undefined) {
-                ref_joint = this.joints.get(joint_name.substring(0,1).toUpperCase() + joint_name.substring(1))
+                ref_joint = this.joints.get(joint_name.substring(0, 1).toUpperCase() + joint_name.substring(1))
             }
             if (ref_joint !== undefined && ref_joint.children.length === 0) {
-                console.log(`Cannot use reference joint ${ref_joint.name} for determining axis system, it is an end-effector (has no children)`)
+                console.log(
+                    `Cannot use reference joint ${ref_joint.name} for determining axis system, it is an end-effector (has no children)`
+                )
                 ref_joint = undefined
             }
             if (ref_joint === undefined) {
-                console.log(`Could not auto guess axis system for BVH file ${this.name} because no known joint name is found. Using Y up as default axis orientation.`)
+                console.log(
+                    `Could not auto guess axis system for BVH file ${this.name} because no known joint name is found. Using Y up as default axis orientation.`
+                )
                 return false
             }
             const tail_joint = ref_joint.children[0]
@@ -264,12 +300,11 @@ export class BiovisionHierarchy {
             joint.position = offset
         } else {
             joint.position = [...offset]
-            joint.parent.position.forEach((v, i) => joint.position[i] += v)
+            joint.parent.position.forEach((v, i) => (joint.position[i] += v))
         }
     }
 
     createAnimationTrack(skel?: string[] | Skeleton, name?: string): mat4[] {
-
         function _bvhJointName(boneName: string | undefined) {
             // Remove the tail from duplicate bone names (added by the BVH parser)
             if (boneName === undefined) {
@@ -333,13 +368,100 @@ export class BiovisionHierarchy {
         return this.joints.get(name)
     }
 
+    getJoints(): BVHJoint[] {
+        return this.jointslist
+    }
+
     getJointByCanonicalName(canonicalName: string): BVHJoint | undefined {
-        canonicalName = canonicalName.toLowerCase().replace(' ', '_').replace('-', '_')
+        canonicalName = canonicalName.toLowerCase().replace(" ", "_").replace("-", "_")
         for (const jointName of this.joints.keys()) {
-            if (canonicalName === jointName.toLowerCase().replace(' ', '_').replace('-', '_'))
+            if (canonicalName === jointName.toLowerCase().replace(" ", "_").replace("-", "_"))
                 return this.getJoint(jointName)
         }
         return undefined
+    }
+
+    /**
+     * Construct a BVH object from a skeleton structure and optionally an
+     * animation track.
+     *
+     * NOTE: Make sure that the skeleton has only one root.
+     *
+     * @param skel
+     * @param animationTrack If no animation track is specified, a dummy animation
+     *        of one frame will be added.
+     * @param dummyJoints
+     *        If dummyJoints is true (the default) then extra dummy joints will be
+     *        introduced when bones are not directly connected, but have their head
+     *        position offset from their parent bone tail. This often happens when
+     *        multiple bones are attached to one parent bones, for example in the
+     *        shoulder, hip and hand areas.
+     *
+     *        When dummyJoints is set to false, for each bone in the skeleton, exactly
+     *        one BVH joint will be created. How this is interpreted depends on the
+     *        tool importing the BVH file. Some create only a bone between the parent
+     *        and its first child joint, and create empty offsets to the other childs.
+     *        Other tools create one bone, with the tail position being the average
+     *        of all the child joints.
+     *
+     *        Dummy joints are introduced to prevent
+     *        ambiguities between tools. Dummy joints carry the same name as the bone
+     *        they parent, with "__" prepended.
+     */
+    fromSkeleton(skel: Skeleton, animationTrack?: mat4[], dummyJoints: boolean = true): BiovisionHierarchy {
+        for (const jointName of skel.getJointNames()) {
+            const bone = skel.getBone(jointName)
+            let parentName: string | undefined
+            let offset: vec3
+            let joint: BVHJoint
+
+            if (
+                dummyJoints &&
+                bone.parent !== undefined &&
+                !vec3.equals(bone.getRestHeadPos(), bone.parent.getRestTailPos())
+            ) {
+                // Introduce a dummy joint to cover the offset between two not-connected bones
+                const joint = this.addJoint(bone.parent!.name, `__${jointName}`)
+                joint.channels = ["Zrotation", "Xrotation", "Yrotation"]
+                parentName = joint.name
+                offset = vec3.sub(vec3.create(), bone.parent.getRestTailPos(), bone.parent.getRestHeadPos())
+                this.__calcPosition(joint, [offset[0], offset[1], offset[2]])
+                vec3.sub(offset, bone.getRestHeadPos(), bone.parent.getRestTailPos())
+            } else {
+                parentName = bone.parent?.name
+                offset = bone.getRestOffset()
+            }
+
+            if (bone.parent !== undefined) {
+                joint = this.addJoint(parentName!, jointName)
+                joint.channels = ["Zrotation", "Xrotation", "Yrotation"]
+            } else {
+                // Root bones have translation channels
+                joint = this.addRootJoint(bone.name)
+                joint.channels = ["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"]
+            }
+
+            this.__calcPosition(joint, [offset[0], offset[1], offset[2]])
+            if (!bone.hasChildren()) {
+                const endJoint = this.addJoint(jointName, 'End effector')
+                offset = vec3.sub(vec3.create(), bone.getRestTailPos(), bone.getRestHeadPos())
+                this.__calcPosition(endJoint,  [offset[0], offset[1], offset[2]])
+            }
+
+            // self.__cacheGetJoints()
+            // nonEndJoints = [ joint for joint in self.getJoints() if not joint.isEndConnector() ]
+    
+            // if (animationTrack != undefined) {
+            //     throw Error("not implemented yet")
+            // } else {
+            //     throw Error("not implemented yet")
+            // }
+
+            for(let joint of this.getJoints()) {
+                joint.calculateFrames()
+            }
+        }
+        return this
     }
 }
 
@@ -366,13 +488,20 @@ export class BVHJoint {
         this.skeleton = skeleton
     }
 
+    addChild(joint: BVHJoint) {
+        this.children.push(joint)
+        joint.parent = this
+    }
+
     calculateFrames() {
         const nChannels = this.channels.length
         const nFrames = this.skeleton.frameCount
         const dataLen = nFrames * nChannels
         if (this.frames.length < dataLen) {
             console.log(`Frame data: ${this.frames}`)
-            throw new Error(`Expected frame data length for joint ${this.name} is ${dataLen} found ${this.frames.length}`)
+            throw new Error(
+                `Expected frame data length for joint ${this.name} is ${dataLen} found ${this.frames.length}`
+            )
         }
 
         let rotOrder = ""
@@ -400,7 +529,7 @@ export class BVHJoint {
         }
 
         const D = Math.PI / 180
-        this.channels.forEach((channel, chanIdx,) => {
+        this.channels.forEach((channel, chanIdx) => {
             switch (channel) {
                 case "Xposition":
                     rXs = sub(this.frames, chanIdx, dataLen, nChannels)
@@ -456,7 +585,12 @@ export class BVHJoint {
         } else {
             if (rotAngles.length >= 3) {
                 for (let frameIdx = 0; frameIdx < nFrames; ++frameIdx) {
-                    this.matrixPoses[frameIdx] = euler_matrix(rotAngles[2][frameIdx], rotAngles[1][frameIdx], rotAngles[0][frameIdx], rotOrder)
+                    this.matrixPoses[frameIdx] = euler_matrix(
+                        rotAngles[2][frameIdx],
+                        rotAngles[1][frameIdx],
+                        rotAngles[0][frameIdx],
+                        rotOrder
+                    )
                 }
             }
         }

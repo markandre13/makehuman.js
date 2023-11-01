@@ -8,8 +8,8 @@ export class Bone {
     index: number = -1 // index within Skeleton.boneslist
     headJoint: string
     tailJoint: string
-    headPos = [0, 0, 0]
-    tailPos = [0, 0, 0]
+    headPos = [0, 0, 0] // FIXME: vec3
+    tailPos = [0, 0, 0] // FIXME: vec3
     roll: string | Array<string>
     length = 0
     yvector4?: vec4 // direction vector of this bone
@@ -79,7 +79,24 @@ export class Bone {
         return this.skeleton.planes
     }
 
-    hasChild(name: string) {
+    getRestHeadPos(): vec3 {
+        return vec3.fromValues(this.headPos[0], this.headPos[1], this.headPos[2])
+    }
+
+    getRestTailPos(): vec3 {
+        return vec3.fromValues(this.tailPos[0], this.tailPos[1], this.tailPos[2])
+    }
+
+    getRestOffset(): vec3 {
+        if (this.parent) {
+            return vec3.sub(vec3.create(), this.getRestHeadPos(), this.parent.getRestHeadPos())
+        } else {
+            return this.getRestHeadPos()
+        }
+    }
+
+
+    hasChild(name: string): boolean {
         for (const child of this.children) {
             if (this.name === name) {
                 return true
@@ -89,6 +106,10 @@ export class Bone {
             }
         }
         return false
+    }
+
+    hasChildren(): boolean {
+        return this.children.length !== 0
     }
 
     // line 768

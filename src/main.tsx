@@ -418,7 +418,7 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
 
             // from plugins/3_libraries_pose.py: loadBvh()
             const COMPARE_BONE = "upperleg02.L"
-            const bvh_file = new BiovisionHierarchy(file.name, "auto", "onlyroot", content)
+            const bvh_file = new BiovisionHierarchy().fromFile(file.name, "auto", "onlyroot", content)
             if (!bvh_file.joints.has(COMPARE_BONE)) {
                 throw Error(`The pose file cannot be loaded. It uses a different rig then MakeHuman's default rig`)
             }
