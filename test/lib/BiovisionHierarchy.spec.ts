@@ -167,9 +167,9 @@ Frame Time: 0.041667
             },
         } as Skeleton
 
-        const track = bvh.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+        const data = bvh.createAnimationTrack(skeleton, "Expression-Face-PoseUnits").data
 
-        expect(track.length).to.equal(4)
+        expect(data.length).to.equal(4)
         // prettier-ignore
         const m0 = mat4.fromValues(
             0.9980212, -0.05230408, 0.0348995, 0.,
@@ -178,7 +178,7 @@ Frame Time: 0.041667
             0, 0, 0, 1
         )
         mat4.transpose(m0, m0)
-        expect(track[0]).deep.almost.equal(m0)
+        expect(data[0]).deep.almost.equal(m0)
         // prettier-ignore
         const m1 = mat4.fromValues(
             0.99073744, -0.1041307, 0.08715574, 0.,
@@ -187,7 +187,7 @@ Frame Time: 0.041667
             0, 0, 0, 1
         )
         mat4.transpose(m1, m1)
-        expect(track[1]).deep.almost.equal(m1)
+        expect(data[1]).deep.almost.equal(m1)
 
         // prettier-ignore
         const m2 = mat4.fromValues(
@@ -196,7 +196,7 @@ Frame Time: 0.041667
             -0.11737048, 0.14197811, 0.98288673, 0.,
             0, 0, 0, 1)
         mat4.transpose(m2, m2)
-        expect(track[2]).deep.almost.equal(m2)
+        expect(data[2]).deep.almost.equal(m2)
         // prettier-ignore
         const m3 = mat4.fromValues(
             0.9601763, -0.20409177, 0.190809, 0.,
@@ -204,7 +204,7 @@ Frame Time: 0.041667
             -0.1477004, 0.20892227, 0.9667141, 0.,
             0, 0, 0, 1)
         mat4.transpose(m3, m3)
-        expect(track[3]).deep.almost.equal(m3)
+        expect(data[3]).deep.almost.equal(m3)
     })
 
     it("BVHJoint.calculateFrames()", function () {
@@ -267,9 +267,9 @@ Frame Time: 0.041667
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const scene = new HumanMesh(human, obj)
         const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
-        const anim = bvh.createAnimationTrack(skel)
-        for (let i = 0; i < anim.length; ++i) {
-            const m0 = anim[i]
+        const data = bvh.createAnimationTrack(skel).data
+        for (let i = 0; i < data.length; ++i) {
+            const m0 = data[i]
             let m1: mat4
             const j = i * 12
             // prettier-ignore
@@ -325,16 +325,31 @@ Frame Time: 0.041667
         // bvh.bvhJoints.forEach( (it, idx) => console.log(`${idx} ${it.name}`))
     })
 
-    it.only("writeToFile", function() {
+    it("writeToFile", function () {
         const human = new Human()
+        console.log(`load wavefront`)
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const scene = new HumanMesh(human, obj)
+        console.log("load skeleton")
         const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
 
-        const bvh = new BiovisionHierarchy()
-        bvh.fromSkeleton(skeleton)
-        // bvh.writeToFile()
-        console.log(bvh.writeToFile())
+        console.log("load bvh")
+        const bvh0 = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh")
+        console.log("create animation track")
+        const ani0 = bvh0.createAnimationTrack(skeleton)
+
+        console.log("create bvh")
+        const bvh1 = bvh0.fromSkeleton(skeleton, ani0)
+        const data = bvh1.writeToFile()
+        console.log("check bvh")
+        const bvh2 = new BiovisionHierarchy().fromFile("xxx.bvh", "auto", "onlyroot", data)
+        const ani1 = bvh2.createAnimationTrack(skeleton)
+        expect(ani0.nFrames).to.almost.equal(ani1.nFrames)
+        expect(ani0.nBones).to.almost.equal(ani1.nBones)
+        expect(ani0.frameRate).to.almost.equal(ani1.frameRate)
+        for (let i = 0; i < ani0.data.length; ++i) {
+            expect(ani0.data[i], `data[${i}] (nFrames=${ani0.nFrames}, nBones=${ani0.nBones})`).to.deep.almost.equal(ani1.data[i])
+        }
     })
 
     it.skip("xxx", function () {
@@ -351,7 +366,7 @@ Frame Time: 0.041667
 
         let bvh_root_translation: vec3
         if (bvh_file.joints.has("root")) {
-            const root_bone = anim[0]
+            const root_bone = anim.data[0]
             bvh_root_translation = vec3.fromValues(root_bone[12], root_bone[13], root_bone[14])
         } else {
             bvh_root_translation = vec3.create()

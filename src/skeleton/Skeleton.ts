@@ -336,6 +336,10 @@ export class Skeleton {
         return this._retrieveJointNames(this.roots[0])
     }
 
+    containsBone(name: string): boolean {
+        return this.bones.has(name)
+    }
+
     protected _retrieveJointNames(parentBone: Bone): string[] {
         const result = [parentBone.name]
         for (const child of parentBone.children) {

@@ -295,7 +295,7 @@ describe("`(face) expression", function () {
         const frameCount = facePoseUnits.frameCount
 
         // WHEN createAnimationTrack()
-        const base_anim: mat4[] = facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+        const base_anim: mat4[] = facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits").data
 
         // THEN it's the same as in MH 1.2 (Python)
         let pythonIdx = 0, typescriptIdx = 0

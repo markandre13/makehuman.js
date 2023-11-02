@@ -422,7 +422,7 @@ function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
             if (!bvh_file.joints.has(COMPARE_BONE)) {
                 throw Error(`The pose file cannot be loaded. It uses a different rig then MakeHuman's default rig`)
             }
-            const anim = bvh_file.createAnimationTrack(scene.skeleton)
+            const anim = bvh_file.createAnimationTrack(scene.skeleton).data
 
             let bvh_root_translation: vec3
             if (bvh_file.joints.has("root")) {

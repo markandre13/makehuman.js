@@ -4,11 +4,27 @@
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { mat4, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
-import { euler_matrix } from "./euler_matrix"
+import { euler_from_matrix, euler_matrix } from "./euler_matrix"
 import { StringToLine } from "./StringToLine"
-import { off } from "process"
 
 export type TranslationType = "all" | "onlyroot" | "none"
+
+export class AnimationTrack {
+    name: string
+    data: mat4[]
+    nFrames: number
+    frameRate: number
+    nBones: number
+
+    constructor(name: string, poseData: mat4[], nFrames: number, framerate: number) {
+        this.name = name
+        this.data = poseData
+        this.nFrames = nFrames
+        this.frameRate = framerate
+
+        this.nBones = Math.round(this.data.length / nFrames)
+    }
+}
 
 export class BiovisionHierarchy {
     name: string = ""
@@ -308,7 +324,7 @@ export class BiovisionHierarchy {
         }
     }
 
-    createAnimationTrack(skel?: string[] | Skeleton, name?: string): mat4[] {
+    createAnimationTrack(skel?: string[] | Skeleton, name?: string): AnimationTrack {
         function _bvhJointName(boneName: string | undefined) {
             // Remove the tail from duplicate bone names (added by the BVH parser)
             if (boneName === undefined) {
@@ -321,17 +337,22 @@ export class BiovisionHierarchy {
             return boneName
         }
 
-        function _createAnimation(jointsData: mat4[], name: string, frameTime: number, nFrames: number) {
+        function _createAnimation(
+            jointsData: mat4[],
+            name: string,
+            frameTime: number,
+            nFrames: number
+        ): AnimationTrack {
             const nJoints = jointsData.length / nFrames
-            const result: mat4[] = Array(jointsData.length)
+            const animData: mat4[] = Array(jointsData.length)
             let outIdx = 0
             for (let f = 0; f < nFrames; ++f) {
                 for (let j = 0; j < nJoints; ++j) {
-                    result[outIdx] = jointsData[f + j * nFrames]
+                    animData[outIdx] = jointsData[f + j * nFrames]
                     ++outIdx
                 }
             }
-            return result
+            return new AnimationTrack(name, animData, nFrames, 1.0 / frameTime)
         }
 
         if (name === undefined) {
@@ -376,6 +397,10 @@ export class BiovisionHierarchy {
         return this.jointslist
     }
 
+    getJointsBVHOrder() {
+        return this.bvhJoints
+    }
+
     getJointByCanonicalName(canonicalName: string): BVHJoint | undefined {
         canonicalName = canonicalName.toLowerCase().replace(" ", "_").replace("-", "_")
         for (const jointName of this.joints.keys()) {
@@ -412,7 +437,7 @@ export class BiovisionHierarchy {
      *        ambiguities between tools. Dummy joints carry the same name as the bone
      *        they parent, with "__" prepended.
      */
-    fromSkeleton(skel: Skeleton, animationTrack?: mat4[], dummyJoints: boolean = true): BiovisionHierarchy {
+    fromSkeleton(skel: Skeleton, animationTrack?: AnimationTrack, dummyJoints: boolean = true): BiovisionHierarchy {
         for (const jointName of skel.getJointNames()) {
             const bone = skel.getBone(jointName)
             let parentName: string | undefined
@@ -457,7 +482,49 @@ export class BiovisionHierarchy {
         const nonEndJoints = this.getJoints().filter((joint) => !joint.isEndConnector())
 
         if (animationTrack !== undefined) {
-            throw Error("not implemented yet")
+            this.frameCount = animationTrack.nFrames
+            this.frameTime = 1.0 / animationTrack.frameRate
+            const jointToBoneIdx = new Map<string, number>()
+            // for joint in nonEndJoints:
+            for (const joint of nonEndJoints) {
+                if (skel.containsBone(joint.name)) {
+                    jointToBoneIdx.set(joint.name, skel.getBone(joint.name).index)
+                } else {
+                    jointToBoneIdx.set(joint.name, -1)
+                }
+            }
+
+            for (let fIdx = 0; fIdx < animationTrack.nFrames; ++fIdx) {
+                // for fIdx in range(animationTrack.nFrames):
+                //     offset = fIdx * animationTrack.nBones
+                const offset = fIdx * animationTrack.nBones
+                //     for jIdx,joint in enumerate(nonEndJoints):
+                nonEndJoints.forEach((joint, jIdx) => {
+                    //         bIdx = jointToBoneIdx[joint.name]
+                    const bIdx = jointToBoneIdx.get(joint.name)!
+                    //         if bIdx < 0:
+                    let poseMat: mat4
+                    if (bIdx < 0) {
+                        //             poseMat = np.identity(4, dtype=np.float32)
+                        poseMat = mat4.create()
+                    } else {
+                        //         else:
+                        //             poseMat = animationTrack.data[offset + bIdx]
+                        poseMat = animationTrack.data[offset + bIdx]
+                    }
+
+                    //         if len(joint.channels) == 6:
+                    if (joint.channels.length === 6) {
+                        // add transformation
+                        //             tx, ty, tz = poseMat[:3,3]
+                        //             joint.frames.extend([tx, ty, tz])
+                        joint.frames.push(poseMat[12], poseMat[13], poseMat[14]) // tx, ty, tz
+                    }
+                    const { x, y, z } = euler_from_matrix(poseMat, "syxz")
+                    const D = Math.PI / 180
+                    joint.frames.push(z / D, x / D, y / D)
+                })
+            }
         } else {
             this.frameCount = 1
             this.frameTime = 1.0
@@ -477,10 +544,6 @@ export class BiovisionHierarchy {
         return this
     }
 
-    getJointsBVHOrder() {
-        return this.bvhJoints
-    }
-
     writeToFile() {
         let out = ""
 
@@ -489,21 +552,20 @@ export class BiovisionHierarchy {
         out += this._writeJoint(this.rootJoint)
 
         // write animation
-        out += 'MOTION\n'
+        out += "MOTION\n"
         out += `Frames: ${this.frameCount}\n`
         out += `Frame Time: ${this.frameTime}\n`
 
-        const allJoints = this.getJointsBVHOrder().filter(joint => !joint.isEndConnector())
+        const allJoints = this.getJointsBVHOrder().filter((joint) => !joint.isEndConnector())
         // const jointsData = allJoints.map(joint => joint.matrixPoses).flat()
         // const nJoints = jointsData.length
         // const nFrames = jointsData[0].length
         // const totalChannels = allJoints.map(joint => joint.channels.length).reduce((a,b) => a + b)
-        for(let fIdx=0; fIdx<this.frameCount; ++fIdx) {
+        for (let fIdx = 0; fIdx < this.frameCount; ++fIdx) {
             let frameData = []
-            for(const joint of allJoints) {
-                console.log(joint.name)
+            for (const joint of allJoints) {
                 const offset = fIdx * joint.channels.length
-                for(let i = offset ; i < offset + joint.channels.length; ++i) {
+                for (let i = offset; i < offset + joint.channels.length; ++i) {
                     frameData.push(joint.frames[i])
                 }
             }
