@@ -2,9 +2,9 @@ import { expect, use } from "@esm-bundle/chai"
 import { chaiString } from "../chai/chaiString"
 use(chaiString)
 import { chaiAlmost } from "../chai/chaiAlmost"
-use(chaiAlmost())
+use(chaiAlmost(0.001))
 
-import { BiovisionHierarchy } from "../../src/lib/BiovisionHierarchy"
+import { BVHJoint, BiovisionHierarchy } from "../../src/lib/BiovisionHierarchy"
 import { FileSystemAdapter } from "../../src/filesystem/FileSystemAdapter"
 import { HTTPFSAdapter } from "../../src/filesystem/HTTPFSAdapter"
 import { mat4, vec3 } from "gl-matrix"
@@ -16,6 +16,8 @@ import { HumanMesh } from "../../src/mesh/HumanMesh"
 import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
 
 import { anim as run01_anmin, joints as run01_joints } from "../testdata/run01_anim"
+import { euler_from_matrix, euler_matrix } from "../../src/lib/euler_matrix"
+import exp from "constants"
 
 describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {
@@ -34,6 +36,7 @@ describe("class BiovisionHierarchy", function () {
             3e-6, 1e-6, -1e-6, -0, -0, 0, 3e-6, 1e-6, -1e-6, 3e-6, 1e-6, -1e-6, 3e-6, 1e-6, -1e-6, -0, -0, 0, -0, -0, 0,
             -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0, -0, -0, 0,
         ])
+        expect(facePoseUnits.name).to.equal("face-poseunits")
         expect(facePoseUnits.bvhJoints.map((j) => j.name).join(",")).to.equal(
             "root,spine05,spine04,spine03,spine02,spine01,neck01,neck02,neck03,head,levator02.L,levator03.L,levator04.L,levator05.L,End effector,special01,oris04.R,oris03.R,End effector,oris06,oris05,End effector,oris04.L,oris03.L,End effector,levator02.R,levator03.R,levator04.R,levator05.R,End effector,special03,levator06.R,End effector,levator06.L,End effector,special06.R,special05.R,orbicularis03.R,End effector,orbicularis04.R,End effector,eye.R,End effector,jaw,tongue00,tongue01,tongue02,tongue03,tongue07.L,End effector,tongue07.R,End effector,tongue04,End effector,tongue06.R,End effector,tongue06.L,End effector,tongue05.L,End effector,tongue05.R,End effector,special04,oris02,oris01,End effector,oris06.R,oris07.R,End effector,oris06.L,oris07.L,End effector,temporalis01.L,oculi02.L,oculi01.L,End effector,temporalis01.R,oculi02.R,oculi01.R,End effector,special06.L,special05.L,orbicularis04.L,End effector,orbicularis03.L,End effector,eye.L,End effector,temporalis02.R,risorius02.R,risorius03.R,End effector,temporalis02.L,risorius02.L,risorius03.L,End effector,clavicle.L,shoulder01.L,upperarm01.L,upperarm02.L,lowerarm01.L,lowerarm02.L,wrist.L,metacarpal4.L,finger5-1.L,finger5-2.L,finger5-3.L,End effector,metacarpal1.L,finger2-1.L,finger2-2.L,finger2-3.L,End effector,metacarpal3.L,finger4-1.L,finger4-2.L,finger4-3.L,End effector,metacarpal2.L,finger3-1.L,finger3-2.L,finger3-3.L,End effector,finger1-1.L,finger1-2.L,finger1-3.L,End effector,clavicle.R,shoulder01.R,upperarm01.R,upperarm02.R,lowerarm01.R,lowerarm02.R,wrist.R,metacarpal2.R,finger3-1.R,finger3-2.R,finger3-3.R,End effector,metacarpal3.R,finger4-1.R,finger4-2.R,finger4-3.R,End effector,finger1-1.R,finger1-2.R,finger1-3.R,End effector,metacarpal1.R,finger2-1.R,finger2-2.R,finger2-3.R,End effector,metacarpal4.R,finger5-1.R,finger5-2.R,finger5-3.R,End effector,breast.R,End effector,breast.L,End effector,pelvis.L,upperleg01.L,upperleg02.L,lowerleg01.L,lowerleg02.L,foot.L,toe5-1.L,toe5-2.L,toe5-3.L,End effector,toe4-1.L,toe4-2.L,toe4-3.L,End effector,toe2-1.L,toe2-2.L,toe2-3.L,End effector,toe1-1.L,toe1-2.L,End effector,toe3-1.L,toe3-2.L,toe3-3.L,End effector,pelvis.R,upperleg01.R,upperleg02.R,lowerleg01.R,lowerleg02.R,foot.R,toe4-1.R,toe4-2.R,toe4-3.R,End effector,toe2-1.R,toe2-2.R,toe2-3.R,End effector,toe5-1.R,toe5-2.R,toe5-3.R,End effector,toe1-1.R,toe1-2.R,End effector,toe3-1.R,toe3-2.R,toe3-3.R,End effector"
         )
@@ -130,7 +133,8 @@ Frame Time: 0.041667
             new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "none", `HIERARCHY\nROOT root\nNOPE`)
         ).to.throw()
     })
-
+    // NOTE: createAnimationTrack is super simple as it is just collecting all matrixPoses from all joints
+    // testing it should be a no brainer, the complicated part is getting the matrixPoses right
     it("createAnimationTrack(skel, name)", function () {
         const bvh = new BiovisionHierarchy().fromFile(
             "biohazard.bvh",
@@ -153,7 +157,7 @@ ROOT root
 }
 MOTION
 Frames: 2
-Frame Time: 0.041667
+Frame Time: ${1 / 24}
 1 2 3 4 5 6
 7 8 9 10 11 12
 `
@@ -167,8 +171,12 @@ Frame Time: 0.041667
             },
         } as Skeleton
 
-        const data = bvh.createAnimationTrack(skeleton, "Expression-Face-PoseUnits").data
+        const animation = bvh.createAnimationTrack(skeleton, "Expression-Face-PoseUnits")
+        expect(animation.name).to.equal("Expression-Face-PoseUnits")
+        expect(animation.nFrames).to.equal(2)
+        expect(animation.frameRate).to.almost.equal(24)
 
+        const data = animation.data
         expect(data.length).to.equal(4)
         // prettier-ignore
         const m0 = mat4.fromValues(
@@ -206,7 +214,64 @@ Frame Time: 0.041667
         mat4.transpose(m3, m3)
         expect(data[3]).deep.almost.equal(m3)
     })
+    describe("joint", function () {
+        it("translate x,y,z", function () {
+            const dx = 1
+            const dy = 2
+            const dz = 3
 
+            const bvh = new BiovisionHierarchy().fromFile(
+                "biohazard.bvh",
+                "auto",
+                "onlyroot",
+                `${bvhSkel1}${dx} ${dy} ${dz} 0 0 0 0 0 0\n`
+            )
+            const m0 = bvh.rootJoint.matrixPoses[0]
+            expect(mat4.getTranslation(vec3.create(), m0)).to.deep.almost.equal(vec3.fromValues(dx, dy, dz))
+        })
+
+        it("rotX", function () {
+            const rotX = 0.2
+
+            const bvh = new BiovisionHierarchy().fromFile(
+                "biohazard.bvh",
+                "auto",
+                "onlyroot",
+                `${bvhSkel1}0 0 0 ${(rotX / Math.PI) * 180.0} 0 0 0 0 0\n`
+            )
+            const m0 = bvh.rootJoint.matrixPoses[0]
+            const rot = euler_from_matrix(m0)
+            expect(rot.x).to.almost.equal(rotX)
+        })
+
+        it("rotY", function () {
+            const rotY = 0.2
+
+            const bvh = new BiovisionHierarchy().fromFile(
+                "biohazard.bvh",
+                "auto",
+                "onlyroot",
+                `${bvhSkel1}0 0 0 0 ${(rotY / Math.PI) * 180.0} 0 0 0 0\n`
+            )
+            const m0 = bvh.rootJoint.matrixPoses[0]
+            const rot = euler_from_matrix(m0)
+            expect(rot.y).to.almost.equal(rotY)
+        })
+
+        it("rotZ", function () {
+            const rotZ = 0.2
+
+            const bvh = new BiovisionHierarchy().fromFile(
+                "biohazard.bvh",
+                "auto",
+                "onlyroot",
+                `${bvhSkel1}0 0 0 0 0 ${(rotZ / Math.PI) * 180.0} 0 0 0\n`
+            )
+            const m0 = bvh.rootJoint.matrixPoses[0]
+            const rot = euler_from_matrix(m0)
+            expect(rot.z).to.almost.equal(rotZ)
+        })
+    })
     it("BVHJoint.calculateFrames()", function () {
         const bvh = new BiovisionHierarchy().fromFile(
             "biohazard.bvh",
@@ -248,8 +313,7 @@ Frame Time: 0.041667
         expect(bvh.rootJoint.matrixPoses[0]).to.deep.almost.equal(m0)
         expect(bvh.rootJoint.matrixPoses[1]).to.deep.almost.equal(m1)
     })
-
-    it("load pose", function () {
+    it("compare loading pose with python code results", function () {
         const bvh = new BiovisionHierarchy().fromFile("data/poses/run01.bvh", "auto")
 
         // check that all joints at frame 0 have the correct pose matrix
@@ -282,74 +346,154 @@ Frame Time: 0.041667
             expect(m0, `matrix ${i}`).to.deep.almost.equal(m1)
         }
     })
+    describe("fromSkeleton()", function () {
+        it("compare with python code results (no animation track)", function () {
+            const human = new Human()
+            const obj = new WavefrontObj("data/3dobjs/base.obj")
+            const scene = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
 
-    it("fromSkeleton", function () {
-        const human = new Human()
-        const obj = new WavefrontObj("data/3dobjs/base.obj")
-        const scene = new HumanMesh(human, obj)
-        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+            const bvh = new BiovisionHierarchy()
 
-        const bvh = new BiovisionHierarchy()
+            bvh.fromSkeleton(skeleton)
 
-        bvh.fromSkeleton(skeleton)
+            expect(bvh.bvhJoints.length).to.equal(241)
 
-        expect(bvh.bvhJoints.length).to.equal(241)
+            expect(bvh.bvhJoints[0].name).to.equal("root")
+            // prettier-ignore
+            expect(bvh.bvhJoints[0].channels).to.deep.equal(["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"])
+            expect(bvh.bvhJoints[0].frames).to.deep.almost.equal([0, 0, 0, 0, 0, 0])
+            expect(bvh.bvhJoints[0].position).to.deep.almost.equal([0, 0.5639, -0.7609])
+            expect(bvh.bvhJoints[0].offset).to.deep.almost.equal([0, 0.5639, -0.7609])
 
-        expect(bvh.bvhJoints[0].name).to.equal("root")
-        // prettier-ignore
-        expect(bvh.bvhJoints[0].channels).to.deep.equal(["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"])
-        expect(bvh.bvhJoints[0].frames).to.deep.almost.equal([0, 0, 0, 0, 0, 0])
-        expect(bvh.bvhJoints[0].position).to.deep.almost.equal([0, 0.5639, -0.7609])
-        expect(bvh.bvhJoints[0].offset).to.deep.almost.equal([0, 0.5639, -0.7609])
+            expect(bvh.bvhJoints[1].name).to.equal("spine05")
+            expect(bvh.bvhJoints[1].channels).to.deep.equal(["Zrotation", "Xrotation", "Yrotation"])
+            expect(bvh.bvhJoints[1].frames).to.deep.almost.equal([0, 0, 0])
+            expect(bvh.bvhJoints[1].position).to.deep.almost.equal([0, 0.72685003, 0.14450002])
+            expect(bvh.bvhJoints[1].offset).to.deep.almost.equal([0, 0.16295004, 0.90540004])
 
-        expect(bvh.bvhJoints[1].name).to.equal("spine05")
-        expect(bvh.bvhJoints[1].channels).to.deep.equal(["Zrotation", "Xrotation", "Yrotation"])
-        expect(bvh.bvhJoints[1].frames).to.deep.almost.equal([0, 0, 0])
-        expect(bvh.bvhJoints[1].position).to.deep.almost.equal([0, 0.72685003, 0.14450002])
-        expect(bvh.bvhJoints[1].offset).to.deep.almost.equal([0, 0.16295004, 0.90540004])
+            expect(bvh.bvhJoints[6].name).to.equal("End effector")
+            expect(bvh.bvhJoints[6].channels).to.deep.equal([])
+            expect(bvh.bvhJoints[6].frames).to.deep.almost.equal([])
+            expect(bvh.bvhJoints[6].position).to.deep.almost.equal([0.7943, 3.8213, 1.5846])
+            expect(bvh.bvhJoints[6].offset).to.deep.almost.equal([0.7943, -0.50724936, 1.6558499])
 
-        expect(bvh.bvhJoints[6].name).to.equal("End effector")
-        expect(bvh.bvhJoints[6].channels).to.deep.equal([])
-        expect(bvh.bvhJoints[6].frames).to.deep.almost.equal([])
-        expect(bvh.bvhJoints[6].position).to.deep.almost.equal([0.7943, 3.8213, 1.5846])
-        expect(bvh.bvhJoints[6].offset).to.deep.almost.equal([0.7943, -0.50724936, 1.6558499])
+            expect(bvh.bvhJoints[10].name).to.equal("__clavicle.L")
+            expect(bvh.bvhJoints[10].position).to.deep.almost.equal([0, 5.8902493, 0.06805])
+            expect(bvh.bvhJoints[10].offset).to.deep.almost.equal([0, 1.5616999, 0.13929999])
 
-        expect(bvh.bvhJoints[10].name).to.equal("__clavicle.L")
-        expect(bvh.bvhJoints[10].position).to.deep.almost.equal([0, 5.8902493, 0.06805])
-        expect(bvh.bvhJoints[10].offset).to.deep.almost.equal([0, 1.5616999, 0.13929999])
+            expect(bvh.bvhJoints[11].name).to.equal("clavicle.L")
+            expect(bvh.bvhJoints[11].position).to.deep.almost.equal([0.26555, 5.19135, 0.6942501])
+            expect(bvh.bvhJoints[11].offset).to.deep.almost.equal([0.26555, -0.69889927, 0.6262001])
 
-        expect(bvh.bvhJoints[11].name).to.equal("clavicle.L")
-        expect(bvh.bvhJoints[11].position).to.deep.almost.equal([0.26555, 5.19135, 0.6942501])
-        expect(bvh.bvhJoints[11].offset).to.deep.almost.equal([0.26555, -0.69889927, 0.6262001])
+            // bvh.bvhJoints.forEach( (it, idx) => console.log(`${idx} ${it.name}`))
+        })
 
-        // bvh.bvhJoints.forEach( (it, idx) => console.log(`${idx} ${it.name}`))
+        // TODO: try a somewhat smaller test to approach the actual bug
+
+        it("load and write face-poseunits.bvh", function () {
+            const human = new Human()
+            const obj = new WavefrontObj("data/3dobjs/base.obj")
+            const scene = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+
+            // console.log("--------------------------------- fromFile")
+            const bvh0 = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh")
+
+            // console.log("--------------------------------- createAnimationTrack")
+            const anim0 = bvh0.createAnimationTrack(skeleton)
+
+            // console.log("--------------------------------- check createAnimationTrack result")
+            // we check createAnimationTrack() by comparing the mat4 references
+            expect(anim0.data.length).to.equal(anim0.nFrames * anim0.nBones)
+            expect(anim0.nBones).to.equal(skeleton.boneslist?.length)
+
+            for (let jointIdx = 0; jointIdx < bvh0.jointslist.length; ++jointIdx) {
+                const joint = bvh0.jointslist[jointIdx]
+                if (joint.name === "End effector") {
+                    continue
+                }
+                const boneIndex = skeleton.getBone(joint.name).index
+                expect(boneIndex).to.be.lessThan(skeleton.boneslist!.length)
+
+                for (let frame = 0; frame < anim0.nFrames; ++frame) {
+                    const i = frame * skeleton.boneslist!.length + boneIndex
+                    expect(i).to.be.lessThan(anim0.data.length)
+                    const m = anim0.data[i]
+                    expect(m).to.deep.almost.equal(joint.matrixPoses[frame])
+                }
+            }
+
+            // console.log("--------------------------------- fromSkeleton")
+            const bvh1 = new BiovisionHierarchy().fromSkeleton(skeleton, anim0, false)
+
+            // console.log("--------------------------------- check BVHJoint tree's matrixPoses")
+            // the trees are the same but the order of joints differs
+            function compareTree(l: BVHJoint, r: BVHJoint, indent = 0) {
+                // console.log(`${"  ".repeat(indent)} ${l.name} ${r.name}`)
+                expect(l.name).to.equal(r.name)
+                expect(l.children.length).to.equal(r.children.length)
+                expect(l.channels.length).to.equal(r.channels.length)
+
+                for (let i = 0; i < l.matrixPoses.length; ++i) {
+                    expect(
+                        l.matrixPoses[i],
+                        `${l.name} ${i}: l: ${l.matrixPoses[i]}, r: ${r.matrixPoses[i]}`
+                    ).to.deep.almost.equal(r.matrixPoses[i])
+                }
+
+                for (let i = 0; i < l.children.length; ++i) {
+                    let j = 0
+                    for (; j < r.children.length; ++j) {
+                        if (l.children[i].name === r.children[j].name) {
+                            break
+                        }
+                    }
+                    if (j >= r.children.length) {
+                        throw Error(`couldn't find matching bone`)
+                    }
+                    compareTree(l.children[i], r.children[j], indent + 1)
+                }
+            }
+            compareTree(bvh1.rootJoint, bvh0.rootJoint)
+
+            // console.log("--------------------------------- check BVH's animation tracks")
+            const anim1 = bvh1.createAnimationTrack(skeleton)
+            expect(anim0.data).to.deep.almost.equal(anim1.data)
+        })
     })
+    describe("writeToFile()", function () {
+        it("one frame", function () {
+            const frames = `3 5 7 0.2 0.3 0.4 0.5 0.6 0.7\n`
+            const bvh = new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "onlyroot", `${bvhSkel1}${frames}`)
+            expect(bvh.writeToFile()).endsWith(frames)
+        })
+        it("two frames", function () {
+            const frames = `3 5 7 0.2 0.3 0.4 0.5 0.6 0.7\n11 13 17 0.8 0.9 0.11 0.12 0.13 0.14\n`
+            const bvh = new BiovisionHierarchy().fromFile("biohazard.bvh", "auto", "onlyroot", `${bvhSkel2}${frames}`)
+            expect(bvh.writeToFile()).endsWith(frames)
+        })
+        it("load and write face-poseunits.bvh", function () {
+            const human = new Human()
+            const obj = new WavefrontObj("data/3dobjs/base.obj")
+            const scene = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
 
-    it("writeToFile", function () {
-        const human = new Human()
-        console.log(`load wavefront`)
-        const obj = new WavefrontObj("data/3dobjs/base.obj")
-        const scene = new HumanMesh(human, obj)
-        console.log("load skeleton")
-        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+            const bvh0 = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh")
+            const bvh1 = new BiovisionHierarchy().fromFile("xxx.bvh", "auto", "onlyroot", bvh0.writeToFile())
 
-        console.log("load bvh")
-        const bvh0 = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh")
-        console.log("create animation track")
-        const ani0 = bvh0.createAnimationTrack(skeleton)
+            const ani0 = bvh0.createAnimationTrack(skeleton)
+            const ani1 = bvh1.createAnimationTrack(skeleton)
 
-        console.log("create bvh")
-        const bvh1 = bvh0.fromSkeleton(skeleton, ani0)
-        const data = bvh1.writeToFile()
-        console.log("check bvh")
-        const bvh2 = new BiovisionHierarchy().fromFile("xxx.bvh", "auto", "onlyroot", data)
-        const ani1 = bvh2.createAnimationTrack(skeleton)
-        expect(ani0.nFrames).to.almost.equal(ani1.nFrames)
-        expect(ani0.nBones).to.almost.equal(ani1.nBones)
-        expect(ani0.frameRate).to.almost.equal(ani1.frameRate)
-        for (let i = 0; i < ani0.data.length; ++i) {
-            expect(ani0.data[i], `data[${i}] (nFrames=${ani0.nFrames}, nBones=${ani0.nBones})`).to.deep.almost.equal(ani1.data[i])
-        }
+            expect(ani0.nFrames).to.almost.equal(ani1.nFrames)
+            expect(ani0.nBones).to.almost.equal(ani1.nBones)
+            expect(ani0.frameRate).to.almost.equal(ani1.frameRate)
+            expect(ani0.data.length).to.equal(ani1.data.length)
+
+            for (let i = 0; i < ani0.data.length; ++i) {
+                expect(ani0.data[i], `data[${i}]`).to.deep.almost.equal(ani1.data[i])
+            }
+        })
     })
 
     it.skip("xxx", function () {
@@ -409,6 +553,44 @@ Frame Time: 0.041667
         }
         autoScaleAnim()
     })
+
+    const bvhSkel1 = `HIERARCHY
+    ROOT root
+    {
+        OFFSET 0.1 0.2 0.3
+        CHANNELS 6 Xposition Yposition Zposition Xrotation Yrotation Zrotation
+        JOINT spine05
+        {
+            OFFSET 1.9 2.8 3.7
+            CHANNELS 3 Xrotation Yrotation Zrotation
+            End Site
+            {
+                OFFSET 11 12 13
+            }
+        }
+    }
+    MOTION
+    Frames: 1
+    Frame Time: ${1 / 24}\n`
+
+    const bvhSkel2 = `HIERARCHY
+    ROOT root
+    {
+        OFFSET 0.1 0.2 0.3
+        CHANNELS 6 Xposition Yposition Zposition Xrotation Yrotation Zrotation
+        JOINT spine05
+        {
+            OFFSET 1.9 2.8 3.7
+            CHANNELS 3 Xrotation Yrotation Zrotation
+            End Site
+            {
+                OFFSET 11 12 13
+            }
+        }
+    }
+    MOTION
+    Frames: 2
+    Frame Time: ${1 / 24}\n`
 })
 
 // print mat4 in the order used in python

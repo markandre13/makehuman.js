@@ -7,6 +7,9 @@ import { Skeleton } from "skeleton/Skeleton"
 import { euler_from_matrix, euler_matrix } from "./euler_matrix"
 import { StringToLine } from "./StringToLine"
 
+/**
+ * defines from which joints we will take translation data
+ */
 export type TranslationType = "all" | "onlyroot" | "none"
 
 export class AnimationTrack {
@@ -24,6 +27,14 @@ export class AnimationTrack {
 
         this.nBones = Math.round(this.data.length / nFrames)
     }
+}
+
+function basename(str: string) {
+    let base = new String(str).substring(str.lastIndexOf("/") + 1)
+    if (base.lastIndexOf(".") != -1) {
+        base = base.substring(0, base.lastIndexOf("."))
+    }
+    return base
 }
 
 export class BiovisionHierarchy {
@@ -51,7 +62,7 @@ export class BiovisionHierarchy {
         allowTranslation: TranslationType = "onlyroot",
         data?: string
     ): BiovisionHierarchy {
-        this.name = filename
+        this.name = basename(filename)
         this.allowTranslation = allowTranslation
 
         let autoAxis
@@ -348,6 +359,7 @@ export class BiovisionHierarchy {
             let outIdx = 0
             for (let f = 0; f < nFrames; ++f) {
                 for (let j = 0; j < nJoints; ++j) {
+                    // console.log(`_createAnimation(): animData[${outIdx}] = jointsData[${f + j * nFrames}]`)
                     animData[outIdx] = jointsData[f + j * nFrames]
                     ++outIdx
                 }
@@ -358,31 +370,36 @@ export class BiovisionHierarchy {
         if (name === undefined) {
             name = this.name
         }
-        if (skel === undefined) {
-            throw Error(`skel === undefined: not implemented yet`)
-        }
-        if (skel instanceof Array) {
-            throw Error(`skel === string[]: not implemented yet`)
-        }
 
-        // map matrixPoses to skel's breadth-first order bones list, one frame after another
-        let jointsData: mat4[] = []
-        for (const bone of skel.getBones()) {
-            if (bone.reference_bones.length > 0) {
-                throw Error(`bone with reference_bones not implemented yet`)
-            } else {
-                // Map bone to joint by bone name
-                const jointName = _bvhJointName(bone.name)!
-                const joint = this.getJointByCanonicalName(jointName)
-                if (joint !== undefined) {
-                    if (joint.matrixPoses.length !== this.frameCount) {
-                        throw Error("yikes")
-                    }
-                    jointsData.push(...joint.matrixPoses)
+        let jointsData: mat4[]
+        if (skel === undefined) {
+            // we leave out end effectors as they should not have animation data
+            jointsData = this.getJoints()
+                .filter((joint) => !joint.isEndConnector())
+                .map((it) => it.matrixPoses)
+                .flat()
+        } else if (skel instanceof Array) {
+            throw Error(`skel === string[]: not implemented yet`)
+        } else {
+            // map matrixPoses to skel's breadth-first order bones list, one frame after another
+            jointsData = []
+            for (const bone of skel.getBones()) {
+                if (bone.reference_bones.length > 0) {
+                    throw Error(`bone with reference_bones not implemented yet`)
                 } else {
-                    const emptyTrack = new Array(this.frameCount)
-                    emptyTrack.fill(mat4.create())
-                    jointsData.push(...emptyTrack)
+                    // Map bone to joint by bone name
+                    const jointName = _bvhJointName(bone.name)!
+                    const joint = this.getJointByCanonicalName(jointName)
+                    if (joint !== undefined) {
+                        if (joint.matrixPoses.length !== this.frameCount) {
+                            throw Error("yikes")
+                        }
+                        jointsData.push(...joint.matrixPoses)
+                    } else {
+                        const emptyTrack = new Array(this.frameCount)
+                        emptyTrack.fill(mat4.create())
+                        jointsData.push(...emptyTrack)
+                    }
                 }
             }
         }
@@ -438,6 +455,8 @@ export class BiovisionHierarchy {
      *        they parent, with "__" prepended.
      */
     fromSkeleton(skel: Skeleton, animationTrack?: AnimationTrack, dummyJoints: boolean = true): BiovisionHierarchy {
+        // create joints
+        // getJointNames is depth first, not breadth first...
         for (const jointName of skel.getJointNames()) {
             const bone = skel.getBone(jointName)
             let parentName: string | undefined
@@ -469,6 +488,7 @@ export class BiovisionHierarchy {
                 joint = this.addRootJoint(bone.name)
                 joint.channels = ["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"]
             }
+            // joint.rotOrder = "syxz"
 
             this.__calcPosition(joint, [offset[0], offset[1], offset[2]])
             if (!bone.hasChildren()) {
@@ -485,50 +505,39 @@ export class BiovisionHierarchy {
             this.frameCount = animationTrack.nFrames
             this.frameTime = 1.0 / animationTrack.frameRate
             const jointToBoneIdx = new Map<string, number>()
-            // for joint in nonEndJoints:
+
             for (const joint of nonEndJoints) {
                 if (skel.containsBone(joint.name)) {
-                    jointToBoneIdx.set(joint.name, skel.getBone(joint.name).index)
+                    jointToBoneIdx.set(joint.name, skel.getBone(joint.name).index) // THIS SHOULD GIVE US A BREADTH FIRST ORDER AS IN THE SKELETON!!!
                 } else {
                     jointToBoneIdx.set(joint.name, -1)
                 }
             }
 
             for (let fIdx = 0; fIdx < animationTrack.nFrames; ++fIdx) {
-                // for fIdx in range(animationTrack.nFrames):
-                //     offset = fIdx * animationTrack.nBones
                 const offset = fIdx * animationTrack.nBones
-                //     for jIdx,joint in enumerate(nonEndJoints):
                 nonEndJoints.forEach((joint, jIdx) => {
-                    //         bIdx = jointToBoneIdx[joint.name]
                     const bIdx = jointToBoneIdx.get(joint.name)!
-                    //         if bIdx < 0:
                     let poseMat: mat4
                     if (bIdx < 0) {
-                        //             poseMat = np.identity(4, dtype=np.float32)
                         poseMat = mat4.create()
                     } else {
-                        //         else:
-                        //             poseMat = animationTrack.data[offset + bIdx]
                         poseMat = animationTrack.data[offset + bIdx]
                     }
 
-                    //         if len(joint.channels) == 6:
                     if (joint.channels.length === 6) {
-                        // add transformation
-                        //             tx, ty, tz = poseMat[:3,3]
-                        //             joint.frames.extend([tx, ty, tz])
                         joint.frames.push(poseMat[12], poseMat[13], poseMat[14]) // tx, ty, tz
                     }
+                    joint.rotOrder = "syxz" // not needed
                     const { x, y, z } = euler_from_matrix(poseMat, "syxz")
                     const D = Math.PI / 180
-                    joint.frames.push(z / D, x / D, y / D)
+                    joint.frames.push(z / D, y / D, x / D)
                 })
             }
         } else {
             this.frameCount = 1
             this.frameTime = 1.0
-            nonEndJoints.forEach((joint, index) => {
+            nonEndJoints.forEach((joint) => {
                 if (joint.channels.length === 6) {
                     joint.frames.push(...[0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
                 } else {
@@ -648,7 +657,11 @@ export class BVHJoint {
         return !this.hasChildren()
     }
 
+    /**
+     * Set this.matrixPoses from this.frames, this.channels and this.skeleton.nFrames
+     */
     calculateFrames() {
+        // console.log(`BVHJoint(${this.name}).calculateFrames()`)
         if (this.channels === undefined) {
             throw Error(`no channels in ${this.name}`)
         }
@@ -657,15 +670,11 @@ export class BVHJoint {
         const nFrames = this.skeleton.frameCount
         const dataLen = nFrames * nChannels
         if (this.frames.length < dataLen) {
-            console.log(`Frame data: ${this.frames}`)
+            // console.log(`Frame data: ${this.frames}`)
             throw new Error(
                 `Expected frame data length for joint ${this.name} is ${dataLen} found ${this.frames.length}`
             )
         }
-
-        let rotOrder = ""
-        let rotAngles: number[][] = []
-        let rXs: number[] | undefined, rYs: number[] | undefined, rZs: number[] | undefined
 
         function sub(array: number[], offset: number, total: number, width: number): number[] {
             const arrayOut = new Array<number>(total / width)
@@ -688,6 +697,9 @@ export class BVHJoint {
         }
 
         const D = Math.PI / 180
+        let rotOrder = ""
+        let rotAngles: number[][] = []
+        let rXs: number[] | undefined, rYs: number[] | undefined, rZs: number[] | undefined
         this.channels.forEach((channel, chanIdx) => {
             switch (channel) {
                 case "Xposition":
@@ -788,4 +800,5 @@ export class BVHJoint {
             })
         }
     }
+
 }
