@@ -12,6 +12,8 @@ import { StringToLine } from "./StringToLine"
  */
 export type TranslationType = "all" | "onlyroot" | "none"
 
+const D = Math.PI / 180
+
 export class AnimationTrack {
     name: string
     data: mat4[]
@@ -325,14 +327,37 @@ export class BiovisionHierarchy {
         return true
     }
 
+    /**
+     * Calculate this joint's position using offset (from parent) defined in
+     * BVH hierarchy data.
+     *
+     * @param joint
+     * @param offset
+     */
     __calcPosition(joint: BVHJoint, offset: number[]) {
-        joint.offset = offset
+        joint.offset = [...offset]
+
+        if (this.convertFromZUp) {
+            const y = joint.offset[1]
+            joint.offset[1] = joint.offset[2]
+            joint.offset[2] = -y
+        }
+
+        // Calculate absolute joint position
         if (joint.parent === undefined) {
-            joint.position = offset
+            joint.position = [...joint.offset]
         } else {
-            joint.position = [...offset]
+            joint.position = [...joint.offset]
             joint.parent.position.forEach((v, i) => (joint.position[i] += v))
         }
+
+        // # Create relative rest matrix for joint (only translation)
+        // joint.matRestRelative = np.identity(4, dtype=np.float32)
+        // joint.matRestRelative[:3,3] = joint.offset
+
+        // # Create world rest matrix for joint (only translation)
+        // joint.matRestGlobal = np.identity(4, dtype=np.float32)
+        // joint.matRestGlobal[:3,3] = joint.position
     }
 
     createAnimationTrack(skel?: string[] | Skeleton, name?: string): AnimationTrack {
@@ -463,21 +488,32 @@ export class BiovisionHierarchy {
             let offset: vec3
             let joint: BVHJoint
 
+            if (jointName === "lowerarm02.L") {
+                console.log(
+                    `lowerarm02.L: dummyJoints=${dummyJoints} parent=${
+                        bone.parent?.name
+                    } ${bone.getRestHeadPos()} ${bone.parent?.getRestTailPos()}`
+                )
+            }
+
             if (
                 dummyJoints &&
                 bone.parent !== undefined &&
                 !vec3.equals(bone.getRestHeadPos(), bone.parent.getRestTailPos())
             ) {
                 // Introduce a dummy joint to cover the offset between two not-connected bones
+                // console.log(`add dummy joint for ${jointName}`)
                 const joint = this.addJoint(bone.parent!.name, `__${jointName}`)
                 joint.channels = ["Zrotation", "Xrotation", "Yrotation"]
                 parentName = joint.name
                 offset = vec3.sub(vec3.create(), bone.parent.getRestTailPos(), bone.parent.getRestHeadPos())
                 this.__calcPosition(joint, [offset[0], offset[1], offset[2]])
                 vec3.sub(offset, bone.getRestHeadPos(), bone.parent.getRestTailPos())
+                // console.log(`BVH.fromSkeleton: [1] bone=${bone.name} offset=${offset}`)
             } else {
                 parentName = bone.parent?.name
                 offset = bone.getRestOffset()
+                // console.log(`BVH.fromSkeleton: [2] bone=${bone.name} offset=${offset}`)
             }
 
             if (bone.parent !== undefined) {
@@ -491,6 +527,9 @@ export class BiovisionHierarchy {
             // joint.rotOrder = "syxz"
 
             this.__calcPosition(joint, [offset[0], offset[1], offset[2]])
+
+            // console.log(`[1] joint ${joint.name}, offset ${joint.offset}`)
+
             if (!bone.hasChildren()) {
                 const endJoint = this.addJoint(jointName, "End effector")
                 endJoint.channels = []
@@ -530,8 +569,14 @@ export class BiovisionHierarchy {
                     }
                     joint.rotOrder = "syxz" // not needed
                     const { x, y, z } = euler_from_matrix(poseMat, "syxz")
-                    const D = Math.PI / 180
-                    joint.frames.push(z / D, y / D, x / D)
+                    if (joint.name === "root") {
+                        console.log(
+                            `fromSkeleton(): euler_from_matrix(poseMat, "syxz") -> xyz = ${x / D}, ${y / D}, ${z / D}`
+                        )
+                        console.log(mat4.str(poseMat))
+                    }
+                    // joint.frames.push(z / D, x / D, y / D) // python
+                    joint.frames.push(z / D, y / D, x / D) // me... but why?
                 })
             }
         } else {
@@ -573,9 +618,22 @@ export class BiovisionHierarchy {
         for (let fIdx = 0; fIdx < this.frameCount; ++fIdx) {
             let frameData = []
             for (const joint of allJoints) {
-                const offset = fIdx * joint.channels.length
+                let offset = fIdx * joint.channels.length
+                // if (joint.channels.length === 6) {
+                //     frameData.push(joint.frames[offset++].toPrecision())
+                //     frameData.push(joint.frames[offset++].toPrecision())
+                //     frameData.push(joint.frames[offset++].toPrecision())
+                // }
+                // frameData.push(joint.frames[offset].toPrecision())
+                // frameData.push(joint.frames[offset+2].toPrecision())
+                // frameData.push(joint.frames[offset+1].toPrecision())
+
+                // joint.frames.push(z / D, x / D, y / D) // python
+                // joint.frames.push(z / D, y / D, x / D) // me... but why?
+                
                 for (let i = offset; i < offset + joint.channels.length; ++i) {
-                    frameData.push(joint.frames[i])
+                    // frameData.push(joint.frames[i].toFixed(6))
+                    frameData.push(joint.frames[i].toPrecision())
                 }
             }
             out += frameData.join(" ") + "\n"
@@ -585,11 +643,12 @@ export class BiovisionHierarchy {
     }
 
     _writeJoint(joint: BVHJoint, ident: number = 0) {
+        const offset = joint.offset
         let out = ""
         if (joint.name === "End effector") {
-            const offset = joint.offset
             out += "\t".repeat(ident + 1) + "End Site\n"
             out += "\t".repeat(ident + 1) + "{\n"
+            // console.log(`_writeJoint ${joint.name} ${offset[0]}  ${offset[1]}  ${offset[2]}`)
             out += "\t".repeat(ident + 2) + `OFFSET\t${offset[0]}\t${offset[1]}\t${offset[2]}\n`
             out += "\t".repeat(ident + 1) + "}\n"
         } else {
@@ -600,8 +659,8 @@ export class BiovisionHierarchy {
                 out += "\t".repeat(ident) + `JOINT ${joint.name}\n`
                 out += "\t".repeat(ident) + "{\n"
             }
-            const offset = joint.offset
-            out += "\t".repeat(ident + 1) + `OFFSET\t${offset[0]}  ${offset[0]}  ${offset[0]}\n`
+            // console.log(`_writeJoint ${joint.name} ${offset[0]}  ${offset[1]}  ${offset[2]}`)
+            out += "\t".repeat(ident + 1) + `OFFSET\t${offset[0]}  ${offset[1]}  ${offset[2]}\n`
             out += "\t".repeat(ident + 1) + `CHANNELS ${joint.channels.length} ${joint.channels.join(" ")}\n`
 
             for (const child of joint.children) {
@@ -696,7 +755,6 @@ export class BVHJoint {
             return array
         }
 
-        const D = Math.PI / 180
         let rotOrder = ""
         let rotAngles: number[][] = []
         let rXs: number[] | undefined, rYs: number[] | undefined, rZs: number[] | undefined
@@ -756,6 +814,11 @@ export class BVHJoint {
         } else {
             if (rotAngles.length >= 3) {
                 for (let frameIdx = 0; frameIdx < nFrames; ++frameIdx) {
+                    // if (this.name === "spine04") {
+                    //     console.log(
+                    //         `calculateFrames(): euler_matrix(${rotAngles[2][frameIdx]}, ${rotAngles[1][frameIdx]}, ${rotAngles[0][frameIdx]}, ${rotOrder})`
+                    //     )
+                    // }
                     this.matrixPoses[frameIdx] = euler_matrix(
                         rotAngles[2][frameIdx],
                         rotAngles[1][frameIdx],
@@ -799,6 +862,9 @@ export class BVHJoint {
                 m[14] = rZs![i]
             })
         }
-    }
 
+        // if (this.name === "spine04") {
+        //     console.log(`calculateFrames(): ${mat4.str(this.matrixPoses[0])}`)
+        // }
+    }
 }

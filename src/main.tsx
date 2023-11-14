@@ -37,11 +37,10 @@ import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
 import { PoseModel } from "pose/PoseModel"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { PoseUnitsModel } from "expression/PoseUnitsModel"
-import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
+import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, vec3 } from "gl-matrix"
 import { ModelReason } from "toad.js/model/Model"
-
 
 main()
 
@@ -265,6 +264,7 @@ function run() {
 
                             <h1>Pose</h1>
                             <Button action={() => loadBVH(scene, upload)}>Load BVH</Button>
+                            <Button action={() => saveBVH(scene, download)}>Save BVH</Button>
 
                             <h1>Collada</h1>
 
@@ -406,117 +406,61 @@ function loadMHM(scene: HumanMesh, upload: HTMLInputElement) {
     upload.dispatchEvent(new MouseEvent("click"))
 }
 
+function saveBVH(scene: HumanMesh, download: HTMLAnchorElement) {
+    // const bvh = new BiovisionHierarchy()
+    // const data: mat4[] = scene.skeleton.boneslist!.map((bone) => {
+    //     const m = mat4.invert(mat4.create(), bone.matPoseGlobal!)
+    //     mat4.mul(m, bone.matPose, m)
+    //     mat4.mul(m, bone.matRestGlobal!, m)
+    //     return m
+    // })
+
+    // const animation = new AnimationTrack("makehuman", data, 1, 1 / 24)
+    // bvh.fromSkeleton(scene.skeleton, animation, false)
+    // const out = bvh.writeToFile()
+    const out = fakeSaveData(scene)
+
+    download.download = "makehuman.bvh"
+    download.href = URL.createObjectURL(new Blob([out], { type: "text/plain" }))
+    download.dispatchEvent(new MouseEvent("click"))
+}
+
+// THIS WORKS!!!
+function fakeSaveData(scene: HumanMesh) {
+    const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+    skeleton.build()
+    skeleton.update()
+
+    scene.skeleton.build()
+    scene.skeleton.update()
+
+    // this works
+    // const bvh0 = new BiovisionHierarchy().fromFile("data/poses/run01.bvh")
+    // const ani0 = bvh0.createAnimationTrack(skeleton)
+
+    console.log(scene.skeleton.roots[0].matPose)
+
+    // this is a total mess, just using bone.matPose is better but not correct
+    // hey! i could create a test from it! and move it into a method and cover that one with tests...
+    const data = scene.skeleton.getPose()
+    const ani0 = new AnimationTrack("makehuman", data, 1, 1 / 24)
+
+    const bvh1 = new BiovisionHierarchy().fromSkeleton(skeleton, ani0, false)
+    return bvh1.writeToFile()
+}
+
 function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
     upload.accept = ".bvh"
     upload.onchange = async () => {
         if (upload.files?.length === 1) {
             const file = upload.files[0]
-            console.log(`file: "${file.name}", size ${file.size} bytes`)
+            // console.log(`file: "${file.name}", size ${file.size} bytes`)
             const buffer = await file.arrayBuffer()
-            const te = new TextDecoder()
-            const content = te.decode(buffer)
-
-            // from plugins/3_libraries_pose.py: loadBvh()
-            const COMPARE_BONE = "upperleg02.L"
+            const textDecoder = new TextDecoder()
+            const content = textDecoder.decode(buffer)
             const bvh_file = new BiovisionHierarchy().fromFile(file.name, "auto", "onlyroot", content)
-            if (!bvh_file.joints.has(COMPARE_BONE)) {
-                throw Error(`The pose file cannot be loaded. It uses a different rig then MakeHuman's default rig`)
-            }
-            const anim = bvh_file.createAnimationTrack(scene.skeleton).data
-
-            let bvh_root_translation: vec3
-            if (bvh_file.joints.has("root")) {
-                const root_bone = anim[0]
-                bvh_root_translation = vec3.fromValues(root_bone[12], root_bone[13], root_bone[14])
-            } else {
-                bvh_root_translation = vec3.create()
-            }
-
-            function calculateBvhBoneLength(bvh_file: BiovisionHierarchy) {
-                const bvh_joint = bvh_file.joints.get(COMPARE_BONE)
-                const j0 = bvh_joint!.children[0].position
-                const j1 = bvh_joint!.position
-                const v0 = vec3.fromValues(j0[0], j0[1], j0[2])
-                const v1 = vec3.fromValues(j1[0], j1[1], j1[2])
-                const joint_length = vec3.len(vec3.sub(v0, v0, v1))
-                console.log(`joint_length = ${joint_length}`)
-                return joint_length
-            }
-            const bvh_bone_length = calculateBvhBoneLength(bvh_file)
-
-            /**
-             * Auto scale BVH translations by comparing upper leg length to make the
-             * human stand on the ground plane, independent of body length.
-             */
-            function autoScaleAnim() {
-                const bone = scene.skeleton.getBone(COMPARE_BONE)
-                console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
-                const scale_factor = bone.length / bvh_bone_length
-                const trans = vec3.scale(vec3.create(), bvh_root_translation, scale_factor)
-                console.log(`Scaling animation with factor ${scale_factor}`)
-                // It's possible to use anim.scale() as well, but by repeated scaling we accumulate error
-                // It's easier to simply set the translation, as poses only have a translation on
-                // root joint
-
-                // Set pose root bone translation
-                // root_bone_idx = 0
-                // posedata = anim.getAtFramePos(0, noBake=True)
-                // posedata[root_bone_idx, :3, 3] = trans
-                // anim.resetBaked()
-            }
-            autoScaleAnim()
-
-            // PYTHON
-            // joint_length = 3.228637218475342
-            // bone.length=3.415726664182774, bvh_bone_length=3.228637218475342
-            // Scaling animation run01 with factor 1.0579468775980292
-
-            // TYPESCRIPT (in the test setup the numbers are correct...)
-            // joint_length = 3.228636702652367 (main.js, line 317)
-            // bone.length=3.155047920856258, bvh_bone_length=3.228636702652367 (main.js, line 328)
-            // Scaling animation with factor 0.9772074752988917 (main.js, line 331)
-
-            // => bone length differs
-
-            for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
-                const bone = scene.skeleton.boneslist![boneIdx]
-                const poseNode = scene.skeleton.poseNodes.find(bone.name)
-                if (!poseNode) {
-                    console.log(`ExpressionManager: no pose node found for bone ${bone.name}`)
-                    return
-                }
-
-                let m = anim[boneIdx]
-
-                // from Skeleton.setPose(poseMats)
-                const invRest = mat4.invert(mat4.create(), bone.matRestGlobal!)
-                m = mat4.mul(mat4.create(), mat4.mul(mat4.create(), invRest, m), bone.matPoseGlobal!)
-                // missing: translation
-
-                let { x, y, z } = euler_from_matrix(m)
-                // enforce zero: looks nicer in the ui and also avoid the math going crazy in some situations
-                if (isZero(x)) {
-                    x = 0
-                }
-                if (isZero(y)) {
-                    y = 0
-                }
-                if (isZero(z)) {
-                    z = 0
-                }
-
-                const check = euler_matrix(x, y, z)
-                if (!mat4.equals(check, m)) {
-                    console.log(`failed to set bone ${bone.name}`)
-                }
-
-                poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
-                poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
-                poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
-            }
-
-            // console.log(bvh)
-            // setPoseFromBVH() for testing, just do this on application start
+            const anim = bvh_file.createAnimationTrack(scene.skeleton)
+            scene.skeleton.setPose(anim, 0)
         }
     }
     upload.dispatchEvent(new MouseEvent("click"))

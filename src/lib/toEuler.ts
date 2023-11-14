@@ -1,3 +1,5 @@
+// FIXME: deprecated by with euler_from_matrix()
+
 // on rotation
 // https://docs.blender.org/manual/en/latest/advanced/appendices/rotations.html
 // * euler modes: any variation of xyz, trouble is 'gimbal lock'

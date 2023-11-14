@@ -14,11 +14,11 @@ import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 import { ExpressionManager, calcWebGL } from '../../src/expression/ExpressionManager'
 import { BiovisionHierarchy } from "../../src/lib/BiovisionHierarchy"
-import { toEuler } from "../../src/lib/toEuler"
 
 import { laugh01_OUT } from '../testdata/laugh01'
 import { python_bvh } from '../testdata/python_bvh'
 import { base_anim_data } from '../testdata/base_anim_data'
+import { euler_from_matrix } from '../../src/lib/euler_matrix'
 
 // 2_posing_expression.py
 //     class ExpressionTaskView(gui3d.TaskView, filecache.MetadataCacher):
@@ -178,7 +178,7 @@ describe("`(face) expression", function () {
 
         expect(matPose).to.deep.almost.equal(expectedValue)
 
-        const { x, y, z } = toEuler(matPose)
+        const { x, y, z } = euler_from_matrix(matPose)
         console.log(`x: ${x}, y: ${y}, z: ${z}`)
         console.log(m2s(`matPose`, matPose))
     })

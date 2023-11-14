@@ -108,19 +108,12 @@ export class UpdateManager {
 
         if (this.modifiedMorphNodes.size > 0) {
             // console.log(`UpdateManager::update(): morph nodes have changed -> set modifiers, morph & update skeleton`)
-            // if (this.update === UpdateSteps.SET_MORPH_MODIFIERS) {
             this.modifiedMorphNodes.forEach((n) => {
                 n.modifier!.updateValue(n.model!.value)
-                // scene.updateRequired = Update.MORPH
             })
             this.modifiedMorphNodes.clear()
-            // }
 
-            // if (this.update <= UpdateSteps.UPDATE_MORPHED_MESH) {
             this.expressionManager.skeleton.scene.calculateVertexMorphed()
-            // }
-
-            // if (this.update <= UpdateSteps.UPDATE_SKELETON) {
             this.expressionManager.skeleton.updateJoints()
             this.expressionManager.skeleton.build()
 

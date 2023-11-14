@@ -82,4 +82,10 @@ export class PoseNode implements TreeNode {
         }
         return undefined
     }
+
+    forEach(cb: (node: PoseNode)=> void) {
+        cb(this)
+        this.next?.forEach(cb)
+        this.down?.forEach(cb)
+    }
 }

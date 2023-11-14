@@ -2,10 +2,12 @@ import { Bone } from "./Bone"
 import { FileInformation } from "./loadSkeleton"
 import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
 import { VertexBoneWeights, VertexBoneMapping } from "./VertexBoneWeights"
-import { vec3 } from "gl-matrix"
-import { HumanMesh } from "../mesh/HumanMesh"
+import { mat4, vec3 } from "gl-matrix"
+import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
 import { Signal } from "toad.js/Signal"
+import { AnimationTrack } from "lib/BiovisionHierarchy"
+import { euler_from_matrix } from "lib/euler_matrix"
 
 export class Skeleton {
     poseNodes: PoseNode
@@ -156,6 +158,122 @@ export class Skeleton {
             //     self.has_custom_weights = True
         }
         this.poseNodes = new PoseNode(this.roots[0], this.poseChanged)
+    }
+
+    getPose(): mat4[] {
+        return this.boneslist!.map((bone) => {
+            const m = mat4.invert(mat4.create(), bone.matRestGlobal!)
+            mat4.mul(m, bone.matPose, m)
+            mat4.mul(m, bone.matRestGlobal!, m)
+            return m
+        })
+    }
+
+    setPose(anim: AnimationTrack, frame: number) {
+        if (frame >= anim.nFrames) {
+            throw new Error(`requested ${frame} frame does not exist, only ${anim.nFrames} available`)
+        }
+        if (anim.nBones !== this.boneslist?.length) {
+            throw new Error(`requested ${anim.nBones} bone count is wrong, ${this.boneslist!.length} is needed`)
+        }
+        const offset = frame * anim.nBones
+
+        // from plugins/3_libraries_pose.py: loadBvh()
+
+        // const COMPARE_BONE = "upperleg02.L"
+        // if (!bvh_file.joints.has(COMPARE_BONE)) {
+        //     throw Error(`The pose file cannot be loaded. It uses a different rig then MakeHuman's default rig`)
+        // }
+
+        // let bvh_root_translation: vec3
+        // if (bvh_file.joints.has("root")) {
+        //     const root_bone = anim[0]
+        //     bvh_root_translation = vec3.fromValues(root_bone[12], root_bone[13], root_bone[14])
+        // } else {
+        //     bvh_root_translation = vec3.create()
+        // }
+
+        // function calculateBvhBoneLength(bvh_file: BiovisionHierarchy) {
+        //     const bvh_joint = bvh_file.joints.get(COMPARE_BONE)
+        //     const j0 = bvh_joint!.children[0].position
+        //     const j1 = bvh_joint!.position
+        //     const v0 = vec3.fromValues(j0[0], j0[1], j0[2])
+        //     const v1 = vec3.fromValues(j1[0], j1[1], j1[2])
+        //     const joint_length = vec3.len(vec3.sub(v0, v0, v1))
+        //     console.log(`joint_length = ${joint_length}`)
+        //     return joint_length
+        // }
+        // const bvh_bone_length = calculateBvhBoneLength(bvh_file)
+
+        /**
+         * Auto scale BVH translations by comparing upper leg length to make the
+         * human stand on the ground plane, independent of body length.
+         */
+        // function autoScaleAnim() {
+        //     const bone = scene.skeleton.getBone(COMPARE_BONE)
+        //     console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
+        //     const scale_factor = bone.length / bvh_bone_length
+        //     const trans = vec3.scale(vec3.create(), bvh_root_translation, scale_factor)
+        //     console.log(`Scaling animation with factor ${scale_factor}`)
+        //     // It's possible to use anim.scale() as well, but by repeated scaling we accumulate error
+        //     // It's easier to simply set the translation, as poses only have a translation on
+        //     // root joint
+
+        //     // Set pose root bone translation
+        //     // root_bone_idx = 0
+        //     // posedata = anim.getAtFramePos(0, noBake=True)
+        //     // posedata[root_bone_idx, :3, 3] = trans
+        //     // anim.resetBaked()
+        // }
+        // autoScaleAnim()
+
+        // PYTHON
+        // joint_length = 3.228637218475342
+        // bone.length=3.415726664182774, bvh_bone_length=3.228637218475342
+        // Scaling animation run01 with factor 1.0579468775980292
+
+        // TYPESCRIPT (in the test setup the numbers are correct...)
+        // joint_length = 3.228636702652367 (main.js, line 317)
+        // bone.length=3.155047920856258, bvh_bone_length=3.228636702652367 (main.js, line 328)
+        // Scaling animation with factor 0.9772074752988917 (main.js, line 331)
+
+        // => bone length differs
+
+        for (let boneIdx = 0; boneIdx < this.boneslist!.length; ++boneIdx) {
+            const bone = this.boneslist![boneIdx + frame * this.boneslist!.length]
+
+            // TODO: I have no idea what this formula is doing...
+            const m = mat4.invert(mat4.create(), bone.matRestGlobal!)
+            mat4.mul(m, m, anim.data[offset + boneIdx])
+            mat4.mul(m, m, bone.matRestGlobal!) // WTF? in the original it's mat4.mul(m, m, bone.matPoseGlobal!)
+            // const m = mat4.copy(mat4.create(), anim.data[offset + boneIdx])
+
+            let { x, y, z } = euler_from_matrix(m)
+            // enforce zero: looks nicer in the ui and also avoids the math going crazy in some situations
+            if (isZero(x)) {
+                x = 0
+            }
+            if (isZero(y)) {
+                y = 0
+            }
+            if (isZero(z)) {
+                z = 0
+            }
+
+            // const check = euler_matrix(x, y, z)
+            // if (!mat4.equals(check, m)) {
+            //     console.log(`failed to set bone ${bone.name}`)
+            // }
+
+            const poseNode = this.poseNodes.find(bone.name)
+            if (!poseNode) {
+                console.log(`Skeleton.setPose(): no pose node found for bone ${bone.name}`)
+                continue
+            }
+            poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
+            poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
+            poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
+        }
     }
 
     // line 122: toFile(self, filename, ref_weights=None)

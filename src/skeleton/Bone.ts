@@ -27,7 +27,7 @@ export class Bone {
     matRestGlobal?: mat4 // bone relative to world
     matRestRelative?: mat4 // bone relative to parent
     // calculated pose positions
-    matPoseGlobal?: mat4 // relative to world
+    matPoseGlobal?: mat4 // relative to world, use to render the skeleton (TODO: change that and get rid of this variable)
     matPoseVerts?: mat4 // relative to world and own rest pose, used for skinning
 
     // shared/skeleton.py: 709
