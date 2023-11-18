@@ -29,35 +29,52 @@ export function renderHuman(
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
+    gl.enable(gl.CULL_FACE)
+    gl.cullFace(gl.BACK)
+    gl.depthMask(true)
+
+    let alpha: number
+    if (wireframe) {
+        gl.enable(gl.BLEND)
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+        alpha = 0.3
+    } else {
+        gl.disable(gl.BLEND)
+        alpha = 1
+    }
+
+    //
+    // JOINTS AND SKELETON
+    //
+    if (wireframe) {
+        const NUMBER_OF_JOINTS = 124
+        const offset = scene.baseMesh.groups[2].startIndex * WORD_LENGTH
+        const count = scene.baseMesh.groups[2].length * NUMBER_OF_JOINTS
+
+        programRGBA.setColor([1, 1, 1, 1])
+        renderList.base.drawSubset(gl.TRIANGLES, offset, count)
+        renderList.skeleton.draw(programRGBA, gl.LINES)
+        gl.depthMask(false)
+    }
+    
     //
     // BASEMESH
     //
     renderList.base.bind(programRGBA)
-    let skin
-    if (wireframe) {
-        skin = [BaseMeshGroup.SKIN, [1 / 5, 0.8 / 5, 0.7 / 5, 1], gl.LINES]
-    } else {
-        skin = [BaseMeshGroup.SKIN, [1, 0.8, 0.7, 1], gl.TRIANGLES]
-    }
 
     const MESH_GROUP_INDEX = 0
     const COLOR_INDEX = 1
     const GLMODE_INDEX = 2
     for (let x of [
-        skin,
-        [BaseMeshGroup.EYEBALL0, [0, 0.5, 1, 1], gl.TRIANGLES],
-        [BaseMeshGroup.EYEBALL1, [0, 0.5, 1, 1], gl.TRIANGLES],
-        [BaseMeshGroup.TEETH_TOP, [1, 1, 1, 1], gl.TRIANGLES],
-        [BaseMeshGroup.TEETH_BOTTOM, [1, 1, 1, 1], gl.TRIANGLES],
-        [BaseMeshGroup.TOUNGE, [1, 0, 0, 1], gl.TRIANGLES],
-        [BaseMeshGroup.CUBE, [1, 0, 0.5, 1], gl.LINE_STRIP],
+        [BaseMeshGroup.SKIN, [1, 0.8, 0.7, alpha], gl.TRIANGLES],
+        [BaseMeshGroup.EYEBALL0, [0, 0.5, 1, alpha], gl.TRIANGLES],
+        [BaseMeshGroup.EYEBALL1, [0, 0.5, 1, alpha], gl.TRIANGLES],
+        [BaseMeshGroup.TEETH_TOP, [1, 1, 1, alpha], gl.TRIANGLES],
+        [BaseMeshGroup.TEETH_BOTTOM, [1, 1, 1, alpha], gl.TRIANGLES],
+        [BaseMeshGroup.TOUNGE, [1, 0, 0, alpha], gl.TRIANGLES],
+        [BaseMeshGroup.CUBE, [1, 0, 0.5, alpha], gl.LINE_STRIP],
     ]) {
         const idx = x[MESH_GROUP_INDEX] as number
-
-        // skip rendering skin when in wireframe mode
-        if (idx === BaseMeshGroup.SKIN && !wireframe) {
-            continue
-        }
 
         // skip rendering base mesh when there is a proxy
         if (renderList.proxies.has(ProxyType.Proxymeshes) && idx === BaseMeshGroup.SKIN) {
@@ -86,52 +103,37 @@ export function renderHuman(
     }
 
     //
-    // JOINTS AND SKELETON
-    //
-    if (wireframe) {
-        const NUMBER_OF_JOINTS = 124
-        const offset = scene.baseMesh.groups[2].startIndex * WORD_LENGTH
-        const count = scene.baseMesh.groups[2].length * NUMBER_OF_JOINTS
-
-        programRGBA.setColor([1, 1, 1, 1])
-        renderList.base.drawSubset(gl.TRIANGLES, offset, count)
-        renderList.skeleton.draw(programRGBA, gl.LINES)
-    }
-
-    //
     // PROXIES
     //
-    let glMode = wireframe ? gl.LINES : gl.TRIANGLES
+    // let glMode = wireframe ? gl.LINES : gl.TRIANGLES
+    let glMode = gl.TRIANGLES
 
     renderList.proxies.forEach((renderMesh, name) => {
-        let rgba: number[] = [0.5, 0.5, 0.5, 1]
+        let rgba: number[] = [0.5, 0.5, 0.5, alpha]
         switch (name) {
             case ProxyType.Proxymeshes:
-                rgba = [1, 0.8, 0.7, 1]
-                if (wireframe) {
-                    rgba = [rgba[0] / 5, rgba[1] / 5, rgba[2] / 5, 1]
-                }
+                rgba = [1, 0.8, 0.7, alpha]
                 break
             case ProxyType.Clothes:
-                rgba = [0.5, 0.5, 0.5, 1]
+                rgba = [0.5, 0.5, 0.5, alpha]
                 break
             case ProxyType.Hair:
-                rgba = [0.2, 0.1, 0.1, 1]
+                rgba = [0.2, 0.1, 0.1, alpha]
                 break
             case ProxyType.Eyes:
-                rgba = [0, 0.5, 1, 1]
+                rgba = [0, 0.5, 1, alpha]
                 break
             case ProxyType.Eyebrows:
-                rgba = [0, 0, 0, 1]
+                rgba = [0, 0, 0, alpha]
                 break
             case ProxyType.Eyelashes:
-                rgba = [0, 0, 0, 1]
+                rgba = [0, 0, 0, alpha]
                 break
             case ProxyType.Teeth:
-                rgba = [1, 1, 1, 1]
+                rgba = [1, 1, 1, alpha]
                 break
             case ProxyType.Tongue:
-                rgba = [1, 0, 0, 1]
+                rgba = [1, 0, 0, alpha]
                 break
         }
         programRGBA.setColor(rgba)
@@ -141,19 +143,17 @@ export function renderHuman(
     //
     // TEXTURED SKIN
     //
-    if (!wireframe) {
-        programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programTex.texture(texture)
-        if (renderList.proxies.has(ProxyType.Proxymeshes)) {
-        } else {
-            let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-            let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
-            renderList.base.bind(programTex)
-            renderList.base.drawSubset(gl.TRIANGLES, offset, length)
-        }
-    }
+    // if (!wireframe) {
+    //     programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    //     programTex.texture(texture)
+    //     if (renderList.proxies.has(ProxyType.Proxymeshes)) {
+    //     } else {
+    //         let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+    //         let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
+    //         renderList.base.bind(programTex)
+    //         renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+    //     }
+    // }
 
-    // programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    // programTex.texture(texture)
-    // buffers.texCube.draw(programTex, gl.TRIANGLES)
+
 }

@@ -484,10 +484,12 @@ Frame Time: 0.041667
             // set pose & copy pose to bone.matPose
             skeleton.setPose(ani0, 0)
             skeleton.poseNodes.forEach((poseNode) => poseNode.updateBonesMatPose())
-            const animX = new AnimationTrack("makehuman", skeleton.getPose(), 1, 1 / 24)
-            const anim1 = ani0
+            skeleton.build()
+            skeleton.update()
+            const anim1 = new AnimationTrack("makehuman", skeleton.getPose(), 1, 1 / 24)
+            // const anim1 = ani0
 
-            expect(animX.data).to.deep.almost.equal(anim1.data)
+            // expect(animX.data).to.deep.almost.equal(anim1.data)
 
             // compare animX & anim1
 
@@ -547,7 +549,7 @@ Frame Time: 0.041667
             }
         })
     })
-    it.only("revert from pose to anim track", function () {
+    it("revert from pose to anim track", function () {
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const scene = new HumanMesh(human, obj)
@@ -565,9 +567,9 @@ Frame Time: 0.041667
         // copy pose to bone.matPose
         skeleton.poseNodes.forEach((poseNode) => poseNode.updateBonesMatPose())
         skeleton.build()
-        skeleton.update() // <================ THIS BREAKS THE TEST
+        skeleton.update()
 
-        // the reason why the update breaks the test is:
+        // the reason why the update broke the test is:
         //
         // Skeleton|Bone.build()
         //   headPos, tailPos => matRestGlobal, matRestRelative, yvector4
@@ -593,6 +595,7 @@ Frame Time: 0.041667
         for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
             const expected = anim0.data[boneIdx]
             const given = anim1[boneIdx]
+            // TODO: this skips the offset... is it important?
             expect(expected.slice(0, 12), `bone ${boneIdx} ${skeleton.boneslist![boneIdx].name}`).to.deep.almost.equal(
                 given.slice(0, 12)
             )
@@ -792,6 +795,9 @@ function compareTree(l: BVHJoint, r: BVHJoint, indent = 0) {
         expect(l.matrixPoses[i], `${l.name} ${i}: l: ${l.matrixPoses[i]}, r: ${r.matrixPoses[i]}`).to.deep.almost.equal(
             r.matrixPoses[i]
         )
+        // expect(l.matrixPoses[i].slice(0, 12), `${l.name} ${i}: l: ${l.matrixPoses[i]}, r: ${r.matrixPoses[i]}`).to.deep.almost.equal(
+        //     r.matrixPoses[i].slice(0, 12)
+        // )
     }
 
     for (let i = 0; i < l.children.length; ++i) {

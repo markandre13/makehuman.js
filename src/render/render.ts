@@ -19,7 +19,12 @@ export function render(
     mode: EnumModel<RenderMode>,
     updateManager: UpdateManager
     ): void {
-    const gl = (canvas.getContext("webgl2") || canvas.getContext("experimental-webgl")) as WebGL2RenderingContext
+        const opt = {
+            alpha: false,
+            premultipliedAlpha: false 
+          }
+
+    const gl = (canvas.getContext("webgl2", opt) || canvas.getContext("experimental-webgl", opt)) as WebGL2RenderingContext
     if (gl == null) {
         throw Error("Unable to initialize WebGL. Your browser or machine may not support it.")
     }

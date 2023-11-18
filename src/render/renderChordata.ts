@@ -47,6 +47,9 @@ export function renderChordata(
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas)
 
+    gl.disable(gl.CULL_FACE)
+    gl.depthMask(true)
+
     let x = 10, y = -5, idx = 0
 
     bones.forEach((bone, name) => {
