@@ -54,7 +54,6 @@ export function renderHuman(
         programRGBA.setColor([1, 1, 1, 1])
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
         renderList.skeleton.draw(programRGBA, gl.LINES)
-        gl.depthMask(false)
     }
     
     //
@@ -75,6 +74,12 @@ export function renderHuman(
         [BaseMeshGroup.CUBE, [1, 0, 0.5, alpha], gl.LINE_STRIP],
     ]) {
         const idx = x[MESH_GROUP_INDEX] as number
+
+        if (idx !== BaseMeshGroup.SKIN && wireframe) {
+            gl.depthMask(false)
+        } else {
+            gl.depthMask(true)
+        }
 
         // skip rendering base mesh when there is a proxy
         if (renderList.proxies.has(ProxyType.Proxymeshes) && idx === BaseMeshGroup.SKIN) {
@@ -108,9 +113,14 @@ export function renderHuman(
     // let glMode = wireframe ? gl.LINES : gl.TRIANGLES
     let glMode = gl.TRIANGLES
 
-    renderList.proxies.forEach((renderMesh, name) => {
+    renderList.proxies.forEach((renderMesh, proxyType) => {
         let rgba: number[] = [0.5, 0.5, 0.5, alpha]
-        switch (name) {
+        if (proxyType !== ProxyType.Proxymeshes && wireframe) {
+            gl.depthMask(false)
+        } else {
+            gl.depthMask(true)
+        }
+        switch (proxyType) {
             case ProxyType.Proxymeshes:
                 rgba = [1, 0.8, 0.7, alpha]
                 break
