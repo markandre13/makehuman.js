@@ -200,10 +200,8 @@ npm run dev:test --file=build/test/skeleton.spec.js
 <!--
 
 TODO
-[ ] load/save pose via bvh file
 [ ] select view (manual, rotate, front, top, ...)
 [ ] adjust camera automatically
-
 [ ] pose units for the body
 
     base/poseunits/body-poseunits.json

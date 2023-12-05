@@ -81,8 +81,7 @@ export function renderHuman(
             gl.depthMask(true)
         }
 
-        // skip rendering base mesh when there is a proxy
-        if (renderList.proxies.has(ProxyType.Proxymeshes) && idx === BaseMeshGroup.SKIN) {
+        if (idx === BaseMeshGroup.SKIN) {
             continue
         }
         if (renderList.proxies.has(ProxyType.Eyes) &&
@@ -153,17 +152,12 @@ export function renderHuman(
     //
     // TEXTURED SKIN
     //
-    // if (!wireframe) {
-    //     programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    //     programTex.texture(texture)
-    //     if (renderList.proxies.has(ProxyType.Proxymeshes)) {
-    //     } else {
-    //         let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-    //         let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
-    //         renderList.base.bind(programTex)
-    //         renderList.base.drawSubset(gl.TRIANGLES, offset, length)
-    //     }
-    // }
-
-
+    programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    programTex.texture(texture, alpha)
+    if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
+        let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+        let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
+        renderList.base.bind(programTex)
+        renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+    }
 }

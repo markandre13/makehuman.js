@@ -2,17 +2,23 @@ import { AbstractShader } from './AbstractShader'
 
 export class TextureShader extends AbstractShader {
     protected uSampler: WebGLUniformLocation
+    protected uAlpha: WebGLUniformLocation
     constructor(gl: WebGL2RenderingContext) {
         super(gl, textureVertexShaderSrc, textureFragmentShaderSrc)
         this.textureCoord = gl.getAttribLocation(this.program, "aTextureCoord")
         this.uSampler = gl.getUniformLocation(this.program, "uSampler")!
+        this.uAlpha = gl.getUniformLocation(this.program, "uAlpha")!
     }
 
     // set texture
-    texture(texture: WebGLTexture) {
+    texture(texture: WebGLTexture, alpha: number) {
         this.gl.activeTexture(this.gl.TEXTURE0)
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
         this.gl.uniform1i(this.uSampler, 0)
+        this.gl.uniform1f(this.uAlpha, alpha)
+    }
+    setAlpha(alpha: number) {
+        this.gl.uniform1f(this.uAlpha, alpha)
     }
     override bind(indices: WebGLBuffer, vertices: WebGLBuffer, normales: WebGLBuffer, texture?: WebGLBuffer): void {
         super.bind(indices, vertices, normales, texture)
@@ -66,7 +72,8 @@ const textureFragmentShaderSrc = `
 varying highp vec2 vTextureCoord;
 varying highp vec3 vLighting;
 uniform sampler2D uSampler;
+uniform highp float uAlpha;
 void main(void) {
   highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
-  gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+  gl_FragColor = vec4(texelColor.rgb * vLighting, uAlpha);
 }`
