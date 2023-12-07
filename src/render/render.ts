@@ -106,6 +106,9 @@ export function render(
     scene.human.modified.add( () => {
         updateManager.invalidateView()
     })
+    scene.wireframe.modified.add( () => {
+        updateManager.invalidateView() 
+    })
 
     new ResizeObserver(() => paint(ctx)).observe(canvas)
     let downX = 0,
