@@ -38,7 +38,7 @@ export function createModelViewMatrix(x: number, y: number) {
     return modelViewMatrix
 }
 
-export function createProjectionMatrix(canvas: HTMLCanvasElement, perspective: boolean) {
+export function createProjectionMatrix(canvas: HTMLCanvasElement, perspective: boolean = true) {
     const fieldOfView = (45 * Math.PI) / 180 // in radians
     const aspect = canvas.width / canvas.height
     const zNear = 0.1
