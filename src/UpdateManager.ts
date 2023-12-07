@@ -18,6 +18,21 @@ export class UpdateManager {
     modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
 
+    render?: () => void
+    private invalidated = false
+    invalidateView() {
+        if (this.invalidated) {
+            return
+        }
+        this.invalidated = true
+        requestAnimationFrame( () => {
+            this.invalidated = false
+            if (this.render !== undefined) {
+                this.render()
+            }
+        })
+    }
+
     constructor(
         expressionManager: ExpressionManager,
         poseModel: PoseModel,
@@ -39,6 +54,7 @@ export class UpdateManager {
             node.model?.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: slider node '${node.label}' has changed to ${node.model?.value}`)
+                    this.invalidateView()
                     this.modifiedMorphNodes.add(node)
                 }
             })
@@ -49,6 +65,7 @@ export class UpdateManager {
             poseUnit.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: face pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
+                    this.invalidateView()
                     this.modifiedExpressionPoseUnits.add(poseUnit)
                 }
             })
@@ -59,6 +76,7 @@ export class UpdateManager {
             poseUnit.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: body pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
+                    this.invalidateView()
                     this.modifiedPosePoseUnits.add(poseUnit)
                 }
             })
@@ -77,18 +95,21 @@ export class UpdateManager {
             poseNode.x.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
+                    this.invalidateView()
                     this.modifiedPoseNodes.add(poseNode)
                 }
             })
             poseNode.y.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
+                    this.invalidateView()
                     this.modifiedPoseNodes.add(poseNode)
                 }
             })
             poseNode.z.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
+                    this.invalidateView()
                     this.modifiedPoseNodes.add(poseNode)
                 }
             })

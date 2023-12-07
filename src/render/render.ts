@@ -102,13 +102,16 @@ export function render(
     const paint = (ctx: Context) => {
         requestAnimationFrame(renderFrame)
     }
+    updateManager.render = () => paint(ctx)
+    scene.human.modified.add( () => {
+        updateManager.invalidateView()
+    })
 
     new ResizeObserver(() => paint(ctx)).observe(canvas)
     let downX = 0,
         downY = 0,
         buttonDown = false
     canvas.onpointerdown = (ev: PointerEvent) => {
-        console.log(`onpointerdown`)
         canvas.setPointerCapture(ev.pointerId)
         buttonDown = true
         downX = ev.x
@@ -118,7 +121,6 @@ export function render(
         buttonDown = false
     }
     canvas.onpointermove = (ev: PointerEvent) => {
-        console.log(`onpointermove ${buttonDown}`)
         if (buttonDown) {
             const x = ev.x - downX
             const y = ev.y - downY

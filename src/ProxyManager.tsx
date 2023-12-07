@@ -51,6 +51,7 @@ export class ProxyManager {
                     scene.proxies.set(type, loadProxy(scene.human, `${prefix}.${suffix}`, type))
                 }
                 scene.changedProxy = type
+                scene.human.modified.trigger()
             })
             this.list.set(type, model)
         }
