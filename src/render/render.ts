@@ -102,7 +102,6 @@ export function render(
     const paint = (ctx: Context) => {
         requestAnimationFrame(renderFrame)
     }
-    updateManager.render = () => paint(ctx)
 
     new ResizeObserver(() => paint(ctx)).observe(canvas)
     let downX = 0,

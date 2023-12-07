@@ -33,8 +33,8 @@ export function createModelViewMatrix(x: number, y: number) {
     const D = 180 / Math.PI
     const modelViewMatrix = mat4.create()
     mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -25])
-    mat4.rotateX(modelViewMatrix, modelViewMatrix, x / D)
     mat4.rotateY(modelViewMatrix, modelViewMatrix, y / D)
+    mat4.rotateX(modelViewMatrix, modelViewMatrix, x / D)
     return modelViewMatrix
 }
 
