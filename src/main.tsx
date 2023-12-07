@@ -178,6 +178,26 @@ function run() {
     TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: WTF???
 
     const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
+    const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
+    const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
+
+    const expressionManager = new ExpressionManager(skeleton)
+    const poseModel = new PoseModel(scene.skeleton)
+    const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
+
+    // some modifiers already have non-null values, hence we mark all modifiers as dirty
+    human.modifiers.forEach((modifer) => {
+        modifer.getModel().modified.trigger(ModelReason.VALUE)
+    })
+
+    const useBlenderProfile = new BooleanModel(true)
+    const limitPrecision = new BooleanModel(false)
+    useBlenderProfile.enabled = false
+    limitPrecision.enabled = false
+
+    const download = makeDownloadElement()
+    const upload = makeUploadElement()
+
     const tabModel = new EnumModel(TAB.PROXY, TAB)
     tabModel.modified.add(() => {
         if (references.overlay) {
@@ -203,51 +223,9 @@ function run() {
                 renderMode.value = RenderMode.CHORDATA
                 break
         }
+        updateManager.invalidateView()
     })
     initHistoryManager(tabModel)
-
-    const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
-    const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
-
-    const expressionManager = new ExpressionManager(skeleton)
-    const poseModel = new PoseModel(scene.skeleton)
-    const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
-
-    // some modifiers already have non-null values, hence we mark all modifiers as dirty
-    human.modifiers.forEach((modifer) => {
-        modifer.getModel().modified.trigger(ModelReason.VALUE)
-    })
-
-    const useBlenderProfile = new BooleanModel(true)
-    const limitPrecision = new BooleanModel(false)
-    useBlenderProfile.enabled = false
-    limitPrecision.enabled = false
-
-    const download = makeDownloadElement()
-    const upload = makeUploadElement()
-
-    // The official Makehuman 1.2 menu structure and how it maps to makehuman.js:
-    //
-    // Files
-    //   Load
-    //   Save
-    //   Export -> Export
-    // Modelling -> Morph
-    // Geometries -> Proxy
-    // Materials -> TBD as part of Proxy
-    // Pose/Animate
-    //    Skeleton -> nope, only the full/default skeleton for now
-    //    Pose -> err... that's only loading predefined poses, not posing
-    //    Expression -> Expression
-    //    Animations
-    // Rendering -> nope
-    // Settings
-    // Utilities
-    //   ...
-    //   Expression mixer -> part of Expression
-    //   ...
-    //   Targets -> TBD as part of Morph
-    // Help
 
     document.body.replaceChildren(
         ...(
