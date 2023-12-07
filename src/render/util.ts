@@ -62,7 +62,7 @@ export function createNormalMatrix(modelViewMatrix: mat4) {
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
 //
-export function loadTexture(gl: WebGLRenderingContext, url: string) {
+export function loadTexture(gl: WebGLRenderingContext, url: string, cb?: () => void) {
     const texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)
 
@@ -116,6 +116,9 @@ export function loadTexture(gl: WebGLRenderingContext, url: string) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+        }
+        if (cb !== undefined) {
+            cb()
         }
     }
     image.src = url

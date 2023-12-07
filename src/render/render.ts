@@ -15,7 +15,7 @@ import { Context } from "./Context"
 
 export enum Projection {
     ORTHOGONAL,
-    PERSPECTIVE
+    PERSPECTIVE,
 }
 
 export function render(
@@ -47,16 +47,16 @@ export function render(
     updateManager.setRenderList(renderList)
     // initCone(gl)
 
-    const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png")!
-    // const texture = loadTexture(gl, "data/cubetexture.png")!
-
-    // let lastRenderTime = 0
-
     const ctx: Context = {
         rotateX: 0,
         rotateY: 0,
-        projection: Projection.PERSPECTIVE
+        projection: Projection.PERSPECTIVE,
     }
+
+    const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png", () => paint(ctx))!
+    // const texture = loadTexture(gl, "data/cubetexture.png")!
+
+    // let lastRenderTime = 0
 
     // draw the scene repeatedly
     function renderFrame(now: number) {
@@ -93,7 +93,7 @@ export function render(
                 break
             default:
                 renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
-                // cubeRotation += deltaTime
+            // cubeRotation += deltaTime
         }
         // requestAnimationFrame(renderFrame)
     }
@@ -102,6 +102,7 @@ export function render(
     const paint = (ctx: Context) => {
         requestAnimationFrame(renderFrame)
     }
+    updateManager.render = () => paint(ctx)
 
     new ResizeObserver(() => paint(ctx)).observe(canvas)
     let downX = 0,
