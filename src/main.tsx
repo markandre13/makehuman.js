@@ -1,16 +1,32 @@
 import { Human } from "./modifier/Human"
-import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
+
+import { loadSkeleton } from "./skeleton/loadSkeleton"
+
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { HumanMesh, isZero } from "./mesh/HumanMesh"
-import { RenderMode } from "./render/RenderMode"
 import { exportCollada } from "mesh/Collada"
-import { ProxyType } from "proxy/Proxy"
 
-import { PoseTreeAdapter } from "ui/poseView"
 import { PoseNode } from "expression/PoseNode"
+import { PoseUnitsModel } from "expression/PoseUnitsModel"
+import { ExpressionManager } from "expression/ExpressionManager"
+import { PoseModel } from "pose/PoseModel"
+
+import { ProxyType } from "proxy/Proxy"
+import { ProxyManager } from "./ProxyManager"
+
+import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
+
+import expressionTab from "ui/expression"
+import chordataTab from "ui/chordata"
+import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
+import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
+import { TAB, initHistoryManager } from "HistoryManager"
+import { UpdateManager } from "UpdateManager"
+
+import { RenderMode } from "./render/RenderMode"
 import { render } from "./render/render"
 import { renderFace } from "render/renderFace"
 
@@ -24,22 +40,8 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
 import { BooleanModel, Button, Checkbox, ref, Select, TableAdapter } from "toad.js"
-import { ProxyManager } from "./ProxyManager"
-import { ExpressionManager } from "expression/ExpressionManager"
-import { UpdateManager } from "UpdateManager"
-
-import { TAB, initHistoryManager } from "HistoryManager"
-import expressionTab from "ui/expression"
-import poseTab from "ui/pose"
-import chordataTab from "ui/chordata"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
-import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
-import { PoseModel } from "pose/PoseModel"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
-import { PoseUnitsModel } from "expression/PoseUnitsModel"
-import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { mat4, vec3 } from "gl-matrix"
 import { ModelReason } from "toad.js/model/Model"
 
 main()
@@ -324,7 +326,7 @@ function run() {
                     <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
                     <div
                         set={ref(references, "overlay")}
-                        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden" }}
+                        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden", pointerEvents: "none" }}
                     ></div>
                 </div>
             </>

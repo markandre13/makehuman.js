@@ -18,25 +18,37 @@ export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasEl
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-export function createModelViewMatrix(renderMode: RenderMode, cubeRotation: number) {
+// export function createModelViewMatrix(renderMode: RenderMode, cubeRotation: number) {
+//     const modelViewMatrix = mat4.create()
+//     if (renderMode === RenderMode.EXPRESSION) {
+//         mat4.translate(modelViewMatrix, modelViewMatrix, [0.5, -7, -5])
+//         mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 6, [0, 1, 0])
+//     } else {
+//         mat4.translate(modelViewMatrix, modelViewMatrix, [-0, 0, -25]) // move the model (cube) away
+//         mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * 0.7, [0, 1, 0])
+//     }
+//     return modelViewMatrix
+// }
+export function createModelViewMatrix(x: number, y: number) {
+    const D = 180 / Math.PI
     const modelViewMatrix = mat4.create()
-    if (renderMode === RenderMode.EXPRESSION) {
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0.5, -7, -5])
-        mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 6, [0, 1, 0])
-    } else {
-        mat4.translate(modelViewMatrix, modelViewMatrix, [-0, 0, -25]) // move the model (cube) away
-        mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * 0.7, [0, 1, 0])
-    }
+    mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -25])
+    mat4.rotateX(modelViewMatrix, modelViewMatrix, x / D)
+    mat4.rotateY(modelViewMatrix, modelViewMatrix, y / D)
     return modelViewMatrix
 }
 
-export function createProjectionMatrix(canvas: HTMLCanvasElement) {
+export function createProjectionMatrix(canvas: HTMLCanvasElement, perspective: boolean) {
     const fieldOfView = (45 * Math.PI) / 180 // in radians
     const aspect = canvas.width / canvas.height
     const zNear = 0.1
     const zFar = 100
     const projectionMatrix = mat4.create()
+    if (perspective) {
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
+    } else {
+        mat4.ortho(projectionMatrix, -10*aspect, 10*aspect,  -10, 10, zNear, zFar)
+    }
     return projectionMatrix
 }
 

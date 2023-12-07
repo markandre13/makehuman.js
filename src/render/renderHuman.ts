@@ -5,10 +5,13 @@ import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
 import { ProxyType } from "proxy/Proxy"
 import { RenderList } from "./RenderList"
-import { cubeRotation } from "./render"
+// import { cubeRotation } from "./render"
 import { prepareCanvas, prepareViewport, createProjectionMatrix, createModelViewMatrix, createNormalMatrix } from "./util"
+import { Context } from "./Context"
+import { Projection } from "./render"
 
 export function renderHuman(
+    ctx: Context,
     gl: WebGL2RenderingContext,
     programRGBA: RGBAShader,
     programTex: TextureShader,
@@ -23,8 +26,8 @@ export function renderHuman(
     const canvas = gl.canvas as HTMLCanvasElement
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
-    const projectionMatrix = createProjectionMatrix(canvas)
-    const modelViewMatrix = createModelViewMatrix(renderMode, cubeRotation)
+    const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+    const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
