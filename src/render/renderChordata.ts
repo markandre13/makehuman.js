@@ -53,13 +53,16 @@ export function renderChordata(
     let x = 10, y = -5, idx = 0
 
     bones.forEach((bone, name) => {
-
+        // create model view matrix which places bone at (x, y, -25)
         const modelViewMatrix = mat4.create()
         mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
 
+        // rotate bone using Chordata quaternion
         const q = quat.fromValues(bone[0], bone[1], bone[2], bone[3])
         const m = mat4.fromQuat(mat4.create(), q)
         mat4.multiply(modelViewMatrix, modelViewMatrix, m)
+
+        // draw bone
         const normalMatrix = createNormalMatrix(modelViewMatrix)
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programRGBA.setColor([1, 0.5, 0, 1])
@@ -69,8 +72,8 @@ export function renderChordata(
         // clipspace is (-1,-1,-1) to (1,1,1)
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection
 
+        // add/place label
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-
         const point = vec4.fromValues(0, 0, 2, 1) // this is the front top right corner
         const clipspace = vec4.transformMat4(vec4.create(), point, m0)
         clipspace[0] /= clipspace[3]
@@ -91,6 +94,7 @@ export function renderChordata(
             (overlay.children[idx] as HTMLElement).style.top = `${pixelY}px`
         }
 
+        // move (x, y) to next bone
         y += 5
         if (y >= 10) {
             y = -5
