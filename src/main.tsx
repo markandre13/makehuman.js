@@ -19,7 +19,7 @@ import { ProxyManager } from "./ProxyManager"
 import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 
 import expressionTab from "ui/expression"
-import chordataTab from "ui/chordata"
+import chordataTab from "chordata/chordata"
 import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
 import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
@@ -43,6 +43,7 @@ import { BooleanModel, Button, Checkbox, ref, Select, TableAdapter } from "toad.
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { ModelReason } from "toad.js/model/Model"
+import { ChordataSettings } from "chordata/ChordataSettings"
 
 main()
 
@@ -184,6 +185,7 @@ function run() {
     const expressionManager = new ExpressionManager(skeleton)
     const poseModel = new PoseModel(scene.skeleton)
     const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
+    const chordataSettings = new ChordataSettings()
 
     // some modifiers already have non-null values, hence we mark all modifiers as dirty
     human.modifiers.forEach((modifer) => {
@@ -298,7 +300,7 @@ function run() {
                     <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
                         Mediapipe coming soon
                     </Tab>
-                    {chordataTab}
+                    {chordataTab(updateManager, chordataSettings)}
                 </Tabs>
                 <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
                     <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
@@ -310,7 +312,7 @@ function run() {
             </>
         )
     )
-    render(references.canvas, references.overlay, scene, renderMode, updateManager)
+    render(references.canvas, references.overlay, scene, renderMode, updateManager, chordataSettings)
 }
 
 function makeDownloadElement() {

@@ -1,6 +1,6 @@
 # Chordata Motion
 
-[Chordata Motion](https://chordata.cc) is an open-source motion capture system of which I got the "Full Motion" set with 15 sensors.
+[Chordata Motion](https://chordata.cc) is an open-source motion capture system of which I got the set with 15 sensors.
 
 The folks are super busy working on it so instead of wasting their time, and because that's what I like to do anyway, here are my own collected notes while attempting to wrap my head around it.
 
@@ -23,7 +23,32 @@ Start by looking at the [official documentation](https://chordata.gitlab.io/docs
 * Click [Set WIFI]
 * Click [Reboot]
 
-Some things to do on the CLI:
+## Calibration
+
+Chordata has two calibrations.
+
+### KCeptor calibration
+
+* Needs to be done once for a new KCeptor.
+* The results will be stored inside the KCeptor.
+* The software on the Notochord is able to handle it.
+
+### Pose calibration
+
+Needs to be done after KCeptors have been mounted on the body.
+
+This consists of two steps:
+
+* stand still in N-Pose (straight, arms & legs stretched, arms to body, legs together)
+  this will be used to a first vector
+* rotate each KCeptor into a defined direction (arms to the sides, body & legs forward)
+  this will be used as a second vector
+
+This needs to be implemented in makehuman.js
+
+# Nerd Stuff
+
+## Some things to do on the CLI:
 
 * ssh human@notochord, chordata
 * to .bashrc add export PATH="/etc/chordata/venv/bin:${PATH}"
@@ -31,72 +56,6 @@ Some things to do on the CLI:
 * config at /opt/chordata/notochord-module/dist/notochord/Chordata.xml says
   * udp 6565
   * ws 7681
-
-Configuration
-
-/opt/chordata/notochord-control-server/notochord_control_server/state.json
-    {"active_configuration": "blender_config"}
-/opt/chordata/notochord-control-server/notochord_control_server/files/*.xml   
-  * default_biped.xml   ;; this seems to be an older one
-  * blender_config.xml  ;; this one's more recent and logical
-
-
-```xml
-<!-- Chordata.xml -->
-<chordata version="1.0.0">
-  <configuration>
-    <kc_revision>++</kc_revision>
-    <communication>
-      <adapter>/dev/i2c-1</adapter>
-      <ip>192.168.178.24</ip>
-      <port>6565</port>
-      <log>stdout,file</log>
-      <transmit>osc</transmit>
-      <send_rate>50</send_rate>
-      <verbosity>0</verbosity>
-    </communication>
-    <osc>
-      <base>/Chordata</base>
-    </osc>
-    <fusion>
-      <beta_start>1.0</beta_start>
-      <beta_final>0.2</beta_final>
-      <time>5000</time>
-    </fusion>
-  </configuration>
-  <hierarchy>
-    <mux Name="main" id="0">0x70
-      <branch Name="branch" id="1">CH_1
-        <k_ceptor Name="r-upperleg" id="2">0x40
-          <k_ceptor Name="r-lowerleg" id="2">0x41
-            <k_ceptor Name="r-foot" id="2">0x42
-      </k_ceptor></k_ceptor></k_ceptor></branch>
-      <branch Name="branch" id="1">CH_2
-        <k_ceptor Name="base" id="2">0x40
-      </k_ceptor></branch>
-      <branch Name="branch" id="1">CH_3
-        <k_ceptor Name="l-upperleg" id="2">0x40
-          <k_ceptor Name="l-lowerleg" id="2">0x41
-            <k_ceptor Name="l-foot" id="2">0x42
-      </k_ceptor></k_ceptor></k_ceptor></branch>
-      <branch Name="branch" id="1">CH_4
-        <k_ceptor Name="l-upperarm" id="2">0x40
-          <k_ceptor Name="l-lowerarm" id="2">0x41
-            <k_ceptor Name="l-hand" id="2">0x42
-      </k_ceptor></k_ceptor></k_ceptor></branch>
-      <branch Name="branch" id="1">CH_5
-        <k_ceptor Name="dorsal" id="2">0x41
-          <k_ceptor Name="neck" id="2">0x42
-      </k_ceptor></k_ceptor></branch>
-      <branch Name="branch" id="1">CH_6
-        <k_ceptor Name="r-upperarm" id="2">0x40
-          <k_ceptor Name="r-lowerarm" id="2">0x41
-            <k_ceptor Name="r-hand" id="2">0x42
-      </k_ceptor></k_ceptor></k_ceptor></branch>
-    </mux>
-  </hierarchy>
-</chordata>
-```
 
 ## Source Code
 
@@ -131,7 +90,6 @@ This is also were the websocket port is...
     notochord-module/
         src/
         lib/ ;; external libs copied into the source
-
 
 ### Notochord Control Server
 
@@ -203,16 +161,6 @@ This is also were the websocket port is...
 
     cd upstream/chordata
     python -m venv venv  
-    
 
-* CSV contains dump of motin capture take
+* CSV contains dump of motion capture take
 * can plot the nodes
-
-#### Callibration   
-1. Static
-    1. stand straight (N-Pose)
-2. Functional
-    1. Arms (rotate forward/up by 90 deg)
-    2. Trunk/Torso (bend upper body down)
-    4. Left Leg (rotate forward/up)
-    5. Right Leg (rotate forward up)

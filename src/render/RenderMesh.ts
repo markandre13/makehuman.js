@@ -83,17 +83,13 @@ export class RenderMesh {
                 this.normal[vertex.length + i * 3 + 1] = this.normal[v * 3 + 1]
                 this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
             })
-
-            this.updateBuffer(
-                this.glVertex,
-                this.gl.ARRAY_BUFFER,
-                this.gl.STATIC_DRAW,
-                Float32Array,
-                this.glData.vertex
-            )
+            // prettier-ignore
+            this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
             this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
         } else {
             this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, vertex)
+            calculateNormalsTriangles(this.normal, vertex, this.fvertex)
+            this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
         }
     }
 

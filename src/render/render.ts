@@ -4,12 +4,13 @@ import { RenderMode } from "./RenderMode"
 import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
 import { RenderMesh } from "./RenderMesh"
-import { renderChordata } from "./renderChordata"
+import { renderChordata } from "../chordata/renderChordata"
 import { RenderList } from "./RenderList"
 import { renderHuman } from "./renderHuman"
 import { loadTexture } from "./util"
 import { UpdateManager } from "UpdateManager"
 import { Context } from "./Context"
+import { ChordataSettings } from "chordata/ChordataSettings"
 
 // export let cubeRotation = 0.0
 
@@ -23,7 +24,8 @@ export function render(
     overlay: HTMLElement,
     scene: HumanMesh,
     mode: EnumModel<RenderMode>,
-    updateManager: UpdateManager
+    updateManager: UpdateManager,
+    chordataExperiment: ChordataSettings
 ): void {
     const opt = {
         alpha: false,
@@ -89,7 +91,7 @@ export function render(
         // }
         switch (mode.value) {
             case RenderMode.CHORDATA:
-                renderChordata(gl, programRGBA, overlay)
+                renderChordata(gl, programRGBA, overlay, chordataExperiment)
                 break
             default:
                 renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
