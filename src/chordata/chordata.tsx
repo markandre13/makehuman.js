@@ -90,11 +90,11 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
                 <FormText model={settings.Z0} />
-            {/* 
+             
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
                 <FormText model={settings.Z1} />
-    <FormText model={settings.R} /> */}
+                {/* <FormText model={settings.R} /> */}
             </Form>
 
             { /* <div style={{ padding: "15px" }}>

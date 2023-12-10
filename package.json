@@ -32,7 +32,7 @@
   "dependencies": {
     "fflate": "^0.8.1",
     "gl-matrix": "^3.4.3",
-    "toad.js": "0.1.8"
+    "toad.js": "0.1.9"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",

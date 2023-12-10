@@ -14,37 +14,44 @@ import { HumanMesh } from "mesh/HumanMesh"
 import { Context } from "render/Context"
 import { Projection } from "render/render"
 import { Skeleton } from "skeleton/Skeleton"
+import { euler_matrix } from "lib/euler_matrix"
+import { getMatrix } from "skeleton/loadSkeleton"
 
 let cone: RenderMesh
 
-const bones = new Map<string, number[]>()
+const bones = new Map<string, mat4>()
 
+// save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
     bones.clear()
     newBones.forEach((value, key) => {
-        // /%/kc_0x42branch6
-        bones.set(`${key.substring(16, 17)}/${key.substring(8, 10)}`, value)
+        // /%/kc_0x42branch6 -> {branch}/{id}
+        bones.set(
+            `${key.substring(16, 17)}/${key.substring(8, 10)}`,
+            mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
+        )
         // TODO: update view
     })
 }
 
+// set an initial COOP packet
 setBones(
     new Map<string, number[]>([
-        ["/%/kc_0x42branch6", [-0.0116586, 0.351683, 0.928858, -0.115784]],
-        ["/%/kc_0x41branch6", [-0.0157049, 0.612659, 0.789144, -0.0406618]],
-        ["/%/kc_0x40branch6", [-0.0206191, 0.282804, 0.95885, -0.0142731]],
-        ["/%/kc_0x42branch5", [-0.437385, 0.408202, 0.547886, -0.584711]],
-        ["/%/kc_0x41branch5", [-0.740224, -0.437169, 0.169961, -0.481731]],
-        ["/%/kc_0x40branch5", [-0.281567, -0.781, 0.219733, -0.512325]],
-        ["/%/kc_0x42branch4", [-0.0397931, 0.449987, 0.892107, 0.00862156]],
-        ["/%/kc_0x41branch4", [-0.0155865, 0.737169, 0.674928, -0.0285038]],
-        ["/%/kc_0x40branch4", [-0.0438127, 0.157583, 0.98258, -0.088229]],
-        ["/%/kc_0x42branch3", [0.0170646, 0.948076, 0.313278, 0.0521385]],
-        ["/%/kc_0x41branch3", [0.0807505, 0.524097, 0.358437, -0.768326]],
-        ["/%/kc_0x40branch3", [-0.0202535, 0.48423, 0.462811, -0.742238]],
-        ["/%/kc_0x42branch1", [0.113668, 0.315253, 0.921183, -0.197781]],
-        ["/%/kc_0x41branch1", [-0.392768, -0.498948, 0.532651, -0.559524]],
-        ["/%/kc_0x40branch1", [-0.428276, -0.163105, 0.552124, -0.696517]],
+        ["/%/kc_0x42branch6", [0, 0, 0, 0]],
+        ["/%/kc_0x41branch6", [0, 0, 0, 0]],
+        ["/%/kc_0x40branch6", [0, 0, 0, 0]],
+        ["/%/kc_0x42branch5", [0, 0, 0, 0]],
+        ["/%/kc_0x41branch5", [0, 0, 0, 0]],
+        ["/%/kc_0x40branch5", [0, 0, 0, 0]],
+        ["/%/kc_0x42branch4", [0, 0, 0, 0]],
+        ["/%/kc_0x41branch4", [0, 0, 0, 0]],
+        ["/%/kc_0x40branch4", [0, 0, 0, 0]],
+        ["/%/kc_0x42branch3", [0, 0, 0, 0]],
+        ["/%/kc_0x41branch3", [0, 0, 0, 0]],
+        ["/%/kc_0x40branch3", [0, 0, 0, 0]],
+        ["/%/kc_0x42branch1", [0, 0, 0, 0]],
+        ["/%/kc_0x41branch1", [0, 0, 0, 0]],
+        ["/%/kc_0x40branch1", [0, 0, 0, 0]],
     ])
 )
 
@@ -53,21 +60,99 @@ class Joint {
     id: number
     name: string
     children?: Joint[]
+
+    parent?: Joint
+    matRestGlobal!: mat4
+    matRestRelative!: mat4
+    length!: number
+    yvector4!: vec4
+
+    matPoseGlobal!: mat4
+
     constructor(branch: number, id: number, name: string, children?: Joint[]) {
         this.branch = branch
         this.id = id
         this.name = name
         this.children = children
+        if (children !== undefined) {
+            children.forEach((it) => (it.parent = this))
+        }
+    }
+
+    // only needed once (similar to the makehuman skeleton/bone)
+    build(skeleton: Skeleton) {
+        if (this.matRestGlobal !== undefined) {
+            return
+        }
+        //
+        // get head and tail
+        //
+        const b0 = skeleton.getBone(this.name)
+        const head3 = vec3.create()
+        vec3.transformMat4(head3, head3, b0.matPoseGlobal!)
+
+        let tail3!: vec3
+        if (this.children === undefined) {
+            tail3 = vec3.fromValues(b0.yvector4![0], b0.yvector4![1], b0.yvector4![2])
+            vec3.scale(tail3, tail3, 4)
+            vec3.transformMat4(tail3, tail3, b0.matPoseGlobal!)
+        } else {
+            const j1 = this.children[0]
+            const b1 = skeleton.getBone(j1.name)
+            tail3 = vec3.create()
+            vec3.transformMat4(tail3, tail3, b1.matPoseGlobal!)
+        }
+
+        //
+        // calculate restGlobal and restRelative
+        //
+        let normal = vec3.fromValues(0, 1, 0)
+
+        this.matRestGlobal = getMatrix(head3, tail3, normal)
+        this.length = vec3.distance(head3, tail3)
+        if (this.parent === undefined) {
+            this.matRestRelative = this.matRestGlobal
+        } else {
+            this.matRestRelative = mat4.mul(
+                mat4.create(),
+                mat4.invert(mat4.create(), this.parent.matRestGlobal!),
+                this.matRestGlobal
+            )
+        }
+        this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
+
+        if (this.children !== undefined) {
+            for(const j1 of this.children) {
+                j1.build(skeleton)
+            }
+        }
+    }
+
+    // update matPoseGlobal
+    update() {
+        const matPose = bones.get(`${this.branch}/${this.id}`)!
+        if (this.parent !== undefined) {
+            this.matPoseGlobal = mat4.multiply(
+                mat4.create(),
+                this.parent.matPoseGlobal!,
+                mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
+            )
+        } else {
+            this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
+        }
+        if (this.children !== undefined) {
+            for(const j1 of this.children) {
+                j1.update()
+            }
+        }
     }
 }
 
-// TODO: try to get the positions from the Makehuman skeleton
-
 // prettier-ignore
-const skeleton = new Joint(5, 40, "root", [
+const chordataSkeleton = new Joint(5, 40, "root", [
     new Joint(5, 41, "spine02", [ // dorsal (poseunits: spine05, spine04, spine03, spine02)
         new Joint(5, 42, "neck02"), // neck (poseunits: spine01, neck01, neck02, neck03, head)
-        new Joint(6, 40, "upperarm01.L", [ // l-upperarm (clavicle.R, soulder01.R, upperarm01.R)
+        new Joint(6, 40, "upperarm01.L", [ // l-upperarm (poseunits: clavicle.R, soulder01.R, upperarm01.R)
             new Joint(6, 41, "lowerarm01.L", [ // l-lowerarm
                 new Joint(6, 42, "wrist.L") // l-hand
             ])
@@ -169,22 +254,16 @@ class SkeletonMesh {
         this.addVec(j1)
     }
 
-    addJoint(j: Joint) {
-        const b0 = this.skeleton.getBone(j.name)
-        const j0 = vec3.create()
-        vec3.transformMat4(j0, j0, b0.matPoseGlobal!)
-        if (j.children === undefined) {
-            const j1 = vec3.fromValues(b0.yvector4![0], b0.yvector4![1], b0.yvector4![2],)
-            vec3.transformMat4(j1, j1, this.skeleton.getBone(j.name).matPoseGlobal!)
-            this.addBone(j0, j1)
-        } else {
-            j.children.forEach((a: Joint) => {
-                const b1 = this.skeleton.getBone(a.name)
-                const j1 = vec3.create()
-                vec3.transformMat4(j1, j1, b1.matPoseGlobal!)
-                this.addBone(j0, j1)
-                this.addJoint(a)
-            })
+    addJoint(j0: Joint) {
+        const m = j0.matPoseGlobal
+        const v = vec3.fromValues(0, 0, 0)
+        const a = vec3.transformMat4(vec3.create(), v, m)
+        const b = vec3.transformMat4(vec3.create(), j0.yvector4! as vec3, m)
+        this.addBone(a, b)
+        if (j0.children !== undefined) {
+            for (const j1 of j0.children) {
+                this.addJoint(j1)
+            }
         }
     }
 }
@@ -204,7 +283,13 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    const mesh = new SkeletonMesh(scene.skeleton, skeleton)    
+    bones.set("5/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
+    bones.set("5/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
+
+    chordataSkeleton.build(scene.skeleton)
+    chordataSkeleton.update()
+
+    const mesh = new SkeletonMesh(scene.skeleton, chordataSkeleton)
     const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
 
     const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
@@ -237,14 +322,12 @@ export function renderChordataX(
         y = -5,
         idx = 0
 
-    bones.forEach((bone, name) => {
+    bones.forEach((m, name) => {
         // create model view matrix which places bone at (x, y, -25)
         const modelViewMatrix = mat4.create()
         mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
 
         // rotate bone using Chordata quaternion
-        const q = quat.fromValues(bone[0], bone[1], bone[2], bone[3])
-        const m = mat4.fromQuat(mat4.create(), q)
         mat4.multiply(modelViewMatrix, modelViewMatrix, m)
 
         // draw bone
