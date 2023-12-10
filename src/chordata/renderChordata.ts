@@ -1,9 +1,18 @@
 import { mat4, quat, vec3, vec4 } from "gl-matrix"
 import { RenderMesh } from "../render/RenderMesh"
-import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "../render/util"
+import {
+    createModelViewMatrix,
+    createNormalMatrix,
+    createProjectionMatrix,
+    prepareCanvas,
+    prepareViewport,
+} from "../render/util"
 import { RGBAShader } from "../render/shader/RGBAShader"
 import { span, text } from "toad.js"
 import { ChordataSettings } from "./ChordataSettings"
+import { HumanMesh } from "mesh/HumanMesh"
+import { Context } from "render/Context"
+import { Projection } from "render/render"
 
 let cone: RenderMesh
 
@@ -38,70 +47,164 @@ setBones(
     ])
 )
 
+class Joint {
+    branch: number
+    id: number
+    name: string
+    children?: Joint[]
+    constructor(branch: number, id: number, name: string, children?: Joint[]) {
+        this.branch = branch
+        this.id = id
+        this.name = name
+        this.children = children
+    }
+}
+
+// TODO: try to get the positions from the Makehuman skeleton
+
+// prettier-ignore
+const skeleton = new Joint(5, 40, "root", [
+    new Joint(5, 41, "spine02", [ // dorsal (poseunits: spine05, spine04, spine03, spine02)
+        new Joint(5, 42, "neck02"), // neck (poseunits: spine01, neck01, neck02, neck03, head)
+        new Joint(6, 40, "upperarm01.L", [ // l-upperarm (clavicle.R, soulder01.R, upperarm01.R)
+            new Joint(6, 41, "lowerarm01.L", [ // l-lowerarm
+                new Joint(6, 42, "wrist.L") // l-hand
+            ])
+        ]),
+        new Joint(4, 40, "upperarm01.R", [
+            new Joint(4, 41, "lowerarm01.R", [
+                new Joint(4, 42, "wrist.R")
+            ])
+        ])
+    ]),
+    new Joint(1, 40, "upperleg01.L", [
+        new Joint(1, 41, "lowerleg01.L", [
+            new Joint(1, 42, "foot.L")
+        ])
+    ]),
+    new Joint(3, 40, "upperleg01.R", [
+        new Joint(3, 41, "lowerleg01.R", [
+            new Joint(3, 42, "foot.R")
+        ])
+    ])
+])
+
 const D = 180 / Math.PI
 
 export function renderChordata(
+    ctx: Context,
     gl: WebGL2RenderingContext,
     programRGBA: RGBAShader,
     overlay: HTMLElement,
+    scene: HumanMesh,
     settings: ChordataSettings
 ) {
-    initCone(gl)
     const canvas = gl.canvas as HTMLCanvasElement
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
-    const projectionMatrix = createProjectionMatrix(canvas)
 
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    let x = 0,
-        y = 0,
-        idx = 0
+    const vertex: number[] = []
+    const indices: number[] = []
 
-    const pose0 = mat4.create()
-    mat4.rotateZ(pose0, pose0, settings.Z0.value / D)
-    mat4.rotateY(pose0, pose0, settings.Y0.value / D)
-    mat4.rotateX(pose0, pose0, settings.X0.value / D)
+    const addVec = (j: vec3) => {
+        vertex.push(...j)
+        indices.push(indices.length)
+    }
 
-    const pose1 = mat4.create()
-    mat4.rotateZ(pose1, pose1, settings.Z1.value / D)
-    mat4.rotateY(pose1, pose1, settings.Y1.value / D)
-    mat4.rotateX(pose1, pose1, settings.X1.value / D)
+    const addBone = (j0: vec3, j1: vec3) => {
+        const d = vec3.sub(vec3.create(), j1, j0)
 
-    const v = vec3.fromValues(0, 1, 0)
-    vec3.transformMat4(v, v, pose1)
+        // const f = vec3.length(d)
+        const f = 0.3
 
-    const pose2 = mat4.create()
-    mat4.rotate(pose2, pose2, settings.R.value / D, v)
+        vec3.scale(d, d, 0.2)
 
-    // draw bone
-    let modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
-    mat4.multiply(modelViewMatrix, modelViewMatrix, pose0)
-    let normalMatrix = createNormalMatrix(modelViewMatrix)
+        const center = vec3.add(vec3.create(), j0, d)
+
+        const a = d[0]
+        const b = d[1]
+        const c = d[2]
+        const q0 = vec3.fromValues(b + c, c - a, -a - b)
+        vec3.normalize(q0, q0)
+        vec3.scale(q0, q0, f)
+        const d0 = vec3.add(vec3.create(), q0, center)
+
+        const q1 = vec3.cross(vec3.create(), d, q0)
+        vec3.normalize(q1, q1)
+        vec3.scale(q1, q1, f)
+        const d1 = vec3.add(vec3.create(), q1, center)
+
+        const q2 = vec3.scale(vec3.create(), q0, -1)
+        const d2 = vec3.add(vec3.create(), q2, center)
+
+        const q3 = vec3.scale(vec3.create(), q1, -1)
+        const d3 = vec3.add(vec3.create(), q3, center)
+
+        addVec(j0)
+        addVec(d0)
+        addVec(d1)
+
+        addVec(j0)
+        addVec(d1)
+        addVec(d2)
+
+        addVec(j0)
+        addVec(d2)
+        addVec(d3)
+
+        addVec(j0)
+        addVec(d3)
+        addVec(d0)
+
+        addVec(d0)
+        addVec(d1)
+        addVec(j1)
+
+        addVec(d1)
+        addVec(d2)
+        addVec(j1)
+
+        addVec(d2)
+        addVec(d3)
+        addVec(j1)
+
+        addVec(d3)
+        addVec(d0)
+        addVec(j1)
+    }
+
+    const addJoint = (j: Joint) => {
+        const b0 = scene.skeleton.getBone(j.name)
+        const j0 = vec3.create()
+        vec3.transformMat4(j0, j0, b0.matPoseGlobal!)
+        if (j.children === undefined) {
+            const j1 = vec3.fromValues(b0.yvector4![0], b0.yvector4![1], b0.yvector4![2],)
+            vec3.transformMat4(j1, j1, scene.skeleton.getBone(j.name).matPoseGlobal!)
+            addBone(j0, j1)
+        } else {
+            j.children.forEach((a: Joint) => {
+                const b1 = scene.skeleton.getBone(a.name)
+                const j1 = vec3.create()
+                vec3.transformMat4(j1, j1, b1.matPoseGlobal!)
+                addBone(j0, j1)
+                addJoint(a)
+            })
+        }
+    }
+    addJoint(skeleton)
+
+    const s = new RenderMesh(gl, new Float32Array(vertex), indices, undefined, undefined, false)
+
+    const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+    const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+    const normalMatrix = createNormalMatrix(modelViewMatrix)
+
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    programRGBA.setColor([1, 0.5, 0, 1])
-    cone.draw(programRGBA, gl.TRIANGLES)
-
-    modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
-    mat4.multiply(modelViewMatrix, modelViewMatrix, pose1)
-    normalMatrix = createNormalMatrix(modelViewMatrix)
-    programRGBA.initModelViewMatrix(modelViewMatrix)
-    programRGBA.initNormalMatrix(normalMatrix)
-    programRGBA.setColor([1, 0, 0, 1])
-    cone.draw(programRGBA, gl.TRIANGLES)
-
-    modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [x, y, -25.0]) // move the model away
-    mat4.multiply(modelViewMatrix, modelViewMatrix, pose2)
-    normalMatrix = createNormalMatrix(modelViewMatrix)
-    programRGBA.initModelViewMatrix(modelViewMatrix)
-    programRGBA.initNormalMatrix(normalMatrix)
-    programRGBA.setColor([1, 1, 0, 1])
-    cone.draw(programRGBA, gl.TRIANGLES)
-
+    programRGBA.setColor([1, 1, 1, 1])
+    s.draw(programRGBA, gl.TRIANGLES)
 }
 
 export function renderChordataX(
@@ -186,6 +289,7 @@ function initCone(gl: WebGL2RenderingContext) {
         return
     }
 
+    // prettier-ignore
     const xyz = [
         -1, -2, 1,
         1, -2, 1,
@@ -208,6 +312,7 @@ function initCone(gl: WebGL2RenderingContext) {
         1, -2, 1,
         1, -2, -1,
     ]
+    // prettier-ignore
     const fxyz = [
         0, 1, 3,
         0, 3, 2,

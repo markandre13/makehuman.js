@@ -95,7 +95,6 @@ export class Bone {
         }
     }
 
-
     hasChild(name: string): boolean {
         for (const child of this.children) {
             if (this.name === name) {

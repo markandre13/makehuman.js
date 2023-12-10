@@ -33,6 +33,7 @@ function runChordata(mgr: UpdateManager) {
     const host = "localhost"
     const port = 9001
     const client = new WebSocket(`ws://${host}:${port}`) // CHECK: is there a WS port on the Notochord itself?
+    // const client = new WebSocket("ws://notochord.fritz.box:7681/")
     client.binaryType = "arraybuffer"
     client.onerror = (e) => {
         start.enabled = true
@@ -56,6 +57,7 @@ function runChordata(mgr: UpdateManager) {
             const decoder = new COOPDecoder(arrayBuffer)
             try {
                 setBones(decoder.decode())
+                mgr.invalidateView()
                 client!.send(enc.encode("GET CHORDATA"))
             } catch (error) {
                 start.enabled = true
@@ -78,13 +80,13 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
     settings.modified.add(() => updateManager.invalidateView())
     return (
         <Tab label="Chordata" value={TAB.CHORDATA}>
-            {/* <Button variant={ButtonVariant.ACCENT} action={start}>
+            <Button variant={ButtonVariant.ACCENT} action={start}>
                 Start
             </Button>
             <Button variant={ButtonVariant.NEGATIVE} action={stop}>
                 Stop
-            </Button> */}
-            <Form>
+            </Button>
+            {/* <Form>
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
                 <FormText model={settings.Z0} />
@@ -127,7 +129,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     </li>
                 </ul>
                 <p>Let's see how much of a fool I'll make out of myself. 😁</p>
-            </div>
+            </div> */}
         </Tab>
     )
 }

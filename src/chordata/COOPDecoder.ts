@@ -14,12 +14,12 @@ export class COOPDecoder {
             throw Error("not an OSC bundle")
         }
         const timetag = this.t()
-        const d = new Date(0)
-        d.setUTCSeconds(timetag.epoch)
+        // const d = new Date(0)
+        // d.setUTCSeconds(timetag.epoch)
 
         // 1st bundle
         const size0 = this.i(), offset0 = this.offset
-        console.log(`timetag: ${d} offset: ${this.offset} size: ${size0}`)
+        // console.log(`timetag: ${d} offset: ${this.offset} size: ${size0}`)
         if (this.s() !== "/%%/Chordata/q") {
             throw Error(`not a Chordata packet`)
         }

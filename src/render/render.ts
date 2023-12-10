@@ -91,7 +91,7 @@ export function render(
         // }
         switch (mode.value) {
             case RenderMode.CHORDATA:
-                renderChordata(gl, programRGBA, overlay, chordataExperiment)
+                renderChordata(ctx, gl, programRGBA, overlay, scene, chordataExperiment)
                 break
             default:
                 renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
