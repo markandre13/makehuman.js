@@ -86,16 +86,18 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
             <Button variant={ButtonVariant.NEGATIVE} action={stop}>
                 Stop
             </Button>
-            {/* <Form>
+            <Form>
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
                 <FormText model={settings.Z0} />
+            {/* 
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
                 <FormText model={settings.Z1} />
-                <FormText model={settings.R} />
+    <FormText model={settings.R} /> */}
             </Form>
-            <div style={{ padding: "15px" }}>
+
+            { /* <div style={{ padding: "15px" }}>
                 <h1>TRY TO LIVE RENDER THE CHAIN BASE, DORSAL, NECK / AND AN ARM</h1>
 
                 <p>The pose calibration is used to detect how the KCeptors are placed on the body.</p>

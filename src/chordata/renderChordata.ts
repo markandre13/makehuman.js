@@ -13,6 +13,7 @@ import { ChordataSettings } from "./ChordataSettings"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Context } from "render/Context"
 import { Projection } from "render/render"
+import { Skeleton } from "skeleton/Skeleton"
 
 let cone: RenderMesh
 
@@ -91,30 +92,22 @@ const skeleton = new Joint(5, 40, "root", [
 
 const D = 180 / Math.PI
 
-export function renderChordata(
-    ctx: Context,
-    gl: WebGL2RenderingContext,
-    programRGBA: RGBAShader,
-    overlay: HTMLElement,
-    scene: HumanMesh,
-    settings: ChordataSettings
-) {
-    const canvas = gl.canvas as HTMLCanvasElement
-    prepareCanvas(canvas)
-    prepareViewport(gl, canvas)
-
-    gl.disable(gl.CULL_FACE)
-    gl.depthMask(true)
-
-    const vertex: number[] = []
-    const indices: number[] = []
-
-    const addVec = (j: vec3) => {
-        vertex.push(...j)
-        indices.push(indices.length)
+class SkeletonMesh {
+    skeleton: Skeleton
+    constructor(skeleton: Skeleton, joint: Joint) {
+        this.skeleton = skeleton
+        this.addJoint(joint)
     }
 
-    const addBone = (j0: vec3, j1: vec3) => {
+    vertex: number[] = []
+    indices: number[] = []
+
+    addVec(j: vec3) {
+        this.vertex.push(...j)
+        this.indices.push(this.indices.length)
+    }
+
+    addBone(j0: vec3, j1: vec3) {
         const d = vec3.sub(vec3.create(), j1, j0)
 
         // const f = vec3.length(d)
@@ -143,60 +136,76 @@ export function renderChordata(
         const q3 = vec3.scale(vec3.create(), q1, -1)
         const d3 = vec3.add(vec3.create(), q3, center)
 
-        addVec(j0)
-        addVec(d0)
-        addVec(d1)
+        this.addVec(j0)
+        this.addVec(d0)
+        this.addVec(d1)
 
-        addVec(j0)
-        addVec(d1)
-        addVec(d2)
+        this.addVec(j0)
+        this.addVec(d1)
+        this.addVec(d2)
 
-        addVec(j0)
-        addVec(d2)
-        addVec(d3)
+        this.addVec(j0)
+        this.addVec(d2)
+        this.addVec(d3)
 
-        addVec(j0)
-        addVec(d3)
-        addVec(d0)
+        this.addVec(j0)
+        this.addVec(d3)
+        this.addVec(d0)
 
-        addVec(d0)
-        addVec(d1)
-        addVec(j1)
+        this.addVec(d0)
+        this.addVec(d1)
+        this.addVec(j1)
 
-        addVec(d1)
-        addVec(d2)
-        addVec(j1)
+        this.addVec(d1)
+        this.addVec(d2)
+        this.addVec(j1)
 
-        addVec(d2)
-        addVec(d3)
-        addVec(j1)
+        this.addVec(d2)
+        this.addVec(d3)
+        this.addVec(j1)
 
-        addVec(d3)
-        addVec(d0)
-        addVec(j1)
+        this.addVec(d3)
+        this.addVec(d0)
+        this.addVec(j1)
     }
 
-    const addJoint = (j: Joint) => {
-        const b0 = scene.skeleton.getBone(j.name)
+    addJoint(j: Joint) {
+        const b0 = this.skeleton.getBone(j.name)
         const j0 = vec3.create()
         vec3.transformMat4(j0, j0, b0.matPoseGlobal!)
         if (j.children === undefined) {
             const j1 = vec3.fromValues(b0.yvector4![0], b0.yvector4![1], b0.yvector4![2],)
-            vec3.transformMat4(j1, j1, scene.skeleton.getBone(j.name).matPoseGlobal!)
-            addBone(j0, j1)
+            vec3.transformMat4(j1, j1, this.skeleton.getBone(j.name).matPoseGlobal!)
+            this.addBone(j0, j1)
         } else {
             j.children.forEach((a: Joint) => {
-                const b1 = scene.skeleton.getBone(a.name)
+                const b1 = this.skeleton.getBone(a.name)
                 const j1 = vec3.create()
                 vec3.transformMat4(j1, j1, b1.matPoseGlobal!)
-                addBone(j0, j1)
-                addJoint(a)
+                this.addBone(j0, j1)
+                this.addJoint(a)
             })
         }
     }
-    addJoint(skeleton)
+}
 
-    const s = new RenderMesh(gl, new Float32Array(vertex), indices, undefined, undefined, false)
+export function renderChordata(
+    ctx: Context,
+    gl: WebGL2RenderingContext,
+    programRGBA: RGBAShader,
+    overlay: HTMLElement,
+    scene: HumanMesh,
+    settings: ChordataSettings
+) {
+    const canvas = gl.canvas as HTMLCanvasElement
+    prepareCanvas(canvas)
+    prepareViewport(gl, canvas)
+
+    gl.disable(gl.CULL_FACE)
+    gl.depthMask(true)
+
+    const mesh = new SkeletonMesh(scene.skeleton, skeleton)    
+    const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
 
     const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
     const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
