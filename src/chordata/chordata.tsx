@@ -1,6 +1,6 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
-import { setBones } from "chordata/renderChordata"
+import { calibrateNPose, setBones } from "chordata/renderChordata"
 import { Action } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
@@ -80,12 +80,13 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
     settings.modified.add(() => updateManager.invalidateView())
     return (
         <Tab label="Chordata" value={TAB.CHORDATA}>
-            <Button variant={ButtonVariant.ACCENT} action={start}>
+            {/* <Button variant={ButtonVariant.ACCENT} action={start}>
                 Start
             </Button>
             <Button variant={ButtonVariant.NEGATIVE} action={stop}>
                 Stop
-            </Button>
+            </Button> */}
+            <Button action={() => calibrateNPose()}>Calibrate N-Pose</Button>
             <Form>
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
