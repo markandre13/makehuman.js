@@ -192,27 +192,24 @@ class SkeletonMesh {
         this.indices.push(this.indices.length)
     }
 
-    addBone(j0: vec3, j1: vec3) {
-        const d = vec3.sub(vec3.create(), j1, j0)
+    addBone(m: mat4, p: vec3) {
+        const head = vec3.create()
+        const tail = vec3.copy(vec3.create(), p)
+        const center = vec3.scale(vec3.create(), tail, 0.2)
 
-        // const f = vec3.length(d)
-        const f = 0.3
+        const r = 0.3 // distance from center
 
-        vec3.scale(d, d, 0.2)
-
-        const center = vec3.add(vec3.create(), j0, d)
-
-        const a = d[0]
-        const b = d[1]
-        const c = d[2]
+        const a = center[0]
+        const b = center[1]
+        const c = center[2]
         const q0 = vec3.fromValues(b + c, c - a, -a - b)
         vec3.normalize(q0, q0)
-        vec3.scale(q0, q0, f)
-        const d0 = vec3.add(vec3.create(), q0, center)
+        vec3.scale(q0, q0, r)
+        const d0 = vec3.add(vec3.create(), center, q0)
 
-        const q1 = vec3.cross(vec3.create(), d, q0)
+        const q1 = vec3.cross(vec3.create(), center, q0)
         vec3.normalize(q1, q1)
-        vec3.scale(q1, q1, f)
+        vec3.scale(q1, q1, r)
         const d1 = vec3.add(vec3.create(), q1, center)
 
         const q2 = vec3.scale(vec3.create(), q0, -1)
@@ -221,45 +218,48 @@ class SkeletonMesh {
         const q3 = vec3.scale(vec3.create(), q1, -1)
         const d3 = vec3.add(vec3.create(), q3, center)
 
-        this.addVec(j0)
+        vec3.transformMat4(head, head, m)
+        vec3.transformMat4(tail, tail, m)
+        vec3.transformMat4(d0, d0, m)
+        vec3.transformMat4(d1, d1, m)
+        vec3.transformMat4(d2, d2, m)
+        vec3.transformMat4(d3, d3, m)
+
+        this.addVec(head)
         this.addVec(d0)
         this.addVec(d1)
 
-        this.addVec(j0)
+        this.addVec(head)
         this.addVec(d1)
         this.addVec(d2)
 
-        this.addVec(j0)
+        this.addVec(head)
         this.addVec(d2)
         this.addVec(d3)
 
-        this.addVec(j0)
+        this.addVec(head)
         this.addVec(d3)
         this.addVec(d0)
 
         this.addVec(d0)
         this.addVec(d1)
-        this.addVec(j1)
+        this.addVec(tail)
 
         this.addVec(d1)
         this.addVec(d2)
-        this.addVec(j1)
+        this.addVec(tail)
 
         this.addVec(d2)
         this.addVec(d3)
-        this.addVec(j1)
+        this.addVec(tail)
 
         this.addVec(d3)
         this.addVec(d0)
-        this.addVec(j1)
+        this.addVec(tail)
     }
 
     addJoint(j0: Joint) {
-        const m = j0.matPoseGlobal
-        const v = vec3.fromValues(0, 0, 0)
-        const a = vec3.transformMat4(vec3.create(), v, m)
-        const b = vec3.transformMat4(vec3.create(), j0.yvector4! as vec3, m)
-        this.addBone(a, b)
+        this.addBone(j0.matPoseGlobal, j0.yvector4! as vec3)
         if (j0.children !== undefined) {
             for (const j1 of j0.children) {
                 this.addJoint(j1)
