@@ -1,4 +1,4 @@
-import { AbstractShader } from './AbstractShader'
+import { AbstractShader } from "./AbstractShader"
 
 export class TextureShader extends AbstractShader {
     protected uSampler: WebGLUniformLocation
@@ -29,51 +29,46 @@ export class TextureShader extends AbstractShader {
             const stride = 0 // how many bytes to get from one set to the next
             const offset = 0 // how many bytes inside the buffer to start from
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texture!)
-            this.gl.vertexAttribPointer(
-                this.textureCoord!,
-                num,
-                type,
-                normalize,
-                stride,
-                offset
-            )
+            this.gl.vertexAttribPointer(this.textureCoord!, num, type, normalize, stride, offset)
             this.gl.enableVertexAttribArray(this.textureCoord!)
         }
     }
 }
-const textureVertexShaderSrc = `
-// this is our input per vertex
-attribute vec4 aVertexPosition;
-attribute vec3 aVertexNormal;
-attribute vec2 aTextureCoord;
+const textureVertexShaderSrc = /*glsl*/ `
+    // this is our input per vertex
+    attribute vec4 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec2 aTextureCoord;
 
-// input for all vertices (uniform for the whole shader program)
-uniform mat4 uNormalMatrix;
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
+    // input for all vertices (uniform for the whole shader program)
+    uniform mat4 uNormalMatrix;
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
 
-// data exchanged with other graphic pipeline stages
-varying highp vec2 vTextureCoord;
-varying highp vec3 vLighting;
+    // data exchanged with other graphic pipeline stages
+    varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
 
-void main(void) {
-  gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-  highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
-  highp vec3 directionalLightColor = vec3(1, 1, 1);
-  highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-  highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
-  highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+    void main(void) {
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+        highp vec3 directionalLightColor = vec3(1, 1, 1);
+        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+        highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
 
-  // out
-  vLighting = ambientLight + (directionalLightColor * directional);
-  vTextureCoord = aTextureCoord;
-}`
-const textureFragmentShaderSrc = `
-varying highp vec2 vTextureCoord;
-varying highp vec3 vLighting;
-uniform sampler2D uSampler;
-uniform highp float uAlpha;
-void main(void) {
-  highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
-  gl_FragColor = vec4(texelColor.rgb * vLighting, uAlpha);
-}`
+        // out
+        vLighting = ambientLight + (directionalLightColor * directional);
+        vTextureCoord = aTextureCoord;
+    }
+`
+const textureFragmentShaderSrc = /*glsl*/ `
+    varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
+    uniform sampler2D uSampler;
+    uniform highp float uAlpha;
+    void main(void) {
+        highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
+        gl_FragColor = vec4(texelColor.rgb * vLighting, uAlpha);
+    }
+`
