@@ -80,13 +80,16 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
     settings.modified.add(() => updateManager.invalidateView())
     return (
         <Tab label="Chordata" value={TAB.CHORDATA}>
-            {/* <Button variant={ButtonVariant.ACCENT} action={start}>
+            <Button variant={ButtonVariant.ACCENT} action={start}>
                 Start
             </Button>
             <Button variant={ButtonVariant.NEGATIVE} action={stop}>
                 Stop
-            </Button> */}
-            <Button action={() => calibrateNPose()}>Calibrate N-Pose</Button>
+            </Button>
+            <Button action={() => {
+                calibrateNPose()
+                updateManager.invalidateView()
+            }}>Calibrate N-Pose</Button>
             <Form>
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />

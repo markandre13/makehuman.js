@@ -61,9 +61,17 @@ export function setBones(newBones: Map<string, number[]>) {
 }
 
 // assume the sensors are now in rest pose
-export function calibrateNPose() {
-    console.log(`calibrate N-Pose`)
-    // basically, it means saving the inverse of the current bones, best pa
+export function calibrateNPose(joint?: Joint) {
+    if (joint === undefined) {
+        joint = chordataSkeleton
+    }
+    const matPose = bones.get(`${joint.branch}/${joint.id}`)!
+    joint.matNPoseInv = mat4.invert(mat4.create(), matPose)
+    if (joint.children !== undefined) {
+        for(const child of joint.children) {
+            calibrateNPose(child)
+        }
+    }
 }
 
 // set an initial COOP packet
@@ -117,8 +125,8 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    bones.set("5/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
-    bones.set("5/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
+    // bones.set("5/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
+    // bones.set("5/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
 
     chordataSkeleton.build(scene.skeleton)
     chordataSkeleton.update()

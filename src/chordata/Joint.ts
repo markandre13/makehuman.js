@@ -80,7 +80,10 @@ export class Joint {
 
     // update matPoseGlobal
     update() {
-        const matPose = bones.get(`${this.branch}/${this.id}`)!
+        let matPose = bones.get(`${this.branch}/${this.id}`)!
+        if (this.matNPoseInv !== undefined) {
+            matPose = mat4.multiply(mat4.create(), matPose, this.matNPoseInv)
+        }
         if (this.parent !== undefined) {
             this.matPoseGlobal = mat4.multiply(
                 mat4.create(),
