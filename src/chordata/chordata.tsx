@@ -1,14 +1,155 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
 import { calibrateNPose, setBones } from "chordata/renderChordata"
-import { Action } from "toad.js"
+import { Action, Display, NumberModel, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
 import { hexdump } from "../lib/hexdump"
 import { UpdateManager } from "UpdateManager"
-import { Form } from "toad.js/view/Form"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
 import { ChordataSettings } from "./ChordataSettings"
+
+// GOAL:
+// * call the notochord on our own
+// * select 'mark_config' as active configuration, which hopefully has my modified ids
+//   also: state shows all available configurations, where are the files, why are there 2 mark_config?, is it okay?
+// * go through the calibration but go through the steps via timer
+// * have a look at what the COOP data now looks like. is n-pose all identity vectors? and do i just have to adjust
+//   for the difference in the makehuman skeleton?
+// * can i get the coop data via websocket?
+
+//
+// Access-Control-Allow-Origin: *
+
+const enum CalibrationStep {
+    CALIB_IDLE = 0, // we send this at the end of each step
+    CALIBRATING = 1, // ???
+    // these initiate an calibration step
+    STATIC = 2,
+    ARMS = 3,
+    TRUNK = 4,
+    L_LEG = 5,
+    R_LEG = 6,
+}
+
+class Notochord {
+    state = new TextModel("UNAVAILABLE", {
+        label: "State",
+        description: "Either STOPPED RUNNING, IDLE or UNAVAILABLE",
+    }) // RUNNING, STOPPED, UNAVAILABLE
+
+    // hostname of the Chordata Notochord
+    hostname = new TextModel("notochord", { label: "Notochord Hostname" })
+    // where to send COOP UDP traffic to
+    dstHostname = new TextModel("192.168.178.24", { label: "COOP Destination Hostname" })
+    dstPort = new NumberModel(6565, { min: 0, max: 0xffff, label: "COOP Destination UDP Port" })
+
+    start = new Action(() => this.doStart())
+    stop = new Action(() => this.doStop(), { enabled: false })
+
+    startProxy = new Action(() => {
+        console.log("START")
+        start.enabled = false
+        stop.enabled = true
+        socket = runChordata(mgr)
+    })
+    stopProxy = new Action(
+        () => {
+            console.log("STOP")
+            start.enabled = true
+            stop.enabled = false
+            socket!.close()
+            socket = undefined
+        },
+        { enabled: false }
+    )
+
+    protected pullState = false
+
+    constructor() {
+        this.visibilityChange = this.visibilityChange.bind(this)
+        this.doPullState = this.doPullState.bind(this)
+
+        this.state.modified.add(() => {
+            switch (this.state.value) {
+                case "UNAVAILABLE":
+                case "IDLE":
+                    this.start.enabled = false
+                    this.stop.enabled = false
+                    break
+                case "STOPPED":
+                    this.start.enabled = true
+                    this.stop.enabled = false
+                    break
+                case "RUNNING":
+                    this.start.enabled = false
+                    this.stop.enabled = true
+                    break
+            }
+        })
+    }
+
+    visibilityChange(state: "visible" | "hidden") {
+        if (this.pullState === false) {
+            this.pullState = true
+            this.doPullState()
+        } else {
+            this.pullState = false
+        }
+    }
+
+    protected async doPullState() {
+        try {
+            const r = await this.poll()
+            const parser = new window.DOMParser()
+            const data = parser.parseFromString(await r.text(), "text/xml")
+            const processState = data.querySelector("NotochordProcess")
+            if (processState) {
+                this.state.value = processState?.innerHTML
+            }
+        } catch (error) {
+            this.state.value = "UNAVAILABLE"
+        }
+        if (this.pullState) {
+            setTimeout(this.doPullState, 1000)
+        }
+    }
+
+    doStart() {
+        console.log("DO START")
+        const r = this.call(
+            `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        )
+        console.log(r)
+    }
+    doStop() {
+        console.log("DO STOP")
+        this.call(`http://${this.hostname.value}/notochord/end`)
+    }
+    callibrate(step: CalibrationStep) {
+        this.call(`http://${this.hostname.value}/pose/calibrate?step=${step}`)
+    }
+    async poll() {
+        // when failing, set state to UNAVAILABLE
+        return fetch(`http://${this.hostname.value}/state?clear_registry=false`)
+    }
+    async call(url: string) {
+        try {
+            return await fetch(url)
+        } catch (e) {
+            console.log(e)
+            // if (e instanceof Error) {
+            //     if (e.name === "TypeError") {
+            //     } else {
+            //         console.log(e)
+            //     }
+            // } else {
+            //     console.log(typeof e)
+            // }
+        }
+    }
+}
 
 let socket: WebSocket | undefined
 let mgr: UpdateManager
@@ -75,67 +216,84 @@ function runChordata(mgr: UpdateManager) {
     return client
 }
 
+// http://notochord.fritz.box/notochord/init?scan=1&addr=192.168.178.24&port=6565&verbose=0
+// http://notochord.fritz.box/notochord/end
+
+let notochord = new Notochord()
+
 export default function (updateManager: UpdateManager, settings: ChordataSettings) {
     mgr = updateManager
     settings.modified.add(() => updateManager.invalidateView())
     return (
-        <Tab label="Chordata" value={TAB.CHORDATA}>
-            <Button variant={ButtonVariant.ACCENT} action={start}>
+        <Tab label="Chordata" value={TAB.CHORDATA} visibilityChange={notochord.visibilityChange}>
+            {/* <Button variant={ButtonVariant.ACCENT} action={start}>
                 Start
             </Button>
             <Button variant={ButtonVariant.NEGATIVE} action={stop}>
                 Stop
-            </Button>
-            <Button action={() => {
-                calibrateNPose()
-                updateManager.invalidateView()
-            }}>Calibrate N-Pose</Button>
+            </Button> */}
             <Form>
-                <FormText model={settings.X0} />
+                <FormText model={notochord.hostname} />
+                <FormText model={notochord.dstHostname} />
+                <FormText model={notochord.dstPort} />
+
+                <FormLabel model={notochord.state} />
+                <FormField>
+                    <div style={{ fontWeight: "bold" }}>
+                        <Display model={notochord.state} />
+                    </div>
+                    <Button variant={ButtonVariant.ACCENT} action={notochord.start}>
+                        Start
+                    </Button>
+                    <Button variant={ButtonVariant.NEGATIVE} action={notochord.stop}>
+                        Stop
+                    </Button>
+                </FormField>
+                <FormHelp model={notochord.state} />
+
+                <FormLabel>Calibrate</FormLabel>
+                <FormField>T.B.D.</FormField>
+
+                <FormLabel>Makehuman.js</FormLabel>
+                <FormField>
+                    <Button
+                        action={() => {
+                            calibrateNPose()
+                            updateManager.invalidateView()
+                        }}
+                    >
+                        Calibrate N-Pose
+                    </Button>
+                </FormField>
+
+                {/* <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
                 <FormText model={settings.Z0} />
-             
+
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
-                <FormText model={settings.Z1} />
+                <FormText model={settings.Z1} /> */}
                 {/* <FormText model={settings.R} /> */}
             </Form>
 
-            { /* <div style={{ padding: "15px" }}>
-                <h1>TRY TO LIVE RENDER THE CHAIN BASE, DORSAL, NECK / AND AN ARM</h1>
-
-                <p>The pose calibration is used to detect how the KCeptors are placed on the body.</p>
+            <div style={{ padding: "15px" }}>
+                <h1>About</h1>
                 <p>
-                    It seems that Chordata is already doing that on it's own and adjusts the data transmitted via COOP
-                    accordingly but when I tried it in the Blender add-on, it didn't seem to work.
+                    This needs a <a href="https://chordata.cc">Chordata Motion</a> running in your local network.
                 </p>
                 <p>
-                    This is an experiment to find out how to perform another pose calibration for the Chordata KCeptors.
-                    Chordata does this by using all sensor data... and since I have no clue what is going on there, I'll
-                    try ny own recipe which uses only data available via COOP.
+                    To be able to call the Notochord from another machine, edit the file
+                    <code> /opt/chordata/notochord-control-server/notochord_control_server/__init__.py </code>
+                    on the Notochord, add the following snippet
+                    <pre>
+                        {`    @app.after_request
+    def apply_caching(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        return response`}
+                    </pre>
+                    and reboot.
                 </p>
-                <ul>
-                    <li>
-                        The <span style={{ color: "#f80" }}>orange</span> cone represents a KCeptor mounted to the body
-                        with rotation (X0, Y0, Z0). This will be used during the first pose calibration step were one
-                        has to assume an N-Pose (normal pose: stand straight, arms and legs straight and close to the
-                        body).
-                    </li>
-                    <li>
-                        The <span style={{ color: "#f00" }}>red</span> cone represent the axis along which the KCeptor
-                        will be rotated during the second calibration step (X1, Y1, Z1).
-                    </li>
-                    <li>
-                        The <span style={{ color: "#ff0" }}>yellow</span> cone represents the KCeptor after the rotation
-                        during the second calibration step by R.
-                    </li>
-                    <li>
-                        The <span style={{ color: "#08f" }}>blue</span> cone represents the calibrated KCeptor points
-                        upwards and one side points in the direction of the second calibration step.
-                    </li>
-                </ul>
-                <p>Let's see how much of a fool I'll make out of myself. 😁</p>
-            </div> */}
+            </div>
         </Tab>
     )
 }

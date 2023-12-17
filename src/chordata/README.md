@@ -57,6 +57,20 @@ This needs to be implemented in makehuman.js
   * udp 6565
   * ws 7681
 
+* the startup code is in /etc/rc.local
+* it starts the gunicorn httpd...
+* with giving control to /opt/chordata/notochord-control-server/wsgi.py
+
+* to be able to call the Notochord from you local development machine, to
+  `/opt/chordata/notochord-control-server/notochord_control_server/__init__` add
+
+    @app.after_request
+    def apply_caching(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        return response
+
+  and reboot.
+
 ## Source Code
 
 Code is hosted at [GitLab](https://gitlab.com/chordata/). Sort by 'Updated' so see which repositories might be most relevant.
@@ -64,7 +78,7 @@ Code is hosted at [GitLab](https://gitlab.com/chordata/). Sort by 'Updated' so s
 * [notochord OS](https://gitlab.com/chordata/notochord-os)
   Scripts to install all software on a fresh PI
 * [Notochord control server](https://gitlab.com/chordata/notochord-control-server)
-  The Webserver running on the PI (written in Python)
+  The Webserver running on the PI (written in Python) based using [gunicorn](https://gunicorn.org) as HTTPD and [Flask](https://www.fullstackpython.com/flask.html) as framework.
 * [notochord-module](https://gitlab.com/chordata/notochord-module)
   C/C++ Python Module
 * [Pose Calibration](https://gitlab.com/chordata/pose-calibration)
@@ -126,9 +140,26 @@ This is also were the websocket port is...
                     GET /pose/index
                 run.py
                     GET /notochord/init
+                      scan=1
+                      addr=192.168.178.24   ;; where to send
+                      port=6565             
+                      verbose=0             ;; info, debug, trace
                     GET /notochord/end
                 state.py
                     GET /state
+                        <ControlServerState>
+                            <NotochordProcess>STOPPED</NotochordProcess>
+                            <ExternalProcess active="False">
+                                <Pty/>
+                            </ExternalProcess>
+                            <NotochordConfigurations>
+                                <NotochordConfiguration active="false" label="mark_config" address="http://notochord.fritz.box/configuration/mark_config.xml" date="Thu Aug 10 11:07:18 2023"/>
+                                <NotochordConfiguration active="false" label="mark_config" address="http://notochord.fritz.box/configuration/mark_config.xml" date="Thu Aug 10 11:07:18 2023"/>
+                                <NotochordConfiguration active="false" label="default_biped" address="http://notochord.fritz.box/configuration/default_biped.xml" date="Thu Mar 30 11:36:55 2023"/>
+                                <NotochordConfiguration active="true" label="blender_config" address="http://notochord.fritz.box/configuration/blender_config.xml" date="Thu Aug 10 17:24:10 2023"/>
+                            </NotochordConfigurations>
+                            <Log/>
+                        </ControlServerState>
                     POST /state
                       
                 CALIB_IDLE  = 0,
@@ -138,7 +169,6 @@ This is also were the websocket port is...
                 TRUNK       = 4,
                 LEFT_LEG    = 5,
                 RIGHT_LEG   = 6
-
 
 ### Pose Calibration
 

@@ -12,7 +12,6 @@ import { ChordataSettings } from "./ChordataSettings"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Context } from "render/Context"
 import { Projection } from "render/render"
-import { euler_matrix } from "lib/euler_matrix"
 import { Joint } from "./Joint"
 import { SkeletonMesh } from "./SkeletonMesh"
 
