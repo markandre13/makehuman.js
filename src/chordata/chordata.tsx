@@ -257,78 +257,125 @@ interface Step {
 }
 
 const script: Step[] = [
-    { 
+    {
+        label: "Get ready to calibrate",
+        color: "#f80",
+    },
+    {
         label: "Move into N-Pose",
-        color: "#f80"
-    }, { 
+        color: "#0f0",
+    },
+    {
         label: "Stand still",
-        color: "#0f0"
-    }, { 
+    },
+    {
         label: "Get ready to raise arms",
-        color: "#f80"
-    }, { 
+        color: "#f80",
+    },
+    {
         label: "Raise arms",
-        color: "#0f0"
-    }, { 
+        color: "#0f0",
+    },
+    {
         label: "Lower arms",
-        color: "#ff0"
-    }, {
+    },
+    {
         label: "Get ready to bow",
-        color: "#f80"
-    }, {
+        color: "#f80",
+    },
+    {
         label: "Bow down",
-        color: "#0f0"
-    }, {
+        color: "#0f0",
+    },
+    {
         label: "Get straight",
-        color: "#ff0"
-    }, {
+    },
+    {
         label: "Get ready to raise left leg",
-        color: "#f80"
-    }, {
+        color: "#f80",
+    },
+    {
         label: "Raise left leg",
-        color: "#0f0"
-    }, {
+        color: "#0f0",
+    },
+    {
         label: "Lower left leg",
-        color: "#ff0"
-    }, {
+    },
+    {
         label: "Get ready to raise right leg",
-        color: "#f80"
-    }, {
+        color: "#f80",
+    },
+    {
         label: "Raise right leg",
-        color: "#0f0"
-    }, {
+        color: "#0f0",
+    },
+    {
         label: "Lower right leg",
-        color: "#ff0"
-    }, {
+    },
+    {
         label: "Done. Thank you",
-        color: "#08f"
-    }
+        color: "#f80",
+    },
 ]
 
 function CallibrationButton() {
-    let stepCounter = 0
     let button: Button
     let btn: HTMLButtonElement
-    const action = new Action(() => {
-        if (stepCounter >= script.length) {
+    let running = false
+    const interval = 2
+    const action = new Action(() => {})
+    const buttonHandler = () => {
+        let stepCounter = 0
+        let timeCounter = interval
+        const reset = () => {
+            running = false
             stepCounter = 0
-            button.innerText = "Start"
+            timeCounter = interval
+            btn.innerText = "Start"
             btn.style.backgroundColor = ""
             btn.style.color = ""
             btn.style.fontSize = ""
-        } else {
-            const step = script[stepCounter]
-            if (step.color !== undefined) {
-                btn.style.backgroundColor = step.color
-                btn.style.color = "#000"
-                btn.style.fontSize = "calc((14/16) * 1rem)"
-            }
-            button.innerText = `${step.label}... 5s`
-            ++stepCounter
         }
-    })
-    button = <Button action={action} style={{width: "250px", height: "50px"}}>Start</Button> as Button
+        const timeHandler = () => {
+            if (stepCounter >= script.length) {
+                reset()
+            } else {
+                if (running) {
+                    const step = script[stepCounter]
+                    if (step.color !== undefined) {
+                        btn.style.backgroundColor = step.color
+                    }
+                    if (stepCounter < script.length - 1) {
+                        btn.innerText = `${step.label}... ${timeCounter.toFixed(1)}s`
+                    } else {
+                        btn.innerText = `${step.label}.`
+                    }
+                    timeCounter = timeCounter - 0.1
+                    if (timeCounter < 0) {
+                        ++stepCounter
+                        timeCounter = interval
+                    }
+                    setTimeout(timeHandler, 100)
+                }
+            }
+        }
+        if (!running) {
+            running = true
+            btn.style.color = "#000"
+            btn.style.fontSize = "calc((14/16) * 1rem)"
+            timeHandler()
+        } else {
+            reset()
+        }
+    }
+    button = (
+        <Button action={action} style={{ width: "250px", height: "50px" }}>
+            Start
+        </Button>
+    ) as Button
     btn = button.shadowRoot!.children[0] as HTMLButtonElement
+    btn.onpointerup = buttonHandler
+    btn.onclick = null
     btn.style.width = "inherit"
     btn.style.height = "inherit"
     return button
@@ -367,7 +414,9 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormSelect model={notochord.configs} />
 
                 <FormLabel>Calibrate</FormLabel>
-                <FormField><CallibrationButton/></FormField>
+                <FormField>
+                    <CallibrationButton />
+                </FormField>
 
                 <FormLabel>Makehuman.js</FormLabel>
                 <FormField>
