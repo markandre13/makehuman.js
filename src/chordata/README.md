@@ -147,6 +147,8 @@ This is also were the websocket port is...
                     GET /notochord/end
                 state.py
                     GET /state
+                      clear_registry
+                      peek_output
                         <ControlServerState>
                             <NotochordProcess>STOPPED</NotochordProcess>
                             <ExternalProcess active="False">
@@ -161,6 +163,11 @@ This is also were the websocket port is...
                             <Log/>
                         </ControlServerState>
                     POST /state
+                        <ControlServerState>
+                          <NotochordConfigurations>
+                            default_biped
+                          </NotochordConfigurations>
+                        </ControlServerState>
                       
                 CALIB_IDLE  = 0,
                 CALIBRATING = 1,

@@ -1,7 +1,7 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
 import { calibrateNPose, setBones } from "chordata/renderChordata"
-import { Action, Display, NumberModel, TextModel } from "toad.js"
+import { Action, Display, NumberModel, OptionModel, OptionModelBase, Select, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
 import { hexdump } from "../lib/hexdump"
@@ -9,6 +9,7 @@ import { UpdateManager } from "UpdateManager"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
 import { ChordataSettings } from "./ChordataSettings"
+import { ModelOptions } from "toad.js/model/Model"
 
 // GOAL:
 // * call the notochord on our own
@@ -18,9 +19,6 @@ import { ChordataSettings } from "./ChordataSettings"
 // * have a look at what the COOP data now looks like. is n-pose all identity vectors? and do i just have to adjust
 //   for the difference in the makehuman skeleton?
 // * can i get the coop data via websocket?
-
-//
-// Access-Control-Allow-Origin: *
 
 const enum CalibrationStep {
     CALIB_IDLE = 0, // we send this at the end of each step
@@ -33,11 +31,39 @@ const enum CalibrationStep {
     R_LEG = 6,
 }
 
+class RemoteOptionModel<V> extends OptionModel<V> {
+    protected _callback?: (value: V) => void
+    constructor(value: V, mapping: readonly (readonly [V, string | number | HTMLElement] | string)[], options?: ModelOptions) {
+        super(value, mapping, options)
+        this.setMapping(mapping)
+    }
+    // sets a callback to be called when the view changes the model's value
+    callback(cb: (value: V) => void) {
+        this._callback = cb
+        return this
+    }
+    // instead of setting the value, invoke the callback
+    override set value(value: V) {
+        if (this._callback) this._callback(value)
+    }
+    // actually set the model's value
+    setLocalValue(value: V) {
+        super.value = value
+    }
+    override get value(): V {
+        return super.value
+    }
+}
+
 class Notochord {
     state = new TextModel("UNAVAILABLE", {
         label: "State",
         description: "Either STOPPED RUNNING, IDLE or UNAVAILABLE",
     }) // RUNNING, STOPPED, UNAVAILABLE
+
+    configs = new RemoteOptionModel("", [], {
+        label: "Configuration",
+    }).callback((config) => this.setConfig(config))
 
     // hostname of the Chordata Notochord
     hostname = new TextModel("notochord", { label: "Notochord Hostname" })
@@ -101,13 +127,26 @@ class Notochord {
 
     protected async doPullState() {
         try {
-            const r = await this.poll()
+            const response = await this.poll()
             const parser = new window.DOMParser()
-            const data = parser.parseFromString(await r.text(), "text/xml")
+            const data = parser.parseFromString(await response.text(), "text/xml")
             const processState = data.querySelector("NotochordProcess")
             if (processState) {
                 this.state.value = processState?.innerHTML
             }
+            const configs = data.querySelectorAll("NotochordConfiguration")
+            let activeConfig = ""
+            const configLabels: string[] = []
+            configs.forEach((it) => {
+                const label = it.getAttribute("label")!
+                const active = it.getAttribute("active") === "true"
+                if (active) {
+                    activeConfig = label
+                }
+                configLabels.push(label)
+            })
+            this.configs.setMapping(configLabels)
+            this.configs.setLocalValue(activeConfig)
         } catch (error) {
             this.state.value = "UNAVAILABLE"
         }
@@ -115,17 +154,20 @@ class Notochord {
             setTimeout(this.doPullState, 1000)
         }
     }
-
     doStart() {
-        console.log("DO START")
         const r = this.call(
             `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         )
-        console.log(r)
     }
     doStop() {
-        console.log("DO STOP")
         this.call(`http://${this.hostname.value}/notochord/end`)
+    }
+    setConfig(config: string) {
+        this.call(
+            `http://${this.hostname.value}/state`,
+            `post`,
+            `<ControlServerState><NotochordConfigurations>${config}</NotochordConfigurations></ControlServerState>`
+        )
     }
     callibrate(step: CalibrationStep) {
         this.call(`http://${this.hostname.value}/pose/calibrate?step=${step}`)
@@ -134,9 +176,9 @@ class Notochord {
         // when failing, set state to UNAVAILABLE
         return fetch(`http://${this.hostname.value}/state?clear_registry=false`)
     }
-    async call(url: string) {
+    async call(url: string, method: string = "get", body?: string) {
         try {
-            return await fetch(url)
+            return await fetch(url, { method, body })
         } catch (e) {
             console.log(e)
             // if (e instanceof Error) {
@@ -221,6 +263,18 @@ function runChordata(mgr: UpdateManager) {
 
 let notochord = new Notochord()
 
+export function FormSelect<V>(props: { model: OptionModelBase<V> }) {
+    return (
+        <>
+            <FormLabel model={props.model} />
+            <FormField>
+                <Select model={props.model} />
+            </FormField>
+            <FormHelp model={props.model} />
+        </>
+    )
+}
+
 export default function (updateManager: UpdateManager, settings: ChordataSettings) {
     mgr = updateManager
     settings.modified.add(() => updateManager.invalidateView())
@@ -250,6 +304,8 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     </Button>
                 </FormField>
                 <FormHelp model={notochord.state} />
+
+                <FormSelect model={notochord.configs} />
 
                 <FormLabel>Calibrate</FormLabel>
                 <FormField>T.B.D.</FormField>
