@@ -20,6 +20,9 @@ import { RemoteOptionModel } from "./RemoteOptionModel"
 //   for the difference in the makehuman skeleton?
 // * can i get the coop data via websocket?
 
+let socket: WebSocket | undefined
+let mgr: UpdateManager
+
 class Notochord {
     processState = new TextModel("UNAVAILABLE", {
         label: "State",
@@ -41,23 +44,6 @@ class Notochord {
 
     start = new Action(() => this.doStart())
     stop = new Action(() => this.doStop(), { enabled: false })
-
-    startProxy = new Action(() => {
-        console.log("START")
-        start.enabled = false
-        stop.enabled = true
-        socket = runChordata(mgr)
-    })
-    stopProxy = new Action(
-        () => {
-            console.log("STOP")
-            start.enabled = true
-            stop.enabled = false
-            socket!.close()
-            socket = undefined
-        },
-        { enabled: false }
-    )
 
     protected pullState = false
 
@@ -123,12 +109,21 @@ class Notochord {
         }
     }
     doStart() {
+        // const r = this.call(
+        //     `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        // )
         const r = this.call(
-            `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+            `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         )
+        socket = runChordata(mgr)
     }
     doStop() {
-        this.call(`http://${this.hostname.value}/notochord/end`)
+        if (socket !== undefined) {
+            socket!.close()
+            socket = undefined
+        }
+        // this.call(`http://${this.hostname.value}/notochord/end`)
+        this.call(`http://${this.hostname.value}/pose/disconnect`)
     }
     setConfig(config: string) {
         this.call(
@@ -192,24 +187,6 @@ class Notochord {
     }
 }
 
-let socket: WebSocket | undefined
-let mgr: UpdateManager
-
-const start = new Action(() => {
-    console.log("START")
-    start.enabled = false
-    stop.enabled = true
-    socket = runChordata(mgr)
-})
-const stop = new Action(() => {
-    console.log("STOP")
-    start.enabled = true
-    stop.enabled = false
-    socket!.close()
-    socket = undefined
-})
-stop.enabled = false
-
 function runChordata(mgr: UpdateManager) {
     const enc = new TextEncoder()
     const host = "localhost"
@@ -218,8 +195,8 @@ function runChordata(mgr: UpdateManager) {
     // const client = new WebSocket("ws://notochord.fritz.box:7681/")
     client.binaryType = "arraybuffer"
     client.onerror = (e) => {
-        start.enabled = true
-        stop.enabled = false
+        notochord.start.enabled = true
+        notochord.stop.enabled = false
         client!.close()
         socket = undefined
     }
@@ -242,8 +219,8 @@ function runChordata(mgr: UpdateManager) {
                 mgr.invalidateView()
                 client!.send(enc.encode("GET CHORDATA"))
             } catch (error) {
-                start.enabled = true
-                stop.enabled = false
+                notochord.start.enabled = true
+                notochord.stop.enabled = false
                 client!.close()
                 socket = undefined
                 console.log(`failed to decode chordata`)
