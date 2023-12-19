@@ -383,7 +383,7 @@ function CallibrationButton() {
             btn.style.color = ""
             btn.style.fontSize = ""
         }
-        const timeHandler = () => {
+        const timeHandler = async () => {
             if (!running) {
                 return
             }
@@ -409,7 +409,11 @@ function CallibrationButton() {
             }
 
             if (call && step.step !== undefined) {
-                notochord.callibrate(step.step, step.run) // TODO: we have now reached a level of sophistication were unit testing becomes feasible
+                const ok = await notochord.callibrate(step.step, step.run) // TODO: we have now reached a level of sophistication were unit testing becomes feasible
+                if (!ok) {
+                    reset()
+                    return
+                }
             }
 
             timeCounter = timeCounter - 0.1
@@ -470,7 +474,12 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
 
                 <FormSelect model={notochord.configs} />
 
-                <FormLabel>Calibrate</FormLabel>
+                <FormLabel>Sensor Calibration</FormLabel>
+                <FormField>
+                    T.B.D.
+                </FormField>
+
+                <FormLabel>Pose Calibration</FormLabel>
                 <FormField>
                     <CallibrationButton />
                     <br />

@@ -192,6 +192,14 @@ function run() {
         modifer.getModel().modified.trigger(ModelReason.VALUE)
     })
 
+    // temporary hack for chordata: apply n-pose
+    skeleton.poseNodes.find("upperarm01.R")!.z.value = 40
+    skeleton.poseNodes.find("lowerarm01.R")!.x.value = -45
+    skeleton.poseNodes.find("upperleg01.R")!.z.value = -10
+    skeleton.poseNodes.find("upperarm01.L")!.z.value = -40
+    skeleton.poseNodes.find("lowerarm01.L")!.x.value = -45
+    skeleton.poseNodes.find("upperleg01.L")!.z.value = 10
+
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
     useBlenderProfile.enabled = false
