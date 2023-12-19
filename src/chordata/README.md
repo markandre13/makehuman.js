@@ -132,6 +132,7 @@ This is also were the websocket port is...
                       scan=false
                       raw=true
                       verbose=0
+                    GET /pose/disconnect
                     GET /pose/calibrate
                       step=see notochord-module/pyx/notochord/calibration.pxd
                       run=false

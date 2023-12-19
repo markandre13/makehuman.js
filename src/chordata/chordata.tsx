@@ -21,10 +21,13 @@ import { RemoteOptionModel } from "./RemoteOptionModel"
 // * can i get the coop data via websocket?
 
 class Notochord {
-    state = new TextModel("UNAVAILABLE", {
+    processState = new TextModel("UNAVAILABLE", {
         label: "State",
-        description: "Either STOPPED RUNNING, IDLE or UNAVAILABLE",
+        description: "Either STOPPED, RUNNING, IDLE or UNAVAILABLE",
     }) // RUNNING, STOPPED, UNAVAILABLE
+    calibrationState = new TextModel("", {
+        label: "Calibration State",
+    })
 
     configs = new RemoteOptionModel("", [], {
         label: "Configuration",
@@ -62,8 +65,8 @@ class Notochord {
         this.visibilityChange = this.visibilityChange.bind(this)
         this.doPullState = this.doPullState.bind(this)
 
-        this.state.modified.add(() => {
-            switch (this.state.value) {
+        this.processState.modified.add(() => {
+            switch (this.processState.value) {
                 case "UNAVAILABLE":
                 case "IDLE":
                     this.start.enabled = false
@@ -97,7 +100,7 @@ class Notochord {
             const data = parser.parseFromString(await response.text(), "text/xml")
             const processState = data.querySelector("NotochordProcess")
             if (processState) {
-                this.state.value = processState?.innerHTML
+                this.processState.value = processState?.innerHTML
             }
             const configs = data.querySelectorAll("NotochordConfiguration")
             let activeConfig = ""
@@ -113,7 +116,7 @@ class Notochord {
             this.configs.setMapping(configLabels)
             this.configs.setLocalValue(activeConfig)
         } catch (error) {
-            this.state.value = "UNAVAILABLE"
+            this.processState.value = "UNAVAILABLE"
         }
         if (this.pullState) {
             setTimeout(this.doPullState, 1000)
@@ -134,9 +137,40 @@ class Notochord {
             `<ControlServerState><NotochordConfigurations>${config}</NotochordConfigurations></ControlServerState>`
         )
     }
-    // callibrate(step: CalibrationStep) {
-    //     this.call(`http://${this.hostname.value}/pose/calibrate?step=${step}`)
-    // }
+    async callibrate(step: CalibrationStep, run?: boolean): Promise<boolean> {
+        let response: Response
+        if (run !== true) {
+            response = await fetch(`http://${this.hostname.value}/pose/calibrate?step=${step}`)
+        } else {
+            response = await fetch(`http://${this.hostname.value}/pose/calibrate?step=${step}&run=1`)
+        }
+
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        const reason = data.querySelector("Reason")
+        let msg = ""
+        if (state !== null) {
+            msg += state.innerHTML
+        }
+        if (reason !== null) {
+            msg += `: ${reason.innerHTML}`
+        }
+        notochord.calibrationState.value = msg
+
+        return response.ok
+
+        // 200
+        // <NotochordResponse>
+        //   <State>Calibration step RIGHT_LEG</State>
+        // </NotochordResponse>
+        //
+        // 500
+        // <NotochordResponse>
+        //   <State>Error on notochord calibration</State>
+        //   <Reason>No data to calibrate</Reason>
+        // </NotochordResponse>
+    }
     async poll() {
         // when failing, set state to UNAVAILABLE
         return fetch(`http://${this.hostname.value}/state?clear_registry=false`)
@@ -254,6 +288,8 @@ const enum CalibrationStep {
 interface Step {
     label: string
     color?: string
+    step?: CalibrationStep
+    run?: boolean
 }
 
 const script: Step[] = [
@@ -267,14 +303,17 @@ const script: Step[] = [
     },
     {
         label: "Stand still",
+        step: CalibrationStep.STATIC, // display, set, run timmer
     },
     {
         label: "Get ready to raise arms",
         color: "#f80",
+        step: CalibrationStep.CALIB_IDLE,
     },
     {
         label: "Raise arms",
         color: "#0f0",
+        step: CalibrationStep.ARMS,
     },
     {
         label: "Lower arms",
@@ -282,10 +321,12 @@ const script: Step[] = [
     {
         label: "Get ready to bow",
         color: "#f80",
+        step: CalibrationStep.CALIB_IDLE,
     },
     {
         label: "Bow down",
         color: "#0f0",
+        step: CalibrationStep.TRUNK,
     },
     {
         label: "Get straight",
@@ -293,10 +334,12 @@ const script: Step[] = [
     {
         label: "Get ready to raise left leg",
         color: "#f80",
+        step: CalibrationStep.CALIB_IDLE,
     },
     {
         label: "Raise left leg",
         color: "#0f0",
+        step: CalibrationStep.L_LEG,
     },
     {
         label: "Lower left leg",
@@ -304,10 +347,12 @@ const script: Step[] = [
     {
         label: "Get ready to raise right leg",
         color: "#f80",
+        step: CalibrationStep.CALIB_IDLE,
     },
     {
         label: "Raise right leg",
         color: "#0f0",
+        step: CalibrationStep.R_LEG,
     },
     {
         label: "Lower right leg",
@@ -315,6 +360,8 @@ const script: Step[] = [
     {
         label: "Done. Thank you",
         color: "#f80",
+        step: CalibrationStep.CALIB_IDLE,
+        run: true,
     },
 ]
 
@@ -325,39 +372,48 @@ function CallibrationButton() {
     const interval = 2
     const action = new Action(() => {})
     const buttonHandler = () => {
-        let stepCounter = 0
-        let timeCounter = interval
+        let stepCounter = -1
+        let timeCounter = -1
         const reset = () => {
             running = false
-            stepCounter = 0
-            timeCounter = interval
+            stepCounter = -1
+            timeCounter = -1
             btn.innerText = "Start"
             btn.style.backgroundColor = ""
             btn.style.color = ""
             btn.style.fontSize = ""
         }
         const timeHandler = () => {
+            if (!running) {
+                return
+            }
+            let call = false
+            if (timeCounter < 0) {
+                ++stepCounter
+                timeCounter = interval
+                call = true
+            }
             if (stepCounter >= script.length) {
                 reset()
-            } else {
-                if (running) {
-                    const step = script[stepCounter]
-                    if (step.color !== undefined) {
-                        btn.style.backgroundColor = step.color
-                    }
-                    if (stepCounter < script.length - 1) {
-                        btn.innerText = `${step.label}... ${timeCounter.toFixed(1)}s`
-                    } else {
-                        btn.innerText = `${step.label}.`
-                    }
-                    timeCounter = timeCounter - 0.1
-                    if (timeCounter < 0) {
-                        ++stepCounter
-                        timeCounter = interval
-                    }
-                    setTimeout(timeHandler, 100)
-                }
+                return
             }
+
+            const step = script[stepCounter]
+            if (step.color !== undefined) {
+                btn.style.backgroundColor = step.color
+            }
+            if (stepCounter < script.length - 1) {
+                btn.innerText = `${step.label}... ${timeCounter.toFixed(1)}s`
+            } else {
+                btn.innerText = `${step.label}.`
+            }
+
+            if (call && step.step !== undefined) {
+                notochord.callibrate(step.step, step.run) // TODO: we have now reached a level of sophistication were unit testing becomes feasible
+            }
+
+            timeCounter = timeCounter - 0.1
+            setTimeout(timeHandler, 100)
         }
         if (!running) {
             running = true
@@ -366,6 +422,7 @@ function CallibrationButton() {
             timeHandler()
         } else {
             reset()
+            notochord.callibrate(CalibrationStep.CALIB_IDLE)
         }
     }
     button = (
@@ -397,10 +454,10 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormText model={notochord.dstHostname} />
                 <FormText model={notochord.dstPort} />
 
-                <FormLabel model={notochord.state} />
+                <FormLabel model={notochord.processState} />
                 <FormField>
                     <div style={{ fontWeight: "bold" }}>
-                        <Display model={notochord.state} />
+                        <Display model={notochord.processState} />
                     </div>
                     <Button variant={ButtonVariant.ACCENT} action={notochord.start}>
                         Start
@@ -409,13 +466,15 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                         Stop
                     </Button>
                 </FormField>
-                <FormHelp model={notochord.state} />
+                <FormHelp model={notochord.processState} />
 
                 <FormSelect model={notochord.configs} />
 
                 <FormLabel>Calibrate</FormLabel>
                 <FormField>
                     <CallibrationButton />
+                    <br />
+                    <Display model={notochord.calibrationState} />
                 </FormField>
 
                 <FormLabel>Makehuman.js</FormLabel>
