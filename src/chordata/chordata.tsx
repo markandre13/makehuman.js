@@ -109,12 +109,13 @@ class Notochord {
         }
     }
     doStart() {
-        // const r = this.call(
-        //     `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
-        // )
         const r = this.call(
-            `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+            `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         )
+        // r.then( (x) => {x!.text().then( y => console.log(y)) })
+        // const r = this.call(
+        //     `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0&raw=0`
+        // )
         socket = runChordata(mgr)
     }
     doStop() {
@@ -122,8 +123,8 @@ class Notochord {
             socket!.close()
             socket = undefined
         }
-        // this.call(`http://${this.hostname.value}/notochord/end`)
-        this.call(`http://${this.hostname.value}/pose/disconnect`)
+        this.call(`http://${this.hostname.value}/notochord/end`)
+        // this.call(`http://${this.hostname.value}/pose/disconnect`)
     }
     setConfig(config: string) {
         this.call(
@@ -215,7 +216,7 @@ function runChordata(mgr: UpdateManager) {
             // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
             const decoder = new COOPDecoder(arrayBuffer)
             try {
-                setBones(decoder.decode())
+                setBones(decoder.decodeQ())
                 mgr.invalidateView()
                 client!.send(enc.encode("GET CHORDATA"))
             } catch (error) {
