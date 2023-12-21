@@ -1,4 +1,4 @@
-import { mat4, quat } from "gl-matrix"
+import { mat4, quat, vec3 } from "gl-matrix"
 import { RenderMesh } from "../render/RenderMesh"
 import {
     createModelViewMatrix,
@@ -69,7 +69,7 @@ export function calibrateNPose(joint?: Joint) {
     const matPose = bones.get(`${joint.branch}/${joint.id}`)!
     joint.matNPoseInv = mat4.invert(mat4.create(), matPose)
     if (joint.children !== undefined) {
-        for(const child of joint.children) {
+        for (const child of joint.children) {
             calibrateNPose(child)
         }
     }
@@ -128,89 +128,123 @@ export function renderChordata(
 
     // bones.set("6/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
     // bones.set("6/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
-
+    //
     // chordataSkeleton.build(scene.skeleton)
     // chordataSkeleton.update()
-
+    //
     // const mesh = new SkeletonMesh(scene.skeleton, chordataSkeleton)
     // const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
+    //
+    // const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+    // const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+    // const normalMatrix = createNormalMatrix(modelViewMatrix)
+    //
+    // programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    // programRGBA.setColor([1, 1, 1, 1])
+    // s.draw(programRGBA, gl.TRIANGLES)
 
     const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
     const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-    // programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    // programRGBA.setColor([1, 1, 1, 1])
-    // s.draw(programRGBA, gl.TRIANGLES)
-    
-    const vertex = new Float32Array([ 
-        -10, -10, -10, 
-        10, -10, -10,
-        0, 10, -10
-    ])
-    const fvertex = new Float32Array([
-        0, 0, 1,
-        0, 0, 1,
-        0, 0, 1,
-    ])
-    const color = new Float32Array([
-        1,0,0,
-        0,1,0,
-        0,0,1,
-    ])
-    const index = new Int16Array([
-        0, 1, 2
-    ])
+    const vertex: number[] = []
+    const fvertex: number[] = []
+    const color: number[] = []
+    const index: number[] = []
 
-    // this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
-    // protected createBuffer(
-    //     target: GLenum,
-    //     usage: GLenum,
-    //     type: Float32ArrayConstructor | Uint16ArrayConstructor,
-    //     data: number[] | Float32Array
-    // ): WebGLBuffer {
-    // const buffer = this.gl.createBuffer()
-    // this.updateBuffer(buffer, target, usage, type, data)
+    //
+    //    1
+    //  0   2
+    //    3
+    //
 
-    // updateBuffer(
-    //     buffer: WebGLBuffer,
-    //     target: GLenum,
-    //     usage: GLenum,
-    //     type: Float32ArrayConstructor | Uint16ArrayConstructor,
-    //     data: number[] | Float32Array
+    function normal(p0: vec3, p1: vec3, p2: vec3) {
+        const u = vec3.create(),
+            v = vec3.create(),
+            n = vec3.create()
+        vec3.subtract(u, p1, p0)
+        vec3.subtract(v, p2, p0)
+        vec3.cross(n, u, v)
+        return n
+    }
 
-    // this.gl.bindBuffer(target, buffer)
-    // if (data instanceof Float32Array) {
-    //     this.gl.bufferData(target, data, usage)
-    //     return
-    // }
-    // if (data instanceof Int16Array) {
-    //     this.gl.bufferData(target, data, usage)
-    //     return
-    // }
-    // this.gl.bufferData(target, new type(data), usage)
+    const n = 16
+    const outerRadius = 1
+    const innerRadius = 0.2
+    const D = 2 * Math.PI
+    const step = D / n
+    const a0 = 5 // top
+    const a1 = 2 // cone bottom
+    const a2 = 0 // arrow bottom
+    const vps = 6 // vertices per side
+    const rgb = [1, 0, 0]
+    const coneBottomCenter = vec3.fromValues(0, 0, a1)
+    const coneBottomNormal = [0, 0, -1]
+
+    const foo = Math.sqrt(Math.pow(outerRadius, 2) + Math.pow(a0 - a1, 2))
+
+    const idx = index.length
+    for (let i = 0; i < n; ++i) {
+        const x0 = Math.cos(i * step)
+        const y0 = Math.sin(i * step)
+        const x1 = Math.cos((i + 0.5) * step)
+        const y1 = Math.sin((i + 0.5) * step)
+
+        const coneTop = vec3.fromValues(0, 0, a0)
+        const coneButtom = vec3.fromValues(x0 * outerRadius, y0 * outerRadius, a1)
+        const pipeTop = vec3.fromValues(x0 * innerRadius, y0 * innerRadius, a1)
+        const pipeBottom = vec3.fromValues(x0 * innerRadius, y0 * innerRadius, a2)
+        const pipeNorm = vec3.fromValues(x0, y0, 0)
+
+        vertex.push(...coneTop, ...coneButtom, ...pipeTop, ...pipeBottom, ...coneButtom, ...coneBottomCenter)
+
+        const n0 = vec3.fromValues(foo * x1, foo * y1, outerRadius)
+        const n1 = vec3.fromValues(foo * x0, foo * y0, outerRadius)
+        vec3.normalize(n0, n0)
+        vec3.normalize(n1, n1)
+        fvertex.push(...n0, ...n1, ...pipeNorm, ...pipeNorm, ...coneBottomNormal, ...coneBottomNormal)
+
+        color.push(...rgb, ...rgb, ...rgb, ...rgb, ...rgb, ...rgb)
+        index.push(
+            idx + vps * i,
+            idx + vps * i + 1,
+            (idx + vps * i + vps + 1) % (vps * n),
+
+            idx + vps * i + 2,
+            idx + vps * i + 3,
+            (idx + vps * i + vps + 3) % (vps * n),
+
+            idx + vps * i + 2,
+            (idx + vps * i + vps + 3) % (vps * n),
+            (idx + vps * i + vps + 2) % (vps * n),
+
+            idx + vps * i + 4,
+            idx + vps * i + 5,
+            (idx + vps * i + vps + 4) % (vps * n)
+        )
+    }
+
     const glVertex = gl.createBuffer()!
     gl.bindBuffer(gl.ARRAY_BUFFER, glVertex)
-    gl.bufferData(gl.ARRAY_BUFFER, vertex, gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
 
     const glNormal = gl.createBuffer()!
     gl.bindBuffer(gl.ARRAY_BUFFER, glNormal)
-    gl.bufferData(gl.ARRAY_BUFFER, fvertex, gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(fvertex), gl.STATIC_DRAW)
 
     const glColor = gl.createBuffer()!
     gl.bindBuffer(gl.ARRAY_BUFFER, glColor)
-    gl.bufferData(gl.ARRAY_BUFFER, color, gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
 
     const glIndices = gl.createBuffer()!
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIndices)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index, gl.STATIC_DRAW)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(index), gl.STATIC_DRAW)
 
     const s = new ColorShader(gl)
     s.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    // s.setColor([1, 1, 1, 1])
 
     s.bind(glIndices, glVertex, glNormal, glColor)
-    gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 0)
+    gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0)
 
     // const v = gl.createBuffer()
     // gl.bufferData(v, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW)
