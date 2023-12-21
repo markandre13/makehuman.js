@@ -40,7 +40,7 @@ class Notochord {
     hostname = new TextModel("notochord", { label: "Notochord Hostname" })
     // where to send COOP UDP traffic to
     dstHostname = new TextModel("192.168.178.24", { label: "COOP Destination Hostname" })
-    dstPort = new NumberModel(6565, { min: 0, max: 0xffff, label: "COOP Destination UDP Port" })
+    dstPort = new NumberModel(6565, { min: 1, max: 0xffff, label: "COOP Destination UDP Port" })
 
     start = new Action(() => this.doStart())
     stop = new Action(() => this.doStop(), { enabled: false })
@@ -50,24 +50,6 @@ class Notochord {
     constructor() {
         this.visibilityChange = this.visibilityChange.bind(this)
         this.doPullState = this.doPullState.bind(this)
-
-        this.processState.modified.add(() => {
-            switch (this.processState.value) {
-                case "UNAVAILABLE":
-                case "IDLE":
-                    this.start.enabled = false
-                    this.stop.enabled = false
-                    break
-                case "STOPPED":
-                    this.start.enabled = true
-                    this.stop.enabled = false
-                    break
-                case "RUNNING":
-                    this.start.enabled = false
-                    this.stop.enabled = true
-                    break
-            }
-        })
     }
 
     visibilityChange(state: "visible" | "hidden") {
@@ -86,7 +68,33 @@ class Notochord {
             const data = parser.parseFromString(await response.text(), "text/xml")
             const processState = data.querySelector("NotochordProcess")
             if (processState) {
-                this.processState.value = processState?.innerHTML
+                this.processState.value = processState.innerHTML
+
+                switch (processState.innerHTML) {
+                    case "UNAVAILABLE":
+                    case "IDLE":
+                        this.start.enabled = false
+                        this.stop.enabled = false
+                        break
+                    case "STOPPED":
+                        this.start.enabled = true
+                        this.stop.enabled = false
+                        break
+                    case "RUNNING":
+                        this.start.enabled = false
+                        this.stop.enabled = true
+                        break
+                    default:
+                        console.log(`UNKNOWN STATE ${processState.innerHTML}`)
+                }
+
+                if (processState.innerHTML === "RUNNING" && socket === undefined) {
+                    socket = runChordata(mgr)
+                }
+                if (processState.innerHTML !== "RUNNING" && socket !== undefined) {
+                    socket.close()
+                    socket = undefined
+                }
             }
             const configs = data.querySelectorAll("NotochordConfiguration")
             let activeConfig = ""
@@ -109,16 +117,16 @@ class Notochord {
         }
     }
     doStart() {
-        const r = this.call(
-            `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
-        )
-        // r.then( (x) => {x!.text().then( y => console.log(y)) })
-        // const r = this.call(
-        //     `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0&raw=0`
-        // )
-        socket = runChordata(mgr)
+        const url = `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        // const url = `http://${this.hostname.value}/pose/connect?raw=0&scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        console.log(`DO START ${url}`)
+        const r = fetch(url)
+        r.then( (x) => {x!.text().then( y => console.log(y)) })
+
+        // socket = runChordata(mgr)
     }
     doStop() {
+        console.log("DO STOP")
         if (socket !== undefined) {
             socket!.close()
             socket = undefined
@@ -224,8 +232,8 @@ function runChordata(mgr: UpdateManager) {
                 notochord.stop.enabled = false
                 client!.close()
                 socket = undefined
-                console.log(`failed to decode chordata`)
-                hexdump(decoder.bytes)
+                console.log(`failed to decode chordata: ${error}`)
+                // hexdump(decoder.bytes)
                 // client!.send(enc.encode("GET CHORDATA"))
             }
         }
@@ -343,7 +351,8 @@ const script: Step[] = [
     },
 ]
 
-function CallibrationButton() {
+// FIXME: WE MIGHT NEED TO CALL CONNECT/DISCONNECT BEFORE/AFTER THE CALIBRATION
+function CalibrationButton() {
     let button: Button
     let btn: HTMLButtonElement
     let running = false
@@ -459,7 +468,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
 
                 <FormLabel>Pose Calibration</FormLabel>
                 <FormField>
-                    <CallibrationButton />
+                    <CalibrationButton />
                     <br />
                     <Display model={notochord.calibrationState} />
                 </FormField>
@@ -476,14 +485,14 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     </Button>
                 </FormField>
 
-                {/* <FormText model={settings.X0} />
+                <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
                 <FormText model={settings.Z0} />
 
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
-                <FormText model={settings.Z1} /> */}
-                {/* <FormText model={settings.R} /> */}
+                <FormText model={settings.Z1} />
+
             </Form>
 
             <div style={{ padding: "15px" }}>
@@ -507,3 +516,6 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
         </Tab>
     )
 }
+
+// /opt/chordata/notochord-control-server/notochord_control_server/endpoints/pose.py
+// n.raw = True to n.raw = raw

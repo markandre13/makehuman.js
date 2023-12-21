@@ -14,6 +14,8 @@ import { Context } from "render/Context"
 import { Projection } from "render/render"
 import { Joint } from "./Joint"
 import { SkeletonMesh } from "./SkeletonMesh"
+import { euler_matrix } from "lib/euler_matrix"
+import { ColorShader } from "render/shader/ColorShader"
 
 export const bones = new Map<string, mat4>()
 
@@ -124,20 +126,92 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    // bones.set("5/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
-    // bones.set("5/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
+    // bones.set("6/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
+    // bones.set("6/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
 
-    chordataSkeleton.build(scene.skeleton)
-    chordataSkeleton.update()
+    // chordataSkeleton.build(scene.skeleton)
+    // chordataSkeleton.update()
 
-    const mesh = new SkeletonMesh(scene.skeleton, chordataSkeleton)
-    const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
+    // const mesh = new SkeletonMesh(scene.skeleton, chordataSkeleton)
+    // const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
 
     const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
     const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-    programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-    programRGBA.setColor([1, 1, 1, 1])
-    s.draw(programRGBA, gl.TRIANGLES)
+    // programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    // programRGBA.setColor([1, 1, 1, 1])
+    // s.draw(programRGBA, gl.TRIANGLES)
+    
+    const vertex = new Float32Array([ 
+        -10, -10, -10, 
+        10, -10, -10,
+        0, 10, -10
+    ])
+    const fvertex = new Float32Array([
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+    ])
+    const color = new Float32Array([
+        1,0,0,
+        0,1,0,
+        0,0,1,
+    ])
+    const index = new Int16Array([
+        0, 1, 2
+    ])
+
+    // this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
+    // protected createBuffer(
+    //     target: GLenum,
+    //     usage: GLenum,
+    //     type: Float32ArrayConstructor | Uint16ArrayConstructor,
+    //     data: number[] | Float32Array
+    // ): WebGLBuffer {
+    // const buffer = this.gl.createBuffer()
+    // this.updateBuffer(buffer, target, usage, type, data)
+
+    // updateBuffer(
+    //     buffer: WebGLBuffer,
+    //     target: GLenum,
+    //     usage: GLenum,
+    //     type: Float32ArrayConstructor | Uint16ArrayConstructor,
+    //     data: number[] | Float32Array
+
+    // this.gl.bindBuffer(target, buffer)
+    // if (data instanceof Float32Array) {
+    //     this.gl.bufferData(target, data, usage)
+    //     return
+    // }
+    // if (data instanceof Int16Array) {
+    //     this.gl.bufferData(target, data, usage)
+    //     return
+    // }
+    // this.gl.bufferData(target, new type(data), usage)
+    const glVertex = gl.createBuffer()!
+    gl.bindBuffer(gl.ARRAY_BUFFER, glVertex)
+    gl.bufferData(gl.ARRAY_BUFFER, vertex, gl.STATIC_DRAW)
+
+    const glNormal = gl.createBuffer()!
+    gl.bindBuffer(gl.ARRAY_BUFFER, glNormal)
+    gl.bufferData(gl.ARRAY_BUFFER, fvertex, gl.STATIC_DRAW)
+
+    const glColor = gl.createBuffer()!
+    gl.bindBuffer(gl.ARRAY_BUFFER, glColor)
+    gl.bufferData(gl.ARRAY_BUFFER, color, gl.STATIC_DRAW)
+
+    const glIndices = gl.createBuffer()!
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIndices)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index, gl.STATIC_DRAW)
+
+    const s = new ColorShader(gl)
+    s.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    // s.setColor([1, 1, 1, 1])
+
+    s.bind(glIndices, glVertex, glNormal, glColor)
+    gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 0)
+
+    // const v = gl.createBuffer()
+    // gl.bufferData(v, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW)
 }

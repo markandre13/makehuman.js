@@ -19,13 +19,16 @@ export class Joint {
 
     matNPoseInv!: mat4
 
+    matPose!: mat4
+    matPoseInv!: mat4
+
     constructor(branch: number, id: number, name: string, children?: Joint[]) {
         this.branch = branch
         this.id = id
         this.name = name
         this.children = children
         if (children !== undefined) {
-            children.forEach((it) => (it.parent = this))
+            children.forEach(it => it.parent = this)
         }
     }
 
@@ -85,17 +88,23 @@ export class Joint {
             matPose = mat4.multiply(mat4.create(), matPose, this.matNPoseInv)
         }
         if (this.parent !== undefined) {
+            // this.matPose = mat4.multiply(mat4.create(), this.parent.matPose, matPose)
+            // mat4.multiply(matPose, matPose, this.parent.matPoseInv)
             this.matPoseGlobal = mat4.multiply(
                 mat4.create(),
                 this.parent.matPoseGlobal!,
                 mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
             )
+            // mat4.multiply(this.matPoseGlobal, this.matPoseGlobal, this.parent.matPoseInv)
         } else {
+            // this.matPose = mat4.copy(mat4.create(), matPose)
             this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
         }
+        this.matPose = mat4.copy(mat4.create(), matPose)
+        this.matPoseInv = mat4.invert(mat4.create(), this.matPose) // THIS IS NOT ENOUGH, WE MUST ALSO TRANSLATE BETWEEN TWO LOCAL COORDINATE SYSTEMS
         if (this.children !== undefined) {
-            for (const j1 of this.children) {
-                j1.update()
+            for (const child of this.children) {
+                child.update()
             }
         }
     }
