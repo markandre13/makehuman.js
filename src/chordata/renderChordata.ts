@@ -152,77 +152,94 @@ export function renderChordata(
     const color: number[] = []
     const index: number[] = []
 
-    //
-    //    1
-    //  0   2
-    //    3
-    //
+    const addArrow = (m: mat4, rgb: number[]) => {
+        const n = 16
+        const coneRadius = 0.2
+        const pipeRadius = 0.05
+        const D = 2 * Math.PI
+        const step = D / n
+        const a0 = 1 // top
+        const a1 = 0.5 // cone bottom
+        const a2 = 0 // arrow bottom
+        const vps = 6 // vertices per side
+        const coneBottomCenter = vec3.fromValues(0, 0, a1)
+        const coneBottomNormal = vec3.fromValues(0, 0, -1)
+        const coneSideLength = Math.sqrt(Math.pow(coneRadius, 2) + Math.pow(a0 - a1, 2))
 
-    function normal(p0: vec3, p1: vec3, p2: vec3) {
-        const u = vec3.create(),
-            v = vec3.create(),
-            n = vec3.create()
-        vec3.subtract(u, p1, p0)
-        vec3.subtract(v, p2, p0)
-        vec3.cross(n, u, v)
-        return n
+        vec3.transformMat4(coneBottomCenter, coneBottomCenter, m)
+        vec3.transformMat4(coneBottomNormal, coneBottomNormal, m)
+
+        const idx = vertex.length / 3
+        for (let i = 0; i < n; ++i) {
+            const x0 = Math.cos(i * step)
+            const y0 = Math.sin(i * step)
+            const x1 = Math.cos((i + 0.5) * step)
+            const y1 = Math.sin((i + 0.5) * step)
+
+            const coneTop = vec3.fromValues(0, 0, a0)
+            const coneButtom = vec3.fromValues(x0 * coneRadius, y0 * coneRadius, a1)
+            const pipeTop = vec3.fromValues(x0 * pipeRadius, y0 * pipeRadius, a1)
+            const pipeBottom = vec3.fromValues(x0 * pipeRadius, y0 * pipeRadius, a2)
+            const pipeNorm = vec3.fromValues(x0, y0, 0)
+
+            const coneSideBottomNormal = vec3.fromValues(coneSideLength * x0, coneSideLength * y0, coneRadius)
+            const coneSideTopNormal = vec3.fromValues(coneSideLength * x1, coneSideLength * y1, coneRadius)
+            vec3.normalize(coneSideBottomNormal, coneSideBottomNormal)
+            vec3.normalize(coneSideTopNormal, coneSideTopNormal)
+
+            vec3.transformMat4(coneTop, coneTop, m)
+            vec3.transformMat4(coneButtom, coneButtom, m)
+            vec3.transformMat4(pipeTop, pipeTop, m)
+            vec3.transformMat4(pipeBottom, pipeBottom, m)
+
+
+            vec3.transformMat4(coneSideTopNormal, coneSideTopNormal, m)
+            vec3.transformMat4(coneSideBottomNormal, coneSideBottomNormal, m)
+            vec3.transformMat4(pipeNorm, pipeNorm, m)
+
+
+            vertex.push(...coneTop, ...coneButtom, ...pipeTop, ...pipeBottom, ...coneButtom, ...coneBottomCenter)
+            fvertex.push(
+                ...coneSideTopNormal,
+                ...coneSideBottomNormal,
+                ...pipeNorm,
+                ...pipeNorm,
+                ...coneBottomNormal,
+                ...coneBottomNormal
+            )
+            color.push(...rgb, ...rgb, ...rgb, ...rgb, ...rgb, ...rgb)
+
+            index.push(
+                // cone side
+                idx + vps * i,
+                idx + vps * i + 1,
+                idx + (vps * i + vps + 1) % (vps * n),
+
+                // cylinder 1
+                idx + vps * i + 2,
+                idx + vps * i + 3,
+                idx + (vps * i + vps + 3) % (vps * n),
+
+                // cylinder 2
+                idx + vps * i + 2,
+                idx + (vps * i + vps + 3) % (vps * n),
+                idx + (vps * i + vps + 2) % (vps * n),
+
+                // cone bottom
+                idx + vps * i + 4,
+                idx + vps * i + 5,
+                idx + (vps * i + vps + 4) % (vps * n)
+            )
+        }
     }
+    const m = mat4.create()
+    addArrow(m, [1,0,0])
+    mat4.rotateX(m, m, 2 * Math.PI / 4)
+    addArrow(m, [0,1,0])
+    mat4.rotateY(m, m, 2 * Math.PI / 4)
+    addArrow(m, [0,0,1])
 
-    const n = 16
-    const outerRadius = 1
-    const innerRadius = 0.2
-    const D = 2 * Math.PI
-    const step = D / n
-    const a0 = 5 // top
-    const a1 = 2 // cone bottom
-    const a2 = 0 // arrow bottom
-    const vps = 6 // vertices per side
-    const rgb = [1, 0, 0]
-    const coneBottomCenter = vec3.fromValues(0, 0, a1)
-    const coneBottomNormal = [0, 0, -1]
-
-    const foo = Math.sqrt(Math.pow(outerRadius, 2) + Math.pow(a0 - a1, 2))
-
-    const idx = index.length
-    for (let i = 0; i < n; ++i) {
-        const x0 = Math.cos(i * step)
-        const y0 = Math.sin(i * step)
-        const x1 = Math.cos((i + 0.5) * step)
-        const y1 = Math.sin((i + 0.5) * step)
-
-        const coneTop = vec3.fromValues(0, 0, a0)
-        const coneButtom = vec3.fromValues(x0 * outerRadius, y0 * outerRadius, a1)
-        const pipeTop = vec3.fromValues(x0 * innerRadius, y0 * innerRadius, a1)
-        const pipeBottom = vec3.fromValues(x0 * innerRadius, y0 * innerRadius, a2)
-        const pipeNorm = vec3.fromValues(x0, y0, 0)
-
-        vertex.push(...coneTop, ...coneButtom, ...pipeTop, ...pipeBottom, ...coneButtom, ...coneBottomCenter)
-
-        const n0 = vec3.fromValues(foo * x1, foo * y1, outerRadius)
-        const n1 = vec3.fromValues(foo * x0, foo * y0, outerRadius)
-        vec3.normalize(n0, n0)
-        vec3.normalize(n1, n1)
-        fvertex.push(...n0, ...n1, ...pipeNorm, ...pipeNorm, ...coneBottomNormal, ...coneBottomNormal)
-
-        color.push(...rgb, ...rgb, ...rgb, ...rgb, ...rgb, ...rgb)
-        index.push(
-            idx + vps * i,
-            idx + vps * i + 1,
-            (idx + vps * i + vps + 1) % (vps * n),
-
-            idx + vps * i + 2,
-            idx + vps * i + 3,
-            (idx + vps * i + vps + 3) % (vps * n),
-
-            idx + vps * i + 2,
-            (idx + vps * i + vps + 3) % (vps * n),
-            (idx + vps * i + vps + 2) % (vps * n),
-
-            idx + vps * i + 4,
-            idx + vps * i + 5,
-            (idx + vps * i + vps + 4) % (vps * n)
-        )
-    }
+    // console.log(index)
 
     const glVertex = gl.createBuffer()!
     gl.bindBuffer(gl.ARRAY_BUFFER, glVertex)
