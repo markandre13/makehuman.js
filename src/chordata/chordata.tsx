@@ -119,19 +119,21 @@ class Notochord {
     doStart() {
         const url = `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         // const url = `http://${this.hostname.value}/pose/connect?raw=0&scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
-        console.log(`DO START ${url}`)
+        // console.log(`DO START ${url}`)
         const r = fetch(url)
-        r.then( (x) => {x!.text().then( y => console.log(y)) })
+        // TODO: handle error
+        // r.then( (x) => {x!.text().then( y => console.log(y)) })
 
         // socket = runChordata(mgr)
     }
     doStop() {
-        console.log("DO STOP")
+        // console.log("DO STOP")
         if (socket !== undefined) {
             socket!.close()
             socket = undefined
         }
         this.call(`http://${this.hostname.value}/notochord/end`)
+        // TODO: handle error
         // this.call(`http://${this.hostname.value}/pose/disconnect`)
     }
     setConfig(config: string) {

@@ -152,7 +152,7 @@ export function renderChordata(
     const color: number[] = []
     const index: number[] = []
 
-    const addArrow = (m: mat4, rgb: number[]) => {
+    const drawArrow = (m: mat4, rgb: number[]) => {
         const n = 16
         const coneRadius = 0.2
         const pipeRadius = 0.05
@@ -192,11 +192,9 @@ export function renderChordata(
             vec3.transformMat4(pipeTop, pipeTop, m)
             vec3.transformMat4(pipeBottom, pipeBottom, m)
 
-
             vec3.transformMat4(coneSideTopNormal, coneSideTopNormal, m)
             vec3.transformMat4(coneSideBottomNormal, coneSideBottomNormal, m)
             vec3.transformMat4(pipeNorm, pipeNorm, m)
-
 
             vertex.push(...coneTop, ...coneButtom, ...pipeTop, ...pipeBottom, ...coneButtom, ...coneBottomCenter)
             fvertex.push(
@@ -213,31 +211,54 @@ export function renderChordata(
                 // cone side
                 idx + vps * i,
                 idx + vps * i + 1,
-                idx + (vps * i + vps + 1) % (vps * n),
+                idx + ((vps * i + vps + 1) % (vps * n)),
 
                 // cylinder 1
                 idx + vps * i + 2,
                 idx + vps * i + 3,
-                idx + (vps * i + vps + 3) % (vps * n),
+                idx + ((vps * i + vps + 3) % (vps * n)),
 
                 // cylinder 2
                 idx + vps * i + 2,
-                idx + (vps * i + vps + 3) % (vps * n),
-                idx + (vps * i + vps + 2) % (vps * n),
+                idx + ((vps * i + vps + 3) % (vps * n)),
+                idx + ((vps * i + vps + 2) % (vps * n)),
 
                 // cone bottom
                 idx + vps * i + 4,
                 idx + vps * i + 5,
-                idx + (vps * i + vps + 4) % (vps * n)
+                idx + ((vps * i + vps + 4) % (vps * n))
             )
         }
     }
-    const m = mat4.create()
-    addArrow(m, [1,0,0])
-    mat4.rotateX(m, m, 2 * Math.PI / 4)
-    addArrow(m, [0,1,0])
-    mat4.rotateY(m, m, 2 * Math.PI / 4)
-    addArrow(m, [0,0,1])
+    const drawAxis = (x: number, y: number, branch: number, id: number) => {
+        const m = mat4.create()
+        mat4.translate(m, m, vec3.fromValues(x, y, 0))
+        mat4.multiply(m, m, bones.get(`${branch}/${id}`)!)
+        mat4.rotateY(m, m, (2 * Math.PI) / 4)
+        drawArrow(m, [1, 0, 0])
+        mat4.rotateY(m, m, (2 * Math.PI) / 4)
+        drawArrow(m, [0, 1, 0])
+        mat4.rotateX(m, m, (-2 * Math.PI) / 4)
+        drawArrow(m, [0, 0, 1])
+    }
+
+    drawAxis(0, 6, 5, 40) // root
+    drawAxis(0, 4, 5, 41) // dorsal
+    drawAxis(0, 2, 5, 42) // neck
+
+    drawAxis(-3, 4, 6, 40) // l-upperarm
+    drawAxis(-3, 2, 6, 41) // l-lowerarm
+    drawAxis(-3, 0, 6, 42) // l-hand
+    drawAxis(3, 4, 4, 40) // r-upperarm
+    drawAxis(3, 2, 4, 41) // r-lowerarm
+    drawAxis(3, 0, 4, 42) // r-hand
+
+    drawAxis(-1.5, -2, 1, 40) // l-upperleg
+    drawAxis(-1.5, -4, 1, 41) // l-lowerleg
+    drawAxis(-1.5, -6, 1, 42) // l-foot
+    drawAxis(1.5, -2, 3, 40) // r-upperleg
+    drawAxis(1.5, -4, 3, 41) // r-lowerleg
+    drawAxis(1.5, -6, 3, 42) // r-foot
 
     // console.log(index)
 

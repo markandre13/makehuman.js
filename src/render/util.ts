@@ -1,5 +1,4 @@
 import { mat4 } from "gl-matrix"
-import { RenderMode } from "./RenderMode"
 import { RenderMesh } from "./RenderMesh"
 
 export function prepareCanvas(canvas: HTMLCanvasElement) {
