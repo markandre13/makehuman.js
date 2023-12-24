@@ -19,6 +19,14 @@ import { RemoteOptionModel } from "./RemoteOptionModel"
 //   for the difference in the makehuman skeleton?
 // * can i get the coop data via websocket?
 
+// ISSUES
+// * after a reboot, and not moving the sensors, i get:
+//   Error on notochord calibration: No data to calibrate
+// * later, with moving the sensors, i get:
+//   Error on notochord calibration: The number of data points 74589 is not equal to the number of cycles 4970 * number of nodes 30 = 149100
+// * calibration steps are most likely the same as with the official software, were i get the same error
+// * error is reported in notochord-module/pyx/notochord/calipration.pyx
+
 let socket: WebSocket | undefined
 let mgr: UpdateManager
 
@@ -50,102 +58,132 @@ class Notochord {
 
     constructor() {
         this.visibilityChange = this.visibilityChange.bind(this)
-        this.doPullState = this.doPullState.bind(this)
+        this.doPullStateJob = this.doPullStateJob.bind(this)
     }
 
     visibilityChange(state: "visible" | "hidden") {
         if (this.pullState === false) {
             this.pullState = true
-            this.doPullState()
+            this.doPullStateJob()
         } else {
             this.pullState = false
         }
     }
 
-    protected async doPullState() {
+    protected async doPullStateJob() {
         try {
-            const response = await this.poll()
+        // when failing, set state to UNAVAILABLE
+            const response = await fetch(`http://${this.hostname.value}/state?clear_registry=false&peek_output=true`)
             const parser = new window.DOMParser()
             const data = parser.parseFromString(await response.text(), "text/xml")
             // console.log(data)
-            const processState = data.querySelector("NotochordProcess")
-            if (processState) {
-                this.processState.value = processState.innerHTML
-
-                switch (processState.innerHTML) {
-                    case "UNAVAILABLE":
-                    case "IDLE":
-                        this.start.enabled = false
-                        this.stop.enabled = false
-                        break
-                    case "STOPPED":
-                        this.start.enabled = true
-                        this.stop.enabled = false
-                        break
-                    case "RUNNING":
-                        this.start.enabled = false
-                        this.stop.enabled = !this.poseMode
-                        break
-                    default:
-                        console.log(`UNKNOWN STATE ${processState.innerHTML}`)
-                }
-
-                if (processState.innerHTML === "RUNNING" && socket === undefined) {
-                    socket = runChordata(mgr)
-                }
-                if (processState.innerHTML !== "RUNNING" && socket !== undefined) {
-                    socket.close()
-                    socket = undefined
-                }
-            }
-            const configs = data.querySelectorAll("NotochordConfiguration")
-            let activeConfig = ""
-            const configLabels: string[] = []
-            configs.forEach((it) => {
-                const label = it.getAttribute("label")!
-                const active = it.getAttribute("active") === "true"
-                if (active) {
-                    activeConfig = label
-                }
-                configLabels.push(label)
-            })
-            this.configs.setMapping(configLabels)
-            this.configs.setLocalValue(activeConfig)
+            this.updateProcessState(data)
+            this.updateConfigs(data)
+            // this.updateLogs(data)
         } catch (error) {
             this.processState.value = "UNAVAILABLE"
         }
         if (this.pullState) {
-            setTimeout(this.doPullState, 1000)
+            setTimeout(this.doPullStateJob, 1000)
         }
     }
-    doStart() {
-        const url = `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
-        // console.log(`DO START ${url}`)
-        const r = fetch(url)
+
+    protected updateProcessState(data: Document) {
+        const processState = data.querySelector("NotochordProcess")
+        if (processState) {
+            if (this.processState.value !== processState.innerHTML) {
+                console.log(`${new Date()} STATE CHANGE FROM ${this.processState.value} TO ${processState.innerHTML}`)
+            }
+            this.processState.value = processState.innerHTML
+
+            switch (this.processState.value) {
+                case "UNAVAILABLE":
+                case "IDLE":
+                    this.start.enabled = false
+                    this.stop.enabled = false
+                    break
+                case "STOPPED":
+                    this.start.enabled = true
+                    this.stop.enabled = false
+                    break
+                case "RUNNING":
+                    this.start.enabled = false
+                    this.stop.enabled = true // !this.poseMode
+                    break
+                default:
+                    console.log(`UNKNOWN STATE ${processState.innerHTML}`)
+            }
+
+            if (processState.innerHTML === "RUNNING" && socket === undefined && !this.poseMode) {
+                socket = runChordata(mgr)
+            }
+            if (processState.innerHTML !== "RUNNING" && socket !== undefined) {
+                socket.close()
+                socket = undefined
+            }
+        }
+    }
+
+    protected updateConfigs(data: Document) {
+        const configs = data.querySelectorAll("NotochordConfiguration")
+        let activeConfig = ""
+        const configLabels: string[] = []
+        configs.forEach((it) => {
+            const label = it.getAttribute("label")!
+            const active = it.getAttribute("active") === "true"
+            if (active) {
+                activeConfig = label
+            }
+            configLabels.push(label)
+        })
+        this.configs.setMapping(configLabels)
+        this.configs.setLocalValue(activeConfig)
+    }
+
+    protected updateLogs(data: Document) {
+        const log = data.querySelector("Log")
+        if (log === null) {
+            return
+        }
+        let text = ""
+        for(let i=0; i<log.children.length; ++i) {
+            const it = log.children[i]
+            text += `${it.nodeName} ${it.innerHTML}`
+        }
+        if (text.length > 0) {
+            console.log(text)
+        }
+    }
+
+    async doStart() {
+        const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        console.log(`DO START ${url}`)
+        const r = await fetch(url)
         // TODO: handle error
         // r.then( (x) => {x!.text().then( y => console.log(y)) })
         // socket = runChordata(mgr)
     }
-    doStop() {
-        // console.log("DO STOP")
+    async doStop() {
+        const url = `http://${this.hostname.value}/notochord/end`
+        console.log(`DO STOP ${url}`)
         if (socket !== undefined) {
             socket!.close()
             socket = undefined
         }
-        this.call(`http://${this.hostname.value}/notochord/end`)
+        await this.call(url)
         // TODO: handle error
         // this.call(`http://${this.hostname.value}/pose/disconnect`)
     }
-    doStartPose() {
+    async doStartPose() {
         this.poseMode = true
-        const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=1`
+        // const url = `http://${this.hostname.value}/pose/connect?scan=1&verbose=0`
         console.log(`${new Date()} START POSE ${url}`)
-        const r = fetch(url)
+        const r = await fetch(url)
         // TODO: handle error
         // r.then( (x) => {x!.text().then( y => console.log(y)) })
-        // socket = runChordata(mgr)
     }
-    doStopPose() {
+    async doStopPose() {
         this.poseMode = false
         const url = `http://${this.hostname.value}/pose/disconnect`
         console.log(`${new Date()} STOP POSE ${url}`)
@@ -153,7 +191,7 @@ class Notochord {
             socket!.close()
             socket = undefined
         }
-        this.call(url)
+        await this.call(url)
         // TODO: handle error
     }
     setConfig(config: string) {
@@ -163,16 +201,42 @@ class Notochord {
             `<ControlServerState><NotochordConfigurations>${config}</NotochordConfigurations></ControlServerState>`
         )
     }
-    async callibrate(step: CalibrationStep, run?: boolean): Promise<boolean> {
+    // will also write data.csv on the Notochord
+    async poseData() {
+        const response = await fetch(`http://${this.hostname.value}/pose/data`)
+        // TODO: handle error
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        return state?.innerHTML
+    }
+    // will also print the index to the Notochord's log
+    async poseIndex() {
+        const response = await fetch(`http://${this.hostname.value}/pose/index`)
+        // TODO: hande error
+        return await response.text()
+        // const parser = new window.DOMParser()
+        // const data = parser.parseFromString(await response.text(), "text/xml")
+        // const state = data.querySelector("State")
+        // return state?.innerHTML
+    }
+    async calibrateRun() {
+        const url = `http://${this.hostname.value}/pose/run`
+        console.log(`${new Date()} CALIBRATE RUN ${url}`)
+        const response = await fetch(url)
+        console.log(response)
+        const text = await response.text()
+        console.log(text)
+    }
+    async calibrate(step: CalibrationStep, run?: boolean): Promise<boolean> {
         let url: string
         if (run !== true) {
             url = `http://${this.hostname.value}/pose/calibrate?step=${step}`
         } else {
             url = `http://${this.hostname.value}/pose/calibrate?step=${step}&run=1`
         }
-        console.log(`${new Date()} CALLIBRATE ${url}`)
+        console.log(`${new Date()} CALIBRATE ${url}`)
         const response = await fetch(url)
-
         const parser = new window.DOMParser()
         const data = parser.parseFromString(await response.text(), "text/xml")
         const state = data.querySelector("State")
@@ -184,24 +248,10 @@ class Notochord {
         if (reason !== null) {
             msg += `: ${reason.innerHTML}`
         }
+        console.log(`${new Date()} CALIBRATE -> ${response.status} ${msg}`)
         notochord.calibrationState.value = msg
 
         return response.ok
-
-        // 200
-        // <NotochordResponse>
-        //   <State>Calibration step RIGHT_LEG</State>
-        // </NotochordResponse>
-        //
-        // 500
-        // <NotochordResponse>
-        //   <State>Error on notochord calibration</State>
-        //   <Reason>No data to calibrate</Reason>
-        // </NotochordResponse>
-    }
-    async poll() {
-        // when failing, set state to UNAVAILABLE
-        return fetch(`http://${this.hostname.value}/state?clear_registry=false`)
     }
     async call(url: string, method: string = "get", body?: string) {
         try {
@@ -228,13 +278,14 @@ function runChordata(mgr: UpdateManager) {
     // const client = new WebSocket("ws://notochord.fritz.box:7681/")
     client.binaryType = "arraybuffer"
     client.onerror = (e) => {
+        console.log(`${new Date()} ERROR COMMUNICATING WITH COOP PROXY`)
         notochord.start.enabled = true
         notochord.stop.enabled = false
         client!.close()
         socket = undefined
     }
     client.onopen = () => {
-        console.log(`web socket is open`)
+        console.log(`${new Date()} CONNECTED TO COOP PROXY`)
         client!.onmessage = async (msg: MessageEvent) => {
             let arrayBuffer: ArrayBuffer
             if (msg.data instanceof Blob) {
@@ -264,13 +315,11 @@ function runChordata(mgr: UpdateManager) {
         // console.log("REQUEST CHORDATA")
         client!.send(enc.encode("GET CHORDATA"))
     }
+    client.onclose = (e: CloseEvent) => {
+        console.log(`${new Date()} DISCONNECTED FROM COOP PROXY`)
+    }
     return client
 }
-
-// http://notochord.fritz.box/notochord/init?scan=1&addr=192.168.178.24&port=6565&verbose=0
-// http://notochord.fritz.box/notochord/end
-
-// Error on notochord calibration: The number of data points 74589 is not equal to the number of cycles 4970 * number of nodes 30 = 149100
 
 let notochord = new Notochord()
 
@@ -318,12 +367,12 @@ const script: Step[] = [
         step: CalibrationStep.STATIC, // display, set, run timmer
     },
     {
-        label: "Get ready to raise arms",
+        label: "Get ready to raise arms forward 90°",
         color: "#f80",
         step: CalibrationStep.CALIB_IDLE,
     },
     {
-        label: "Raise arms",
+        label: "Raise arms forward 90°",
         color: "#0f0",
         step: CalibrationStep.ARMS,
     },
@@ -331,12 +380,12 @@ const script: Step[] = [
         label: "Lower arms",
     },
     {
-        label: "Get ready to bow",
+        label: "Get ready to bow forward",
         color: "#f80",
         step: CalibrationStep.CALIB_IDLE,
     },
     {
-        label: "Bow down",
+        label: "Bow forward",
         color: "#0f0",
         step: CalibrationStep.TRUNK,
     },
@@ -420,26 +469,47 @@ function CalibrationButton() {
             } else {
                 btn.innerText = `${step.label}.`
             }
+
             if (call) {
                 if (stepCounter === 0) {
-                    await notochord.doStop()
+                    // await notochord.doStop()
                     await notochord.doStartPose()
-                }
-                if (stepCounter >= script.length - 1) {
-                    await notochord.doStopPose()
                 }
             }
 
             if (call && step.step !== undefined) {
-                const ok = await notochord.callibrate(step.step, step.run) // TODO: we have now reached a level of sophistication were unit testing becomes feasible
-                if (!ok) {
+                const ok = await notochord.calibrate(step.step)
+                if (step.run) {
+                    // dump captured data into file on the Notochord
+                    //     /opt/chordata/notochord-control-server/data.csv
+                    // of format
+                    //     ,time(msec),node_label,q_w,q_x,q_y,q_z,g_x,g_y,g_z,a_x,a_y,a_z,m_x,m_y,m_z
+                    //     0,4267851,base,42.0,93.0,3.0,2.0,5.0,125.0,590.0,1.0,54.0,34.0,654.0,453.0,231.0
+                    //     ...
+                    await notochord.poseData()
+                    // prints the indices into the HTTP log, TODO: also write to file
+                    //     {'func_legs_l_s': 737, 'func_legs_r_i': 738, 'func_legs_l_i': 528, 'func_legs_r_s': 0, 'func_trunk_s': 527, 'func_trunk_i': 318, 'func_arms_s': 317, 'func_arms_i': 108, 'vert_s': 107, 'vert_i': 0}
+                    await notochord.poseIndex()
+                    // now run the calibration (and in case it crashes, we now have the data available for debugging)
+                    await notochord.calibrateRun()
+                }
+                // when not okay and not run (as run includes a stop), stop
+                if (!ok && step.run !== true) {
                     await notochord.doStopPose()
                     reset()
                     return
                 }
             }
 
-            timeCounter = timeCounter - 0.1
+            // if (call) {
+            //     if (stepCounter >= script.length - 1) {
+            //         await notochord.doStopPose()
+            //     }
+            // }
+
+            if (notochord.processState.value === "RUNNING") {
+                timeCounter = timeCounter - 0.1
+            }
             setTimeout(timeHandler, 100)
         }
         if (!running) {
@@ -449,7 +519,7 @@ function CalibrationButton() {
             timeHandler()
         } else {
             reset()
-            notochord.callibrate(CalibrationStep.CALIB_IDLE)
+            notochord.calibrate(CalibrationStep.CALIB_IDLE)
         }
     }
     button = (
@@ -507,7 +577,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     <Display model={notochord.calibrationState} />
                 </FormField>
 
-                <FormLabel>Makehuman.js</FormLabel>
+                {/* <FormLabel>Makehuman.js</FormLabel>
                 <FormField>
                     <Button
                         action={() => {
@@ -525,7 +595,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
 
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
-                <FormText model={settings.Z1} />
+                <FormText model={settings.Z1} /> */}
             </Form>
 
             <div style={{ padding: "15px" }}>

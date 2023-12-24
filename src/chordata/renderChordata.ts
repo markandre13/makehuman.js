@@ -1,4 +1,4 @@
-import { mat4, quat, vec3 } from "gl-matrix"
+import { mat4, quat, vec3, vec4 } from "gl-matrix"
 import { RenderMesh } from "../render/RenderMesh"
 import {
     createModelViewMatrix,
@@ -16,6 +16,7 @@ import { Joint } from "./Joint"
 import { SkeletonMesh } from "./SkeletonMesh"
 import { euler_matrix } from "lib/euler_matrix"
 import { ColorShader } from "render/shader/ColorShader"
+import { span, text } from "toad.js"
 
 export const bones = new Map<string, mat4>()
 
@@ -48,10 +49,18 @@ const chordataSkeleton = new Joint(5, 40, "root", [
 
 const D = 180 / Math.PI
 
+const yummy = new Set<string>()
+
 // save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
+    // console.log(`setBones()`)
+    // console.log(newBones)
     // bones.clear()
     newBones.forEach((value, key) => {
+        if (!yummy.has(key)) {
+            yummy.add(key)
+            console.log(`${key} = [${value.join(", ")}]`)
+        }
         if (value.length !== 4) {
             return
         }
@@ -233,9 +242,14 @@ export function renderChordata(
             )
         }
     }
-    const drawAxis = (x: number, y: number, branch: number, id: number) => {
+
+    let idx = 0
+    const overlayChildren: HTMLElement[] = []
+
+    const drawAxis = (x: number, y: number, branch: number, id: number, name: string) => {
         const m = mat4.create()
         mat4.translate(m, m, vec3.fromValues(x, y, 0))
+
         mat4.multiply(m, m, bones.get(`${branch}/${id}`)!)
         mat4.rotateY(m, m, (2 * Math.PI) / 4)
         drawArrow(m, [1, 0, 0])
@@ -243,25 +257,53 @@ export function renderChordata(
         drawArrow(m, [0, 1, 0])
         mat4.rotateX(m, m, (-2 * Math.PI) / 4)
         drawArrow(m, [0, 0, 1])
+
+        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+        mat4.multiply(m0, m0, m)
+        const point = vec4.fromValues(0, 0, 0, 1) // this is the front top right corner
+        const clipspace = vec4.transformMat4(point, point, m0)
+        clipspace[0] /= clipspace[3]
+        clipspace[1] /= clipspace[3]
+        const pixelX = (clipspace[0] * 0.5 + 0.5) * gl.canvas.width
+        const pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height
+
+        // console.log(`${name} ${pixelX}, ${pixelY}`)
+        // console.log(`${name} ${point[0]}, ${point[1]}`)
+
+        let label: HTMLElement
+        if (overlay.children.length === 0) {
+            label = span(text(name))
+            label.style.position = "absolute"
+            label.style.color = "#fff"
+            overlayChildren.push(label)
+        } else {
+            label = overlay.children[idx++] as HTMLElement
+        }
+        label.style.left = `${pixelX}px`
+        label.style.top = `${pixelY}px`
     }
 
-    drawAxis(0, 2, 5, 40) // root
-    drawAxis(0, 4, 5, 41) // dorsal
-    drawAxis(0, 6, 5, 42) // neck
+    drawAxis(0, 2, 5, 40, "root")
+    drawAxis(0, 4, 5, 41, "dorsal")
+    drawAxis(0, 6, 5, 42, "neck")
 
-    drawAxis(-3, 4, 6, 40) // l-upperarm
-    drawAxis(-3, 2, 6, 41) // l-lowerarm
-    drawAxis(-3, 0, 6, 42) // l-hand
-    drawAxis(3, 4, 4, 40) // r-upperarm
-    drawAxis(3, 2, 4, 41) // r-lowerarm
-    drawAxis(3, 0, 4, 42) // r-hand
+    drawAxis(3, 4, 6, 40, "r-upperarm")
+    drawAxis(3, 2, 6, 41, "r-lowerarm")
+    drawAxis(3, 0, 6, 42, "r-hand")
+    drawAxis(-3, 4, 4, 40, "l-upperarm")
+    drawAxis(-3, 2, 4, 41, "l-lowerarm")
+    drawAxis(-3, 0, 4, 42, "l-hand")
 
-    drawAxis(-1.5, -2, 1, 40) // l-upperleg
-    drawAxis(-1.5, -4, 1, 41) // l-lowerleg
-    drawAxis(-1.5, -6, 1, 42) // l-foot
-    drawAxis(1.5, -2, 3, 40) // r-upperleg
-    drawAxis(1.5, -4, 3, 41) // r-lowerleg
-    drawAxis(1.5, -6, 3, 42) // r-foot
+    drawAxis(1.5, -2, 1, 40, "r-upperleg")
+    drawAxis(1.5, -4, 1, 41, "r-lowerleg")
+    drawAxis(1.5, -6, 1, 42, "r-foot")
+    drawAxis(-1.5, -2, 3, 40, "l-upperleg")
+    drawAxis(-1.5, -4, 3, 41, "l-lowerleg")
+    drawAxis(-1.5, -6, 3, 42, "l-foot")
+
+    if (overlay.children.length === 0) {
+        overlay.replaceChildren(...overlayChildren)
+    }
 
     // console.log(index)
 
