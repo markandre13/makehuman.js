@@ -30,7 +30,7 @@ describe("chordata", function () {
     it("decodeQ()", function () {
         const data = fromHexdump(message0)
         const decoder = new COOPDecoder(data)
-        const bones = decoder.decodeQ()
+        const bones = decoder.decode()
 
         const e = new Map<string, number[]>([
             ["/%/kc_0x42branch6", [-0.0116586, 0.351683, 0.928858, -0.115784]],
@@ -55,7 +55,7 @@ describe("chordata", function () {
     it("decodeRaw()", function () {
         const data = fromHexdump(message1)
         const decoder = new COOPDecoder(data)
-        const bones = decoder.decodeRaw()
+        const bones = decoder.decode()
         // bones.forEach((v, k) => console.log(`["${k}", [${v.join(", ")}]],`))
         const e = new Map<string, number[]>([
             ["/%/r-foot", [5, 125, 590, 1, 54, 34, 654, 453, 231]],

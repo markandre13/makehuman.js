@@ -4,7 +4,6 @@ import { calibrateNPose, setBones } from "chordata/renderChordata"
 import { Action, Display, NumberModel, OptionModelBase, Select, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
-import { hexdump } from "../lib/hexdump"
 import { UpdateManager } from "UpdateManager"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
@@ -42,6 +41,8 @@ class Notochord {
     dstHostname = new TextModel("192.168.178.24", { label: "COOP Destination Hostname" })
     dstPort = new NumberModel(6565, { min: 1, max: 0xffff, label: "COOP Destination UDP Port" })
 
+    poseMode = false
+
     start = new Action(() => this.doStart())
     stop = new Action(() => this.doStop(), { enabled: false })
 
@@ -66,6 +67,7 @@ class Notochord {
             const response = await this.poll()
             const parser = new window.DOMParser()
             const data = parser.parseFromString(await response.text(), "text/xml")
+            // console.log(data)
             const processState = data.querySelector("NotochordProcess")
             if (processState) {
                 this.processState.value = processState.innerHTML
@@ -82,7 +84,7 @@ class Notochord {
                         break
                     case "RUNNING":
                         this.start.enabled = false
-                        this.stop.enabled = true
+                        this.stop.enabled = !this.poseMode
                         break
                     default:
                         console.log(`UNKNOWN STATE ${processState.innerHTML}`)
@@ -118,12 +120,10 @@ class Notochord {
     }
     doStart() {
         const url = `http://${this.hostname.value}/notochord/init?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
-        // const url = `http://${this.hostname.value}/pose/connect?raw=0&scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         // console.log(`DO START ${url}`)
         const r = fetch(url)
         // TODO: handle error
         // r.then( (x) => {x!.text().then( y => console.log(y)) })
-
         // socket = runChordata(mgr)
     }
     doStop() {
@@ -136,6 +136,26 @@ class Notochord {
         // TODO: handle error
         // this.call(`http://${this.hostname.value}/pose/disconnect`)
     }
+    doStartPose() {
+        this.poseMode = true
+        const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        console.log(`${new Date()} START POSE ${url}`)
+        const r = fetch(url)
+        // TODO: handle error
+        // r.then( (x) => {x!.text().then( y => console.log(y)) })
+        // socket = runChordata(mgr)
+    }
+    doStopPose() {
+        this.poseMode = false
+        const url = `http://${this.hostname.value}/pose/disconnect`
+        console.log(`${new Date()} STOP POSE ${url}`)
+        if (socket !== undefined) {
+            socket!.close()
+            socket = undefined
+        }
+        this.call(url)
+        // TODO: handle error
+    }
     setConfig(config: string) {
         this.call(
             `http://${this.hostname.value}/state`,
@@ -144,12 +164,14 @@ class Notochord {
         )
     }
     async callibrate(step: CalibrationStep, run?: boolean): Promise<boolean> {
-        let response: Response
+        let url: string
         if (run !== true) {
-            response = await fetch(`http://${this.hostname.value}/pose/calibrate?step=${step}`)
+            url = `http://${this.hostname.value}/pose/calibrate?step=${step}`
         } else {
-            response = await fetch(`http://${this.hostname.value}/pose/calibrate?step=${step}&run=1`)
+            url = `http://${this.hostname.value}/pose/calibrate?step=${step}&run=1`
         }
+        console.log(`${new Date()} CALLIBRATE ${url}`)
+        const response = await fetch(url)
 
         const parser = new window.DOMParser()
         const data = parser.parseFromString(await response.text(), "text/xml")
@@ -226,7 +248,7 @@ function runChordata(mgr: UpdateManager) {
             // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
             const decoder = new COOPDecoder(arrayBuffer)
             try {
-                setBones(decoder.decodeQ())
+                setBones(decoder.decode())
                 mgr.invalidateView()
                 client!.send(enc.encode("GET CHORDATA"))
             } catch (error) {
@@ -247,6 +269,8 @@ function runChordata(mgr: UpdateManager) {
 
 // http://notochord.fritz.box/notochord/init?scan=1&addr=192.168.178.24&port=6565&verbose=0
 // http://notochord.fritz.box/notochord/end
+
+// Error on notochord calibration: The number of data points 74589 is not equal to the number of cycles 4970 * number of nodes 30 = 149100
 
 let notochord = new Notochord()
 
@@ -391,15 +415,25 @@ function CalibrationButton() {
             if (step.color !== undefined) {
                 btn.style.backgroundColor = step.color
             }
-            if (stepCounter < script.length - 1) {
+            if (stepCounter !== 0 && stepCounter < script.length - 1) {
                 btn.innerText = `${step.label}... ${timeCounter.toFixed(1)}s`
             } else {
                 btn.innerText = `${step.label}.`
+            }
+            if (call) {
+                if (stepCounter === 0) {
+                    await notochord.doStop()
+                    await notochord.doStartPose()
+                }
+                if (stepCounter >= script.length - 1) {
+                    await notochord.doStopPose()
+                }
             }
 
             if (call && step.step !== undefined) {
                 const ok = await notochord.callibrate(step.step, step.run) // TODO: we have now reached a level of sophistication were unit testing becomes feasible
                 if (!ok) {
+                    await notochord.doStopPose()
                     reset()
                     return
                 }
@@ -464,9 +498,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormSelect model={notochord.configs} />
 
                 <FormLabel>Sensor Calibration</FormLabel>
-                <FormField>
-                    T.B.D.
-                </FormField>
+                <FormField>T.B.D.</FormField>
 
                 <FormLabel>Pose Calibration</FormLabel>
                 <FormField>
@@ -494,7 +526,6 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
                 <FormText model={settings.Z1} />
-
             </Form>
 
             <div style={{ padding: "15px" }}>
@@ -518,6 +549,3 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
         </Tab>
     )
 }
-
-// /opt/chordata/notochord-control-server/notochord_control_server/endpoints/pose.py
-// n.raw = True to n.raw = raw

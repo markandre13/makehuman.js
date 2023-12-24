@@ -50,8 +50,11 @@ const D = 180 / Math.PI
 
 // save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
-    bones.clear()
+    // bones.clear()
     newBones.forEach((value, key) => {
+        if (value.length !== 4) {
+            return
+        }
         // /%/kc_0x42branch6 -> {branch}/{id}
         bones.set(
             `${key.substring(16, 17)}/${key.substring(8, 10)}`,
@@ -242,9 +245,9 @@ export function renderChordata(
         drawArrow(m, [0, 0, 1])
     }
 
-    drawAxis(0, 6, 5, 40) // root
+    drawAxis(0, 2, 5, 40) // root
     drawAxis(0, 4, 5, 41) // dorsal
-    drawAxis(0, 2, 5, 42) // neck
+    drawAxis(0, 6, 5, 42) // neck
 
     drawAxis(-3, 4, 6, 40) // l-upperarm
     drawAxis(-3, 2, 6, 41) // l-lowerarm
