@@ -33,8 +33,6 @@ Start by looking at the [official documentation](https://chordata.gitlab.io/docs
 
 (Adapted from [notochord-os](https://gitlab.com/chordata/notochord-os).)
 
-As of time of writing (2023-12-27), the software you'll get is the same as in the official image.
-
 * Insert SD Card into your computer
 * With the [Raspberry Pi Imager](https://www.raspberrypi.com/software/), flash the image 
 
@@ -49,8 +47,13 @@ As of time of writing (2023-12-27), the software you'll get is the same as in th
   ```
 * Boot Raspberry Pi with SD Card
 * ssh human@notochord
-* run
+* for the stable version run
+  ```bash
+  bash <(curl -sL "https://gitlab.com/api/v4/projects/39055939/repository/files/fetch_and_run%2Esh/raw?ref=master")
   ```
+  for the development version run
+  ```bash
+  export NOTO_CHECKOUT_BRANCH=develop NOTOSERVER_CHECKOUT_BRANCH=develop
   bash <(curl -sL "https://gitlab.com/api/v4/projects/39055939/repository/files/fetch_and_run%2Esh/raw?ref=master")
   ```
   and answer the questions as follows
@@ -71,19 +74,49 @@ As of time of writing (2023-12-27), the software you'll get is the same as in th
 
 ### Grant makehuman.js access to the Notochord
 
-I usually run makehuman.js on my desktop using `make dev:serve`. To allow it calling the
-Notochord, edit the file
+I usually run makehuman.js on my desktop using `make dev:serve`. To allow the webapp calling the
+Notochord, edit the file `/opt/chordata/notochord-control-server/notochord_control_server/__init__.py` and add
 
-    /opt/chordata/notochord-control-server/notochord_control_server/__init__.py
-
-and add
-
-    @app.after_request
-    def apply_caching(response):
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        return response
-
+```python
+@app.after_request
+def allow_origin(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+```
 and reboot.
+
+### Debug calibration
+
+In case the calibration fails, it dumps it's data into the directory `/opt/chordata/notochord-control-server/` on the Notochord.
+
+`data.csv` will contain the sensor data.
+
+`data.json` will contain the indices after `/opt/chordata/notochord-control-server/notochord_control_server/endpoints/pose.py` has been extended as follows:
+
+```python
+...
+import json
+...
+
+def index():
+    ...
+    # Save the data
+    with open("data.json", "w") as file:
+        file.write(json.dumps({'indexes': data}))
+    ...
+```
+
+Fetch the data using:
+
+```bash
+scp 'notochord:/opt/chordata/notochord-control-server/data.*' .
+```
+
+And evaluate locally:
+
+```bash
+venv/bin/pose-calib -t ./data.csv -i ./data.json
+```
 
 ## Calibration
 
@@ -124,16 +157,15 @@ It looks like there are two versions:
 The web process is actually creating more output than available in the logs.
 One can log into the notochord, type
 
-    sudo /bin/bash
-    killall unicorn
-    cd /opt/chordata/notochord-control-server
-    /etc/chordata/venv/bin/gunicorn -b '0.0.0.0:80' -w 1 'wsgi:application' \
-	    --threads 1 --access-logfile - \
-	    --error-logfile -
-
+```bash
+sudo /bin/bash
+killall unicorn
+cd /opt/chordata/notochord-control-server
+/etc/chordata/venv/bin/gunicorn -b '0.0.0.0:80' -w 1 'wsgi:application' \
+    --threads 1 --access-logfile - \
+    --error-logfile -
+```
 ## Pose Calibration
-
-
 
 the blender plugin uses this call:
 
@@ -181,14 +213,6 @@ I got a failure and only got one file:
     2023-12-26T19-52-53-Chordata_calibration_result.log
 
 which says it found labels like "kc_0x42branch6", but misses nodes like "l-lowerarm".
-
-# MY HACK
-
-    joe /opt/chordata/notochord-control-server/notochord_control_server/endpoints/pose.py
-    calibrator.run_calibration()
-
-    pose/data will print and write 'data.csv'
-    pose/index will print the index
 
 ---
 

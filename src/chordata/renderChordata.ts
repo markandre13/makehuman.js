@@ -283,7 +283,7 @@ export function renderChordata(
         label.style.top = `${pixelY}px`
     }
 
-    drawAxis(0, 2, 5, 40, "root")
+    drawAxis(0, 2, 5, 40, "base")
     drawAxis(0, 4, 5, 41, "dorsal")
     drawAxis(0, 6, 5, 42, "neck")
 

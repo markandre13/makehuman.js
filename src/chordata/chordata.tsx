@@ -98,11 +98,11 @@ class Notochord {
 
             switch (this.processState.value) {
                 case "UNAVAILABLE":
-                case "IDLE":
                     this.start.enabled = false
                     this.stop.enabled = false
                     break
                 case "STOPPED":
+                case "IDLE":
                     this.start.enabled = true
                     this.stop.enabled = false
                     break
@@ -176,8 +176,8 @@ class Notochord {
     }
     async doStartPose() {
         this.poseMode = true
-        const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=1`
-        // const url = `http://${this.hostname.value}/pose/connect?scan=1&verbose=0`
+        // const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=1`
+        const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         console.log(`${new Date()} START POSE ${url}`)
         const r = await fetch(url)
         // TODO: handle error
@@ -185,7 +185,8 @@ class Notochord {
     }
     async doStopPose() {
         this.poseMode = false
-        const url = `http://${this.hostname.value}/pose/disconnect`
+        // const url = `http://${this.hostname.value}/pose/disconnect`
+        const url = `http://${this.hostname.value}/notochord/end`
         console.log(`${new Date()} STOP POSE ${url}`)
         if (socket !== undefined) {
             socket!.close()
@@ -203,7 +204,10 @@ class Notochord {
     }
     // will also write data.csv on the Notochord
     async poseData() {
-        const response = await fetch(`http://${this.hostname.value}/pose/data`)
+        const url = `http://${this.hostname.value}/pose/data`
+        console.log(`${new Date()} POSE DATA ${url}`)
+        const response = await fetch(url)
+        console.log(`${new Date()} POSE DATA -> ${response.status} ${response.statusText}`)
         // TODO: handle error
         const parser = new window.DOMParser()
         const data = parser.parseFromString(await response.text(), "text/xml")
@@ -212,21 +216,26 @@ class Notochord {
     }
     // will also print the index to the Notochord's log
     async poseIndex() {
-        const response = await fetch(`http://${this.hostname.value}/pose/index`)
-        // TODO: hande error
-        return await response.text()
-        // const parser = new window.DOMParser()
-        // const data = parser.parseFromString(await response.text(), "text/xml")
-        // const state = data.querySelector("State")
-        // return state?.innerHTML
+        const url = `http://${this.hostname.value}/pose/index`
+        console.log(`${new Date()} POSE INDICES ${url}`)
+        const response = await fetch(url)
+        console.log(`${new Date()} POSE INDICES -> ${response.status} ${response.statusText}`)
+        // TODO: handle error
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        return state?.innerHTML
     }
     async calibrateRun() {
         const url = `http://${this.hostname.value}/pose/run`
         console.log(`${new Date()} CALIBRATE RUN ${url}`)
         const response = await fetch(url)
-        console.log(response)
-        const text = await response.text()
-        console.log(text)
+        console.log(`${new Date()} CALIBRATE RUN -> ${response.status} ${response.statusText}`)
+        // TODO: handle error
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        return state?.innerHTML
     }
     async calibrate(step: CalibrationStep, run?: boolean): Promise<boolean> {
         let url: string
@@ -486,12 +495,19 @@ function CalibrationButton() {
                     //     ,time(msec),node_label,q_w,q_x,q_y,q_z,g_x,g_y,g_z,a_x,a_y,a_z,m_x,m_y,m_z
                     //     0,4267851,base,42.0,93.0,3.0,2.0,5.0,125.0,590.0,1.0,54.0,34.0,654.0,453.0,231.0
                     //     ...
-                    await notochord.poseData()
+                    let msg = "data: "
+                    msg += await notochord.poseData()
+                    notochord.calibrationState.value = msg
                     // prints the indices into the HTTP log, TODO: also write to file
                     //     {'func_legs_l_s': 737, 'func_legs_r_i': 738, 'func_legs_l_i': 528, 'func_legs_r_s': 0, 'func_trunk_s': 527, 'func_trunk_i': 318, 'func_arms_s': 317, 'func_arms_i': 108, 'vert_s': 107, 'vert_i': 0}
-                    await notochord.poseIndex()
+                    msg += ", indices: "
+                    msg += await notochord.poseIndex()
+                    notochord.calibrationState.value = msg
+
                     // now run the calibration (and in case it crashes, we now have the data available for debugging)
-                    await notochord.calibrateRun()
+                    msg += ", calibration: "
+                    msg += await notochord.calibrateRun()
+                    notochord.calibrationState.value = msg
                 }
                 // when not okay and not run (as run includes a stop), stop
                 if (!ok && step.run !== true) {
