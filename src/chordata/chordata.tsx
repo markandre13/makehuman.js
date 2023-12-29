@@ -156,12 +156,14 @@ class Notochord {
     }
 
     async doStart() {
-        const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        // scan: 0: use hierarchy from the config, 1: scan kceptors
+        const url = `http://${this.hostname.value}/notochord/init?scan=0&raw=0&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
         console.log(`DO START ${url}`)
-        const r = await fetch(url)
-        // TODO: handle error
-        // r.then( (x) => {x!.text().then( y => console.log(y)) })
-        // socket = runChordata(mgr)
+        const response = await fetch(url)
+        if (!response.ok) {
+            const msg = `${response.status} ${response.statusText}: ${await response.text()}`
+            console.log(msg)
+        }
     }
     async doStop() {
         const url = `http://${this.hostname.value}/notochord/end`
@@ -170,23 +172,30 @@ class Notochord {
             socket!.close()
             socket = undefined
         }
-        await this.call(url)
-        // TODO: handle error
-        // this.call(`http://${this.hostname.value}/pose/disconnect`)
+        const response = await fetch(url)
+        if (!response.ok) {
+            const msg = `${response.status} ${response.statusText}: ${await response.text()}`
+            console.log(msg)
+        }
     }
     async doStartPose() {
         this.poseMode = true
-        // const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=1`
-        const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
+        // const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         console.log(`${new Date()} START POSE ${url}`)
-        const r = await fetch(url)
+        const response = await fetch(url)
+        if (!response.ok) {
+            const msg = `${response.status} ${response.statusText}: ${await response.text()}`
+            console.log(msg)
+            this.calibrationState.value = msg
+        }
         // TODO: handle error
         // r.then( (x) => {x!.text().then( y => console.log(y)) })
     }
     async doStopPose() {
         this.poseMode = false
-        // const url = `http://${this.hostname.value}/pose/disconnect`
-        const url = `http://${this.hostname.value}/notochord/end`
+        const url = `http://${this.hostname.value}/pose/disconnect`
+        // const url = `http://${this.hostname.value}/notochord/end`
         console.log(`${new Date()} STOP POSE ${url}`)
         if (socket !== undefined) {
             socket!.close()

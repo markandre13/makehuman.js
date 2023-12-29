@@ -167,54 +167,11 @@ cd /opt/chordata/notochord-control-server
 ```
 ## Pose Calibration
 
-the blender plugin uses this call:
+To use the Pose Calibration on the Notochord, config needs to contain
 
-    GET /notochord/init?addr=192.168.178.24&port=6565&scan=True&verbose=0&raw=True
+    <use_armature>true</use_armature>
 
-and no calls to the pose/ endpoint. so i guess it's doing the calibration within
-the blender plugin?
-
-the blender plugin also creates files in the same directory as the .blend file
-
-* Chordata_calib_dump.csv
-
-  A dump of all Q and RAW COOP packets during the calibration.
-
-```
-  time(msec),node_label,q_w,q_x,q_y,q_z,g_x,g_y,g_z,a_x,a_y,a_z,m_x,m_y,m_z
-  1639120,r-hand,0.18474090099334717,0.1065092459321022,0.7445586323738098,0.6325812339782715,-32,-29,-15,612,-4048,591,2407,-227,-25561
-  ...
-```
-* Chordata_calib_data.json
-
-  The result of the calibration. 
-```
-    calib_results {
-        vert_rot: ..., 
-        PCA: ..., 
-        angle_PCA: ..., 
-        gyro_int
-        func_rot
-        heading_rot
-        post_rot
-      }
-      indexes: {}
-      delta_time: number
-      g_s: number
-      a_s: number
-      m_s: number
-      fc: number
-    }
-```
-* calibration_result.log
-
-I got a failure and only got one file:
-
-    2023-12-26T19-52-53-Chordata_calibration_result.log
-
-which says it found labels like "kc_0x42branch6", but misses nodes like "l-lowerarm".
-
----
+and an `<avatar>` section.
 
 see https://forum.chordata.cc/d/62-new-blender-2-8-chordata-node-system-addon/35
 
@@ -222,11 +179,60 @@ see https://forum.chordata.cc/d/62-new-blender-2-8-chordata-node-system-addon/35
     RUNNING VERTICAL CALIBRATION
     RUNNING FUNCTIONAL CALIBRATION
     RUNNING HEADING CALIBRATION
-    [2023-12-26 10:31:55 +0000] [1529] [WARNING] Worker with pid 1530 was terminated due to signal 11
 
-since it crashes, it would be nice to dump the data somewhere...
+So, about that avatar...
 
-The blender plug-in I have is version 1.2.2
+    get_runtime().get_armature().get().get_bones()[name].set_(pre|post)_quaternion(...)
+
+where does this end up?
+
+```c
+_Bone {
+    matrix4_ptr local_transform;    // Original transform
+    matrix4_ptr global_transform;   // Derived transform
+
+    bone_ptr parent;                // Parent bone
+    std::vector<bone_ptr> children; // Child bones 
+
+    Quaternion pre, post;           // calibration pre & post rotation; identity per default
+}
+```
+this is used in
+```c
+void Chordata::_Bone::set_global_rotation(Quaternion &_global_rotation, bool use_calibration) {
+    if (use_calibration) { _global_rotation = pre * _global_rotation * post; }
+...
+}
+```
+ which makes sense as the quaternions i get over COOP are global...
+        which is called by
+```c
+void Chordata::_Armature::process_bone(const _Node &n, Quaternion &q) {
+    bone_ptr bone = bones[n.get_label()];
+    bone->set_global_rotation(q);
+}
+```
+which is called by
+```c
+void Chordata::Armature_Task::run() {
+	Chordata::get_runtime()->get_armature()->process_bone(*node, q);
+	if (node->first_sensor) {
+		Chordata::get_runtime()->get_armature()->update();		
+		comm::_transmit(Chordata::get_runtime()->get_armature().get()); 
+		Chordata::Communicator::flush_loggers();
+	}
+}
+```
+ah! `void Chordata::Fusion_Task::run()` does indeed do something different when an armature is defined.
+
+for the time being, it seems we just need the nodes as we still send the global rotation (but adjusted) over COOP.
+
+We can get core dumps...
+
+    ulimit -S -c unlimited
+    # run gunicorn
+    gdb /usr/bin/python3.9 /opt/chordata/notochord-control-server/core
+    where
 
 ## Source Code
 

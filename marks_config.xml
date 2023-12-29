@@ -1,0 +1,125 @@
+<chordata version="1.0.0">
+    <configuration>
+        <kc_revision>++</kc_revision>
+        <communication>
+            <adapter>/dev/i2c-1</adapter>
+            <ip>192.168.178.24</ip>
+            <port>6565</port>
+            <log>stdout,file</log>
+            <transmit>osc</transmit>
+            <send_rate>50</send_rate>
+            <verbosity>2</verbosity>
+            <use_armature>true</use_armature>
+        </communication>
+        <osc>
+            <base>/Chordata</base>
+        </osc>
+        <fusion>
+            <beta_start>1.0</beta_start>
+            <beta_final>0.2</beta_final>
+            <time>5000</time>
+        </fusion>
+    </configuration>
+    <hierarchy>
+        <mux Name="main" id="0">0x70
+            <branch Name="branch" id="1">CH_1
+                <k_ceptor Name="r-upperleg" id="2">0x40
+                    <k_ceptor Name="r-lowerleg" id="2">0x41
+                        <k_ceptor Name="r-foot" id="2">0x42
+                        </k_ceptor>
+                    </k_ceptor>
+                </k_ceptor>
+            </branch>
+            <branch Name="branch" id="1">CH_3
+                <k_ceptor Name="l-upperleg" id="2">0x40
+                    <k_ceptor Name="l-lowerleg" id="2">0x41
+                        <k_ceptor Name="l-foot" id="2">0x42
+                        </k_ceptor>
+                    </k_ceptor>
+                </k_ceptor>
+            </branch>
+            <branch Name="branch" id="1">CH_4
+                <k_ceptor Name="l-upperarm" id="2">0x40
+                    <k_ceptor Name="l-lowerarm" id="2">0x41
+                        <k_ceptor Name="l-hand" id="2">0x42
+                        </k_ceptor>
+                    </k_ceptor>
+                </k_ceptor>
+            </branch>
+            <branch Name="branch" id="1">CH_5
+                <k_ceptor Name="base" id="2">0x40
+                    <k_ceptor Name="dorsal" id="2">0x41
+                        <k_ceptor Name="neck" id="2">0x42
+                        </k_ceptor>
+                    </k_ceptor>
+                </k_ceptor>
+            </branch>
+            <branch Name="branch" id="1">CH_6
+                <k_ceptor Name="r-upperarm" id="2">0x40
+                    <k_ceptor Name="r-lowerarm" id="2">0x41
+                        <k_ceptor Name="r-hand" id="2">0x42
+                        </k_ceptor>
+                    </k_ceptor>
+                </k_ceptor>
+            </branch>
+        </mux>
+    </hierarchy>
+    <Avatar>
+		{
+			"asset" : {
+				"generator" : "mhopf@mark13.org",
+				"version" : "2.0"
+			},
+			"scene" : 0,
+			"scenes" : [
+				{
+					"name" : "human",
+					"nodes" : [	14 ]
+				}
+			],
+			"nodes" : [
+				{
+					"name" : "r-foot"
+				}, {
+					"name" : "r-lowerleg",
+					"children" : [ 0 ]
+				}, {
+					"name" : "r-upperleg",
+					"children" : [ 1 ]
+				}, {
+					"name" : "l-foot"
+				}, {
+					"name" : "l-lowerleg",
+					"children" : [ 3 ]
+				}, {
+					"name" : "l-upperleg",
+					"children" : [ 4 ]
+				}, {
+					"name" : "r-hand"
+				}, {
+					"name" : "r-lowerarm",
+					"children" : [ 6 ]
+				}, {
+					"name" : "r-upperarm",
+					"children" : [ 7 ]
+				}, {
+					"name" : "l-hand"
+				}, {
+					"name" : "l-lowerarm",
+					"children" : [ 9 ]
+				}, {
+					"name" : "l-upperarm",
+					"children" : [ 10 ]
+				}, {
+					"name" : "neck"
+				}, {
+					"name" : "dorsal",
+					"children" : [ 8, 11, 12 ]
+				}, {
+					"name" : "base",
+					"children" : [ 2, 5, 13 ]
+				}
+            ]
+		}
+	</Avatar>
+</chordata>

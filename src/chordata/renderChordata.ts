@@ -21,7 +21,7 @@ import { span, text } from "toad.js"
 export const bones = new Map<string, mat4>()
 
 // prettier-ignore
-const chordataSkeleton = new Joint(5, 40, "root", [
+const chordataSkeleton = new Joint(5, 40, "root", [ // base
     new Joint(5, 41, "spine02", [ // dorsal (poseunits: spine05, spine04, spine03, spine02)
         new Joint(5, 42, "neck02"), // neck (poseunits: spine01, neck01, neck02, neck03, head)
         new Joint(6, 40, "upperarm01.L", [ // l-upperarm (poseunits: clavicle.R, soulder01.R, upperarm01.R)
@@ -47,9 +47,25 @@ const chordataSkeleton = new Joint(5, 40, "root", [
     ])
 ])
 
-const D = 180 / Math.PI
+/*
+ 14 base
+ 13  dorsal
+ 12    neck
+ 11    l-upperarm
+ 10      l-lowerarm
+  9         l-hand
+  8    r-upperarm
+  7      r-lowerarm
+  6         r-hand
+  5  l-upperleg
+  4   l-lowerleg
+  3     l-foot
+  2 r-upperleg
+  1   r-lowerleg
+  0     r-foot
+*/
 
-const yummy = new Set<string>()
+const D = 180 / Math.PI
 
 // save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
@@ -57,16 +73,13 @@ export function setBones(newBones: Map<string, number[]>) {
     // console.log(newBones)
     // bones.clear()
     newBones.forEach((value, key) => {
-        if (!yummy.has(key)) {
-            yummy.add(key)
-            console.log(`${key} = [${value.join(", ")}]`)
-        }
         if (value.length !== 4) {
             return
         }
         // /%/kc_0x42branch6 -> {branch}/{id}
         bones.set(
-            `${key.substring(16, 17)}/${key.substring(8, 10)}`,
+            // `${key.substring(16, 17)}/${key.substring(8, 10)}`,
+            key.substring(3),
             mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
         )
         // TODO: update view
@@ -105,21 +118,21 @@ setBones(
         // ["/%/kc_0x42branch1", [0.113668, 0.315253, 0.921183, -0.197781]],
         // ["/%/kc_0x41branch1", [-0.392768, -0.498948, 0.532651, -0.559524]],
         // ["/%/kc_0x40branch1", [-0.428276, -0.163105, 0.552124, -0.696517]],
-        ["/%/kc_0x42branch6", [0, 0, 0, 0]],
-        ["/%/kc_0x41branch6", [0, 0, 0, 0]],
-        ["/%/kc_0x40branch6", [0, 0, 0, 0]],
-        ["/%/kc_0x42branch5", [0, 0, 0, 0]],
-        ["/%/kc_0x41branch5", [0, 0, 0, 0]],
-        ["/%/kc_0x40branch5", [0, 0, 0, 0]],
-        ["/%/kc_0x42branch4", [0, 0, 0, 0]],
-        ["/%/kc_0x41branch4", [0, 0, 0, 0]],
-        ["/%/kc_0x40branch4", [0, 0, 0, 0]],
-        ["/%/kc_0x42branch3", [0, 0, 0, 0]],
-        ["/%/kc_0x41branch3", [0, 0, 0, 0]],
-        ["/%/kc_0x40branch3", [0, 0, 0, 0]],
-        ["/%/kc_0x42branch1", [0, 0, 0, 0]],
-        ["/%/kc_0x41branch1", [0, 0, 0, 0]],
-        ["/%/kc_0x40branch1", [0, 0, 0, 0]],
+        ["/%/base", [0, 0, 0, 0]],
+        ["/%/dorsal", [0, 0, 0, 0]],
+        ["/%/neck", [0, 0, 0, 0]],
+        ["/%/l-upperarm", [0, 0, 0, 0]],
+        ["/%/l-lowerarm", [0, 0, 0, 0]],
+        ["/%/l-hand", [0, 0, 0, 0]],
+        ["/%/r-upperarm", [0, 0, 0, 0]],
+        ["/%/r-lowerarm", [0, 0, 0, 0]],
+        ["/%/r-hand", [0, 0, 0, 0]],
+        ["/%/l-upperleg", [0, 0, 0, 0]],
+        ["/%/l-lowerleg", [0, 0, 0, 0]],
+        ["/%/l-foot", [0, 0, 0, 0]],
+        ["/%/r-upperleg", [0, 0, 0, 0]],
+        ["/%/r-lowerleg", [0, 0, 0, 0]],
+        ["/%/r-foot", [0, 0, 0, 0]]
     ])
 )
 
@@ -250,7 +263,8 @@ export function renderChordata(
         const m = mat4.create()
         mat4.translate(m, m, vec3.fromValues(x, y, 0))
 
-        mat4.multiply(m, m, bones.get(`${branch}/${id}`)!)
+        // mat4.multiply(m, m, bones.get(`${branch}/${id}`)!)
+        mat4.multiply(m, m, bones.get(`${name}`)!)
         mat4.rotateY(m, m, (2 * Math.PI) / 4)
         drawArrow(m, [1, 0, 0])
         mat4.rotateY(m, m, (2 * Math.PI) / 4)
