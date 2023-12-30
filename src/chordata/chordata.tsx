@@ -7,6 +7,8 @@ import { Tab } from "toad.js/view/Tab"
 import { UpdateManager } from "UpdateManager"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
+import { FormSelect } from "toad.js/view/FormSelect"
+import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
 
@@ -341,18 +343,6 @@ function runChordata(mgr: UpdateManager) {
 
 let notochord = new Notochord()
 
-export function FormSelect<V>(props: { model: OptionModelBase<V> }) {
-    return (
-        <>
-            <FormLabel model={props.model} />
-            <FormField>
-                <Select model={props.model} />
-            </FormField>
-            <FormHelp model={props.model} />
-        </>
-    )
-}
-
 const enum CalibrationStep {
     CALIB_IDLE = 0, // we send this at the end of each step
     CALIBRATING = 1, // ???
@@ -601,6 +591,8 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     <br />
                     <Display model={notochord.calibrationState} />
                 </FormField>
+
+                <FormSwitch model={settings.mountKCeptorView}/>
 
                 {/* <FormLabel>Makehuman.js</FormLabel>
                 <FormField>

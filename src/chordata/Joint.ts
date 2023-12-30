@@ -4,8 +4,7 @@ import { getMatrix } from "skeleton/loadSkeleton"
 import { bones } from "./renderChordata"
 
 export class Joint {
-    branch: number
-    id: number
+    n: string
     name: string
     children?: Joint[]
 
@@ -22,9 +21,8 @@ export class Joint {
     matPose!: mat4
     matPoseInv!: mat4
 
-    constructor(branch: number, id: number, name: string, children?: Joint[]) {
-        this.branch = branch
-        this.id = id
+    constructor(n: string, name: string, children?: Joint[]) {
+        this.n = n
         this.name = name
         this.children = children
         if (children !== undefined) {
@@ -83,7 +81,12 @@ export class Joint {
 
     // update matPoseGlobal
     update() {
-        let matPose = bones.get(`${this.branch}/${this.id}`)!
+        // let matPose = bones.get(`${this.branch}/${this.id}`)!
+        let matPose = bones.get(this.n)
+        if (matPose === undefined) {
+            console.log(`no rotation for bone '${this.name}`)
+            return
+        }
         if (this.matNPoseInv !== undefined) {
             matPose = mat4.multiply(mat4.create(), matPose, this.matNPoseInv)
         }
