@@ -604,7 +604,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     >
                         Calibrate N-Pose
                     </Button>
-                </FormField>
+                </FormField> */}
 
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />
@@ -612,7 +612,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
 
                 <FormText model={settings.X1} />
                 <FormText model={settings.Y1} />
-                <FormText model={settings.Z1} /> */}
+                <FormText model={settings.Z1} />
             </Form>
 
             <div style={{ padding: "15px" }}>

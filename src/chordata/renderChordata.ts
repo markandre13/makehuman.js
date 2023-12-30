@@ -91,7 +91,7 @@ export function calibrateNPose(joint?: Joint) {
     if (joint === undefined) {
         joint = chordataSkeleton
     }
-    const matPose = bones.get(joint.n)!
+    const matPose = bones.get(joint.chordataName)!
     joint.matNPoseInv = mat4.invert(mat4.create(), matPose)
     if (joint.children !== undefined) {
         for (const child of joint.children) {
@@ -136,14 +136,14 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
+    bones.set("l-upperarm", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
+    bones.set("l-lowerarm", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
+
     if (!settings.mountKCeptorView.value) {
         if (overlay.children.length > 0) {
             overlay.replaceChildren()
         }
-
-        // bones.set("6/41", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
-        // bones.set("6/42", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
-        //
+        
         chordataSkeleton.build(scene.skeleton)
         chordataSkeleton.update()
         
