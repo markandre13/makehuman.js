@@ -88,24 +88,29 @@ export class Joint {
         if (this.parent === undefined) {
             this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)     
         } else {
-            // compensate for parent pose
-            // FIXME: this isn't exactly correct, e.g. rotate lowerarm around y and see it fail
-            let pPose = mat4.clone(bones.get(this.parent.chordataName)!)
-            mat4.invert(pPose, pPose)
-            matPose = mat4.multiply(mat4.create(), pPose, matPose)
-
             // convert matPose from world to local
             const L = mat4.multiply(mat4.create(), this.parent.matRestGlobal, this.matRestRelative)
             L[12] = L[13] = L[14] = 0
             const invL = mat4.invert(mat4.create(), L)
             matPose = mat4.multiply(mat4.create(), L, matPose) // move matPose into L
-            mat4.multiply(matPose, matPose, invL) // compensate for local's rotation ralative to world
+            mat4.multiply(matPose, matPose, invL) // compensate for local's rotation relative to world
 
+            // mpg := pmpg * ( mrr * mp )
             this.matPoseGlobal = mat4.multiply(
                 mat4.create(),
                 this.parent.matPoseGlobal!,
                 mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
             )
+
+            // compensate for parent pose (saveing'n restoring the translation doesn't seem very clever though...)
+            // and actually, i rather need to change poseMat instead the result of the previous calculation because
+            // poseMat is the primary source for the pose in makehuman...
+            const m = mat4.invert(mat4.create(), this.parent.matRestGlobal) // remove parents rest...
+            mat4.multiply(m, this.parent.matPoseGlobal, m) // from it's rotation
+            mat4.invert(m, m)
+            const [x,y,z] = [this.matPoseGlobal[12], this.matPoseGlobal[13], this.matPoseGlobal[14]]
+            mat4.multiply(this.matPoseGlobal, m, this.matPoseGlobal);
+            [this.matPoseGlobal[12], this.matPoseGlobal[13], this.matPoseGlobal[14]] = [x,y,z]
         }
 
         if (this.children !== undefined) {
