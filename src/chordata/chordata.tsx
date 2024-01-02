@@ -1,7 +1,7 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
 import { calibrateNPose, setBones } from "chordata/renderChordata"
-import { Action, Display, NumberModel, OptionModelBase, Select, TextModel } from "toad.js"
+import { Action, Display, NumberModel, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
 import { UpdateManager } from "UpdateManager"
@@ -74,7 +74,7 @@ class Notochord {
 
     protected async doPullStateJob() {
         try {
-        // when failing, set state to UNAVAILABLE
+            // when failing, set state to UNAVAILABLE
             const response = await fetch(`http://${this.hostname.value}/state?clear_registry=false&peek_output=true`)
             const parser = new window.DOMParser()
             const data = parser.parseFromString(await response.text(), "text/xml")
@@ -83,7 +83,7 @@ class Notochord {
             this.updateConfigs(data)
             // this.updateLogs(data)
         } catch (error) {
-            this.processState.value = "UNAVAILABLE"
+            this.setProccessState("UNAVAILABLE")
         }
         if (this.pullState) {
             setTimeout(this.doPullStateJob, 1000)
@@ -96,33 +96,40 @@ class Notochord {
             if (this.processState.value !== processState.innerHTML) {
                 console.log(`${new Date()} STATE CHANGE FROM ${this.processState.value} TO ${processState.innerHTML}`)
             }
-            this.processState.value = processState.innerHTML
+            this.setProccessState(processState.innerHTML)
+        }
+    }
 
-            switch (this.processState.value) {
-                case "UNAVAILABLE":
-                    this.start.enabled = false
-                    this.stop.enabled = false
-                    break
-                case "STOPPED":
-                case "IDLE":
-                    this.start.enabled = true
-                    this.stop.enabled = false
-                    break
-                case "RUNNING":
-                    this.start.enabled = false
-                    this.stop.enabled = true // !this.poseMode
-                    break
-                default:
-                    console.log(`UNKNOWN STATE ${processState.innerHTML}`)
-            }
+    protected setProccessState(state: string) {
+        if (state === this.processState.value) {
+            return
+        }
+        this.processState.value =  state
 
-            if (processState.innerHTML === "RUNNING" && socket === undefined && !this.poseMode) {
-                socket = runChordata(mgr)
-            }
-            if (processState.innerHTML !== "RUNNING" && socket !== undefined) {
-                socket.close()
-                socket = undefined
-            }
+        switch (this.processState.value) {
+            case "UNAVAILABLE":
+                this.start.enabled = false
+                this.stop.enabled = false
+                break
+            case "STOPPED":
+            case "IDLE":
+                this.start.enabled = true
+                this.stop.enabled = false
+                break
+            case "RUNNING":
+                this.start.enabled = false
+                this.stop.enabled = true // !this.poseMode
+                break
+            default:
+                console.log(`UNKNOWN STATE ${this.processState.value}`)
+        }
+
+        if (this.processState.value === "RUNNING" && socket === undefined && !this.poseMode) {
+            socket = runChordata(mgr)
+        }
+        if (this.processState.value !== "RUNNING" && socket !== undefined) {
+            socket.close()
+            socket = undefined
         }
     }
 
@@ -148,7 +155,7 @@ class Notochord {
             return
         }
         let text = ""
-        for(let i=0; i<log.children.length; ++i) {
+        for (let i = 0; i < log.children.length; ++i) {
             const it = log.children[i]
             text += `${it.nodeName} ${it.innerHTML}`
         }
@@ -160,7 +167,7 @@ class Notochord {
     async doStart() {
         // scan: 0: use hierarchy from the config, 1: scan kceptors
         const url = `http://${this.hostname.value}/notochord/init?scan=0&raw=0&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
-        console.log(`DO START ${url}`)
+        console.log(`${new Date()} START ${url}`)
         const response = await fetch(url)
         if (!response.ok) {
             const msg = `${response.status} ${response.statusText}: ${await response.text()}`
@@ -169,7 +176,7 @@ class Notochord {
     }
     async doStop() {
         const url = `http://${this.hostname.value}/notochord/end`
-        console.log(`DO STOP ${url}`)
+        console.log(`${new Date()} STOP ${url}`)
         if (socket !== undefined) {
             socket!.close()
             socket = undefined
@@ -186,13 +193,16 @@ class Notochord {
         // const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         console.log(`${new Date()} START POSE ${url}`)
         const response = await fetch(url)
+        console.log(`${new Date()} START POSE -> ${response.status} ${response.statusText}`)
         if (!response.ok) {
             const msg = `${response.status} ${response.statusText}: ${await response.text()}`
             console.log(msg)
             this.calibrationState.value = msg
         }
-        // TODO: handle error
-        // r.then( (x) => {x!.text().then( y => console.log(y)) })
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        return state?.innerHTML
     }
     async doStopPose() {
         this.poseMode = false
@@ -203,8 +213,12 @@ class Notochord {
             socket!.close()
             socket = undefined
         }
-        await this.call(url)
-        // TODO: handle error
+        const response = await fetch(url)
+        console.log(`${new Date()} STOP POSE -> ${response.status} ${response.statusText}`)
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        return state?.innerHTML
     }
     setConfig(config: string) {
         this.call(
@@ -507,10 +521,13 @@ function CalibrationButton() {
                     msg += ", calibration: "
                     msg += await notochord.calibrateRun()
                     notochord.calibrationState.value = msg
+
+                    msg += ", stop: "
+                    msg += await notochord.doStopPose()
+                    notochord.calibrationState.value = msg
                 }
                 // when not okay and not run (as run includes a stop), stop
                 if (!ok && step.run !== true) {
-                    await notochord.doStopPose()
                     reset()
                     return
                 }
@@ -592,9 +609,9 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     <Display model={notochord.calibrationState} />
                 </FormField>
 
-                <FormSwitch model={settings.mountKCeptorView}/>
+                <FormSwitch model={settings.mountKCeptorView} />
 
-                {/* <FormLabel>Makehuman.js</FormLabel>
+                <FormLabel>Makehuman.js</FormLabel>
                 <FormField>
                     <Button
                         action={() => {
@@ -604,7 +621,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     >
                         Calibrate N-Pose
                     </Button>
-                </FormField> */}
+                </FormField>
 
                 <FormText model={settings.X0} />
                 <FormText model={settings.Y0} />

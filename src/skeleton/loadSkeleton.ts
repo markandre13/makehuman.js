@@ -40,6 +40,9 @@ function a2vec3(a: number[] | undefined) {
     return vec3.fromValues(a[0], a[1], a[2])
 }
 
+/**
+ * Create a matrix which moves to head, and then rotates towards tail
+ */
 export function getMatrix(head: vec3, tail: vec3, normal: vec3): mat4 {
     let bone_direction = vec3.subtract(vec3.create(), tail, head)
     vec3.normalize(bone_direction, bone_direction)

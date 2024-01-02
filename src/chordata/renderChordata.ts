@@ -77,11 +77,8 @@ export function setBones(newBones: Map<string, number[]>) {
             return
         }
         // /%/kc_0x42branch6 -> {branch}/{id}
-        bones.set(
-            // `${key.substring(16, 17)}/${key.substring(8, 10)}`,
-            key.substring(3),
-            mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
-        )
+        const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
+        bones.set(key.substring(3), m)
         // TODO: update view
     })
 }
@@ -91,8 +88,11 @@ export function calibrateNPose(joint?: Joint) {
     if (joint === undefined) {
         joint = chordataSkeleton
     }
-    const matPose = bones.get(joint.chordataName)!
-    joint.matNPoseInv = mat4.invert(mat4.create(), matPose)
+    const m = mat4.clone(bones.get(joint.chordataName)!)
+    joint.adjustJCS(m)
+    mat4.invert(m, m)
+    joint.matNPoseInv = m
+
     if (joint.children !== undefined) {
         for (const child of joint.children) {
             calibrateNPose(child)
@@ -136,24 +136,24 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    bones.set("l-upperarm", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
-    bones.set("l-lowerarm", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
+    // bones.set("l-upperarm", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
+    // bones.set("l-lowerarm", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
 
     if (!settings.mountKCeptorView.value) {
         if (overlay.children.length > 0) {
             overlay.replaceChildren()
         }
-        
+
         chordataSkeleton.build(scene.skeleton)
-        chordataSkeleton.update()
-        
+        chordataSkeleton.update(settings)
+
         const mesh = new SkeletonMesh(scene.skeleton, chordataSkeleton)
         const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
-        
+
         const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
         const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
-        
+
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programRGBA.setColor([1, 1, 1, 1])
         s.draw(programRGBA, gl.TRIANGLES)
@@ -249,7 +249,7 @@ export function renderChordata(
         let idx = 0
         const overlayChildren: HTMLElement[] = []
 
-        const drawAxis = (x: number, y: number, branch: number, id: number, name: string) => {
+        const drawAxis = (x: number, y: number, name: string) => {
             const m = mat4.create()
             mat4.translate(m, m, vec3.fromValues(x, y, 0))
 
@@ -287,23 +287,23 @@ export function renderChordata(
             label.style.top = `${pixelY}px`
         }
 
-        drawAxis(0, 2, 5, 40, "base")
-        drawAxis(0, 4, 5, 41, "dorsal")
-        drawAxis(0, 6, 5, 42, "neck")
+        drawAxis(0, 2, "base")
+        drawAxis(0, 4, "dorsal")
+        drawAxis(0, 6, "neck")
 
-        drawAxis(3, 4, 6, 40, "r-upperarm")
-        drawAxis(3, 2, 6, 41, "r-lowerarm")
-        drawAxis(3, 0, 6, 42, "r-hand")
-        drawAxis(-3, 4, 4, 40, "l-upperarm")
-        drawAxis(-3, 2, 4, 41, "l-lowerarm")
-        drawAxis(-3, 0, 4, 42, "l-hand")
+        drawAxis(3, 4, "r-upperarm")
+        drawAxis(3, 2, "r-lowerarm")
+        drawAxis(3, 0, "r-hand")
+        drawAxis(-3, 4, "l-upperarm")
+        drawAxis(-3, 2, "l-lowerarm")
+        drawAxis(-3, 0, "l-hand")
 
-        drawAxis(1.5, -2, 1, 40, "r-upperleg")
-        drawAxis(1.5, -4, 1, 41, "r-lowerleg")
-        drawAxis(1.5, -6, 1, 42, "r-foot")
-        drawAxis(-1.5, -2, 3, 40, "l-upperleg")
-        drawAxis(-1.5, -4, 3, 41, "l-lowerleg")
-        drawAxis(-1.5, -6, 3, 42, "l-foot")
+        drawAxis(1.5, -2, "r-upperleg")
+        drawAxis(1.5, -4, "r-lowerleg")
+        drawAxis(1.5, -6, "r-foot")
+        drawAxis(-1.5, -2, "l-upperleg")
+        drawAxis(-1.5, -4, "l-lowerleg")
+        drawAxis(-1.5, -6, "l-foot")
 
         if (overlay.children.length === 0) {
             overlay.replaceChildren(...overlayChildren)

@@ -167,6 +167,8 @@ cd /opt/chordata/notochord-control-server
 ```
 ## Pose Calibration
 
+### Avatar
+
 To use the Pose Calibration on the Notochord, config needs to contain
 
     <use_armature>true</use_armature>
@@ -226,6 +228,20 @@ void Chordata::Armature_Task::run() {
 ah! `void Chordata::Fusion_Task::run()` does indeed do something different when an armature is defined.
 
 for the time being, it seems we just need the nodes as we still send the global rotation (but adjusted) over COOP.
+
+### Calibration Algorithm
+
+src/pose_calib/core.py
+
+i: start
+s: end
+
+func_arms
+func_trunc
+func_legs_r
+func_legs_l
+
+## Debugging
 
 We can get core dumps...
 

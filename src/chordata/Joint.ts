@@ -2,6 +2,10 @@ import { mat4, vec3, vec4 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { getMatrix } from "skeleton/loadSkeleton"
 import { bones } from "./renderChordata"
+import { ChordataSettings } from "./ChordataSettings"
+import { euler_matrix } from "lib/euler_matrix"
+
+const D = 180 / Math.PI
 
 export class Joint {
     chordataName: string
@@ -26,7 +30,7 @@ export class Joint {
         this.makehumanName = name
         this.children = children
         if (children !== undefined) {
-            children.forEach(it => it.parent = this)
+            children.forEach((it) => (it.parent = this))
         }
     }
 
@@ -78,16 +82,58 @@ export class Joint {
         }
     }
 
+    adjustJCS(matPose: mat4) {
+        if (this.chordataName === "r-upperarm") {
+            mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        }
+        if (this.chordataName === "r-hand") {
+            mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
+        }
+        if (["r-upperleg", "r-lowerleg", "r-foot", "l-upperleg", "l-lowerleg", "l-foot"].includes(this.chordataName)) {
+            mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
+            mat4.scale(matPose, matPose, vec3.fromValues(1, 1, -1))
+        }
+        if (this.chordataName === "r-foot" || this.chordataName === "l-foot") {
+            mat4.multiply(matPose, euler_matrix(0, 0, 65 / D), matPose)
+        }
+    }
+
     // update matPoseGlobal
-    update() {
+    update(settings: ChordataSettings) {
         let matPose = bones.get(this.chordataName)
         if (matPose === undefined) {
             matPose = mat4.create()
+        } else {
+            matPose = mat4.clone(matPose)
+        }
+
+        if (this.chordataName === "base") {
+            mat4.multiply(
+                matPose,
+                euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D),
+                matPose
+            )
+        }
+        if (this.chordataName === "dorsal") {
+            mat4.multiply(
+                matPose,
+                euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D),
+                matPose
+            )
+        }
+
+        this.adjustJCS(matPose)
+
+        if (this.matNPoseInv !== undefined) {
+            mat4.multiply(matPose, matPose, this.matNPoseInv)
         }
 
         if (this.parent === undefined) {
-            this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)     
+            this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
         } else {
+            // this.matPoseGlobal = mat4.clone(this.matRestGlobal)
+            // mat4.multiply(this.matPoseGlobal, this.matPoseGlobal, matPose)
+
             // convert matPose from world to local
             const L = mat4.multiply(mat4.create(), this.parent.matRestGlobal, this.matRestRelative)
             L[12] = L[13] = L[14] = 0
@@ -95,27 +141,36 @@ export class Joint {
             matPose = mat4.multiply(mat4.create(), L, matPose) // move matPose into L
             mat4.multiply(matPose, matPose, invL) // compensate for local's rotation relative to world
 
-            // mpg := pmpg * ( mrr * mp )
+            // * this.parent.matPoseGlobal! ^-1 ???
+            // what the easiest way to implement it? then refactor to work with the formula below?
+
+            // calculate matPoseGlobal from matPose
             this.matPoseGlobal = mat4.multiply(
                 mat4.create(),
-                this.parent.matPoseGlobal!,
-                mat4.multiply(mat4.create(), this.matRestRelative!, matPose!)
+                this.parent.matPoseGlobal!, // place relative to parent's pose
+                mat4.multiply(
+                    mat4.create(),
+                    this.matRestRelative!, // relative to rest pose
+                    matPose!
+                )
             )
 
             // compensate for parent pose (saveing'n restoring the translation doesn't seem very clever though...)
             // and actually, i rather need to change poseMat instead the result of the previous calculation because
             // poseMat is the primary source for the pose in makehuman...
+            // but for now it's good enough for testing chordata
             const m = mat4.invert(mat4.create(), this.parent.matRestGlobal) // remove parents rest...
-            mat4.multiply(m, this.parent.matPoseGlobal, m) // from it's rotation
+            mat4.multiply(m, this.parent.matPoseGlobal, m) // from it's pose rotation
             mat4.invert(m, m)
-            const [x,y,z] = [this.matPoseGlobal[12], this.matPoseGlobal[13], this.matPoseGlobal[14]]
-            mat4.multiply(this.matPoseGlobal, m, this.matPoseGlobal);
-            [this.matPoseGlobal[12], this.matPoseGlobal[13], this.matPoseGlobal[14]] = [x,y,z]
+            // remove parent's pose rotation from matPoseGlobal
+            const [x, y, z] = [this.matPoseGlobal[12], this.matPoseGlobal[13], this.matPoseGlobal[14]]
+            mat4.multiply(this.matPoseGlobal, m, this.matPoseGlobal)
+            ;[this.matPoseGlobal[12], this.matPoseGlobal[13], this.matPoseGlobal[14]] = [x, y, z]
         }
 
         if (this.children !== undefined) {
             for (const child of this.children) {
-                child.update()
+                child.update(settings)
             }
         }
     }

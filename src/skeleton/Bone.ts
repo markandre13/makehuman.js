@@ -12,7 +12,6 @@ export class Bone {
     tailPos = [0, 0, 0] // FIXME: vec3
     roll: string | Array<string>
     length = 0
-    yvector4?: vec4 // direction vector of this bone
 
     parent?: Bone
     children: Bone[] = []
@@ -24,8 +23,10 @@ export class Bone {
     matPose: mat4
 
     // calculated rest position
-    matRestGlobal?: mat4 // bone relative to world
+    matRestGlobal?: mat4 // bone relative to world (move, rotate)
     matRestRelative?: mat4 // bone relative to parent
+    yvector4?: vec4 // direction vector of this bone
+
     // calculated pose positions
     matPoseGlobal?: mat4 // relative to world, use to render the skeleton (TODO: change that and get rid of this variable)
     matPoseVerts?: mat4 // relative to world and own rest pose, used for skinning
@@ -138,6 +139,8 @@ export class Bone {
     build(ref_skel?: any) {
         const head3 = vec3.fromValues(this.headPos[0], this.headPos[1], this.headPos[2])
         const tail3 = vec3.fromValues(this.tailPos[0], this.tailPos[1], this.tailPos[2])
+        this.length = vec3.distance(head3, tail3)
+        this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
 
         let normal
         if (ref_skel) {
@@ -146,7 +149,6 @@ export class Bone {
             normal = this.get_normal()
         }
         this.matRestGlobal = getMatrix(head3, tail3, normal)
-        this.length = vec3.distance(head3, tail3)
         if (this.parent === undefined) {
             this.matRestRelative = this.matRestGlobal
         } else {
@@ -156,7 +158,6 @@ export class Bone {
                 this.matRestGlobal
             )
         }
-        this.yvector4 = vec4.fromValues(0, this.length, 0, 1)
     }
 
     // calculate matPoseGlobal & matPoseVerts
