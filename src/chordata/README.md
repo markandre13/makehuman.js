@@ -206,8 +206,9 @@ void Chordata::_Bone::set_global_rotation(Quaternion &_global_rotation, bool use
 ...
 }
 ```
- which makes sense as the quaternions i get over COOP are global...
-        which is called by
+which makes sense as the quaternions i get over COOP are global...
+
+which is called by
 ```c
 void Chordata::_Armature::process_bone(const _Node &n, Quaternion &q) {
     bone_ptr bone = bones[n.get_label()];
@@ -225,7 +226,21 @@ void Chordata::Armature_Task::run() {
 	}
 }
 ```
-ah! `void Chordata::Fusion_Task::run()` does indeed do something different when an armature is defined.
+and the armature is called once it is defined. otherwise data will be send as is:
+```c
+void Chordata::Fusion_Task::run() {
+    ...
+    if (Chordata::get_config()->use_armature) {
+        // forward to armature
+    } else {
+        // transmit quaternion as is
+        comm::_transmit(*node, q);
+        // when requested, also transmit raw data
+        if (Chordata::get_config()->raw){ comm::_transmit(*node); }	
+    }
+    ...
+}
+```
 
 for the time being, it seems we just need the nodes as we still send the global rotation (but adjusted) over COOP.
 

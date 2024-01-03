@@ -53,8 +53,9 @@ class Notochord {
 
     poseMode = false
 
-    start = new Action(() => this.doStart())
+    start = new Action(() => this.doStart(), { enabled: false })
     stop = new Action(() => this.doStop(), { enabled: false })
+    reboot = new Action(() => this.doReboot(), { enabled: false })
 
     protected pullState = false
 
@@ -74,8 +75,13 @@ class Notochord {
 
     protected async doPullStateJob() {
         try {
-            // when failing, set state to UNAVAILABLE
-            const response = await fetch(`http://${this.hostname.value}/state?clear_registry=false&peek_output=true`)
+            const controller = new AbortController()
+            const id = setTimeout(() => controller.abort(), 500)
+            const response = await fetch(`http://${this.hostname.value}/state?clear_registry=false&peek_output=true`, {
+                signal: controller.signal,
+            })
+            clearTimeout(id)
+
             const parser = new window.DOMParser()
             const data = parser.parseFromString(await response.text(), "text/xml")
             // console.log(data)
@@ -83,6 +89,15 @@ class Notochord {
             this.updateConfigs(data)
             // this.updateLogs(data)
         } catch (error) {
+            let expectedError = false
+            if (error instanceof Error) {
+                if (error.name === "AbortError") {
+                    expectedError = true
+                }
+            }
+            if (!expectedError) {
+                console.log(error)
+            }
             this.setProccessState("UNAVAILABLE")
         }
         if (this.pullState) {
@@ -104,21 +119,24 @@ class Notochord {
         if (state === this.processState.value) {
             return
         }
-        this.processState.value =  state
+        this.processState.value = state
 
         switch (this.processState.value) {
             case "UNAVAILABLE":
                 this.start.enabled = false
                 this.stop.enabled = false
+                this.reboot.enabled = false
                 break
             case "STOPPED":
             case "IDLE":
                 this.start.enabled = true
                 this.stop.enabled = false
+                this.reboot.enabled = true
                 break
             case "RUNNING":
                 this.start.enabled = false
-                this.stop.enabled = true // !this.poseMode
+                this.stop.enabled = !this.poseMode
+                this.reboot.enabled = true
                 break
             default:
                 console.log(`UNKNOWN STATE ${this.processState.value}`)
@@ -162,6 +180,17 @@ class Notochord {
         if (text.length > 0) {
             console.log(text)
         }
+    }
+
+    async doReboot() {
+        const url = `http://${this.hostname.value}/maintenance/reboot`
+        console.log(`${new Date()} REBOOT ${url}`)
+        const response = await fetch(url)
+        console.log(`${new Date()} REBOOT -> ${response.status} ${response.statusText}`)
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        return state?.innerHTML
     }
 
     async doStart() {
@@ -593,6 +622,9 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     </Button>
                     <Button variant={ButtonVariant.NEGATIVE} action={notochord.stop}>
                         Stop
+                    </Button>
+                    <Button variant={ButtonVariant.PRIMARY} action={notochord.reboot}>
+                        Reboot
                     </Button>
                 </FormField>
                 <FormHelp model={notochord.processState} />

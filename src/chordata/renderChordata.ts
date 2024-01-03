@@ -30,7 +30,7 @@ const chordataSkeleton = new Joint("base", "root", [
             ])
         ]),
         new Joint("r-upperarm", "upperarm01.R", [
-            new Joint("r-upperarm", "lowerarm01.R", [
+            new Joint("r-lowerarm", "lowerarm01.R", [
                 new Joint("r-hand", "wrist.R")
             ])
         ])
@@ -63,6 +63,10 @@ const chordataSkeleton = new Joint("base", "root", [
   2 r-upperleg
   1   r-lowerleg
   0     r-foot
+
+
+
+      base
 */
 
 const D = 180 / Math.PI
