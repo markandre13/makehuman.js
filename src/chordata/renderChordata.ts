@@ -18,6 +18,8 @@ import { euler_matrix } from "lib/euler_matrix"
 import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
 
+const D = 180 / Math.PI
+
 export const bones = new Map<string, mat4>()
 
 // prettier-ignore
@@ -63,27 +65,74 @@ const chordataSkeleton = new Joint("base", "root", [
   2 r-upperleg
   1   r-lowerleg
   0     r-foot
-
-
-
-      base
 */
 
-const D = 180 / Math.PI
+// in no avatar/scan has been configured
+const kceptorName2boneName = new Map<string, string>([
+    ["kc_0x40branch1", "r-upperleg"],
+    ["kc_0x41branch1", "r-lowerleg"],
+    ["kc_0x42branch1", "r-foot"],
+    ["kc_0x40branch3", "l-upperleg"],
+    ["kc_0x41branch3", "l-lowerleg"],
+    ["kc_0x42branch3", "l-foot"],
+    ["kc_0x40branch4", "l-upperarm"],
+    ["kc_0x41branch4", "l-lowerarm"],
+    ["kc_0x42branch4", "l-hand"],
+    ["kc_0x40branch5", "base"],
+    ["kc_0x41branch5", "dorsal"],
+    ["kc_0x42branch5", "neck"],
+    ["kc_0x40branch6", "r-upperarm"],
+    ["kc_0x41branch6", "r-lowerarm"],
+    ["kc_0x42branch6", "r-hand"],
+])
 
 // save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
-    // console.log(`setBones()`)
     // console.log(newBones)
-    // bones.clear()
     newBones.forEach((value, key) => {
         if (value.length !== 4) {
             return
         }
-        // /%/kc_0x42branch6 -> {branch}/{id}
-        const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
-        bones.set(key.substring(3), m)
-        // TODO: update view
+        // convert received quaternion to mat4
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[3], value[2]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[2], value[1], value[3]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[2], value[3], value[1]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[3], value[1], value[2]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[3], value[2], value[1]))
+
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[0], value[2], value[3]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[0], value[3], value[2]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[2], value[0], value[3]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[2], value[3], value[0]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[3], value[0], value[2]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[3], value[2], value[0]))
+
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[1], value[0], value[3]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[1], value[3], value[0]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[0], value[1], value[3]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[0], value[3], value[1]))
+        // GOOD
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[3], value[1], value[0]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[3], value[0], value[1]))
+
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[1], value[2], value[0]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[1], value[0], value[2]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[2], value[1], value[0]))
+        // GOOD
+        const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[2], value[0], value[1]))
+        mat4.rotateX(m, m, -Math.PI/2)
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[0], value[1], value[2]))
+        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[0], value[2], value[1]))
+
+        // in case we got a kceptor name, convert it to a bone name
+        let name = key.substring(3)
+        const boneName = kceptorName2boneName.get(name)
+        if (boneName !== undefined) {
+            name = boneName
+        }
+        // store for rendering
+        bones.set(name, m)
     })
 }
 
@@ -256,6 +305,7 @@ export function renderChordata(
         const drawAxis = (x: number, y: number, name: string) => {
             const m = mat4.create()
             mat4.translate(m, m, vec3.fromValues(x, y, 0))
+            mat4.multiply(m, m, euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
 
             // mat4.multiply(m, m, bones.get(`${branch}/${id}`)!)
             mat4.multiply(m, m, bones.get(`${name}`)!)

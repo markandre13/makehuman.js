@@ -57,11 +57,14 @@ class Notochord {
     stop = new Action(() => this.doStop(), { enabled: false })
     reboot = new Action(() => this.doReboot(), { enabled: false })
 
+    protected settings: ChordataSettings
+
     protected pullState = false
 
-    constructor() {
+    constructor(settings: ChordataSettings) {
         this.visibilityChange = this.visibilityChange.bind(this)
         this.doPullStateJob = this.doPullStateJob.bind(this)
+        this.settings = settings
     }
 
     visibilityChange(state: "visible" | "hidden") {
@@ -76,7 +79,7 @@ class Notochord {
     protected async doPullStateJob() {
         try {
             const controller = new AbortController()
-            const id = setTimeout(() => controller.abort(), 500)
+            const id = setTimeout(() => controller.abort(), 1000)
             const response = await fetch(`http://${this.hostname.value}/state?clear_registry=false&peek_output=true`, {
                 signal: controller.signal,
             })
@@ -195,7 +198,7 @@ class Notochord {
 
     async doStart() {
         // scan: 0: use hierarchy from the config, 1: scan kceptors
-        const url = `http://${this.hostname.value}/notochord/init?scan=0&raw=0&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
+        const url = `http://${this.hostname.value}/notochord/init?scan=${this.settings.scan.value ? 1 : 0}&raw=0&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
         console.log(`${new Date()} START ${url}`)
         const response = await fetch(url)
         if (!response.ok) {
@@ -334,11 +337,11 @@ class Notochord {
 }
 
 function runChordata(mgr: UpdateManager) {
+    let initialMessage = true
     const enc = new TextEncoder()
     const host = "localhost"
     const port = 9001
     const client = new WebSocket(`ws://${host}:${port}`) // CHECK: is there a WS port on the Notochord itself?
-    // const client = new WebSocket("ws://notochord.fritz.box:7681/")
     client.binaryType = "arraybuffer"
     client.onerror = (e) => {
         console.log(`${new Date()} ERROR COMMUNICATING WITH COOP PROXY`)
@@ -362,7 +365,25 @@ function runChordata(mgr: UpdateManager) {
             // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
             const decoder = new COOPDecoder(arrayBuffer)
             try {
-                setBones(decoder.decode())
+                const msg = decoder.decode()
+                if (initialMessage) {
+                    let value = msg.get("/%/kc_0x40branch1")
+                    if (value !== undefined) {
+                        if (value.length === 4) {
+                            console.log(`COOP uses kceptor names: [${value.join(", ")}]`)
+                            initialMessage = false
+                        }
+                    }
+                    value = msg.get("/%/r-upperleg")
+                    if (value !== undefined) {
+                        if (value.length === 4) {
+                            console.log(`COOP uses bones names: [${value.join(", ")}]`)
+                            initialMessage = false      
+                        }
+                    }
+                    initialMessage = false
+                }
+                setBones(msg)
                 mgr.invalidateView()
                 client!.send(enc.encode("GET CHORDATA"))
             } catch (error) {
@@ -384,7 +405,7 @@ function runChordata(mgr: UpdateManager) {
     return client
 }
 
-let notochord = new Notochord()
+let notochord: Notochord
 
 const enum CalibrationStep {
     CALIB_IDLE = 0, // we send this at the end of each step
@@ -484,7 +505,7 @@ function CalibrationButton() {
     let running = false
     const interval = 2
     const action = new Action(() => {})
-    const buttonHandler = () => {
+    const buttonHandler = async() => {      
         let stepCounter = -1
         let timeCounter = -1
         const reset = () => {
@@ -562,25 +583,28 @@ function CalibrationButton() {
                 }
             }
 
-            // if (call) {
-            //     if (stepCounter >= script.length - 1) {
-            //         await notochord.doStopPose()
-            //     }
-            // }
+            if (call) {
+                if (stepCounter >= script.length - 1) {
+                    reset()
+                }
+            }
 
             if (notochord.processState.value === "RUNNING") {
                 timeCounter = timeCounter - 0.1
             }
             setTimeout(timeHandler, 100)
         }
+
         if (!running) {
             running = true
             btn.style.color = "#000"
             btn.style.fontSize = "calc((14/16) * 1rem)"
             timeHandler()
         } else {
+            let msg = "abort: "
+            msg += await notochord.doStopPose()
+            notochord.calibrationState.value = msg
             reset()
-            notochord.calibrate(CalibrationStep.CALIB_IDLE)
         }
     }
     button = (
@@ -597,6 +621,7 @@ function CalibrationButton() {
 }
 
 export default function (updateManager: UpdateManager, settings: ChordataSettings) {
+    notochord = new Notochord(settings)
     mgr = updateManager
     settings.modified.add(() => updateManager.invalidateView())
     return (
@@ -630,6 +655,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormHelp model={notochord.processState} />
 
                 <FormSelect model={notochord.configs} />
+                <FormSwitch model={settings.scan} />
 
                 <FormLabel>Sensor Calibration</FormLabel>
                 <FormField>T.B.D.</FormField>

@@ -85,6 +85,7 @@ export class Joint {
     adjustJCS(matPose: mat4) {
         if (["r-upperarm", "r-lowerarm", "r-hand"].includes(this.chordataName)) {
             mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+            // mat4.scale(matPose, matPose, vec3.fromValues(-1, 1, 1))
         }
         if (["r-upperleg", "r-lowerleg", "r-foot", "l-upperleg", "l-lowerleg", "l-foot"].includes(this.chordataName)) {
             mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
@@ -93,9 +94,14 @@ export class Joint {
         if (["r-foot", "l-foot"].includes(this.chordataName)) {
             mat4.multiply(matPose, euler_matrix(0, 0, 90 / D), matPose)
         }
-        // if (this.chordataName === "r-hand") {
-        //     mat4.multiply(matPose, euler_matrix(0, 0, 15 / D), matPose)
-        // }
+        if (["base"].includes(this.chordataName)) {
+            mat4.multiply(matPose, euler_matrix(0, 0, -90 / D), matPose)
+            mat4.multiply(matPose, euler_matrix(0, 90 / D, 90 / D), matPose)
+        }
+        if (["dorsal"].includes(this.chordataName)) {
+            mat4.multiply(matPose, euler_matrix(0, 0, 180 / D), matPose)
+            mat4.multiply(matPose, euler_matrix(0, 90 / D, 90 / D), matPose)
+        }
     }
 
     // update matPoseGlobal
