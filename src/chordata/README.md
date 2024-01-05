@@ -2,6 +2,19 @@
 
 [Chordata Motion](https://chordata.cc) is an open-source motion capture system of which I got the set with 15 sensors.
 
+* Each sensor contains accelerometer, gyroscope and magnetometer
+* [Fusion](https://github.com/xioTechnologies/Fusion) is used to combine them into a single quaternion.
+
+  "An efficient orientation filter for inertial and inertial/magnetic sensor arrays", Sebastian O.H. Madgwick, 2010-04-30
+
+* There is a pose calibration algorithm.
+
+* In the future, using https://github.com/xioTechnologies/Gait-Tracking on a single foot can be used to calculate x,y,z relative coordinates
+  of a walking person.
+
+* Inertial Measurement Unit (IMU): accelerometer + gyroscope
+* Magnetic, Angular Rate, Gravity (MARG): IMU + magnetometer
+
 The folks are super busy working on it so instead of wasting their time, and because that's what I like to do anyway, here are my own collected notes while attempting to wrap my head around it.
 
 ## Setup

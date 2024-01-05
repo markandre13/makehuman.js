@@ -11,6 +11,8 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
+import { mat4, quat } from "gl-matrix"
+import { euler_from_matrix } from "lib/euler_matrix"
 
 // GOAL:
 // * call the notochord on our own
@@ -145,7 +147,7 @@ class Notochord {
                 console.log(`UNKNOWN STATE ${this.processState.value}`)
         }
 
-        if (this.processState.value === "RUNNING" && socket === undefined && !this.poseMode) {
+        if (this.processState.value === "RUNNING" && socket === undefined) {
             socket = runChordata(mgr)
         }
         if (this.processState.value !== "RUNNING" && socket !== undefined) {
@@ -198,7 +200,7 @@ class Notochord {
 
     async doStart() {
         // scan: 0: use hierarchy from the config, 1: scan kceptors
-        const url = `http://${this.hostname.value}/notochord/init?scan=${this.settings.scan.value ? 1 : 0}&raw=0&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
+        const url = `http://${this.hostname.value}/notochord/init?scan=0&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
         console.log(`${new Date()} START ${url}`)
         const response = await fetch(url)
         if (!response.ok) {
@@ -366,23 +368,6 @@ function runChordata(mgr: UpdateManager) {
             const decoder = new COOPDecoder(arrayBuffer)
             try {
                 const msg = decoder.decode()
-                if (initialMessage) {
-                    let value = msg.get("/%/kc_0x40branch1")
-                    if (value !== undefined) {
-                        if (value.length === 4) {
-                            console.log(`COOP uses kceptor names: [${value.join(", ")}]`)
-                            initialMessage = false
-                        }
-                    }
-                    value = msg.get("/%/r-upperleg")
-                    if (value !== undefined) {
-                        if (value.length === 4) {
-                            console.log(`COOP uses bones names: [${value.join(", ")}]`)
-                            initialMessage = false      
-                        }
-                    }
-                    initialMessage = false
-                }
                 setBones(msg)
                 mgr.invalidateView()
                 client!.send(enc.encode("GET CHORDATA"))
@@ -393,10 +378,8 @@ function runChordata(mgr: UpdateManager) {
                 socket = undefined
                 console.log(`failed to decode chordata: ${error}`)
                 // hexdump(decoder.bytes)
-                // client!.send(enc.encode("GET CHORDATA"))
             }
         }
-        // console.log("REQUEST CHORDATA")
         client!.send(enc.encode("GET CHORDATA"))
     }
     client.onclose = (e: CloseEvent) => {
@@ -655,7 +638,6 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormHelp model={notochord.processState} />
 
                 <FormSelect model={notochord.configs} />
-                <FormSwitch model={settings.scan} />
 
                 <FormLabel>Sensor Calibration</FormLabel>
                 <FormField>T.B.D.</FormField>

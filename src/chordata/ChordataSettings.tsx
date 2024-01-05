@@ -10,12 +10,8 @@ export class ChordataSettings {
     constructor() {
         this.mountKCeptorView.modified.add( () => this.modified.trigger() )
     }
-    mountKCeptorView = new BooleanModel(true, {
+    mountKCeptorView = new BooleanModel(false, {
         label: "Mount KCeptor View"
-    })
-    scan = new BooleanModel(false, {
-        label: "Scan",
-        description: "Do not use config/calibration to find/query KCeptors. Requires a config without an avatar."
     })
     modified = new Signal()
     // 1st vector for playing

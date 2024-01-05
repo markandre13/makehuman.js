@@ -86,6 +86,41 @@ const kceptorName2boneName = new Map<string, string>([
     ["kc_0x42branch6", "r-hand"],
 ])
 
+/**
+ * Convert Chordata/Blender quaternion to OpenGL matrix
+ * 
+ * Chordata stores quaternions as [w, x, y, z], gl-matrix as [x, y, z, w]
+ * 
+ * Chordata uses a right-hand coordinate system with Z being up:
+ * ```
+ *     Z    _ Y
+ *     ^    /|
+ *     |  /
+ *     |/
+ *     +----> X
+ * ```
+ * OpenGL uses a right-hand coordinate system with Y being up, and a
+ * left-handed in screen-space
+ * ```
+ *     Y    _ Z
+ *     ^    /|
+ *     |  /
+ *     |/
+ *     +----> X
+ * ```
+ */
+function chordataQuat2glMatrix(chordataQuaternion: number[]) {
+    const w = chordataQuaternion[0]
+    const x = chordataQuaternion[1]
+    const y = chordataQuaternion[2]
+    const z = chordataQuaternion[3]
+    const m = mat4.fromQuat(mat4.create(), quat.fromValues(x, z, -y, w))
+    // KCeptor rotation
+    // mat4.rotateX(m, m, 90 / D)
+    // mat4.rotateZ(m, m, -90 / D)
+    return m
+}
+
 // save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
     // console.log(newBones)
@@ -93,38 +128,6 @@ export function setBones(newBones: Map<string, number[]>) {
         if (value.length !== 4) {
             return
         }
-        // convert received quaternion to mat4
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[2], value[3]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[1], value[3], value[2]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[2], value[1], value[3]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[2], value[3], value[1]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[3], value[1], value[2]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[0], value[3], value[2], value[1]))
-
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[0], value[2], value[3]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[0], value[3], value[2]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[2], value[0], value[3]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[2], value[3], value[0]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[3], value[0], value[2]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[1], value[3], value[2], value[0]))
-
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[1], value[0], value[3]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[1], value[3], value[0]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[0], value[1], value[3]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[0], value[3], value[1]))
-        // GOOD
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[3], value[1], value[0]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[2], value[3], value[0], value[1]))
-
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[1], value[2], value[0]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[1], value[0], value[2]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[2], value[1], value[0]))
-        // GOOD
-        const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[2], value[0], value[1]))
-        mat4.rotateX(m, m, -Math.PI/2)
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[0], value[1], value[2]))
-        // const m = mat4.fromQuat(mat4.create(), quat.fromValues(value[3], value[0], value[2], value[1]))
-
         // in case we got a kceptor name, convert it to a bone name
         let name = key.substring(3)
         const boneName = kceptorName2boneName.get(name)
@@ -132,7 +135,7 @@ export function setBones(newBones: Map<string, number[]>) {
             name = boneName
         }
         // store for rendering
-        bones.set(name, m)
+        bones.set(name, chordataQuat2glMatrix(value))
     })
 }
 

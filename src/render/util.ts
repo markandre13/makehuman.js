@@ -17,17 +17,6 @@ export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasEl
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-// export function createModelViewMatrix(renderMode: RenderMode, cubeRotation: number) {
-//     const modelViewMatrix = mat4.create()
-//     if (renderMode === RenderMode.EXPRESSION) {
-//         mat4.translate(modelViewMatrix, modelViewMatrix, [0.5, -7, -5])
-//         mat4.rotate(modelViewMatrix, modelViewMatrix, -Math.PI / 6, [0, 1, 0])
-//     } else {
-//         mat4.translate(modelViewMatrix, modelViewMatrix, [-0, 0, -25]) // move the model (cube) away
-//         mat4.rotate(modelViewMatrix, modelViewMatrix, cubeRotation * 0.7, [0, 1, 0])
-//     }
-//     return modelViewMatrix
-// }
 export function createModelViewMatrix(x: number, y: number) {
     const D = 180 / Math.PI
     const modelViewMatrix = mat4.create()
@@ -44,9 +33,9 @@ export function createProjectionMatrix(canvas: HTMLCanvasElement, perspective: b
     const zFar = 100
     const projectionMatrix = mat4.create()
     if (perspective) {
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
+        mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
     } else {
-        mat4.ortho(projectionMatrix, -10*aspect, 10*aspect,  -10, 10, zNear, zFar)
+        mat4.ortho(projectionMatrix, -10 * aspect, 10 * aspect, -10, 10, zNear, zFar)
     }
     return projectionMatrix
 }
@@ -78,30 +67,13 @@ export function loadTexture(gl: WebGLRenderingContext, url: string, cb?: () => v
     const srcFormat = gl.RGBA
     const srcType = gl.UNSIGNED_BYTE
     const pixel = new Uint8Array([0, 0, 255, 255]) // opaque blue
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        level,
-        internalFormat,
-        width,
-        height,
-        border,
-        srcFormat,
-        srcType,
-        pixel
-    )
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel)
 
     const image = new Image()
     image.onload = () => {
         console.log(`texture "${url}" has been loaded`)
         gl.bindTexture(gl.TEXTURE_2D, texture)
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            level,
-            internalFormat,
-            srcFormat,
-            srcType,
-            image
-        )
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image)
 
         // WebGL1 has different requirements for power of 2 images
         // vs non power of 2 images so check if the image is a
@@ -126,45 +98,4 @@ export function loadTexture(gl: WebGLRenderingContext, url: string, cb?: () => v
 }
 function isPowerOf2(value: number) {
     return (value & (value - 1)) === 0
-}
-function createTexturedCubeRenderer(gl: WebGL2RenderingContext): RenderMesh {
-    //         4-------5
-    //        /       /|
-    //       0-------1 |
-    //       | 7     | 6
-    //       |       |/
-    //       3-------2
-    const xyz = [
-        -1, 1, 1,
-        1, 1, 1,
-        1, -1, 1,
-        -1, -1, 1,
-        -1, 1, -1,
-        1, 1, -1,
-        1, -1, -1,
-        -1, -1, -1, // 7
-    ]
-    const fxyz = [
-        0, 1, 2, 3,
-        7, 6, 5, 4,
-        4, 5, 1, 0,
-        3, 2, 6, 7,
-        1, 5, 6, 2,
-        4, 0, 3, 7 // left
-    ]
-    const uv = [
-        0, 1,
-        1, 1,
-        1, 0,
-        0, 0,
-    ]
-    const fuv = [
-        0, 1, 2, 3,
-        0, 1, 2, 3,
-        0, 1, 2, 3,
-        0, 1, 2, 3,
-        0, 1, 2, 3,
-        0, 1, 2, 3
-    ]
-    return new RenderMesh(gl, new Float32Array(xyz), fxyz, new Float32Array(uv), fuv)
 }
