@@ -88,9 +88,9 @@ const kceptorName2boneName = new Map<string, string>([
 
 /**
  * Convert Chordata/Blender quaternion to OpenGL matrix
- * 
+ *
  * Chordata stores quaternions as [w, x, y, z], gl-matrix as [x, y, z, w]
- * 
+ *
  * Chordata uses a right-hand coordinate system with Z being up:
  * ```
  *     Z    _ Y
@@ -110,10 +110,7 @@ const kceptorName2boneName = new Map<string, string>([
  * ```
  */
 function chordataQuat2glMatrix(chordataQuaternion: number[]) {
-    const w = chordataQuaternion[0]
-    const x = chordataQuaternion[1]
-    const y = chordataQuaternion[2]
-    const z = chordataQuaternion[3]
+    const [w, x, y, z] = chordataQuaternion
     const m = mat4.fromQuat(mat4.create(), quat.fromValues(x, z, -y, w))
     // KCeptor rotation
     // mat4.rotateX(m, m, 90 / D)
