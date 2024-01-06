@@ -99,6 +99,9 @@ class Notochord {
                 if (error.name === "AbortError") {
                     expectedError = true
                 }
+                if (error.name === "TypeError") {
+                    expectedError = true
+                }
             }
             if (!expectedError) {
                 console.log(error)
@@ -200,7 +203,7 @@ class Notochord {
 
     async doStart() {
         // scan: 0: use hierarchy from the config, 1: scan kceptors
-        const url = `http://${this.hostname.value}/notochord/init?scan=0&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=2`
+        const url = `http://${this.hostname.value}/notochord/init?scan=0&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         console.log(`${new Date()} START ${url}`)
         const response = await fetch(url)
         if (!response.ok) {

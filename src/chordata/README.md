@@ -1,4 +1,27 @@
-# Chordata Motion
+Chordata Motion
+===============
+
+***Table of Contents***
+
+- [Introduction](#introduction)
+- [Install](#install)
+  - [Official Image](#official-image)
+  - [Custom Build](#custom-build)
+  - [Grant makehuman.js access to the Notochord](#grant-makehumanjs-access-to-the-notochord)
+- [Source Code](#source-code)
+- [Notochord OS](#notochord-os)
+  - [Boot Process](#boot-process)
+  - [Getting More Logs](#getting-more-logs)
+  - [Getting Core Dumps](#getting-core-dumps)
+- [KCeptor Calibration](#kceptor-calibration)
+- [Pose Calibration](#pose-calibration)
+  - [Pose Calibration Overview](#pose-calibration-overview)
+  - [Avatar](#avatar)
+  - [Pose Calibration Debugging](#pose-calibration-debugging)
+  - [Pose Calibration Implementation](#pose-calibration-implementation)
+- [REST API](#rest-api)
+
+## Introduction
 
 [Chordata Motion](https://chordata.cc) is an open-source motion capture system of which I got the set with 15 sensors.
 
@@ -7,7 +30,7 @@
 
   "An efficient orientation filter for inertial and inertial/magnetic sensor arrays", Sebastian O.H. Madgwick, 2010-04-30
 
-* There is a pose calibration algorithm.
+* There is a pose calibration algorithm to figure out how the sensors are oriented relative to the body.
 
 * In the future, using https://github.com/xioTechnologies/Gait-Tracking on a single foot can be used to calculate x,y,z relative coordinates
   of a walking person.
@@ -17,7 +40,7 @@
 
 The folks are super busy working on it so instead of wasting their time, and because that's what I like to do anyway, here are my own collected notes while attempting to wrap my head around it.
 
-## Setup
+## Install
 
 I have [macOS](https://en.wikipedia.org/wiki/MacOS) and a [FRITZ!Box](https://en.wikipedia.org/wiki/Fritz!Box) at home and Chordata Motion will appear under http://notochord in my local network (for the time being, avoid Safari unless you like waiting).
 
@@ -98,7 +121,113 @@ def allow_origin(response):
 ```
 and reboot.
 
-### Debug calibration
+## Source Code
+
+Code is hosted at [GitLab](https://gitlab.com/chordata/). Sort by 'Updated' so see which repositories might be most relevant.
+
+* [notochord-os](https://gitlab.com/chordata/notochord-os)
+  Scripts to install all software on a fresh PI
+* [notochord-control-server](https://gitlab.com/chordata/notochord-control-server)
+  The Webserver: [gunicorn](https://gunicorn.org) as HTTPD and [Flask](https://www.fullstackpython.com/flask.html) as web framework.
+* [notochord-module](https://gitlab.com/chordata/notochord-module)
+  C/C++ Python Module containing the core of the functionality
+* [pose-calibration](https://gitlab.com/chordata/pose-calibration)
+  The code to calibrate the sensors. (python, numpy, panda)
+  * Used by the notochord-module
+    * notochord-module/setup.cfg references chordata-pose-calib @ git+https://gitlab.com/chordata/pose-calibration.git
+    * [Cython](https://cython.org) combines the Python and C++ code
+        * pxd: makes C/C++ code available to Python, included by the pyx file
+        * pyx: adds some syntaxtical sugar
+    * notochord-module/pyx/notochord/calibration.pyx
+        * change_status(), get_data(), get_indexes(): directs to Calibration_Manager(), a C++ class for recording the data
+        * run_calibration(): calls Calibrator().run() to evaluate the recorded data
+        * apply_calibration(): calls get_runtime().get_armature().get().get_bones() and Bone.set_(pre|pose)_quaternion()
+* [blender-mathutils](https://gitlab.com/chordata/blender-mathutils)
+  Python module with the C/C++ functions and classes from Blender.
+
+* [Blender-addon](https://gitlab.com/chordata/Blender-addon)
+  On macOS will be installed into ~/Library/Application Support/Blender/2.83/scripts/addons/chordata/
+  * the tree of KCeptor nodes can/will be uploaded as an XML configuration to the Notochord
+  * the code used on the Notochord for Pose Calibration is also part of the addon
+
+* [COPP server](https://gitlab.com/chordata/copp_server)
+  COPP is the UDP protocol by which motion events are send.
+* [notochord](https://gitlab.com/chordata/notochord) CLI tool
+* [Avatar pose visualization](https://gitlab.com/chordata/avatar-pose-visualization)
+  Avatar pose visualization for Blender
+
+Which branches are relevant is a bit more tricky.
+* `master` seems to be the latest official release
+* `develop` seems to be the the latest stable development version
+* the other branches seem to be feature branches
+* to find the latest modified branches use `git branch -r --sort=-committerdate`
+
+
+## Notochord OS
+
+### Boot Process
+
+* the startup code is in /etc/rc.local, ...
+* which starts the gunicorn web server, ...
+* which gives control to /opt/chordata/notochord-control-server/wsgi.py
+* which controls the bulk of the Notochord code in /opt/chordata/notochord-module/
+
+### Getting More Logs
+
+The web process is actually creating more output than available in the logs.
+One can log into the notochord, type
+
+```bash
+sudo /bin/bash
+killall unicorn
+cd /opt/chordata/notochord-control-server
+/etc/chordata/venv/bin/gunicorn -b '0.0.0.0:80' -w 1 'wsgi:application' \
+    --threads 1 --access-logfile - \
+    --error-logfile -
+```
+
+### Getting Core Dumps
+
+We can get core dumps...
+
+    ulimit -S -c unlimited
+    # run gunicorn
+    gdb /usr/bin/python3.9 /opt/chordata/notochord-control-server/core
+    where
+
+
+## KCeptor Calibration
+
+* Needs to be done once for a new KCeptor.
+* The results will be stored inside the KCeptor.
+* The software on the Notochord is able to handle it.
+
+## Pose Calibration
+
+Needs to be done after KCeptors have been mounted on the body.
+
+### Pose Calibration Overview
+
+This consists of two steps:
+
+* stand still in N-Pose (straight, arms & legs stretched, arms to body, legs together)
+  this will be used to a first vector
+* rotate each KCeptor into a defined direction (arms to the sides, body & legs forward)
+  this will be used as a second vector
+
+It looks like there are two versions:
+* On the Notochord
+* In the Blender plugin
+
+### Avatar
+
+To use the Pose Calibration on the Notochord, config needs to contain
+
+    <use_armature>true</use_armature>
+
+and an `<avatar>` section.
+
+### Pose Calibration Debugging
 
 In case the calibration fails, it dumps it's data into the directory `/opt/chordata/notochord-control-server/` on the Notochord.
 
@@ -131,78 +260,32 @@ And evaluate locally:
 venv/bin/pose-calib -t ./data.csv -i ./data.json
 ```
 
-## Calibration
+## Pose Calibration Implementation
 
-Chordata has two calibrations.
+### Calibration Data Capture
 
-### KCeptor calibration
+src/pose_calib/core.py
 
-* Needs to be done once for a new KCeptor.
-* The results will be stored inside the KCeptor.
-* The software on the Notochord is able to handle it.
+i: start
+s: end
 
-### Pose calibration
+func_arms_(i|s)
+func_trunc_(i|s)
+func_legs_r_(i|s)
+func_legs_l_(i|s)
 
-Needs to be done after KCeptors have been mounted on the body.
+### Calibration Calculation
 
-This consists of two steps:
+T.B.D.
 
-* stand still in N-Pose (straight, arms & legs stretched, arms to body, legs together)
-  this will be used to a first vector
-* rotate each KCeptor into a defined direction (arms to the sides, body & legs forward)
-  this will be used as a second vector
+### Calibration Application
 
-It looks like there are two versions:
-* On the Notochord
-* In the Blender plugin
+* file `notochord-module/pyx/notochord/calibration.pyx`, function `run_calibration()` calls `Calibrator.run()`
+* file `notochord-module/pyx/notochord/calibration.pyx`, function `apply_calibration()` sets the `pre` and `post`
+  quaternions in the armature's bones.
 
-# Notochord OS
-
-## Boot
-
-* the startup code is in /etc/rc.local, ...
-* which starts the gunicorn web server, ...
-* which gives control to /opt/chordata/notochord-control-server/wsgi.py
-* which controls the bulk of the Notochord code in /opt/chordata/notochord-module/
-
-## More logs
-
-The web process is actually creating more output than available in the logs.
-One can log into the notochord, type
-
-```bash
-sudo /bin/bash
-killall unicorn
-cd /opt/chordata/notochord-control-server
-/etc/chordata/venv/bin/gunicorn -b '0.0.0.0:80' -w 1 'wsgi:application' \
-    --threads 1 --access-logfile - \
-    --error-logfile -
-```
-## Pose Calibration
-
-### Avatar
-
-To use the Pose Calibration on the Notochord, config needs to contain
-
-    <use_armature>true</use_armature>
-
-and an `<avatar>` section.
-
-see https://forum.chordata.cc/d/62-new-blender-2-8-chordata-node-system-addon/35
-
-    CHORDATA POSE CALIBRATION V0.1.2-A1 INIT
-    RUNNING VERTICAL CALIBRATION
-    RUNNING FUNCTIONAL CALIBRATION
-    RUNNING HEADING CALIBRATION
-
-So, about that avatar...
-
-    get_runtime().get_armature().get().get_bones()[name].set_(pre|post)_quaternion(...)
-
-where does this end up?
-
-```c
-_Bone {
+```c++
+class _Bone {
     matrix4_ptr local_transform;    // Original transform
     matrix4_ptr global_transform;   // Derived transform
 
@@ -213,7 +296,7 @@ _Bone {
 }
 ```
 this is used in
-```c
+```c++
 void Chordata::_Bone::set_global_rotation(Quaternion &_global_rotation, bool use_calibration) {
     if (use_calibration) { _global_rotation = pre * _global_rotation * post; }
 ...
@@ -222,14 +305,14 @@ void Chordata::_Bone::set_global_rotation(Quaternion &_global_rotation, bool use
 which makes sense as the quaternions i get over COOP are global...
 
 which is called by
-```c
+```c++
 void Chordata::_Armature::process_bone(const _Node &n, Quaternion &q) {
     bone_ptr bone = bones[n.get_label()];
     bone->set_global_rotation(q);
 }
 ```
 which is called by
-```c
+```c++
 void Chordata::Armature_Task::run() {
 	Chordata::get_runtime()->get_armature()->process_bone(*node, q);
 	if (node->first_sensor) {
@@ -240,7 +323,7 @@ void Chordata::Armature_Task::run() {
 }
 ```
 and the armature is called once it is defined. otherwise data will be send as is:
-```c
+```c++
 void Chordata::Fusion_Task::run() {
     ...
     if (Chordata::get_config()->use_armature) {
@@ -257,76 +340,17 @@ void Chordata::Fusion_Task::run() {
 
 for the time being, it seems we just need the nodes as we still send the global rotation (but adjusted) over COOP.
 
-### Calibration Algorithm
+Okay, the above goes from bottom to top. Since the calibration data currrently get's lost, find out:
+* How is the data captured
+* How is it put on wire
+* How is the avatar, which stores the calibration, initialized... and lost.
 
-src/pose_calib/core.py
 
-i: start
-s: end
 
-func_arms
-func_trunc
-func_legs_r
-func_legs_l
 
-## Debugging
+### REST API
 
-We can get core dumps...
-
-    ulimit -S -c unlimited
-    # run gunicorn
-    gdb /usr/bin/python3.9 /opt/chordata/notochord-control-server/core
-    where
-
-## Source Code
-
-Code is hosted at [GitLab](https://gitlab.com/chordata/). Sort by 'Updated' so see which repositories might be most relevant.
-
-* [notochord-os](https://gitlab.com/chordata/notochord-os)
-  Scripts to install all software on a fresh PI
-* [notochord-control-server](https://gitlab.com/chordata/notochord-control-server)
-  The Webserver: [gunicorn](https://gunicorn.org) as HTTPD and [Flask](https://www.fullstackpython.com/flask.html) as web framework.
-* [notochord-module](https://gitlab.com/chordata/notochord-module)
-  C/C++ Python Module
-* [pose-calibration](https://gitlab.com/chordata/pose-calibration)
-  The number crunching code to calibrate the sensors. (python, numpy, panda)
-  * Integration into the notochord-module
-    * notochord-module/setup.cfg references chordata-pose-calib @ git+https://gitlab.com/chordata/pose-calibration.git
-    * [Cython](https://cython.org) combines the Python and C++ code
-        * pxd: makes C/C++ code available to Python, included by the pyx file
-        * pyx: adds some syntaxtical sugar
-    * notochord-module/pyx/notochord/calibration.pyx
-        * change_status(), get_data(), get_indexes(): directs to Calibration_Manager(), a C++ class for recording the data
-        * run_calibration(): calls Calibrator().run() to evaluate the recorded data
-        * apply_calibration(): calls get_runtime().get_armature().get().get_bones() and Bone.set_(pre|pose)_quaternion()
-
-* [Blender-addon](https://gitlab.com/chordata/Blender-addon)
-  On macOS will be installed into ~/Library/Application Support/Blender/2.83/scripts/addons/chordata/
-  * the tree of KCeptor nodes can/will be uploaded as an XML configuration to the Notochord
-  * the code used on the Notochord for Pose Calibration is also part of the addon
-
-* [COPP server](https://gitlab.com/chordata/copp_server)
-  COPP is the UDP protocol by which motion events are send.
-* [notochord](https://gitlab.com/chordata/notochord) CLI tool
-* [blender-mathutils](https://gitlab.com/chordata/blender-mathutils)
-* [Avatar pose visualization](https://gitlab.com/chordata/avatar-pose-visualization)
-  Avatar pose visualization for Blender
-
-Which branches are relevant is a bit more tricky.
-* master seems to be the latest official release
-* develop seems to be the the latest stable development version
-* the other branches seem to be feature branches
-* to find the latest modified branches use `git branch -r --sort=-committerdate`
-
-### Notochord Module
-
-This is also were the websocket port is...
-
-    notochord-module/
-        src/
-        lib/ ;; external libs copied into the source
-
-### Notochord Control Server
+Notochord Control Server 
 
     notochord-control-server/
         notochord_control_server/
@@ -392,30 +416,3 @@ This is also were the websocket port is...
                             default_biped
                           </NotochordConfigurations>
                         </ControlServerState>
-
-### Pose Calibration
-
-(this one seems to be just doing the math using a capture file)
-
-Q: does this end up in the notochord-module as calibration.cpython-39-aarch64-linux-gnu.so ???
-
-    pose-calibration/
-        src/
-           pose_calib/
-               __main__.py             CLI
-               core.py
-                   class Calibrator
-                       run()
-                           vertical
-                           functional
-                           heading
-               test_data/
-                   Chordata_calib_data.json
-                   Chordata_calib_dump.csv
-        test/
-
-    cd upstream/chordata
-    python -m venv venv  
-
-* CSV contains dump of motion capture take
-* can plot the nodes
