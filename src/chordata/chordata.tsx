@@ -42,6 +42,7 @@ class Notochord {
     calibrationState = new TextModel("", {
         label: "Calibration State",
     })
+    calibration = new Action(() => {})
 
     configs = new RemoteOptionModel("", [], {
         label: "Configuration",
@@ -55,7 +56,10 @@ class Notochord {
 
     poseMode = false
 
-    start = new Action(() => this.doStart(), { enabled: false })
+    start = new Action(async () => {
+        await this.doStart()
+        await this.calibrateRun()
+    }, { enabled: false })
     stop = new Action(() => this.doStop(), { enabled: false })
     reboot = new Action(() => this.doReboot(), { enabled: false })
 
@@ -225,6 +229,7 @@ class Notochord {
         }
     }
     async doStartPose() {
+        this.calibration.error = undefined
         this.poseMode = true
         const url = `http://${this.hostname.value}/pose/connect?scan=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
         // const url = `http://${this.hostname.value}/notochord/init?scan=1&raw=1&addr=${this.dstHostname.value}&port=${this.dstPort.value}&verbose=0`
@@ -288,17 +293,6 @@ class Notochord {
         const state = data.querySelector("State")
         return state?.innerHTML
     }
-    async calibrateRun() {
-        const url = `http://${this.hostname.value}/pose/run`
-        console.log(`${new Date()} CALIBRATE RUN ${url}`)
-        const response = await fetch(url)
-        console.log(`${new Date()} CALIBRATE RUN -> ${response.status} ${response.statusText}`)
-        // TODO: handle error
-        const parser = new window.DOMParser()
-        const data = parser.parseFromString(await response.text(), "text/xml")
-        const state = data.querySelector("State")
-        return state?.innerHTML
-    }
     async calibrate(step: CalibrationStep, run?: boolean): Promise<boolean> {
         let url: string
         if (run !== true) {
@@ -323,6 +317,20 @@ class Notochord {
         notochord.calibrationState.value = msg
 
         return response.ok
+    }
+    async calibrateRun() {
+        const url = `http://${this.hostname.value}/pose/run`
+        console.log(`${new Date()} CALIBRATE RUN ${url}`)
+        const response = await fetch(url)
+        console.log(`${new Date()} CALIBRATE RUN -> ${response.status} ${response.statusText}`)
+        // TODO: handle error
+        const parser = new window.DOMParser()
+        const data = parser.parseFromString(await response.text(), "text/xml")
+        const state = data.querySelector("State")
+        if (!response.ok) {
+            this.calibration.error = state?.innerHTML
+        }
+        return state?.innerHTML
     }
     async call(url: string, method: string = "get", body?: string) {
         try {
@@ -485,12 +493,12 @@ const script: Step[] = [
 ]
 
 // FIXME: WE MIGHT NEED TO CALL CONNECT/DISCONNECT BEFORE/AFTER THE CALIBRATION
-function CalibrationButton() {
+function CalibrationButton(init: {model: Action}) {
+    const action = init.model
     let button: Button
     let btn: HTMLButtonElement
     let running = false
     const interval = 2
-    const action = new Action(() => {})
     const buttonHandler = async() => {      
         let stepCounter = -1
         let timeCounter = -1
@@ -647,10 +655,11 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
 
                 <FormLabel>Pose Calibration</FormLabel>
                 <FormField>
-                    <CalibrationButton />
+                    <CalibrationButton model={notochord.calibration} />
                     <br />
                     <Display model={notochord.calibrationState} />
                 </FormField>
+                <FormHelp model={notochord.calibration} />
 
                 <FormSwitch model={settings.mountKCeptorView} />
 
