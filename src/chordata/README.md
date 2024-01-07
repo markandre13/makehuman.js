@@ -345,9 +345,6 @@ Okay, the above goes from bottom to top. Since the calibration data currrently g
 * How is it put on wire
 * How is the avatar, which stores the calibration, initialized... and lost.
 
-
-
-
 ### REST API
 
 Notochord Control Server 
@@ -416,3 +413,41 @@ Notochord Control Server
                             default_biped
                           </NotochordConfigurations>
                         </ControlServerState>
+
+## Blender Plugin
+
+blender add-on
+
+/Users/mark/Library/Application Support/Blender/2.83/scripts/addons/chordata
+
+```
+__init__.py
+__pycache__/
+chordatatree.py
+copp_server/            receive UDP traffic?
+defaults.py
+dependencies.py
+nodes/
+ops/                    code
+  calibration_manager.py
+    def run():
+      ...
+      return c.results["heading_rot"], c.results["post_rot"], now_str
+  ops/armature_manager.py
+    def calibrate():
+      ...
+
+new_quat = bone.chordata.Q_local_instant_conj \
+                                        @ bone.chordata.Q_pre_calib \
+                                        @ bone.chordata.Q_temp_received \
+                                        @ bone.chordata.Q_post_calib
+
+self.root_pbone.chordata.Q_local_instant_conj = self.root_local_matrix.to_quaternion().conjugated()
+
+"For instance, if we are using a quaternion q to represent a rotation then
+conj(q) represents the same rotation in the reverse direction."
+
+pose-calibration/       same as on the notochord?
+templates/
+utils/
+```

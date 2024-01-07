@@ -1,7 +1,7 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
-import { calibrateNPose, setBones } from "chordata/renderChordata"
-import { Action, Display, NumberModel, TextModel } from "toad.js"
+import { calibrateNPose, resetNPose, setBones } from "chordata/renderChordata"
+import { Action, Display, NumberModel, TextField, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
 import { UpdateManager } from "UpdateManager"
@@ -9,27 +9,8 @@ import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
-import { ChordataSettings } from "./ChordataSettings"
+import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
-import { mat4, quat } from "gl-matrix"
-import { euler_from_matrix } from "lib/euler_matrix"
-
-// GOAL:
-// * call the notochord on our own
-// * select 'mark_config' as active configuration, which hopefully has my modified ids
-//   also: state shows all available configurations, where are the files, why are there 2 mark_config?, is it okay?
-// * go through the calibration but go through the steps via timer
-// * have a look at what the COOP data now looks like. is n-pose all identity vectors? and do i just have to adjust
-//   for the difference in the makehuman skeleton?
-// * can i get the coop data via websocket?
-
-// ISSUES
-// * after a reboot, and not moving the sensors, i get:
-//   Error on notochord calibration: No data to calibrate
-// * later, with moving the sensors, i get:
-//   Error on notochord calibration: The number of data points 74589 is not equal to the number of cycles 4970 * number of nodes 30 = 149100
-// * calibration steps are most likely the same as with the official software, were i get the same error
-// * error is reported in notochord-module/pyx/notochord/calipration.pyx
 
 let socket: WebSocket | undefined
 let mgr: UpdateManager
@@ -43,6 +24,7 @@ class Notochord {
         label: "Calibration State",
     })
     calibration = new Action(() => {})
+    hasCalibrationData = false
 
     configs = new RemoteOptionModel("", [], {
         label: "Configuration",
@@ -56,10 +38,15 @@ class Notochord {
 
     poseMode = false
 
-    start = new Action(async () => {
-        await this.doStart()
-        await this.calibrateRun()
-    }, { enabled: false })
+    start = new Action(
+        async () => {
+            await this.doStart()
+            if (this.hasCalibrationData) {
+                await this.calibrateRun()
+            }
+        },
+        { enabled: false }
+    )
     stop = new Action(() => this.doStop(), { enabled: false })
     reboot = new Action(() => this.doReboot(), { enabled: false })
 
@@ -493,13 +480,13 @@ const script: Step[] = [
 ]
 
 // FIXME: WE MIGHT NEED TO CALL CONNECT/DISCONNECT BEFORE/AFTER THE CALIBRATION
-function CalibrationButton(init: {model: Action}) {
+function CalibrationButton(init: { model: Action }) {
     const action = init.model
     let button: Button
     let btn: HTMLButtonElement
     let running = false
     const interval = 2
-    const buttonHandler = async() => {      
+    const buttonHandler = async () => {
         let stepCounter = -1
         let timeCounter = -1
         const reset = () => {
@@ -566,6 +553,8 @@ function CalibrationButton(init: {model: Action}) {
                     msg += await notochord.calibrateRun()
                     notochord.calibrationState.value = msg
 
+                    notochord.hasCalibrationData = true
+
                     msg += ", stop: "
                     msg += await notochord.doStopPose()
                     notochord.calibrationState.value = msg
@@ -612,6 +601,16 @@ function CalibrationButton(init: {model: Action}) {
     btn.style.width = "inherit"
     btn.style.height = "inherit"
     return button
+}
+
+function VectorView(props: { model: Rot3Model }) {
+    return (
+        <>
+            <TextField style={{ width: "50px" }} model={props.model.x} />{" "}
+            <TextField style={{ width: "50px" }} model={props.model.y} />{" "}
+            <TextField style={{ width: "50px" }} model={props.model.z} />
+        </>
+    )
 }
 
 export default function (updateManager: UpdateManager, settings: ChordataSettings) {
@@ -663,7 +662,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
 
                 <FormSwitch model={settings.mountKCeptorView} />
 
-                <FormLabel>Makehuman.js</FormLabel>
+                <FormLabel>Custom Post Calibrate</FormLabel>
                 <FormField>
                     <Button
                         action={() => {
@@ -671,17 +670,27 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                             updateManager.invalidateView()
                         }}
                     >
-                        Calibrate N-Pose
+                        Calibrate
+                    </Button>
+                    <Button
+                        action={() => {
+                            resetNPose()
+                            updateManager.invalidateView()
+                        }}
+                    >
+                        Reset
                     </Button>
                 </FormField>
 
-                <FormText model={settings.X0} />
-                <FormText model={settings.Y0} />
-                <FormText model={settings.Z0} />
+                <FormLabel>V0</FormLabel>
+                <FormField>
+                    <VectorView model={settings.v0} />
+                </FormField>
 
-                <FormText model={settings.X1} />
-                <FormText model={settings.Y1} />
-                <FormText model={settings.Z1} />
+                <FormLabel>V1</FormLabel>
+                <FormField>
+                    <VectorView model={settings.v1} />
+                </FormField>
             </Form>
 
             <div style={{ padding: "15px" }}>

@@ -20,6 +20,14 @@ import { span, text } from "toad.js"
 
 const D = 180 / Math.PI
 
+// PRE rotation around y so that the sensor in your hand is aligned with the one on the screen
+// we should be able to calculate this one by rotating the sensor forward/backward
+const preCalibration = new Map<string, mat4>()
+
+// POST rotate so that blue is up and red is to the right
+// we can calculate this by inverting ( PRE * SENSOR ) while standing in the rest pose
+const postCalibration = new Map<string, mat4>()
+
 export const bones = new Map<string, mat4>()
 
 // prettier-ignore
@@ -112,9 +120,6 @@ const kceptorName2boneName = new Map<string, string>([
 function chordataQuat2glMatrix(chordataQuaternion: number[]) {
     const [w, x, y, z] = chordataQuaternion
     const m = mat4.fromQuat(mat4.create(), quat.fromValues(x, z, -y, w))
-    // KCeptor rotation
-    // mat4.rotateX(m, m, 90 / D)
-    // mat4.rotateZ(m, m, -90 / D)
     return m
 }
 
@@ -132,7 +137,8 @@ export function setBones(newBones: Map<string, number[]>) {
             name = boneName
         }
         // store for rendering
-        bones.set(name, chordataQuat2glMatrix(value))
+        const m = chordataQuat2glMatrix(value)
+        bones.set(name, m)
     })
 }
 
@@ -141,14 +147,34 @@ export function calibrateNPose(joint?: Joint) {
     if (joint === undefined) {
         joint = chordataSkeleton
     }
-    const m = mat4.clone(bones.get(joint.chordataName)!)
-    joint.adjustJCS(m)
+    const m = mat4.create()
+    const pre = preCalibration.get(joint.chordataName)
+    if (pre !== undefined) {
+        mat4.multiply(m, m, pre)
+    }
+    mat4.multiply(m, m, bones.get(joint.chordataName)!)
+    // const m = mat4.clone(bones.get(joint.chordataName)!)
+    // joint.adjustJCS(m)
     mat4.invert(m, m)
     joint.matNPoseInv = m
+    postCalibration.set(joint.chordataName, m)
 
     if (joint.children !== undefined) {
         for (const child of joint.children) {
             calibrateNPose(child)
+        }
+    }
+}
+
+export function resetNPose(joint?: Joint) {
+    if (joint === undefined) {
+        joint = chordataSkeleton
+        postCalibration.clear()
+    }
+    joint.matNPoseInv = undefined
+    if (joint.children !== undefined) {
+        for (const child of joint.children) {
+            resetNPose(child)
         }
     }
 }
@@ -191,6 +217,8 @@ export function renderChordata(
 
     // bones.set("l-upperarm", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
     // bones.set("l-lowerarm", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
+
+    preCalibration.set("neck", euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2]/ D))
 
     if (!settings.mountKCeptorView.value) {
         if (overlay.children.length > 0) {
@@ -304,11 +332,20 @@ export function renderChordata(
 
         const drawAxis = (x: number, y: number, name: string) => {
             const m = mat4.create()
-            mat4.translate(m, m, vec3.fromValues(x, y, 0))
-            mat4.multiply(m, m, euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
+            // mat4.translate(m, m, vec3.fromValues(x, y, 0))
 
-            // mat4.multiply(m, m, bones.get(`${branch}/${id}`)!)
+            const pre = preCalibration.get(name)
+            if (pre !== undefined) {
+                mat4.multiply(m, m, pre)
+            }
+
             mat4.multiply(m, m, bones.get(`${name}`)!)
+
+            const post = postCalibration.get(name)
+            if (post !== undefined) {
+                mat4.multiply(m, m, post)
+            }
+
             mat4.rotateY(m, m, (2 * Math.PI) / 4)
             drawArrow(m, [1, 0, 0])
             mat4.rotateY(m, m, (2 * Math.PI) / 4)
@@ -341,23 +378,23 @@ export function renderChordata(
             label.style.top = `${pixelY}px`
         }
 
-        drawAxis(0, 2, "base")
-        drawAxis(0, 4, "dorsal")
+        // drawAxis(0, 2, "base")
+        // drawAxis(0, 4, "dorsal")
         drawAxis(0, 6, "neck")
 
-        drawAxis(3, 4, "r-upperarm")
-        drawAxis(3, 2, "r-lowerarm")
-        drawAxis(3, 0, "r-hand")
-        drawAxis(-3, 4, "l-upperarm")
-        drawAxis(-3, 2, "l-lowerarm")
-        drawAxis(-3, 0, "l-hand")
+        // drawAxis(-3, 4, "r-upperarm")
+        // drawAxis(-3, 2, "r-lowerarm")
+        // drawAxis(-3, 0, "r-hand")
+        // drawAxis(3, 4, "l-upperarm")
+        // drawAxis(3, 2, "l-lowerarm")
+        // drawAxis(3, 0, "l-hand")
 
-        drawAxis(1.5, -2, "r-upperleg")
-        drawAxis(1.5, -4, "r-lowerleg")
-        drawAxis(1.5, -6, "r-foot")
-        drawAxis(-1.5, -2, "l-upperleg")
-        drawAxis(-1.5, -4, "l-lowerleg")
-        drawAxis(-1.5, -6, "l-foot")
+        // drawAxis(-1.5, -2, "r-upperleg")
+        // drawAxis(-1.5, -4, "r-lowerleg")
+        // drawAxis(-1.5, -6, "r-foot")
+        // drawAxis(1.5, -2, "l-upperleg")
+        // drawAxis(1.5, -4, "l-lowerleg")
+        // drawAxis(1.5, -6, "l-foot")
 
         if (overlay.children.length === 0) {
             overlay.replaceChildren(...overlayChildren)

@@ -23,7 +23,7 @@ export class Joint {
 
     matPoseGlobal!: mat4
 
-    matNPoseInv!: mat4 // poor man's calibration
+    matNPoseInv?: mat4 // poor man's calibration
 
     constructor(n: string, name: string, children?: Joint[]) {
         this.chordataName = n
@@ -83,24 +83,24 @@ export class Joint {
     }
 
     adjustJCS(matPose: mat4) {
-         if (["r-upperarm", "r-lowerarm", "r-hand"].includes(this.chordataName)) {
-            mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
-        }
-        if (["l-upperarm", "l-lowerarm", "l-hand"].includes(this.chordataName)) {
-            mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
-        }
-        if (["r-upperleg", "r-lowerleg"].includes(this.chordataName)) {
-            mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
-        }
-        if (["l-upperleg", "l-lowerleg"].includes(this.chordataName)) {
-            mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
-        }
-        if (["base"].includes(this.chordataName)) {
-            mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
-        }
-        if (["dorsal", "neck"].includes(this.chordataName)) {
-            mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
-        }
+        //  if (["r-upperarm", "r-lowerarm", "r-hand"].includes(this.chordataName)) {
+        //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        // }
+        // if (["l-upperarm", "l-lowerarm", "l-hand"].includes(this.chordataName)) {
+        //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        // }
+        // if (["r-upperleg", "r-lowerleg"].includes(this.chordataName)) {
+        //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        // }
+        // if (["l-upperleg", "l-lowerleg"].includes(this.chordataName)) {
+        //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        // }
+        // if (["base"].includes(this.chordataName)) {
+        //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        // }
+        // if (["dorsal", "neck"].includes(this.chordataName)) {
+        //     mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
+        // }
     }
 
     // update matPoseGlobal
@@ -111,23 +111,24 @@ export class Joint {
         } else {
             matPose = mat4.clone(matPose)
         }
-
-        if (this.chordataName === "base") {
-            mat4.multiply(
-                matPose,
-                euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D),
-                matPose
-            )
-        }
-        if (this.chordataName === "dorsal") {
-            mat4.multiply(
-                matPose,
-                euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D),
-                matPose
-            )
-        }
-
         this.adjustJCS(matPose)
+        // console.log(this.chordataName)
+        // if (this.chordataName === "base") {
+        //     // console.log("base")
+        //     mat4.multiply(
+        //         matPose,
+        //         euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D),
+        //         matPose 
+        //     )
+        // }
+        // if (this.chordataName === "dorsal") {
+        //     mat4.multiply(
+        //         matPose,
+        //         euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D),
+        //         matPose
+        //     )
+        // }
+
 
         if (this.matNPoseInv !== undefined) {
             mat4.multiply(matPose, matPose, this.matNPoseInv)
