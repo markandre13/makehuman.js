@@ -22,11 +22,11 @@ const D = 180 / Math.PI
 
 // PRE rotation around y so that the sensor in your hand is aligned with the one on the screen
 // we should be able to calculate this one by rotating the sensor forward/backward
-const preCalibration = new Map<string, mat4>()
+export const preCalibration = new Map<string, mat4>()
 
 // POST rotate so that blue is up and red is to the right
 // we can calculate this by inverting ( PRE * SENSOR ) while standing in the rest pose
-const postCalibration = new Map<string, mat4>()
+export const postCalibration = new Map<string, mat4>()
 
 export const bones = new Map<string, mat4>()
 
@@ -218,7 +218,7 @@ export function renderChordata(
     // bones.set("l-upperarm", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
     // bones.set("l-lowerarm", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
 
-    preCalibration.set("neck", euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2]/ D))
+    // preCalibration.set("neck", euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2]/ D))
 
     if (!settings.mountKCeptorView.value) {
         if (overlay.children.length > 0) {
@@ -336,6 +336,7 @@ export function renderChordata(
 
             const pre = preCalibration.get(name)
             if (pre !== undefined) {
+                // console.log(`got pre for ${name}`)
                 mat4.multiply(m, m, pre)
             }
 

@@ -1,6 +1,6 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
-import { calibrateNPose, resetNPose, setBones } from "chordata/renderChordata"
+import { bones, calibrateNPose, postCalibration, preCalibration, resetNPose, setBones } from "chordata/renderChordata"
 import { Action, Display, NumberModel, TextField, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
@@ -11,6 +11,8 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
+import { euler_from_matrix } from "lib/euler_matrix"
+import { mat4, vec3 } from "gl-matrix"
 
 let socket: WebSocket | undefined
 let mgr: UpdateManager
@@ -613,6 +615,55 @@ function VectorView(props: { model: Rot3Model }) {
     )
 }
 
+const D = 180 / Math.PI
+const message = new TextModel()
+const preCalibrator = new Action(() => {
+    console.log("START PRE CALIBRATION")
+    const m0 = mat4.clone(bones.get("neck")!)
+    const i0 = mat4.create()
+    mat4.invert(i0, m0)
+    const e0 = euler_from_matrix(m0)
+    message.value = `${(e0.x * D).toFixed()}, ${(e0.y * D).toFixed()}, ${(e0.z * D).toFixed()}`
+    const rate = 1000 / 25
+    const job = () => {
+        const m1 = mat4.clone(bones.get("neck")!)
+        mat4.multiply(m1, m1, i0)
+
+        const v0 = vec3.fromValues(0, 1, 0)
+        const v1 = vec3.fromValues(0, 1, 0)
+        vec3.transformMat4(v1, v1, m1)
+        const d = vec3.distance(v0, v1)
+        const v = vec3.create()
+        vec3.sub(v, v1, v0)      
+        const x = v[0]
+        const y = v[2]
+        let rad = Math.atan2(y, x)
+        let deg = rad * D - 90
+        if (deg <= -180) {
+            deg += 360
+        }
+        if (d < 0.1) {
+            message.value = `${(v[0]*10).toFixed()}, ${(v[1]*10).toFixed()}, ${(v[2]*10).toFixed()}, ?`
+        } else {
+            message.value = `${(v[0]*10).toFixed()}, ${(v[1]*10).toFixed()}, ${(v[2]*10).toFixed()}, ${deg.toFixed()}`
+        }
+
+        if (d < 0.2) {
+            setTimeout(job, rate)
+        } else {
+            const pre = mat4.create()
+            mat4.rotateY(pre, pre, rad + Math.PI / 2)
+            const post = mat4.multiply(mat4.create(), pre, m0)
+            mat4.invert(post, post)
+
+            preCalibration.set("neck", pre)
+            postCalibration.set("neck", post)
+        }
+    }
+    setTimeout(job, rate)
+    // start job, assume start as being in n-pose, print distance
+})
+
 export default function (updateManager: UpdateManager, settings: ChordataSettings) {
     notochord = new Notochord(settings)
     mgr = updateManager
@@ -661,6 +712,14 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormHelp model={notochord.calibration} />
 
                 <FormSwitch model={settings.mountKCeptorView} />
+
+                <FormLabel>Custom Pre Calibrate</FormLabel>
+                <FormField>
+                    <Button action={preCalibrator}>Calibrate</Button>
+                    <Button>Reset</Button><br/>
+                    <Display model={message}/>
+                </FormField>
+                <FormHelp model={preCalibrator} />
 
                 <FormLabel>Custom Post Calibrate</FormLabel>
                 <FormField>
