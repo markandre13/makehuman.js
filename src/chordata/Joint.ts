@@ -1,10 +1,8 @@
-import { mat4, quat, vec3, vec4 } from "gl-matrix"
+import { mat4, vec3, vec4 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { getMatrix } from "skeleton/loadSkeleton"
 import { ChordataSettings } from "./ChordataSettings"
-import { euler_matrix } from "lib/euler_matrix"
 
-const D = 180 / Math.PI
 
 export class Joint {
     chordataName: string
@@ -24,6 +22,9 @@ export class Joint {
      * we can calculate this from the sensor being in n-pose.
      */
     post?: mat4
+
+    m0?: mat4
+    i0?: mat4
 
     parent?: Joint
     children?: Joint[]
@@ -52,6 +53,32 @@ export class Joint {
         callback(this)
         this.children?.forEach(it => it.forEach(callback))
     }
+
+    getCalibrated(): mat4 {
+        let m: mat4 | undefined
+        if (this.pre) {
+            m = mat4.clone(this.pre)
+        }
+        if (this.kceptor) {
+            if (m === undefined) {
+                m = mat4.clone(this.kceptor)
+            } else {
+                mat4.multiply(m, m, this.kceptor)
+            }
+        }
+        if (this.post) {
+            if (m === undefined) {
+                m = mat4.clone(this.post)
+            } else {
+                mat4.multiply(m, m, this.post)
+            }
+        }
+        if (m === undefined) {
+            m = mat4.create()
+        }
+        return m
+    }
+
 
     // only needed once (similar to the makehuman skeleton/bone)
     build(skeleton: Skeleton) {
@@ -147,7 +174,6 @@ export class Joint {
         //         matPose
         //     )
         // }
-
 
         if (this.matNPoseInv !== undefined) {
             mat4.multiply(matPose, matPose, this.matNPoseInv)

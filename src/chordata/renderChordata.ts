@@ -14,7 +14,6 @@ import { Context } from "render/Context"
 import { Projection } from "render/render"
 import { Joint } from "./Joint"
 import { SkeletonMesh } from "./SkeletonMesh"
-import { euler_matrix } from "lib/euler_matrix"
 import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
 
@@ -64,36 +63,65 @@ class Skeleton {
             return
         }
         joint.kceptor = m
+
+        if (joint.pre === undefined && joint.post !== undefined) {
+            const m1 = mat4.clone(joint.kceptor)
+            mat4.multiply(m1, m1, joint.i0!)
+
+            const v0 = vec3.fromValues(0, 1, 0)
+            const v1 = vec3.fromValues(0, 1, 0)
+            vec3.transformMat4(v1, v1, m1)
+            const a = vec3.angle(v0, v1)
+            
+            const v = vec3.create()
+            vec3.sub(v, v1, v0)      
+            const x = v[0]
+            const y = v[2]
+            let rad = Math.atan2(y, x)
+
+            if (a >= 30 / D) {
+                const pre = mat4.create()
+                mat4.rotateY(pre, pre, rad + Math.PI / 2)
+                const post = mat4.multiply(mat4.create(), pre, joint.m0!)
+                mat4.invert(post, post)
+
+                joint.pre = pre
+                joint.post = post
+                joint.m0 = undefined
+                joint.i0 = undefined
+            }
+        }
     }
 
-    getCalibrated(chordataName: string): mat4 {
+    getJoint(chordataName: string): Joint {
         const joint = this.chordataName2Joint.get(chordataName)
         if (joint === undefined) {
             throw Error(`no joint named '${chordataName}'`)
         }
-        let m: mat4 | undefined
-        if (joint.pre) {
-            m = mat4.clone(joint.pre)
-        }
-        if (joint.kceptor) {
-            if (m === undefined) {
-                m = mat4.clone(joint.kceptor)
-            } else {
-                mat4.multiply(m, m, joint.kceptor)
-            }
-        }
-        if (joint.post) {
-            if (m === undefined) {
-                m = mat4.clone(joint.post)
-            } else {
-                mat4.multiply(m, m, joint.post)
-            }
-        }
-        if (m === undefined) {
-            m = mat4.create()
-        }
-        return m
+        return joint
     }
+
+    startCalibration() {
+        this.resetCalibration()
+        this.root.forEach( joint => {
+            if (joint.kceptor) {
+                joint.m0 = mat4.clone(joint.kceptor)
+            } else {
+                joint.m0 = mat4.create()
+            }
+            joint.i0 = mat4.invert(mat4.create(), joint.m0)
+            joint.post = joint.i0
+        })
+    }
+    resetCalibration() {
+        this.root.forEach( joint => {
+            joint.pre = undefined
+            joint.post = undefined
+            joint.m0 = undefined
+            joint.i0 = undefined
+        })
+    }
+
 }
 
 const skeleton = new Skeleton()
@@ -165,42 +193,14 @@ export function setBones(newBones: Map<string, number[]>) {
     })
 }
 
-// // assume the sensors are now in rest pose
-// export function calibrateNPose(joint?: Joint) {
-//     if (joint === undefined) {
-//         joint = chordataSkeleton
-//     }
-//     const m = mat4.create()
-//     const pre = preCalibration.get(joint.chordataName)
-//     if (pre !== undefined) {
-//         mat4.multiply(m, m, pre)
-//     }
-//     mat4.multiply(m, m, bones.get(joint.chordataName)!)
-//     // const m = mat4.clone(bones.get(joint.chordataName)!)
-//     // joint.adjustJCS(m)
-//     mat4.invert(m, m)
-//     joint.matNPoseInv = m
-//     postCalibration.set(joint.chordataName, m)
+// assume the sensors are now in rest pose
+export function calibrateNPose() {
+    skeleton.startCalibration()
+}
 
-//     if (joint.children !== undefined) {
-//         for (const child of joint.children) {
-//             calibrateNPose(child)
-//         }
-//     }
-// }
-
-// export function resetNPose(joint?: Joint) {
-//     if (joint === undefined) {
-//         joint = chordataSkeleton
-//         postCalibration.clear()
-//     }
-//     joint.matNPoseInv = undefined
-//     if (joint.children !== undefined) {
-//         for (const child of joint.children) {
-//             resetNPose(child)
-//         }
-//     }
-// }
+export function resetNPose() {
+    skeleton.resetCalibration()
+}
 
 // set an initial COOP packet
 setBones(
@@ -353,30 +353,39 @@ export function renderChordata(
         let idx = 0
         const overlayChildren: HTMLElement[] = []
 
+        // NTSC rgb to gray, based on average persons perception of brightness of red, green and blue
+        function rgb2gray(r: number, g: number, b: number) {
+            return 0.299 * r + 0.587 * g + 0.114 * b
+        }
+
         const drawAxis = (x: number, y: number, chordataName: string) => {
             const m = mat4.create()
             mat4.translate(m, m, vec3.fromValues(x, y, 0))
+            const joint = skeleton.getJoint(chordataName)
 
-            // const pre = preCalibration.get(chordataName)
-            // if (pre !== undefined) {
-            //     // console.log(`got pre for ${name}`)
-            //     mat4.multiply(m, m, pre)
-            // }
-
-            // mat4.multiply(m, m, bones.get(`${chordataName}`)!)
-
-            // const post = postCalibration.get(chordataName)
-            // if (post !== undefined) {
-            //     mat4.multiply(m, m, post)
-            // }
-            mat4.multiply(m, m, skeleton.getCalibrated(chordataName))
+            mat4.multiply(m, m, joint.getCalibrated())
 
             mat4.rotateY(m, m, (2 * Math.PI) / 4)
-            drawArrow(m, [1, 0, 0])
+            if (joint.pre === undefined) {
+                const a = rgb2gray(1, 0, 0)
+                drawArrow(m, [a, a, a])
+            } else {
+                drawArrow(m, [1, 0, 0])
+            }
             mat4.rotateY(m, m, (2 * Math.PI) / 4)
-            drawArrow(m, [0, 1, 0])
+            if (joint.pre === undefined) {
+                const a = rgb2gray(0, 1, 0)
+                drawArrow(m, [a, a, a])
+            } else {
+                drawArrow(m, [0, 1, 0])
+            }
             mat4.rotateX(m, m, (-2 * Math.PI) / 4)
-            drawArrow(m, [0, 0, 1])
+            if (joint.post === undefined) {
+                const a = rgb2gray(0, 0, 1)
+                drawArrow(m, [a, a, a])
+            } else {
+                drawArrow(m, [0, 0, 1])
+            }
 
             const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
             mat4.multiply(m0, m0, m)
