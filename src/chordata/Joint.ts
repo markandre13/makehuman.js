@@ -1,7 +1,6 @@
-import { mat4, vec3, vec4 } from "gl-matrix"
+import { mat4, quat, vec3, vec4 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { getMatrix } from "skeleton/loadSkeleton"
-import { bones } from "./renderChordata"
 import { ChordataSettings } from "./ChordataSettings"
 import { euler_matrix } from "lib/euler_matrix"
 
@@ -10,6 +9,21 @@ const D = 180 / Math.PI
 export class Joint {
     chordataName: string
     makehumanName: string
+
+    /**
+     * pre rotation around y so that the sensor in your hand is aligned with the one on the screen.
+     * we calculate this from rotating the sensor forward/backward.
+     */
+    pre?: mat4
+    /**
+     * rotation from the chordata motion kceptor
+     */
+    kceptor?: mat4
+    /**
+     * post rotatation so that blue is up and red is to the right.
+     * we can calculate this from the sensor being in n-pose.
+     */
+    post?: mat4
 
     parent?: Joint
     children?: Joint[]
@@ -32,6 +46,11 @@ export class Joint {
         if (children !== undefined) {
             children.forEach((it) => (it.parent = this))
         }
+    }
+
+    forEach(callback: (joint: Joint) => void) {
+        callback(this)
+        this.children?.forEach(it => it.forEach(callback))
     }
 
     // only needed once (similar to the makehuman skeleton/bone)
@@ -105,7 +124,7 @@ export class Joint {
 
     // update matPoseGlobal
     update(settings: ChordataSettings) {
-        let matPose = bones.get(this.chordataName)
+        let matPose = this.kceptor
         if (matPose === undefined) {
             matPose = mat4.create()
         } else {
