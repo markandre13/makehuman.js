@@ -19,7 +19,8 @@ import { Skeleton } from "./Skeleton"
 
 export const D = 180 / Math.PI
 
-const skeleton = new Skeleton()
+// const skeleton = new Skeleton()
+let skeleton: Skeleton
 
 // in no avatar/scan has been configured
 const kceptorName2boneName = new Map<string, string>([
@@ -97,27 +98,6 @@ export function resetNPose() {
     skeleton.resetCalibration()
 }
 
-// set an initial COOP packet
-setBones(
-    new Map<string, number[]>([
-        ["/%/base", [0, 0, 0, 0]],
-        ["/%/dorsal", [0, 0, 0, 0]],
-        ["/%/neck", [0, 0, 0, 0]],
-        ["/%/l-upperarm", [0, 0, 0, 0]],
-        ["/%/l-lowerarm", [0, 0, 0, 0]],
-        ["/%/l-hand", [0, 0, 0, 0]],
-        ["/%/r-upperarm", [0, 0, 0, 0]],
-        ["/%/r-lowerarm", [0, 0, 0, 0]],
-        ["/%/r-hand", [0, 0, 0, 0]],
-        ["/%/l-upperleg", [0, 0, 0, 0]],
-        ["/%/l-lowerleg", [0, 0, 0, 0]],
-        ["/%/l-foot", [0, 0, 0, 0]],
-        ["/%/r-upperleg", [0, 0, 0, 0]],
-        ["/%/r-lowerleg", [0, 0, 0, 0]],
-        ["/%/r-foot", [0, 0, 0, 0]],
-    ])
-)
-
 export function renderChordata(
     ctx: Context,
     gl: WebGL2RenderingContext,
@@ -126,6 +106,30 @@ export function renderChordata(
     scene: HumanMesh,
     settings: ChordataSettings
 ) {
+    if (skeleton === undefined) {
+        skeleton = new Skeleton()
+        // set an initial COOP packet
+        setBones(
+            new Map<string, number[]>([
+                ["/%/base", [0, 0, 0, 0]],
+                ["/%/dorsal", [0, 0, 0, 0]],
+                ["/%/neck", [0, 0, 0, 0]],
+                ["/%/l-upperarm", [0, 0, 0, 0]],
+                ["/%/l-lowerarm", [0, 0, 0, 0]],
+                ["/%/l-hand", [0, 0, 0, 0]],
+                ["/%/r-upperarm", [0, 0, 0, 0]],
+                ["/%/r-lowerarm", [0, 0, 0, 0]],
+                ["/%/r-hand", [0, 0, 0, 0]],
+                ["/%/l-upperleg", [0, 0, 0, 0]],
+                ["/%/l-lowerleg", [0, 0, 0, 0]],
+                ["/%/l-foot", [0, 0, 0, 0]],
+                ["/%/r-upperleg", [0, 0, 0, 0]],
+                ["/%/r-lowerleg", [0, 0, 0, 0]],
+                ["/%/r-foot", [0, 0, 0, 0]],
+            ])
+        )
+    }
+
     const canvas = gl.canvas as HTMLCanvasElement
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)

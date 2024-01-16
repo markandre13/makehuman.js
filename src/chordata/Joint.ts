@@ -2,7 +2,9 @@ import { mat4, vec3, vec4 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { getMatrix } from "skeleton/loadSkeleton"
 import { ChordataSettings } from "./ChordataSettings"
+import { euler_matrix } from "lib/euler_matrix"
 
+export const D = 180 / Math.PI
 
 export class Joint {
     chordataName: string
@@ -51,7 +53,7 @@ export class Joint {
 
     forEach(callback: (joint: Joint) => void) {
         callback(this)
-        this.children?.forEach(it => it.forEach(callback))
+        this.children?.forEach((it) => it.forEach(callback))
     }
 
     getCalibrated(): mat4 {
@@ -78,7 +80,6 @@ export class Joint {
         }
         return m
     }
-
 
     // only needed once (similar to the makehuman skeleton/bone)
     build(skeleton: Skeleton) {
@@ -142,7 +143,9 @@ export class Joint {
         //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
         // }
         // if (["base"].includes(this.chordataName)) {
-        //     mat4.multiply(matPose, euler_matrix(0, 180 / D, 0), matPose)
+        //     mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
+        // } else {
+        //     mat4.multiply(matPose, euler_matrix(0, -90 / D, 0), matPose)
         // }
         // if (["dorsal", "neck"].includes(this.chordataName)) {
         //     mat4.multiply(matPose, euler_matrix(0, 90 / D, 0), matPose)
@@ -151,12 +154,7 @@ export class Joint {
 
     // update matPoseGlobal
     update(settings: ChordataSettings) {
-        let matPose = this.kceptor
-        if (matPose === undefined) {
-            matPose = mat4.create()
-        } else {
-            matPose = mat4.clone(matPose)
-        }
+        let matPose = this.getCalibrated()
         this.adjustJCS(matPose)
         // console.log(this.chordataName)
         // if (this.chordataName === "base") {
@@ -164,7 +162,7 @@ export class Joint {
         //     mat4.multiply(
         //         matPose,
         //         euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D),
-        //         matPose 
+        //         matPose
         //     )
         // }
         // if (this.chordataName === "dorsal") {

@@ -37,6 +37,8 @@ export class Skeleton {
         this.root.forEach(it => {
             this.chordataName2Joint.set(it.chordataName, it)
         })
+
+        this.loadCalibration()
     }
 
     setKCeptor(chordataName: string, m: mat4) {
@@ -72,7 +74,59 @@ export class Skeleton {
                 joint.post = post
                 joint.m0 = undefined
                 joint.i0 = undefined
+
+                if (this.isCalibrated()) {
+                    this.saveCalibration()
+                }
             }
+        }
+    }
+
+    isCalibrated(): boolean {
+        for(const [_, joint] of this.chordataName2Joint) {
+            if (joint.pre === undefined) {
+                return false
+            }
+        }
+        return true
+    }
+
+    saveCalibration() {
+        console.log(`saveCalibration()`)
+        const data: any = {}
+        for(const [name, joint] of this.chordataName2Joint) {
+            if (joint.pre === undefined || joint.post === undefined) {
+                return
+            }
+            const pre: number[] = [], post: number[] = [];
+            for(const [i, v] of joint.pre.entries()) {
+                pre.push(v)
+            }
+            for(const [i, v] of joint.post.entries()) {
+                post.push(v)
+            }
+            data[name] = { pre, post}
+        }
+        const json = JSON.stringify(data)
+        localStorage.setItem("calibration", json)
+    }
+
+    loadCalibration() {
+        console.log(`loadCalibration()`)
+        const json = localStorage.getItem("calibration")
+        if (json === null) {
+            return
+        }
+        const data = JSON.parse(json)
+        console.log(data)
+        for(const [name, joint] of this.chordataName2Joint) {
+            const pre = data[name].pre as number[]
+            // prettier-ignore
+            joint.pre = mat4.fromValues(pre[0],pre[1],pre[2],pre[3],pre[4],pre[5],pre[6],pre[7],pre[8],pre[9],pre[10],pre[11],pre[12],pre[13],pre[14],pre[15])
+
+            const post = data[name].post as number[]
+            // prettier-ignore
+            joint.post = mat4.fromValues(post[0],post[1],post[2],post[3],post[4],post[5],post[6],post[7],post[8],post[9],post[10],post[11],post[12],post[13],post[14],post[15])
         }
     }
 
@@ -97,6 +151,7 @@ export class Skeleton {
         })
     }
     resetCalibration() {
+        localStorage.removeItem("calibration")
         this.root.forEach(joint => {
             joint.pre = undefined
             joint.post = undefined
