@@ -25,7 +25,7 @@ export function render(
     scene: HumanMesh,
     mode: EnumModel<RenderMode>,
     updateManager: UpdateManager,
-    chordataExperiment: ChordataSettings
+    chordataSettings: ChordataSettings
 ): void {
     const opt = {
         alpha: false,
@@ -56,16 +56,8 @@ export function render(
     }
 
     const texture = loadTexture(gl, "data/skins/textures/young_caucasian_female_special_suit.png", () => paint(ctx))!
-    // const texture = loadTexture(gl, "data/cubetexture.png")!
 
-    // let lastRenderTime = 0
-
-    // draw the scene repeatedly
-    function renderFrame(now: number) {
-        // now *= 0.001 // convert to seconds
-        // const deltaTime = now - lastRenderTime
-        // lastRenderTime = now
-
+    function renderFrame() {
         const wireframe =
             mode.value === RenderMode.WIREFRAME ||
             ((mode.value === RenderMode.EXPRESSION || mode.value === RenderMode.POSE) && scene.wireframe.value)
@@ -91,13 +83,14 @@ export function render(
         // }
         switch (mode.value) {
             case RenderMode.CHORDATA:
-                renderChordata(ctx, gl, programRGBA, overlay, scene, chordataExperiment)
+                renderChordata(ctx, gl, programRGBA, overlay, scene, chordataSettings)
+                if (chordataSettings.mountKCeptorView.value !== true) {
+                    renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, true)
+                }
                 break
             default:
                 renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
-            // cubeRotation += deltaTime
         }
-        // requestAnimationFrame(renderFrame)
     }
     requestAnimationFrame(renderFrame)
 

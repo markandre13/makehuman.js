@@ -82,6 +82,10 @@ export class Skeleton {
         }
     }
 
+    update() {
+        this.root.update()
+    }
+
     isCalibrated(): boolean {
         for(const [_, joint] of this.chordataName2Joint) {
             if (joint.pre === undefined) {

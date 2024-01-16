@@ -16,6 +16,7 @@ import { SkeletonMesh } from "./SkeletonMesh"
 import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
 import { Skeleton } from "./Skeleton"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export const D = 180 / Math.PI
 
@@ -137,29 +138,46 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    // bones.set("l-upperarm", euler_matrix(settings.X0.value / D, settings.Y0.value / D, settings.Z0.value / D))
-    // bones.set("l-lowerarm", euler_matrix(settings.X1.value / D, settings.Y1.value / D, settings.Z1.value / D))
-
-    // preCalibration.set("neck", euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2]/ D))
+    skeleton.setKCeptor(
+        "base",
+        euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2] / D)
+    )
+    skeleton.setKCeptor(
+        "dorsal",
+        euler_matrix(settings.v1.value[0] / D, settings.v1.value[1] / D, settings.v1.value[2] / D)
+    )
 
     if (!settings.mountKCeptorView.value) {
         if (overlay.children.length > 0) {
             overlay.replaceChildren()
         }
+        skeleton.update()
+        const base = skeleton.getJoint("base")
+        base.forEach((joint) => {
+            const node = scene.skeleton.poseNodes.find(joint.makehumanName)!
+            const m = joint.relative!
 
-        skeleton.root.build(scene.skeleton)
-        skeleton.root.update(settings)
+            // FIXME: must move M into the joints coordinate system!!!
 
-        const mesh = new SkeletonMesh(scene.skeleton, skeleton.root)
-        const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
+            const e = euler_from_matrix(m)
+            node.x.value = e.x * D
+            node.y.value = e.y * D
+            node.z.value = e.z * D
+        })
 
-        const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
+        // skeleton.root.build(scene.skeleton)
+        // skeleton.root.update(settings)
 
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.setColor([1, 1, 1, 1])
-        s.draw(programRGBA, gl.TRIANGLES)
+        // const mesh = new SkeletonMesh(scene.skeleton, skeleton.root)
+        // const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
+
+        // const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+        // const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+        // const normalMatrix = createNormalMatrix(modelViewMatrix)
+
+        // programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        // programRGBA.setColor([1, 1, 1, 1])
+        // s.draw(programRGBA, gl.TRIANGLES)
     } else {
         const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
         const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)

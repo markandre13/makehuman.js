@@ -1,14 +1,7 @@
 import { vec3 } from "gl-matrix"
 import { BooleanModel, NumberModel, Signal } from "toad.js"
-import { ModelReason } from "toad.js/model/Model"
 import { NumberModelReason } from "toad.js/model/NumberModel"
-import { ValueModel, ValueModelReason } from "toad.js/model/ValueModel"
-
-function makeNumber(signal: Signal, label: string) {
-    const value = new NumberModel(0, { min: -180, max: 180, step: 5, label })
-    value.modified.add( () => signal.trigger() )
-    return value
-}
+import { ValueModel } from "toad.js/model/ValueModel"
 
 export class Rot3Model extends ValueModel<vec3, NumberModelReason> {
     x: NumberModel
@@ -45,17 +38,7 @@ export class ChordataSettings {
         this.v0.modified.add( () => this.modified.trigger() )
         this.v1.modified.add( () => this.modified.trigger() )
     }
-    mountKCeptorView = new BooleanModel(true, {
+    mountKCeptorView = new BooleanModel(false, {
         label: "Mount KCeptor View"
     })
-
-    // // 1st vector for playing
-    // X0 = makeNumber(this.modified, "X0")
-    // Y0 = makeNumber(this.modified, "Y0")
-    // Z0 = makeNumber(this.modified, "Z0")
-
-    // // 2nd vector for playing
-    // X1 = makeNumber(this.modified, "X1")
-    // Y1 = makeNumber(this.modified, "Y1")
-    // Z1 = makeNumber(this.modified, "Z1")
 }

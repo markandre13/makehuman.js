@@ -691,7 +691,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     </Button>
                 </FormField>
 
-                {/* <FormLabel>V0</FormLabel>
+                <FormLabel>V0</FormLabel>
                 <FormField>
                     <VectorView model={settings.v0} />
                 </FormField>
@@ -699,7 +699,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormLabel>V1</FormLabel>
                 <FormField>
                     <VectorView model={settings.v1} />
-                </FormField> */}
+                </FormField>
             </Form>
 
             {/* <div style={{ padding: "15px" }}>

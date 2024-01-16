@@ -25,22 +25,25 @@ export class Joint {
      */
     post?: mat4
 
+    absolute?: mat4
+    relative?: mat4
+
     m0?: mat4
     i0?: mat4
 
     parent?: Joint
     children?: Joint[]
 
-    matRestGlobal!: mat4
-    matRestRelative!: mat4
-    length!: number
-    yvector4!: vec4
+    // matRestGlobal!: mat4
+    // matRestRelative!: mat4
+    // length!: number
+    // yvector4!: vec4
 
-    matPoseRelative!: mat4
+    // matPoseRelative!: mat4
 
-    matPoseGlobal!: mat4
+    // matPoseGlobal!: mat4
 
-    matNPoseInv?: mat4 // poor man's calibration
+    // matNPoseInv?: mat4 // poor man's calibration
 
     constructor(n: string, name: string, children?: Joint[]) {
         this.chordataName = n
@@ -81,6 +84,18 @@ export class Joint {
         return m
     }
 
+    update() {
+        this.absolute = this.getCalibrated()
+        if (this.parent === undefined) {
+            this.relative = this.absolute
+        } else {
+            const m = mat4.invert(mat4.create(), this.parent!.absolute!)
+            this.relative = mat4.multiply(m, m, this.absolute)
+        }
+        this.children?.forEach(it => it.update())
+    }
+
+    /*
     // only needed once (similar to the makehuman skeleton/bone)
     build(skeleton: Skeleton) {
         if (this.matRestGlobal !== undefined) {
@@ -223,4 +238,5 @@ export class Joint {
             }
         }
     }
+    */
 }

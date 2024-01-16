@@ -415,7 +415,7 @@ function saveBVH(scene: HumanMesh, download: HTMLAnchorElement) {
     download.dispatchEvent(new MouseEvent("click"))
 }
 
-// THIS WORKS!!!
+// THIS WORKS!!! (SOMETIMES...)
 function fakeSaveData(scene: HumanMesh) {
     const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
     skeleton.build()
@@ -428,7 +428,7 @@ function fakeSaveData(scene: HumanMesh) {
     // const bvh0 = new BiovisionHierarchy().fromFile("data/poses/run01.bvh")
     // const ani0 = bvh0.createAnimationTrack(skeleton)
 
-    console.log(scene.skeleton.roots[0].matPose)
+    // console.log(scene.skeleton.roots[0].matPose)
 
     // this is a total mess, just using bone.matPose is better but not correct
     // hey! i could create a test from it! and move it into a method and cover that one with tests...

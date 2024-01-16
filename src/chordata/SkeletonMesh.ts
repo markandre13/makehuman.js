@@ -84,11 +84,11 @@ export class SkeletonMesh {
     }
 
     addJoint(j0: Joint) {
-        this.addBone(j0.matPoseGlobal, j0.yvector4! as vec3)
-        if (j0.children !== undefined) {
-            for (const j1 of j0.children) {
-                this.addJoint(j1)
-            }
-        }
+        // this.addBone(j0.matPoseGlobal, j0.yvector4! as vec3)
+        // if (j0.children !== undefined) {
+        //     for (const j1 of j0.children) {
+        //         this.addJoint(j1)
+        //     }
+        // }
     }
 }
