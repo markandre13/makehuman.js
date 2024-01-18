@@ -10,9 +10,9 @@ export class Rot3Model extends ValueModel<vec3, NumberModelReason> {
 
     constructor(value: vec3 = vec3.create()) {
         super(value)
-        this.x = new NumberModel(value[0], { min: -180, max: 180, step: 1 })
-        this.y = new NumberModel(value[0], { min: -180, max: 180, step: 1 })
-        this.z = new NumberModel(value[0], { min: -180, max: 180, step: 1 })
+        this.x = new NumberModel(value[0], { min: -180, max: 180, step: 5 })
+        this.y = new NumberModel(value[0], { min: -180, max: 180, step: 5 })
+        this.z = new NumberModel(value[0], { min: -180, max: 180, step: 5 })
         this.x.modified.add( (reason) => {
             this._value[0] = this.x.value
             this.modified.trigger(reason)

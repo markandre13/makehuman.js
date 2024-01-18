@@ -21,7 +21,7 @@ import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 export const D = 180 / Math.PI
 
 // const skeleton = new Skeleton()
-let skeleton: Skeleton
+export let skeleton: Skeleton
 
 // in no avatar/scan has been configured
 const kceptorName2boneName = new Map<string, string>([
@@ -95,7 +95,7 @@ export function calibrateNPose() {
     skeleton.startCalibration()
 }
 
-export function resetNPose() {
+export function resetCalibration() {
     skeleton.resetCalibration()
 }
 
@@ -138,33 +138,19 @@ export function renderChordata(
     gl.disable(gl.CULL_FACE)
     gl.depthMask(true)
 
-    skeleton.setKCeptor(
-        "base",
-        euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2] / D)
-    )
-    skeleton.setKCeptor(
-        "dorsal",
-        euler_matrix(settings.v1.value[0] / D, settings.v1.value[1] / D, settings.v1.value[2] / D)
-    )
+    // skeleton.setKCeptor(
+    //     "l-upperarm",
+    //     euler_matrix(settings.v0.value[0] / D, settings.v0.value[1] / D, settings.v0.value[2] / D)
+    // )
+    // skeleton.setKCeptor(
+    //     "l-lowerarm",
+    //     euler_matrix(settings.v1.value[0] / D, settings.v1.value[1] / D, settings.v1.value[2] / D)
+    // )
 
     if (!settings.mountKCeptorView.value) {
         if (overlay.children.length > 0) {
             overlay.replaceChildren()
         }
-        skeleton.update()
-        const base = skeleton.getJoint("base")
-        base.forEach((joint) => {
-            const node = scene.skeleton.poseNodes.find(joint.makehumanName)!
-            const m = joint.relative!
-
-            // FIXME: must move M into the joints coordinate system!!!
-
-            const e = euler_from_matrix(m)
-            node.x.value = e.x * D
-            node.y.value = e.y * D
-            node.z.value = e.z * D
-        })
-
         // skeleton.root.build(scene.skeleton)
         // skeleton.root.update(settings)
 

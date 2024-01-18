@@ -4,7 +4,8 @@ import { D } from "./renderChordata"
 
 export class Skeleton {
     root: Joint
-    protected chordataName2Joint = new Map<string, Joint>();
+    protected chordataName2Joint = new Map<string, Joint>()
+    protected makehumanName2Joint = new Map<string, Joint>()
 
     constructor() {
         // prettier-ignore
@@ -36,6 +37,7 @@ export class Skeleton {
 
         this.root.forEach(it => {
             this.chordataName2Joint.set(it.chordataName, it)
+            this.makehumanName2Joint.set(it.makehumanName, it)
         })
 
         this.loadCalibration()
@@ -116,11 +118,12 @@ export class Skeleton {
     }
 
     loadCalibration() {
-        console.log(`loadCalibration()`)
         const json = localStorage.getItem("calibration")
         if (json === null) {
+            console.log(`loadCalibration(): no calibration`)
             return
         }
+        console.log(`loadCalibration(): found calibration`)
         const data = JSON.parse(json)
         console.log(data)
         for(const [name, joint] of this.chordataName2Joint) {
@@ -140,6 +143,10 @@ export class Skeleton {
             throw Error(`no joint named '${chordataName}'`)
         }
         return joint
+    }
+
+    getMHJoint(chordataName: string): Joint | undefined {
+        return this.makehumanName2Joint.get(chordataName)
     }
 
     startCalibration() {

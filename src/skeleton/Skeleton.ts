@@ -8,6 +8,7 @@ import { PoseNode } from "expression/PoseNode"
 import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
 import { euler_from_matrix } from "lib/euler_matrix"
+import { Skeleton as ChordataSkeleton } from "chordata/Skeleton"
 
 export class Skeleton {
     poseNodes: PoseNode
@@ -347,6 +348,12 @@ export class Skeleton {
             bone.update()
         }
         // this.scene.setUpdate(Update.POSE)
+    }
+
+    updateChordata(skeleton: ChordataSkeleton) {
+        for (const bone of this.getBones()) {
+            bone.updateChordata(skeleton)
+        }
     }
 
     // line 631

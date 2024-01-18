@@ -1,6 +1,8 @@
 import { vec3, mat4, vec4 } from "gl-matrix"
 import { getMatrix, get_normal } from "./loadSkeleton"
 import { Skeleton } from "./Skeleton"
+import { Skeleton as ChordataSkeleton } from "chordata/Skeleton"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export class Bone {
     skeleton: Skeleton
@@ -171,6 +173,57 @@ export class Bone {
             )
         } else {
             this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!)
+        }
+        this.matPoseVerts = mat4.multiply(
+            mat4.create(),
+            this.matPoseGlobal,
+            mat4.invert(mat4.create(), this.matRestGlobal!)
+        )
+    }
+
+    updateChordata(skeleton: ChordataSkeleton) {
+        const joint = skeleton.getMHJoint(this.name)
+        let chordata: mat4
+        if (joint === undefined) {
+            chordata = mat4.create()
+        } else {
+            chordata = joint.relative! // getCalibrated()
+        }
+
+        let P: mat4
+        if (this.parent !== undefined) {
+            P = mat4.multiply(mat4.create(), this.parent.matPoseGlobal!, this.matRestRelative!)
+        } else {
+            P = mat4.clone(this.matRestRelative!)
+        }
+
+        const matPose = mat4.multiply(mat4.create(), chordata, P)
+        this.matPoseGlobal = matPose
+        this.matPoseGlobal[12] = P[12]
+        this.matPoseGlobal[13] = P[13]
+        this.matPoseGlobal[14] = P[14]
+
+        // N-POSE
+        const D = Math.PI / 180
+        switch (this.name) {
+            case "upperarm01.R":
+                mat4.rotateZ(this.matPoseGlobal, this.matPoseGlobal, 40 * D)
+                break
+            case "lowerarm01.R":
+                mat4.rotateX(this.matPoseGlobal, this.matPoseGlobal, -45 * D)
+                break
+            case "upperleg01.R":
+                mat4.rotateZ(this.matPoseGlobal, this.matPoseGlobal, -10 * D)
+                break
+            case "upperarm01.L":
+                mat4.rotateZ(this.matPoseGlobal, this.matPoseGlobal, -40 * D)
+                break
+            case "lowerarm01.L":
+                mat4.rotateX(this.matPoseGlobal, this.matPoseGlobal, -45 * D)
+                break
+            case "upperleg01.L":
+                mat4.rotateZ(this.matPoseGlobal, this.matPoseGlobal, 10 * D)
+                break
         }
         this.matPoseVerts = mat4.multiply(
             mat4.create(),

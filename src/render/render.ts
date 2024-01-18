@@ -60,7 +60,7 @@ export function render(
     function renderFrame() {
         const wireframe =
             mode.value === RenderMode.WIREFRAME ||
-            ((mode.value === RenderMode.EXPRESSION || mode.value === RenderMode.POSE) && scene.wireframe.value)
+            ([RenderMode.EXPRESSION, RenderMode.POSE, RenderMode.CHORDATA].includes(mode.value) && scene.wireframe.value) 
 
         if (scene.changedProxy !== undefined) {
             if (scene.proxies.has(scene.changedProxy)) {
@@ -85,7 +85,7 @@ export function render(
             case RenderMode.CHORDATA:
                 renderChordata(ctx, gl, programRGBA, overlay, scene, chordataSettings)
                 if (chordataSettings.mountKCeptorView.value !== true) {
-                    renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, true)
+                    renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
                 }
                 break
             default:

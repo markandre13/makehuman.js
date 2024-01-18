@@ -1,6 +1,6 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
-import { calibrateNPose as startCalibration, resetNPose as resetCalibration, setBones } from "chordata/renderChordata"
+import { calibrateNPose as startCalibration, resetCalibration, setBones, skeleton } from "chordata/renderChordata"
 import { Action, Display, NumberModel, TextField, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
@@ -11,6 +11,7 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
+import { HumanMesh } from "mesh/HumanMesh"
 
 let socket: WebSocket | undefined
 let mgr: UpdateManager
@@ -367,7 +368,7 @@ function runChordata(mgr: UpdateManager) {
             try {
                 const msg = decoder.decode()
                 setBones(msg)
-                mgr.invalidateView()
+                mgr.chordataChanged(skeleton)
                 client!.send(enc.encode("GET CHORDATA"))
             } catch (error) {
                 notochord.start.enabled = true
@@ -613,10 +614,10 @@ function VectorView(props: { model: Rot3Model }) {
     )
 }
 
-export default function (updateManager: UpdateManager, settings: ChordataSettings) {
+export default function (scene: HumanMesh, updateManager: UpdateManager, settings: ChordataSettings) {
     notochord = new Notochord(settings)
     mgr = updateManager
-    settings.modified.add(() => updateManager.invalidateView())
+    settings.modified.add(() => updateManager.chordataChanged(skeleton))
     return (
         <Tab label="Chordata" value={TAB.CHORDATA} visibilityChange={notochord.visibilityChange}>
             {/* <Button variant={ButtonVariant.ACCENT} action={start}>
@@ -661,6 +662,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormHelp model={notochord.calibration} /> */}
 
                 <FormSwitch model={settings.mountKCeptorView} />
+                <FormSwitch model={scene.wireframe}/>
 
                 {/* <FormLabel>Custom Pre Calibrate</FormLabel>
                 <FormField>
@@ -691,7 +693,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                     </Button>
                 </FormField>
 
-                <FormLabel>V0</FormLabel>
+                {/* <FormLabel>V0</FormLabel>
                 <FormField>
                     <VectorView model={settings.v0} />
                 </FormField>
@@ -699,7 +701,7 @@ export default function (updateManager: UpdateManager, settings: ChordataSetting
                 <FormLabel>V1</FormLabel>
                 <FormField>
                     <VectorView model={settings.v1} />
-                </FormField>
+                </FormField> */}
             </Form>
 
             {/* <div style={{ padding: "15px" }}>

@@ -5,6 +5,7 @@ import { SliderNode } from "modifier/loadSliders"
 import { PoseModel } from "pose/PoseModel"
 import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
+import { Skeleton as ChordataSkeleton } from "chordata/Skeleton"
 
 /**
  * All presentation models report changes to the update manager
@@ -122,6 +123,13 @@ export class UpdateManager {
         this.renderList = renderList
     }
 
+    protected _chordataChanged?: ChordataSkeleton
+
+    chordataChanged(skeleton: ChordataSkeleton) {
+        this.invalidateView()
+        this._chordataChanged = skeleton
+    }
+
     // the nice thing is, this method also serves as an overview of the data flow
     updateIt() {
         let skeletonChanged = false
@@ -165,10 +173,17 @@ export class UpdateManager {
         }
 
         // UPDATE_SKINNING_MATRIX
-        if (skeletonChanged) {
-            // console.log(`UpdateManager::update(): skeleton has changed -> update skinning matrix`)
-            this.expressionManager.skeleton.update()
+        if (this._chordataChanged !== undefined) {
+            this._chordataChanged.update()
+            this.expressionManager.skeleton.updateChordata(this._chordataChanged)
             skinChanged = true
+            this._chordataChanged = undefined
+        } else {
+            if (skeletonChanged) {
+                // console.log(`UpdateManager::update(): skeleton has changed -> update skinning matrix`)
+                this.expressionManager.skeleton.update()
+                skinChanged = true
+            }
         }
 
         // UPDATE SKIN MESH AND OPENGL BUFFERS

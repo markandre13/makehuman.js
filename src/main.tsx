@@ -192,14 +192,6 @@ function run() {
         modifer.getModel().modified.trigger(ModelReason.VALUE)
     })
 
-    // temporary hack for chordata: apply n-pose
-    skeleton.poseNodes.find("upperarm01.R")!.z.value = 40
-    skeleton.poseNodes.find("lowerarm01.R")!.x.value = -45
-    skeleton.poseNodes.find("upperleg01.R")!.z.value = -10
-    skeleton.poseNodes.find("upperarm01.L")!.z.value = -40
-    skeleton.poseNodes.find("lowerarm01.L")!.x.value = -45
-    skeleton.poseNodes.find("upperleg01.L")!.z.value = 10
-
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
     useBlenderProfile.enabled = false
@@ -308,7 +300,7 @@ function run() {
                     <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
                         Mediapipe coming soon
                     </Tab>
-                    {chordataTab(updateManager, chordataSettings)}
+                    {chordataTab(scene, updateManager, chordataSettings)}
                 </Tabs>
                 <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
                     <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
