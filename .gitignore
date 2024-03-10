@@ -3,6 +3,9 @@ DEADJOE
 *~
 node_modules
 data
+src/net/makehuman.ts
+src/net/makehuman_skel.ts       
+src/net/makehuman_stub.ts
 dist
 build
 package-lock.json

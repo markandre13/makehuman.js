@@ -44,6 +44,7 @@ import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSettings } from "chordata/ChordataSettings"
+import { MediapipeTab } from "mediapipe/mediapipe"
 
 main()
 
@@ -297,9 +298,7 @@ function run() {
                     </Tab>
                     {/* {poseTab(scene, poseModel)} */}
                     {expressionTab(expressionManager, scene)}
-                    <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
-                        Mediapipe coming soon
-                    </Tab>
+                    <MediapipeTab />
                     {chordataTab(scene, updateManager, chordataSettings)}
                 </Tabs>
                 <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
