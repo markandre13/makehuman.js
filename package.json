@@ -30,7 +30,8 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "fflate": "^0.8.1",
+    "corba.js": "^0.1.7",
+    "fflate": "^0.8.2",
     "gl-matrix": "^3.4.3",
     "toad.js": "0.1.13"
   },
@@ -39,22 +40,22 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "@types/chai": "^4.3.11",
+    "@types/chai": "^4.3.12",
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.4",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0",
-    "@web/dev-server": "^0.4.1",
-    "@web/test-runner": "^0.18.0",
-    "chai": "^5.0.0",
-    "eslint": "^8.56.0",
-    "mocha": "^10.2.0",
-    "rollup": "^4.9.5",
+    "@types/node": "^20.11.25",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "@web/dev-server": "^0.4.3",
+    "@web/test-runner": "^0.18.1",
+    "chai": "^5.1.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.3.0",
+    "rollup": "^4.12.1",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.1.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.2"
   }
 }

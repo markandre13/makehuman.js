@@ -175,8 +175,10 @@ class Proxy {
     npm install
 
     # populate data directory
-    # (I run this outside the Visual Studio Code terminal, to get access to my
-    # local Makehuman installation to avoid downloading all assets from the net.)
+
+    (I run this outside the Visual Studio Code terminal, to get access to my
+    local Makehuman installation to avoid downloading all assets from the net.)
+
     npm run dev:prepare
 
     # run (in separate terminals)

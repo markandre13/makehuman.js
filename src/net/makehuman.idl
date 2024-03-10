@@ -1,0 +1,23 @@
+/*
+enum MotionCaptureEngine {
+    MEDIAPIPE,
+    CHORDATA,
+};
+
+enum MotionCaptureType {
+    BODY,
+    FACE,
+    HAND
+};
+*/
+
+interface Frontend {
+    void hello();
+//    oneway void chordata(in sequence<octet> data);
+//    oneway void mediapipe(in sequence<octet> data);
+};
+
+interface Backend {
+    void setFrontend(in Frontend frontend);
+//    oneway void setEngine(in MotionCaptureEngine engine, in MotionCaptureType type);
+};
