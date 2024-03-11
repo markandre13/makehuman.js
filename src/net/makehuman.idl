@@ -1,7 +1,6 @@
-/*
 enum MotionCaptureEngine {
     MEDIAPIPE,
-    CHORDATA,
+    CHORDATA
 };
 
 enum MotionCaptureType {
@@ -9,7 +8,12 @@ enum MotionCaptureType {
     FACE,
     HAND
 };
-*/
+
+enum EngineStatus {
+    OFF,
+    ON
+};
+
 
 interface Frontend {
     void hello();
@@ -19,5 +23,5 @@ interface Frontend {
 
 interface Backend {
     void setFrontend(in Frontend frontend);
-//    oneway void setEngine(in MotionCaptureEngine engine, in MotionCaptureType type);
+    void setEngine(in MotionCaptureEngine engine, in MotionCaptureType type, in EngineStatus status);
 };
