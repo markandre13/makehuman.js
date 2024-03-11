@@ -18,7 +18,7 @@ enum EngineStatus {
 interface Frontend {
     void hello();
 //    oneway void chordata(in sequence<octet> data);
-//    oneway void mediapipe(in sequence<octet> data);
+    oneway void mediapipe(in sequence<float> data);
 };
 
 interface Backend {
