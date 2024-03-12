@@ -11,6 +11,7 @@ import { loadTexture } from "./util"
 import { UpdateManager } from "UpdateManager"
 import { Context } from "./Context"
 import { ChordataSettings } from "chordata/ChordataSettings"
+import { renderFace } from "./renderFace"
 
 // export let cubeRotation = 0.0
 
@@ -86,6 +87,11 @@ export function render(
                 renderChordata(ctx, gl, programRGBA, overlay, scene, chordataSettings)
                 if (chordataSettings.mountKCeptorView.value !== true) {
                     renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
+                }
+                break
+            case RenderMode.MEDIAPIPE:
+                if (updateManager.mediapipeData) {
+                    renderFace(canvas, updateManager.mediapipeData)
                 }
                 break
             default:

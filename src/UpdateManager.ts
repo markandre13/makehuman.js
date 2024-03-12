@@ -124,10 +124,15 @@ export class UpdateManager {
     }
 
     protected _chordataChanged?: ChordataSkeleton
-
     chordataChanged(skeleton: ChordataSkeleton) {
         this.invalidateView()
         this._chordataChanged = skeleton
+    }
+
+    mediapipeData?: Float32Array
+    mediapipe(data: Float32Array) {
+        this.invalidateView()
+        this.mediapipeData = data
     }
 
     // the nice thing is, this method also serves as an overview of the data flow

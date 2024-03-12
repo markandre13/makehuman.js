@@ -3,14 +3,14 @@ import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewp
 import { RenderMesh } from "./RenderMesh"
 import { RGBAShader } from "./shader/RGBAShader"
 
-export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
+export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
     // console.log("render face")
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (gl == null) {
         throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
     }
     // Flip image pixels into the bottom-to-top order that WebGL expects.
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+    // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
     const programRGBA = new RGBAShader(gl)
 
@@ -35,7 +35,7 @@ export function renderFace(canvas: HTMLCanvasElement, face: ArrayBuffer) {
     // const xyz = new Float32Array((testCube.vertexMorphed as any) as number[])
     // const fxyz = (testCube.baseMesh as any).indices as number[]
 
-    const xyz = new Float32Array(face)
+    // const xyz = new Float32Array(face)
     const fxyz = new Array<number>(xyz.length / 3)
     for (let i = 0; i < fxyz.length; ++i) {
         fxyz[i] = i

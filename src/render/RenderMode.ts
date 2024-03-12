@@ -3,5 +3,6 @@ export enum RenderMode {
     POSE,
     POLYGON,
     WIREFRAME,
-    CHORDATA
+    CHORDATA,
+    MEDIAPIPE
 }
