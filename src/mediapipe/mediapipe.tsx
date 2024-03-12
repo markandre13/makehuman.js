@@ -46,11 +46,6 @@ class Frontend_impl extends Frontend {
     }
     override mediapipe(data: Float32Array): void {
         this.updateManager.mediapipe(data)
-        console.log(`got ${data.length} floats from mediapipe`)
-        // * store the data
-        // * request a screen update
-        // * where do we
-        // renderFace()
     }
     override async hello(): Promise<void> {
         console.log("HELLO FROM THE SERVER")

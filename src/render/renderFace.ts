@@ -22,7 +22,7 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
     const modelViewMatrix = mat4.create()
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -5.0]) // test cube
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -30.0]) // obj file face
-    mat4.translate(modelViewMatrix, modelViewMatrix, [0.2, 0, -0.5]) // obj file face centered
+    mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -0.5]) // obj file face centered
     // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -1.5]) // obj file face
     mat4.rotate(modelViewMatrix, modelViewMatrix, 0.0 * .7, [0, 1, 0])
 
@@ -30,22 +30,31 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-    // const mesh = new RenderMesh(gl, vertex, obj.fxyz, undefined, undefined, false)
-    // test cube
-    // const xyz = new Float32Array((testCube.vertexMorphed as any) as number[])
-    // const fxyz = (testCube.baseMesh as any).indices as number[]
+    center(xyz)
 
-    // const xyz = new Float32Array(face)
-    const fxyz = new Array<number>(xyz.length / 3)
-    for (let i = 0; i < fxyz.length; ++i) {
-        fxyz[i] = i
-    }
+    // function r(num: number) {
+    //     // return Math.round((num + Number.EPSILON) * 10000000) / 10000000
+    //     return num
+    // }
+    //
+    // let l = ""
+    // for (let i = 3; i < xyz.length; i += 3) {
+    //     l=`${l}v ${r(xyz[i])} ${r(xyz[i+1])} ${r(xyz[i+2])}\n`
+    // }
+    // console.log(l)
 
+    // DRAW POINT CLOUD
+
+    // drawPointCloud(gl, programRGBA, xyz)
+    drawLineArt(gl, programRGBA, xyz)
+}
+
+function center(xyz: Float32Array) {
     let minX, maxX, minY, maxY, minZ, maxZ
     minX = maxX = xyz[0]
     minY = maxY = xyz[1]
     minZ = maxZ = xyz[2]
-    for (let i = 3; i < xyz.length; i += 3) {
+    for (let i = 3; i < xyz.length-3; i += 3) {
         minX = Math.min(minX, xyz[i])
         maxX = Math.max(maxX, xyz[i])
         minY = Math.min(minY, xyz[i + 1])
@@ -55,30 +64,28 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
     }
     // console.log(`X:${minX}:${maxX}`)
     // console.log(`Y:${minY}:${maxY}`)
-    // console.log( `Z:${minZ}:${maxZ}`)
+    // console.log(`Z:${minZ}:${maxZ}`)
     const originX = minX += (maxX - minX) / 2, originY = minY += (maxY - minY) / 2, originZ = minZ += (maxZ - minZ) / 2
     for (let i = 3; i < xyz.length; i += 3) {
         xyz[i] -= originX
         xyz[i + 1] = (xyz[i + 1] - originY) * -1
         xyz[i + 2] = (xyz[i + 2] - originZ)
     }
+}
 
-    function r(num: number) {
-        // return Math.round((num + Number.EPSILON) * 10000000) / 10000000
-        return num
+function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array) {
+    const fxyz = new Array<number>(xyz.length / 3)
+    for (let i = 0; i < fxyz.length; ++i) {
+        fxyz[i] = i
     }
-
-    // let l = ""
-    // for (let i = 3; i < xyz.length; i += 3) {
-    //     l=`${l}v ${r(xyz[i])} ${r(xyz[i+1])} ${r(xyz[i+2])}\n`
-    // }
-    // console.log(l)
-
     const mesh = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
     programRGBA.setColor([10.0, 8, 7, 1])
     mesh.bind(programRGBA)
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
+}
 
+function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array) {
+    // DRAW LINE ART
     programRGBA.setColor([0.0, 1.8, 0.0, 1])
     const lineStrips = [[
         // RING 0
