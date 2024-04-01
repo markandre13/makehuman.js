@@ -18,7 +18,7 @@ import { ProxyManager } from "./ProxyManager"
 
 import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 
-import expressionTab from "ui/expression"
+import ExpressionTab from "ui/expression"
 import chordataTab from "chordata/chordata"
 import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
@@ -225,8 +225,8 @@ function run() {
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
                     {/* {poseTab(scene, poseModel)} */}
-                    {expressionTab(expressionManager, scene)}
-                    <MediapipeTab updateManager={updateManager} />
+                    <ExpressionTab scene={scene} expressionManager={expressionManager} />
+                    <MediapipeTab updateManager={updateManager} expressionModel={expressionManager.model} />
                     {chordataTab(scene, updateManager, chordataSettings)}
                 </Tabs>
                 <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
