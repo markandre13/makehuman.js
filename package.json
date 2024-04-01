@@ -1,7 +1,7 @@
 {
   "name": "makehuman.js",
   "version": "0.0.1",
-  "description": "An experimental Makehuman port to Typescript, aiming for better UX, Clean Code and TDD",
+  "description": "A MakeHuman branch with different features",
   "author": "Mark-André Hopf <mhopf@mark13.org> based on work of the MakeHuman Team (www.makehumancommunity.org)",
   "license": "AGPL-3.0-or-later",
   "engines": {
@@ -31,7 +31,7 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "corba.js": "^0.1.7",
+    "corba.js": "^0.1.8",
     "fflate": "^0.8.2",
     "gl-matrix": "^3.4.3",
     "toad.js": "0.1.13"
@@ -41,22 +41,22 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "@types/chai": "^4.3.12",
+    "@types/chai": "^4.3.14",
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.25",
-    "@typescript-eslint/eslint-plugin": "^7.1.1",
-    "@typescript-eslint/parser": "^7.1.1",
+    "@types/node": "^20.12.2",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "@web/dev-server": "^0.4.3",
     "@web/test-runner": "^0.18.1",
     "chai": "^5.1.0",
     "eslint": "^8.57.0",
-    "mocha": "^10.3.0",
-    "rollup": "^4.12.1",
+    "mocha": "^10.4.0",
+    "rollup": "^4.13.2",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.1.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.3"
   }
 }
