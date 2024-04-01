@@ -2,7 +2,7 @@ import { TAB } from "HistoryManager"
 import { ORB } from "corba.js"
 import { WsProtocol } from "corba.js/net/browser"
 import { Backend } from "net/makehuman_stub"
-import { Frontend } from "net/makehuman_skel"
+import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { Button } from "toad.js"
 import { Tab } from "toad.js/view/Tab"
 import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
@@ -38,14 +38,22 @@ async function callORB(updateManager: UpdateManager) {
     backend.setEngine(MotionCaptureEngine.MEDIAPIPE, MotionCaptureType.FACE, EngineStatus.ON);
 }
 
-class Frontend_impl extends Frontend {
+
+// hello(): Promise<void>
+// faceBlendshapeNames(faceBlendshapeNames: Array<string>): void
+// faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array): void
+
+class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
     constructor(orb: ORB, updateManager: UpdateManager) {
         super(orb)
         this.updateManager = updateManager
     }
-    override mediapipe(data: Float32Array): void {
-        this.updateManager.mediapipe(data)
+
+    override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
+    }
+    override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array): void {
+        this.updateManager.mediapipe(landmarks)
     }
     override async hello(): Promise<void> {
         console.log("HELLO FROM THE SERVER")

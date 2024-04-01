@@ -3,6 +3,8 @@ import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewp
 import { RenderMesh } from "./RenderMesh"
 import { RGBAShader } from "./shader/RGBAShader"
 
+let lastXYZ: Float32Array | undefined
+
 export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
     // console.log("render face")
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
@@ -30,7 +32,10 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-    center(xyz)
+    if (xyz !== lastXYZ) {
+        center(xyz)
+        lastXYZ = xyz
+    }
 
     // function r(num: number) {
     //     // return Math.round((num + Number.EPSILON) * 10000000) / 10000000
@@ -227,7 +232,7 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: F
         474, 473,
         476, 473,
         475, 473,
-        477
+        477 
     ], [
         // RIGHT IRIS
         469, 471, 468,
