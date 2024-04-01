@@ -1,7 +1,7 @@
 {
   "name": "makehuman.js",
   "version": "0.0.1",
-  "description": "A MakeHuman branch with different features",
+  "description": "A MakeHuman variant with different features",
   "author": "Mark-André Hopf <mhopf@mark13.org> based on work of the MakeHuman Team (www.makehumancommunity.org)",
   "license": "AGPL-3.0-or-later",
   "engines": {

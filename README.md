@@ -1,10 +1,22 @@
 # makehuman.js
 
+A [Makehuman](http://www.makehumancommunity.org) variant with different features.
+
 <div style="text-align:npm center">
   <img src="screenshot.png" />
-
-  A variation of [Makehuman](http://www.makehumancommunity.org) as a WebApp.
 </div>
+
+## Currently Working On
+
+Animation!
+
+* Face animation with
+[MediaPipe](https://developers.google.com/mediapipe)'s Face Landmarker
+* Body animation with [Chordata](https://chordata.cc)
+
+This needs the [makehuman.js backend](https://github.com/markandre13/makehuman.js-backend) to be running locally.
+
+Once that is working, the next step will be to record animations and export them to Blender.
 
 ## Current Status
 
@@ -16,17 +28,7 @@
 * Export the mesh with rig and texture coordinates as Collada for Blender
 * Nothing else... 😅
 
-Currently working on:
-
-* pose/animate via pose units (pose units affect multiple bones)
-* pose/animate the face with Google's [MediaPipe](https://developers.google.com/mediapipe) 
-* pose/animate the body with [Chordata](https://chordata.cc)
-
-both will require building some C++ code from
-[mediapipe_cpp_lib](https://github.com/markandre13/mediapipe_cpp_lib) and
-[mediapipe_daemon](https://github.com/markandre13/mediapipe_daemon)
-
-Build steps are currently:
+## How to build
 
 * npm install
 * npm run dev:prepare
@@ -188,16 +190,6 @@ class Proxy {
 ## Run single test
 
 npm run dev:test --file=build/test/skeleton.spec.js
-
-## Next Goals
-
-* save/load morph
-* save/load pose
-* posing via mediapipe/chordata (Done: PoC reading data in C++)
-  https://github.com/markandre13/mediapipe_cpp_lib
-* multiple proxy meshes
-* texture
-* ...
 
 <!--
 
