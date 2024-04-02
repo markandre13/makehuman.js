@@ -97,6 +97,7 @@ export function render(
             default:
                 renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
         }
+        console.log(`render: latency ${Date.now() - Number(updateManager.timestamp_ms)}ms`)
     }
     requestAnimationFrame(renderFrame)
 

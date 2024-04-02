@@ -32,8 +32,7 @@ Chordata Motion
 
 * There is a pose calibration algorithm to figure out how the sensors are oriented relative to the body.
 
-* In the future, using https://github.com/xioTechnologies/Gait-Tracking on a single foot can be used to calculate x,y,z relative coordinates
-  of a walking person.
+* In the future, using https://github.com/xioTechnologies/Gait-Tracking on a single foot can be used to calculate x,y,z relative coordinates of a walking person.
 
 * Inertial Measurement Unit (IMU): accelerometer + gyroscope
 * Magnetic, Angular Rate, Gravity (MARG): IMU + magnetometer

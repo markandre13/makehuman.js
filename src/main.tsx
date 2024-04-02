@@ -225,7 +225,10 @@ function run() {
                         <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
                     {/* {poseTab(scene, poseModel)} */}
-                    <ExpressionTab scene={scene} expressionManager={expressionManager} />
+                    {/* 
+                        this one costs too much time when using motion capture
+                        <ExpressionTab scene={scene} expressionManager={expressionManager} />
+                    */}
                     <MediapipeTab updateManager={updateManager} expressionModel={expressionManager.model} />
                     {chordataTab(scene, updateManager, chordataSettings)}
                 </Tabs>

@@ -18,7 +18,10 @@ interface Frontend {
     void hello();
 //    oneway void chordata(in sequence<octet> data);
     oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
-    oneway void faceLandmarks(in sequence<float> landmarks, in sequence<float> blendshapes);
+    oneway void faceLandmarks(
+        in sequence<float> landmarks,
+        in sequence<float> blendshapes,
+        in unsigned long long timestamp_ms);
 };
 
 interface Backend {

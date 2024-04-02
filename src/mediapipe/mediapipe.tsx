@@ -6,12 +6,8 @@ import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { Button } from "toad.js"
 import { Tab } from "toad.js/view/Tab"
 import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
-import { renderFace } from "render/renderFace"
 import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
-
-// step 1: switch mediapipe on
-// step 2: switch mediapipe off
 
 let orb: ORB | undefined
 let backend: Backend
@@ -39,10 +35,6 @@ async function callORB(updateManager: UpdateManager, expressionModel: Expression
     backend.setEngine(MotionCaptureEngine.MEDIAPIPE, MotionCaptureType.FACE, EngineStatus.ON)
 }
 
-// hello(): Promise<void>
-// faceBlendshapeNames(faceBlendshapeNames: Array<string>): void
-// faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array): void
-
 class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
     expressionModel: ExpressionModel
@@ -69,7 +61,7 @@ class Frontend_impl extends Frontend_skel {
         ["eyeBlinkLeft", "LeftUpperLidClosed"],
         ["eyeBlinkRight", "RightUpperLidClosed"],
         ["mouthPucker", "LipsKiss"],
-        ["jawLeft", "ChinLeft"], 
+        ["jawLeft", "ChinLeft"],
         ["jawRight", "ChinRight"],
         ["browInnerUp", "LeftInnerBrowUp"],
         ["browInnerUp", "RightInnerBrowUp"],
@@ -93,8 +85,9 @@ class Frontend_impl extends Frontend_skel {
             }
         })
     }
-    override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array): void {
-        this.updateManager.mediapipe(landmarks)
+    override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, timestamp_ms: bigint): void {
+        console.log(`rcvd  : latency ${Date.now() - Number(timestamp_ms)}ms`)
+        this.updateManager.mediapipe(landmarks, timestamp_ms)
         this.blendshapeIndex2poseUnit.forEach((name, index) => {
             if (index < blendshapes.length) {
                 this.expressionModel.setPoseUnit(name, blendshapes[index])

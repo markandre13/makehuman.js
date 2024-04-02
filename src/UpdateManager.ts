@@ -130,9 +130,11 @@ export class UpdateManager {
     }
 
     mediapipeData?: Float32Array
-    mediapipe(data: Float32Array) {
+    timestamp_ms?: bigint
+    mediapipe(data: Float32Array, timestamp_ms: bigint) {
         this.invalidateView()
         this.mediapipeData = data
+        this.timestamp_ms = timestamp_ms
     }
 
     // the nice thing is, this method also serves as an overview of the data flow
