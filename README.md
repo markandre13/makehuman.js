@@ -40,6 +40,47 @@ Once that is working, the next step will be to record animations and export them
 * I've been using MakeHuman for more than a decade but often struggled with the UI and the source code.
 * I'm up to [something](https://mark13.org) with [Blender](https://www.blender.org) and [Chordata](https://chordata.cc) and in need for full artistic control of the toolchain. 😎
 
+## Animation
+
+### Capturing
+
+* [MediaPipe](https://developers.google.com/mediapipe)
+
+  Contains image recognition for facial landmarks, fingers and body.
+
+* [Chordata](https://chordata.cc)
+
+  Body pose capturing using 15 or 17 MARGS (accelerometer + gyroscope + magnetometer) attached to the body.
+
+* [The FreeMoCap Project](https://freemocap.org)
+
+  Not used in makehuman.js (yet): Python project which bundles and extends various free motion capture tools.
+
+### Face
+
+* https://en.wikipedia.org/wiki/Facial_Action_Coding_System
+
+* Siggraph 2021 [3D Morphable Face Models - Past, Present and Future](https://youtu.be/UGtIwWv1dds?si=-FJNP9f_wYKuuPCc)
+
+  * https://github.com/3d-morphable-models/curated-list-of-awesome-3D-Morphable-Model-software-and-data
+
+* MakeHuman uses a facial rig, which can be animated by combining 60 predefined poses (aka. pose units)
+
+* Google Mediapipe / Apple ARKit / ...
+
+  52 Blendshapes/Morph Targets
+
+  * https://hinzka.hatenablog.com/entry/2021/12/21/222635#Blendshapes-LIST
+  * https://arkit-face-blendshapes.com
+  * https://github.com/ICT-VGL/ICT-FaceKit
+    Here's how the data can look:
+    * https://news.productioncrate.com/free-3d-facial-expression-blendshapes-pack/
+    * Video: https://youtu.be/QAa2j-B2fa4?si=4d_xlBEOfO2FbOAg
+
+### Body
+
+TBD
+
 ## How does Makehuman work?
 
 ### Morph
@@ -189,86 +230,4 @@ class Proxy {
 
 ## Run single test
 
-npm run dev:test --file=build/test/skeleton.spec.js
-
-<!--
-
-TODO
-[ ] select view (manual, rotate, front, top, ...)
-[ ] adjust camera automatically
-[ ] pose units for the body
-
-    base/poseunits/body-poseunits.json
-    * no code, but this looks like quaternions, and then same approach as for facial expressions
-    * some discussion http://www.makehumancommunity.org/forum/viewtopic.php?f=7&t=12167
-    * makehuman-0.9.1-rc1a.tar.gz had it, i have it in virtual box 'Debian Desktop'
-      ~/upstream/makehuman/makehuman-0.9.1.rc1a/makehuman
-      not sure what the data format is, but, e.g. raising the arm would also raise
-      the breast because of the skin and tissue pulling it upwards
-
-      but: i guess it's no point re-using that. instead try to make sens of
-      body-poseunits.json and similar as planed for the facial expressions, also bring this
-      data into the ui to be tweaked be the user
-[ ] save/load custom expressions/poseunits/bones?
-[ ] export animation
-[ ] evaluate using glTF 2.0 to replace collada as per suggestion in MH forum
-[ ] ...
-
------
-
-// the morphed base mesh
-HumanMesh {
-    human: Human
-
-    obj: Mesh // aka WavefrontObj
-    origVertex: number[]
-    vertex: number[]
-    indices: number[]
-    groups: Group[]
-
-    proxy?: Proxy
-    proxyMesh?: WavefrontObj
-
-    update() {
-        this.vertex = [...this.origVertex]
-        // morph this.vertex
-        // update skeleton to new morph (temporarily set this.obj.vertex = this.vertex)
-        // skin this.vertex (this.human.__skeleton.skinMesh(...))
-    }
-}
-
-render() will use the proxy mesh
-
-// aggregates all the modifiers and creates a list of morph targets
-Human: AnimatedMesh {
-    meshData: WavefrontObj // Object3D(name)
-
-    def addBoundMesh(self, mesh, vertexToBoneMapping):
-
-    getRestCoordinates(name) {
-        rIdx = self._getBoundMeshIndex(name)
-        self.__originalMeshCoords[rIdx][:,:3]
-    }
-
-    setProxy()
-    setHairProxy()
-    setEyesProxy()
-    setEyebrowsProxy()
-    setEyelashesProxy()
-    setTeethProxy()
-    setToungeProxy()
-    addClothesProxy()
-    removeClothesProxy()
-}
-
-how upstream Makehuman does it...
-
-## Makehuman
-
-```
-cd /Users/mark/upstream/makehuman/makehuman
-./makehuman
-pip3.9 install --upgrade --force-reinstall PyQt5
-```
-
--->
+    npm run dev:test --file=build/test/skeleton.spec.js
