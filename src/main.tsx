@@ -1,3 +1,13 @@
+/*
+
+TODO: IT'S TIME TO CLEAR UP THIS MESS
+[ ] render, UpdateManager, ...
+    have something like setRenderer(...) which is called when a tab is activated
+[ ] get rid of the ui/ directory and instead clean up the root directory to match the UI structure
+[ ] instead of passing indiviual models around, group them into a class and pass that around
+
+*/
+
 import { Human } from "./modifier/Human"
 import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
@@ -5,8 +15,7 @@ import { loadSliders, SliderNode } from "./modifier/loadSliders"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
 
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { HumanMesh, isZero } from "./mesh/HumanMesh"
-import { exportCollada } from "mesh/Collada"
+import { HumanMesh } from "./mesh/HumanMesh"
 
 import { PoseNode } from "expression/PoseNode"
 import { PoseUnitsModel } from "expression/PoseUnitsModel"
@@ -16,9 +25,8 @@ import { PoseModel } from "pose/PoseModel"
 import { ProxyType } from "proxy/Proxy"
 import { ProxyManager } from "./ProxyManager"
 
-import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
-
 import ExpressionTab from "ui/expression"
+import FileTab from "ui/file"
 import chordataTab from "chordata/chordata"
 import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
@@ -39,7 +47,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { BooleanModel, Button, Checkbox, ref, Select, TableAdapter } from "toad.js"
+import { ref, Select, TableAdapter } from "toad.js"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { ModelReason } from "toad.js/model/Model"
@@ -52,7 +60,6 @@ export function main() {
     try {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
         run()
-        // runMediaPipe()
     } catch (e) {
         console.log(e)
         if (e instanceof Error) {
@@ -67,11 +74,6 @@ export function main() {
 //   class MHApplication
 //     startupSequence()
 function run() {
-    const references = new (class {
-        canvas!: HTMLCanvasElement
-        overlay!: HTMLElement
-    })()
-
     console.log("loading assets...")
     const human = new Human()
     const obj = new WavefrontObj("data/3dobjs/base.obj")
@@ -79,14 +81,6 @@ function run() {
     human.scene = scene
 
     const proxyManager = new ProxyManager(scene)
-
-    // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", "Proxymeshes"))
-    // scene.proxies.set("Proxymeshes", loadProxy(human, "data/proxymeshes/female_generic/female_generic.proxy", "Proxymeshes"))
-    // scene.proxies.set("Eyes", loadProxy(human, "data/eyes/high-poly/high-poly.mhclo", "Eyes"))
-    // scene.proxies.set("Teeth", loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth))
-    // scene.proxies.set("Tongue", loadProxy(human, "data/tongue/tongue01/tongue01.mhclo", "Tongue"))
-
-    // human.modified.add(() => scene.updateRequired = Update.MORPH)
 
     const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
     scene.skeleton = skeleton
@@ -120,13 +114,10 @@ function run() {
         modifer.getModel().modified.trigger(ModelReason.VALUE)
     })
 
-    const useBlenderProfile = new BooleanModel(true)
-    const limitPrecision = new BooleanModel(false)
-    useBlenderProfile.enabled = false
-    limitPrecision.enabled = false
-
-    const download = makeDownloadElement()
-    const upload = makeUploadElement()
+    const references = new (class {
+        canvas!: HTMLCanvasElement
+        overlay!: HTMLElement
+    })()
 
     // FIXME: OOP SMELL => replace ENUM with OBJECT
     const tabModel = new EnumModel(TAB.PROXY, TAB)
@@ -162,49 +153,7 @@ function run() {
         ...(
             <>
                 <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
-                    <Tab label="File" value={TAB.EXPORT}>
-                        <div style={{ padding: "10px" }}>
-                            <h1>Morph</h1>
-
-                            <p>
-                                <u>NOTE</u>: Only MakeHuman 1.1 and 1.2 files are supported.
-                            </p>
-
-                            <Button action={() => loadMHM(scene, upload)}>Load MHM</Button>
-                            <Button action={() => saveMHM(scene, download)}>Save MHM</Button>
-
-                            <h1>Pose</h1>
-                            <Button action={() => loadBVH(scene, upload)}>Load BVH</Button>
-                            <Button action={() => saveBVH(scene, download)}>Save BVH</Button>
-
-                            <h1>Collada</h1>
-
-                            <p>
-                                <Checkbox
-                                    model={useBlenderProfile}
-                                    title="Export additional Blender specific information (for material, shaders, bones, etc.)."
-                                />{" "}
-                                Use Blender Profile
-                            </p>
-                            <p>
-                                <Checkbox
-                                    model={limitPrecision}
-                                    title="Reduce the precision of the exported data to 6 digits."
-                                />{" "}
-                                Limit Precision
-                            </p>
-                            <p>
-                                <u>NOTE</u>: When importing into Blender, only the first material may look correct in
-                                the UV editor while rendering will still be okay. A workaround is to separate the mesh
-                                by material after import. (Edit Mode, P).
-                            </p>
-                            <p>
-                                <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded
-                                animation of the jaw.
-                            </p>
-                            <Button action={() => downloadCollada(scene, download)}>Export Collada</Button>
-                        </div>
-                    </Tab>
+                    <FileTab scene={scene}/>
                     <Tab label="Morph" value={TAB.MORPH}>
                         <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
@@ -236,7 +185,15 @@ function run() {
                     <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
                     <div
                         set={ref(references, "overlay")}
-                        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, overflow: "hidden", pointerEvents: "none" }}
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            overflow: "hidden",
+                            pointerEvents: "none",
+                        }}
                     ></div>
                 </div>
             </>
@@ -245,135 +202,3 @@ function run() {
     render(references.canvas, references.overlay, scene, renderMode, updateManager, chordataSettings)
 }
 
-function makeDownloadElement() {
-    const download = document.createElement("a")
-    download.type = "text/plain"
-    download.style.display = "hidden"
-    download.download = "makehuman.dae"
-    return download
-}
-
-function makeUploadElement() {
-    const upload = document.createElement("input")
-    upload.type = "file"
-    upload.style.display = "none"
-    return upload
-}
-
-function downloadCollada(scene: HumanMesh, download: HTMLAnchorElement) {
-    download.download = "makehuman.dae"
-    download.href = URL.createObjectURL(new Blob([exportCollada(scene)], { type: "text/plain" }))
-    download.dispatchEvent(new MouseEvent("click"))
-}
-
-function saveMHM(scene: HumanMesh, download: HTMLAnchorElement) {
-    console.log(`saveMHM`)
-
-    let out = `version v1.2.0\n`
-    out += `name makehuman.js\n`
-    out += `camera 0.0 0.0 0.0 0.0 0.0 1.0\n`
-
-    scene.human.modifiers.forEach((modifer, name) => {
-        const value = modifer.getValue()
-        if (!isZero(value)) {
-            out += `modifier ${name} ${value.toPrecision(6)}\n`
-        }
-    })
-    // out += `eyes HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6\n`
-    out += `clothesHideFaces True\n`
-    // out += `skinMaterial skins/default.mhmat\n`
-    // out += `material HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6 eyes/materials/brown.mhmat\n`
-    out += `subdivide False\n`
-
-    download.download = "makehuman.mhm"
-    download.href = URL.createObjectURL(new Blob([out], { type: "text/plain" }))
-    download.dispatchEvent(new MouseEvent("click"))
-}
-
-function loadMHM(scene: HumanMesh, upload: HTMLInputElement) {
-    upload.accept = ".mhm"
-    upload.onchange = async () => {
-        if (upload.files?.length === 1) {
-            const file = upload.files[0]
-            console.log(`file: "${file.name}", size ${file.size} bytes`)
-            const buffer = await file.arrayBuffer()
-            const te = new TextDecoder()
-            const content = te.decode(buffer)
-            scene.human.modifiers.forEach((modifier) => {
-                modifier.getModel().value = modifier.getDefaultValue()
-            })
-            for (const line of content.split("\n")) {
-                const token = line.split(" ")
-                if (token[0] === "modifier") {
-                    const modifier = scene.human.modifiers.get(token[1])
-                    if (modifier === undefined) {
-                        console.log(`unknown modifier '${token[1]}' in file`)
-                    } else {
-                        modifier.getModel().value = parseFloat(token[2])
-                    }
-                }
-            }
-        }
-    }
-    upload.dispatchEvent(new MouseEvent("click"))
-}
-
-function saveBVH(scene: HumanMesh, download: HTMLAnchorElement) {
-    // const bvh = new BiovisionHierarchy()
-    // const data: mat4[] = scene.skeleton.boneslist!.map((bone) => {
-    //     const m = mat4.invert(mat4.create(), bone.matPoseGlobal!)
-    //     mat4.mul(m, bone.matPose, m)
-    //     mat4.mul(m, bone.matRestGlobal!, m)
-    //     return m
-    // })
-
-    // const animation = new AnimationTrack("makehuman", data, 1, 1 / 24)
-    // bvh.fromSkeleton(scene.skeleton, animation, false)
-    // const out = bvh.writeToFile()
-    const out = fakeSaveData(scene)
-
-    download.download = "makehuman.bvh"
-    download.href = URL.createObjectURL(new Blob([out], { type: "text/plain" }))
-    download.dispatchEvent(new MouseEvent("click"))
-}
-
-// THIS WORKS!!! (SOMETIMES...)
-function fakeSaveData(scene: HumanMesh) {
-    const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
-    skeleton.build()
-    skeleton.update()
-
-    scene.skeleton.build()
-    scene.skeleton.update()
-
-    // this works
-    // const bvh0 = new BiovisionHierarchy().fromFile("data/poses/run01.bvh")
-    // const ani0 = bvh0.createAnimationTrack(skeleton)
-
-    // console.log(scene.skeleton.roots[0].matPose)
-
-    // this is a total mess, just using bone.matPose is better but not correct
-    // hey! i could create a test from it! and move it into a method and cover that one with tests...
-    const data = scene.skeleton.getPose()
-    const ani0 = new AnimationTrack("makehuman", data, 1, 1 / 24)
-
-    const bvh1 = new BiovisionHierarchy().fromSkeleton(skeleton, ani0, false)
-    return bvh1.writeToFile()
-}
-
-function loadBVH(scene: HumanMesh, upload: HTMLInputElement) {
-    upload.accept = ".bvh"
-    upload.onchange = async () => {
-        if (upload.files?.length === 1) {
-            const file = upload.files[0]
-            // console.log(`file: "${file.name}", size ${file.size} bytes`)
-            const buffer = await file.arrayBuffer()
-            const textDecoder = new TextDecoder()
-            const content = textDecoder.decode(buffer)
-            const bvh_file = new BiovisionHierarchy().fromFile(file.name, "auto", "onlyroot", content)
-            const anim = bvh_file.createAnimationTrack(scene.skeleton)
-            scene.skeleton.setPose(anim, 0)
-        }
-    }
-    upload.dispatchEvent(new MouseEvent("click"))
-}

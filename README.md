@@ -60,6 +60,10 @@ Once that is working, the next step will be to record animations and export them
 
 * https://en.wikipedia.org/wiki/Facial_Action_Coding_System
 
+  For psychology. Emotions only. Not speech. Doesn't detail muscle movements.
+
+* Facial Representations: Modeling, Rigging, Retargeting; Iain Mattherys; 2012-03-11; Disney Research, Pittsburgh [PDF](https://www.cs.cmu.edu/~yaser/Lecture-8-Face%20Representation.pdf)
+
 * Siggraph 2021 [3D Morphable Face Models - Past, Present and Future](https://youtu.be/UGtIwWv1dds?si=-FJNP9f_wYKuuPCc)
 
   * https://github.com/3d-morphable-models/curated-list-of-awesome-3D-Morphable-Model-software-and-data
@@ -73,7 +77,7 @@ Once that is working, the next step will be to record animations and export them
   * https://hinzka.hatenablog.com/entry/2021/12/21/222635#Blendshapes-LIST
   * https://arkit-face-blendshapes.com
   * https://github.com/ICT-VGL/ICT-FaceKit
-    Here's how the data can look:
+    Blendshapes from scans. Here's how the data can look:
     * https://news.productioncrate.com/free-3d-facial-expression-blendshapes-pack/
     * Video: https://youtu.be/QAa2j-B2fa4?si=4d_xlBEOfO2FbOAg
 
