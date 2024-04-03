@@ -1,11 +1,26 @@
 /*
 
 TODO: IT'S TIME TO CLEAR UP THIS MESS
-[ ] render, UpdateManager, ...
-    have something like setRenderer(...) which is called when a tab is activated
-[ ] get rid of the ui/ directory and instead clean up the root directory to match the UI structure
 [ ] instead of passing indiviual models around, group them into a class and pass that around
-
+    it will be basically like a bunch of global variables. but at the moment i'm not sure
+    how all the parts of the app will relate to each other
+[ ] render, UpdateManager, ...
+    * have something like setRenderer(...) which is called when a tab is activated
+    * Tab has visibilityChange(state: "visible" | "hidden") property
+    * it will need the canvas and the overlay
+    * name... RenderView?, GLView? => WE NOW HAVE 'GlView'
+[ ] get rid of the ui/ directory and instead clean up the root directory to match the UI structure
+    application/
+      file/
+      morph/
+      proxy/
+      pose/
+      expression/
+      mediapipe/
+      chordata/
+      glview/
+    makehuman/ ;; all the code from makehuman
+    main.tsx   ;; an no other files to make it prominent!
 */
 
 import { Human } from "./modifier/Human"
@@ -47,7 +62,7 @@ import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { ref, Select, TableAdapter } from "toad.js"
+import { HTMLElementProps, ref, Select, TableAdapter } from "toad.js"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { ModelReason } from "toad.js/model/Model"
@@ -153,7 +168,7 @@ function run() {
         ...(
             <>
                 <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
-                    <FileTab scene={scene}/>
+                    <FileTab scene={scene} />
                     <Tab label="Morph" value={TAB.MORPH}>
                         <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
@@ -181,24 +196,39 @@ function run() {
                     <MediapipeTab updateManager={updateManager} expressionModel={expressionManager.model} />
                     {chordataTab(scene, updateManager, chordataSettings)}
                 </Tabs>
-                <div style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
-                    <canvas set={ref(references, "canvas")} style={{ width: "100%", height: "100%" }} />
-                    <div
-                        set={ref(references, "overlay")}
-                        style={{
-                            position: "absolute",
-                            left: 0,
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                            overflow: "hidden",
-                            pointerEvents: "none",
-                        }}
-                    ></div>
-                </div>
+                <GLView
+                    references={references}
+                    style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}
+                />
             </>
         )
     )
     render(references.canvas, references.overlay, scene, renderMode, updateManager, chordataSettings)
 }
 
+interface GLViewProps extends HTMLElementProps {
+    references: {
+        canvas: HTMLCanvasElement
+        overlay: HTMLElement
+    }
+}
+
+function GLView(props: GLViewProps) {
+    return (
+        <div style={props.style}>
+            <canvas set={ref(props.references, "canvas")} style={{ width: "100%", height: "100%" }} />
+            <div
+                set={ref(props.references, "overlay")}
+                style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    overflow: "hidden",
+                    pointerEvents: "none",
+                }}
+            ></div>
+        </div>
+    )
+}
