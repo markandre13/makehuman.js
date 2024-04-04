@@ -14,7 +14,7 @@ export class Skeleton {
     poseNodes: PoseNode
     poseChanged = new Signal<PoseNode>()
 
-    scene: HumanMesh
+    humanMesh: HumanMesh
 
     info: FileInformation
 
@@ -33,8 +33,8 @@ export class Skeleton {
     scale: number = 1
 
     // makehuman/shared/skeleton.py:88 fromFile()
-    constructor(scene: HumanMesh, filename: string, data: any) {
-        this.scene = scene
+    constructor(humanMesh: HumanMesh, filename: string, data: any) {
+        this.humanMesh = humanMesh
         this.info = {
             name: data.name,
             version: data.version,
@@ -211,7 +211,7 @@ export class Skeleton {
          * human stand on the ground plane, independent of body length.
          */
         // function autoScaleAnim() {
-        //     const bone = scene.skeleton.getBone(COMPARE_BONE)
+        //     const bone = humanMesh.skeleton.getBone(COMPARE_BONE)
         //     console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
         //     const scale_factor = bone.length / bvh_bone_length
         //     const trans = vec3.scale(vec3.create(), bvh_root_translation, scale_factor)
@@ -296,7 +296,7 @@ export class Skeleton {
             //
             let verts
             if (rest_coord) {
-                const meshCoords = this.scene.getRestposeCoordinates()
+                const meshCoords = this.humanMesh.getRestposeCoordinates()
                 verts = v_idx.map((i) => {
                     i = i * 3
                     return [meshCoords[i], meshCoords[i + 1], meshCoords[i + 2]]
@@ -347,7 +347,7 @@ export class Skeleton {
         for (const bone of this.getBones()) {
             bone.update()
         }
-        // this.scene.setUpdate(Update.POSE)
+        // this.humanMesh.setUpdate(Update.POSE)
     }
 
     updateChordata(skeleton: ChordataSkeleton) {

@@ -286,8 +286,8 @@ describe("`(face) expression", function () {
         
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+        const humanMesh = new HumanMesh(human, obj)
+        const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
 
         const facePoseUnits = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh", "auto", "none")
 
@@ -316,8 +316,8 @@ describe("`(face) expression", function () {
         
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+        const humanMesh = new HumanMesh(human, obj)
+        const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
 
         const mgr = new ExpressionManager(skeleton)
 

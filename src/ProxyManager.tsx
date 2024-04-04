@@ -15,7 +15,7 @@ import { OptionModel } from 'toad.js'
 // clothes/fedora01/fedora[_cocked]
 
 export class ProxyManager {
-    scene: HumanMesh
+    humanMesh: HumanMesh
     // list of all known proxies by type
     list = new Map<ProxyType, OptionModel<string>>;
 
@@ -28,8 +28,8 @@ export class ProxyManager {
     ProxyType.Teeth,
     ProxyType.Tongue];
 
-    constructor(scene: HumanMesh) {
-        this.scene = scene
+    constructor(humanMesh: HumanMesh) {
+        this.humanMesh = humanMesh
         for (const type of this.allProxyTypes) {
             const proxyList: string[] = ["none"]          
             for (const file of FileSystemAdapter.listDir(ProxyType[type].toLowerCase())) {
@@ -43,15 +43,15 @@ export class ProxyManager {
             model.modified.add(() => {
                 console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
                 if (model.value === "none") {
-                    scene.proxies.delete(type)
+                    humanMesh.proxies.delete(type)
                 } else {
                     const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
                     const suffix = exists(`${prefix}.mhclo`) ? "mhclo" : "proxy"
                     console.log(`try toad load '${prefix}.${suffix}'`)
-                    scene.proxies.set(type, loadProxy(scene.human, `${prefix}.${suffix}`, type))
+                    humanMesh.proxies.set(type, loadProxy(humanMesh.human, `${prefix}.${suffix}`, type))
                 }
-                scene.changedProxy = type
-                scene.human.modified.trigger()
+                humanMesh.changedProxy = type
+                humanMesh.human.modified.trigger()
             })
             this.list.set(type, model)
         }

@@ -82,14 +82,14 @@ describe("Proxy", function () {
     it("weights", function () {
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        human.scene = scene
+        const humanMesh = new HumanMesh(human, obj)
+        human.humanMesh = humanMesh
 
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
-        scene.proxies.set(ProxyType.Teeth, proxy)
+        humanMesh.proxies.set(ProxyType.Teeth, proxy)
 
-        const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
-        scene.skeleton = skeleton
+        const skeleton = loadSkeleton(humanMesh, 'data/rigs/default.mhskel')
+        humanMesh.skeleton = skeleton
         expect(skeleton.vertexWeights).not.to.be.undefined
 
         const weights = proxy.getVertexWeights(skeleton.vertexWeights!)
@@ -107,12 +107,12 @@ describe("Proxy", function () {
     it("weights (intermediate)", function () {
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        human.scene = scene
+        const humanMesh = new HumanMesh(human, obj)
+        human.humanMesh = humanMesh
         const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
-        scene.proxies.set(ProxyType.Teeth, proxy)
-        const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel')
-        scene.skeleton = skeleton
+        humanMesh.proxies.set(ProxyType.Teeth, proxy)
+        const skeleton = loadSkeleton(humanMesh, 'data/rigs/default.mhskel')
+        humanMesh.skeleton = skeleton
         const weights = proxy._getVertexWeights(skeleton.vertexWeights!)
 
         expect(weights).to.deep.equal(teeth_proxy_intermediate_weights)
@@ -258,7 +258,7 @@ describe("Proxy", function () {
         ])
 
         const human = {
-            scene: {
+            humanMesh: {
                 vertexMorphed: hcoord
             }
         } as Human

@@ -13,7 +13,7 @@ import { Form } from "toad.js/view/Form"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { FormSelect } from "toad.js/view/FormSelect"
 
-export default function(props: {expressionManager: ExpressionManager, scene: HumanMesh}) {
+export default function(props: {expressionManager: ExpressionManager, humanMesh: HumanMesh}) {
     const expressionList = new OptionModel(
         props.expressionManager.expressions[0], 
         props.expressionManager.expressions, {
@@ -30,7 +30,7 @@ export default function(props: {expressionManager: ExpressionManager, scene: Hum
         <Tab label="Expression" value={TAB.EXPRESSION} style={{ overflow: "none" }}>
             <Form>
                 <FormSelect model={expressionList} />
-                <FormSwitch model={props.scene.wireframe}/>
+                <FormSwitch model={props.humanMesh.wireframe}/>
             </Form>
             <Table selectionModel={sm} model={props.expressionManager.model} style={{ width: "487px", height: "100%" }} />
         </Tab>

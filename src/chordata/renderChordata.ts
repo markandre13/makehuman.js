@@ -104,7 +104,7 @@ export function renderChordata(
     gl: WebGL2RenderingContext,
     programRGBA: RGBAShader,
     overlay: HTMLElement,
-    scene: HumanMesh,
+    humanMesh: HumanMesh,
     settings: ChordataSettings
 ) {
     if (skeleton === undefined) {
@@ -151,10 +151,10 @@ export function renderChordata(
         if (overlay.children.length > 0) {
             overlay.replaceChildren()
         }
-        // skeleton.root.build(scene.skeleton)
+        // skeleton.root.build(humanMesh.skeleton)
         // skeleton.root.update(settings)
 
-        // const mesh = new SkeletonMesh(scene.skeleton, skeleton.root)
+        // const mesh = new SkeletonMesh(humanMesh.skeleton, skeleton.root)
         // const s = new RenderMesh(gl, new Float32Array(mesh.vertex), mesh.indices, undefined, undefined, false)
 
         // const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)

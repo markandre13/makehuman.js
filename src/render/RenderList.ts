@@ -5,41 +5,41 @@ import { ProxyType } from "proxy/Proxy"
 
 export class RenderList {
     gl: WebGL2RenderingContext
-    scene: HumanMesh
+    humanMesh: HumanMesh
 
     base: RenderMesh
     proxies = new Map<ProxyType, RenderMesh>();
     skeleton: RenderMesh
 
-    constructor(gl: WebGL2RenderingContext, scene: HumanMesh) {
+    constructor(gl: WebGL2RenderingContext, humanMesh: HumanMesh) {
         this.gl = gl
-        this.scene = scene
-        this.base = new RenderMesh(gl, scene.vertexRigged, scene.baseMesh.fxyz, scene.baseMesh.uv, scene.baseMesh.fuv)
-        scene.proxies.forEach((proxy) => {
-            this.proxies.set(proxy.type, new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz))
+        this.humanMesh = humanMesh
+        this.base = new RenderMesh(gl, humanMesh.vertexRigged, humanMesh.baseMesh.fxyz, humanMesh.baseMesh.uv, humanMesh.baseMesh.fuv)
+        humanMesh.proxies.forEach((proxy) => {
+            this.proxies.set(proxy.type, new RenderMesh(gl, proxy.getCoords(humanMesh.vertexRigged), proxy.mesh.fxyz))
         })
-        const skel = renderSkeletonGlobal(scene)
+        const skel = renderSkeletonGlobal(humanMesh)
         this.skeleton = new RenderMesh(gl, skel.vertex, skel.indices, undefined, undefined, false)
     }
 
     update() {
-        // this.scene.update()
-        this.base.update(this.scene.vertexRigged)
+        // this.humanMesh.update()
+        this.base.update(this.humanMesh.vertexRigged)
         this.proxies.forEach((renderMesh, type) => {
-            const proxy = this.scene.proxies.get(type)!
-            const vertexMorphed = proxy.getCoords(this.scene.vertexMorphed)
-            const vertexWeights = proxy.getVertexWeights(this.scene.skeleton.vertexWeights!)
-            const vertexRigged = this.scene.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
+            const proxy = this.humanMesh.proxies.get(type)!
+            const vertexMorphed = proxy.getCoords(this.humanMesh.vertexMorphed)
+            const vertexWeights = proxy.getVertexWeights(this.humanMesh.skeleton.vertexWeights!)
+            const vertexRigged = this.humanMesh.skeleton.skinMesh(vertexMorphed, vertexWeights!._data)
             renderMesh.update(vertexRigged)
         })
-        const skel = renderSkeletonGlobal(this.scene)
+        const skel = renderSkeletonGlobal(this.humanMesh)
         this.skeleton.update(skel.vertex)
     }
 }
 
 // render the skeleton using matRestGlobal
-function renderSkeletonGlobal(scene: HumanMesh) {
-    const skel = scene.skeleton
+function renderSkeletonGlobal(humanMesh: HumanMesh) {
+    const skel = humanMesh.skeleton
     const v = vec4.fromValues(0, 0, 0, 1)
     const vertex = new Float32Array(skel.boneslist!.length * 6)
     const indices = new Array<number>(skel.boneslist!.length * 2)

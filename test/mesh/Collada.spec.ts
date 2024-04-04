@@ -209,11 +209,11 @@ describe("Collada", function () {
     xit("exportCollada() with real world data", function () {
         const human = new Human()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const scene = new HumanMesh(human, obj)
-        const skeleton = loadSkeleton(scene, 'data/rigs/default.mhskel.z')
-        scene.skeleton = skeleton
+        const humanMesh = new HumanMesh(human, obj)
+        const skeleton = loadSkeleton(humanMesh, 'data/rigs/default.mhskel.z')
+        humanMesh.skeleton = skeleton
 
-        exportCollada(scene)
+        exportCollada(humanMesh)
 
         // console.log(dumpBone(skeleton.roots[0])
         // checkCollada("exportCollada()", exportCollada(scene))

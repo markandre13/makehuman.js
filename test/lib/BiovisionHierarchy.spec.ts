@@ -329,8 +329,8 @@ Frame Time: 0.041667
         // check createAnimationTrack()
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
-        const scene = new HumanMesh(human, obj)
-        const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
+        const humanMesh = new HumanMesh(human, obj)
+        const skel = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
         const data = bvh.createAnimationTrack(skel).data
         for (let i = 0; i < data.length; ++i) {
             const m0 = data[i]
@@ -350,8 +350,8 @@ Frame Time: 0.041667
         it("compare with python code results (no animation track)", function () {
             const human = new Human()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
-            const scene = new HumanMesh(human, obj)
-            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+            const humanMesh = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
 
             const bvh = new BiovisionHierarchy()
 
@@ -394,8 +394,8 @@ Frame Time: 0.041667
         it("load and write face-poseunits.bvh", function () {
             const human = new Human()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
-            const scene = new HumanMesh(human, obj)
-            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+            const humanMesh = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
 
             // console.log("--------------------------------- fromFile")
             const bvh0 = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh")
@@ -450,8 +450,8 @@ Frame Time: 0.041667
         it("load and write face-poseunits.bvh (fromFile -> writeToFile -> fromFile)", function () {
             const human = new Human()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
-            const scene = new HumanMesh(human, obj)
-            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+            const humanMesh = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
 
             const bvh0 = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh")
             const bvh1 = new BiovisionHierarchy().fromFile("xxx.bvh", "auto", "onlyroot", bvh0.writeToFile())
@@ -471,8 +471,8 @@ Frame Time: 0.041667
         it("load and write run01.bvh (fromFile -> fromSkeleton -> writeToFile -> fromFile)", function () {
             const human = new Human()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
-            const scene = new HumanMesh(human, obj)
-            const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
+            const humanMesh = new HumanMesh(human, obj)
+            const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
             skeleton.updateJoints()
             skeleton.build()
             skeleton.update()
@@ -552,10 +552,10 @@ Frame Time: 0.041667
     it("revert from pose to anim track", function () {
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
-        const scene = new HumanMesh(human, obj)
-        human.scene = scene
-        const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
-        scene.skeleton = skeleton
+        const humanMesh = new HumanMesh(human, obj)
+        human.humanMesh = humanMesh
+        const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
+        humanMesh.skeleton = skeleton
         skeleton.build()
         skeleton.update()
 
@@ -592,7 +592,7 @@ Frame Time: 0.041667
 
         const anim1 = skeleton.getPose()
 
-        for (let boneIdx = 0; boneIdx < scene.skeleton.boneslist!.length; ++boneIdx) {
+        for (let boneIdx = 0; boneIdx < humanMesh.skeleton.boneslist!.length; ++boneIdx) {
             const expected = anim0.data[boneIdx]
             const given = anim1[boneIdx]
             // TODO: this skips the offset... is it important?
@@ -671,9 +671,9 @@ Frame Time: 0.041667
 
         const human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
-        const scene = new HumanMesh(human, obj)
-        const skel = loadSkeleton(scene, "data/rigs/default.mhskel")
-        scene.skeleton = skel
+        const humanMesh = new HumanMesh(human, obj)
+        const skel = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
+        humanMesh.skeleton = skel
         const anim = bvh_file.createAnimationTrack(skel)
 
         let bvh_root_translation: vec3
@@ -702,7 +702,7 @@ Frame Time: 0.041667
          * human stand on the ground plane, independent of body length.
          */
         function autoScaleAnim() {
-            const bone = scene.skeleton.getBone(COMPARE_BONE)
+            const bone = humanMesh.skeleton.getBone(COMPARE_BONE)
             console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
             expect(bone.length).to.almost.equal(3.415726664182774)
             const scale_factor = bone.length / bvh_bone_length

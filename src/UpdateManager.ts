@@ -149,7 +149,7 @@ export class UpdateManager {
             })
             this.modifiedMorphNodes.clear()
 
-            this.expressionManager.skeleton.scene.calculateVertexMorphed()
+            this.expressionManager.skeleton.humanMesh.calculateVertexMorphed()
             this.expressionManager.skeleton.updateJoints()
             this.expressionManager.skeleton.build()
 
@@ -197,7 +197,7 @@ export class UpdateManager {
         if (this.renderList !== undefined) {
             if (skinChanged) {
                 // console.log(`UpdateManager::update(): skin has changed`)
-                this.expressionManager.skeleton.scene.calculateVertexRigged()
+                this.expressionManager.skeleton.humanMesh.calculateVertexRigged()
                 this.renderList.update()
             }
         }

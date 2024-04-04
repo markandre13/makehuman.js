@@ -99,7 +99,7 @@ export class Proxy {
      * @returns proxy mesh vertices
      */
     getCoords(hcoord: Float32Array): Float32Array {
-        const matrix = this.tmatrix.getMatrix(this.human.scene.vertexMorphed)
+        const matrix = this.tmatrix.getMatrix(this.human.humanMesh.vertexMorphed)
 
         const ref_vIdxs = this.ref_vIdxs! // three vertices in the base mesh
         const weights = this.weights!     // three weights for each of those vertices

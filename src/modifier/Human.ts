@@ -8,7 +8,7 @@ import { HumanMesh, isZero } from 'mesh/HumanMesh'
  * Aggregate the morph modifiers
  */
 export class Human {
-    scene!: HumanMesh
+    humanMesh!: HumanMesh
 
     modified = new Signal()
 

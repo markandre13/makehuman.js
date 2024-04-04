@@ -23,7 +23,7 @@ export enum Projection {
 export function render(
     canvas: HTMLCanvasElement,
     overlay: HTMLElement,
-    scene: HumanMesh,
+    humanMesh: HumanMesh,
     mode: EnumModel<RenderMode>,
     updateManager: UpdateManager,
     chordataSettings: ChordataSettings
@@ -46,7 +46,7 @@ export function render(
     const programTex = new TextureShader(gl)
 
     // const texCube = createTexturedCubeRenderer(gl)
-    const renderList = new RenderList(gl, scene)
+    const renderList = new RenderList(gl, humanMesh)
     updateManager.setRenderList(renderList)
     // initCone(gl)
 
@@ -61,32 +61,32 @@ export function render(
     function renderFrame() {
         const wireframe =
             mode.value === RenderMode.WIREFRAME ||
-            ([RenderMode.EXPRESSION, RenderMode.POSE, RenderMode.CHORDATA].includes(mode.value) && scene.wireframe.value) 
+            ([RenderMode.EXPRESSION, RenderMode.POSE, RenderMode.CHORDATA].includes(mode.value) && humanMesh.wireframe.value) 
 
-        if (scene.changedProxy !== undefined) {
-            if (scene.proxies.has(scene.changedProxy)) {
-                const proxy = scene.proxies.get(scene.changedProxy)!
+        if (humanMesh.changedProxy !== undefined) {
+            if (humanMesh.proxies.has(humanMesh.changedProxy)) {
+                const proxy = humanMesh.proxies.get(humanMesh.changedProxy)!
                 renderList.proxies.set(
                     proxy.type,
-                    new RenderMesh(gl, proxy.getCoords(scene.vertexRigged), proxy.mesh.fxyz)
+                    new RenderMesh(gl, proxy.getCoords(humanMesh.vertexRigged), proxy.mesh.fxyz)
                 )
             } else {
-                renderList.proxies.delete(scene.changedProxy)
+                renderList.proxies.delete(humanMesh.changedProxy)
             }
-            scene.changedProxy = undefined
+            humanMesh.changedProxy = undefined
         }
 
         updateManager.updateIt()
 
-        // if (scene.updateRequired !== Update.NONE) {
+        // if (humanMesh.updateRequired !== Update.NONE) {
         //     renderList.update()
-        //     // updateBuffers(scene, buffers)
+        //     // updateBuffers(humanMesh, buffers)
         // }
         switch (mode.value) {
             case RenderMode.CHORDATA:
-                renderChordata(ctx, gl, programRGBA, overlay, scene, chordataSettings)
+                renderChordata(ctx, gl, programRGBA, overlay, humanMesh, chordataSettings)
                 if (chordataSettings.mountKCeptorView.value !== true) {
-                    renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
+                    renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, humanMesh, mode.value, wireframe)
                 }
                 break
             case RenderMode.MEDIAPIPE:
@@ -95,7 +95,7 @@ export function render(
                 }
                 break
             default:
-                renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, scene, mode.value, wireframe)
+                renderHuman(ctx, gl, programRGBA, programTex, texture, renderList, humanMesh, mode.value, wireframe)
         }
         console.log(`render: latency ${Date.now() - Number(updateManager.timestamp_ms)}ms`)
     }
@@ -105,10 +105,10 @@ export function render(
         requestAnimationFrame(renderFrame)
     }
     updateManager.render = () => paint(ctx)
-    scene.human.modified.add( () => {
+    humanMesh.human.modified.add( () => {
         updateManager.invalidateView()
     })
-    scene.wireframe.modified.add( () => {
+    humanMesh.wireframe.modified.add( () => {
         updateManager.invalidateView() 
     })
 

@@ -17,7 +17,7 @@ export function renderHuman(
     programTex: TextureShader,
     texture: WebGLTexture,
     renderList: RenderList,
-    scene: HumanMesh,
+    humanMesh: HumanMesh,
     renderMode: RenderMode,
     wireframe: boolean
 ): void {
@@ -51,8 +51,8 @@ export function renderHuman(
     //
     if (wireframe) {
         const NUMBER_OF_JOINTS = 124
-        const offset = scene.baseMesh.groups[2].startIndex * WORD_LENGTH
-        const count = scene.baseMesh.groups[2].length * NUMBER_OF_JOINTS
+        const offset = humanMesh.baseMesh.groups[2].startIndex * WORD_LENGTH
+        const count = humanMesh.baseMesh.groups[2].length * NUMBER_OF_JOINTS
 
         programRGBA.setColor([1, 1, 1, 1])
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
@@ -102,8 +102,8 @@ export function renderHuman(
         // render
         const rgba = x[COLOR_INDEX] as number[]
         programRGBA.setColor(rgba)
-        let offset = scene.baseMesh.groups[idx].startIndex * WORD_LENGTH
-        let length = scene.baseMesh.groups[idx].length
+        let offset = humanMesh.baseMesh.groups[idx].startIndex * WORD_LENGTH
+        let length = humanMesh.baseMesh.groups[idx].length
 
         const mode = x[GLMODE_INDEX] as number
         renderList.base.drawSubset(mode, offset, length)
@@ -158,8 +158,8 @@ export function renderHuman(
     programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
     programTex.texture(texture, alpha)
     if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
-        let offset = scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        let length = scene.baseMesh.groups[BaseMeshGroup.SKIN].length
+        let offset = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+        let length = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
         renderList.base.bind(programTex)
         renderList.base.drawSubset(gl.TRIANGLES, offset, length)
     }

@@ -614,7 +614,7 @@ function VectorView(props: { model: Rot3Model }) {
     )
 }
 
-export default function (scene: HumanMesh, updateManager: UpdateManager, settings: ChordataSettings) {
+export default function (humanMesh: HumanMesh, updateManager: UpdateManager, settings: ChordataSettings) {
     notochord = new Notochord(settings)
     mgr = updateManager
     settings.modified.add(() => updateManager.chordataChanged(skeleton))
@@ -662,7 +662,7 @@ export default function (scene: HumanMesh, updateManager: UpdateManager, setting
                 <FormHelp model={notochord.calibration} /> */}
 
                 <FormSwitch model={settings.mountKCeptorView} />
-                <FormSwitch model={scene.wireframe}/>
+                <FormSwitch model={humanMesh.wireframe}/>
 
                 {/* <FormLabel>Custom Pre Calibrate</FormLabel>
                 <FormField>

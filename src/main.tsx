@@ -87,7 +87,7 @@ export function main() {
 class Application {
     // makehuman
     human: Human // MorphManager / MorphController
-    scene: HumanMesh // base mesh, morphed mesh, posed mesh
+    humanMesh: HumanMesh // base mesh, morphed mesh, posed mesh
     skeleton: Skeleton
 
     // application
@@ -111,10 +111,10 @@ class Application {
         console.log("loading assets...")
         this.human = new Human()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
-        this.scene = new HumanMesh(this.human, obj)
-        this.human.scene = this.scene
-        this.skeleton = loadSkeleton(this.scene, "data/rigs/default.mhskel")
-        this.scene.skeleton = this.skeleton
+        this.humanMesh = new HumanMesh(this.human, obj)
+        this.human.humanMesh = this.humanMesh
+        this.skeleton = loadSkeleton(this.humanMesh, "data/rigs/default.mhskel")
+        this.humanMesh.skeleton = this.skeleton
         loadModifiers(this.human, "data/modifiers/modeling_modifiers.json")
         loadModifiers(this.human, "data/modifiers/measurement_modifiers.json")
 
@@ -123,12 +123,12 @@ class Application {
 
         console.log("everything is loaded...")
 
-        this.proxyManager = new ProxyManager(this.scene)
+        this.proxyManager = new ProxyManager(this.humanMesh)
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
         this.morphControls = new TreeNodeModel(SliderNode, this.sliderNodes)
         this.poseControls = new TreeNodeModel(PoseNode, this.skeleton.poseNodes)
         this.expressionManager = new ExpressionManager(this.skeleton)
-        this.poseModel = new PoseModel(this.scene.skeleton)
+        this.poseModel = new PoseModel(this.humanMesh.skeleton)
         this.updateManager = new UpdateManager(this.expressionManager, this.poseModel, this.sliderNodes)
         this.chordataSettings = new ChordataSettings()
 
@@ -190,7 +190,7 @@ function run() {
                     model={application.tabModel}
                     style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}
                 >
-                    <FileTab scene={application.scene} />
+                    <FileTab humanMesh={application.humanMesh} />
                     <Tab label="Morph" value={TAB.MORPH}>
                         <Table model={application.morphControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
@@ -219,7 +219,7 @@ function run() {
                         updateManager={application.updateManager}
                         expressionModel={application.expressionManager.model}
                     />
-                    {chordataTab(application.scene, application.updateManager, application.chordataSettings)}
+                    {chordataTab(application.humanMesh, application.updateManager, application.chordataSettings)}
                 </Tabs>
                 <GLView
                     references={application.references}
@@ -231,7 +231,7 @@ function run() {
     render(
         application.references.canvas,
         application.references.overlay,
-        application.scene,
+        application.humanMesh,
         application.renderMode,
         application.updateManager,
         application.chordataSettings

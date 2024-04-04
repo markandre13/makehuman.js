@@ -24,12 +24,12 @@ export interface Material {
     b: number
 }
 
-export function exportCollada(scene: HumanMesh) {
-    let s = scene
+export function exportCollada(humanMesh: HumanMesh) {
+    let s = humanMesh
     // s = testCube
     const geometry = new Geometry()
 
-    const proxy = scene.proxies.get(ProxyType.Teeth)!
+    const proxy = humanMesh.proxies.get(ProxyType.Teeth)!
 
     // TODO
     // [ ] combine this with the creation of RenderMesh!!!
@@ -37,49 +37,49 @@ export function exportCollada(scene: HumanMesh) {
     // [ ] the proxy mesh mostly be copied (but: we are merging them all into one list!)
     const materials: Material[] = [
         {
-            xyz: scene.vertexMorphed,
-            fxyz: scene.baseMesh.fxyz,
-            uv: scene.baseMesh.uv,
-            fuv: scene.baseMesh.fuv,
-            vertexWeights: scene.skeleton.vertexWeights!,
-            start: scene.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
-            length: scene.baseMesh.groups[BaseMeshGroup.SKIN].length,
+            xyz: humanMesh.vertexMorphed,
+            fxyz: humanMesh.baseMesh.fxyz,
+            uv: humanMesh.baseMesh.uv,
+            fuv: humanMesh.baseMesh.fuv,
+            vertexWeights: humanMesh.skeleton.vertexWeights!,
+            start: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
+            length: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length,
             name: "skin", r: 1, g: 0.5, b: 0.5
         }, {
-            xyz: scene.vertexMorphed,
-            fxyz: scene.baseMesh.fxyz,
-            uv: scene.baseMesh.uv,
-            fuv: scene.baseMesh.fuv,
-            vertexWeights: scene.skeleton.vertexWeights!,
-            start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
-            length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
+            xyz: humanMesh.vertexMorphed,
+            fxyz: humanMesh.baseMesh.fxyz,
+            uv: humanMesh.baseMesh.uv,
+            fuv: humanMesh.baseMesh.fuv,
+            vertexWeights: humanMesh.skeleton.vertexWeights!,
+            start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
+            length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
             name: "eyeL", r: 0.0, g: 1.0, b: 0.5
         }, {
-            xyz: scene.vertexMorphed,
-            fxyz: scene.baseMesh.fxyz,
-            uv: scene.baseMesh.uv,
-            fuv: scene.baseMesh.fuv,
-            vertexWeights: scene.skeleton.vertexWeights!,
-            start: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
-            length: scene.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
+            xyz: humanMesh.vertexMorphed,
+            fxyz: humanMesh.baseMesh.fxyz,
+            uv: humanMesh.baseMesh.uv,
+            fuv: humanMesh.baseMesh.fuv,
+            vertexWeights: humanMesh.skeleton.vertexWeights!,
+            start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
+            length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
             name: "eyeR", r: 1.0, g: 0.0, b: 0.0
         }, {
-            xyz: proxy.getCoords(scene.vertexMorphed),
+            xyz: proxy.getCoords(humanMesh.vertexMorphed),
             fxyz: proxy.mesh.fxyz,
             uv: proxy.mesh.uv,
             fuv: proxy.mesh.fuv,
-            vertexWeights: proxy.getVertexWeights(scene.skeleton.vertexWeights!),
+            vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
             start: 0,
             length: proxy.mesh.fxyz.length,
             name: "teeth", r: 1.0, g: 1.0, b: 1.0
         }, {
-            xyz: scene.vertexMorphed,
-            fxyz: scene.baseMesh.fxyz,
-            uv: scene.baseMesh.uv,
-            fuv: scene.baseMesh.fuv,
-            vertexWeights: scene.skeleton.vertexWeights!,
-            start: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
-            length: scene.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
+            xyz: humanMesh.vertexMorphed,
+            fxyz: humanMesh.baseMesh.fxyz,
+            uv: humanMesh.baseMesh.uv,
+            fuv: humanMesh.baseMesh.fuv,
+            vertexWeights: humanMesh.skeleton.vertexWeights!,
+            start: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
+            length: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
             name: "tounge", r: 1, g: 0.0, b: 0.0
         }
     ]
@@ -172,7 +172,7 @@ function colladaMaterials(materials: Material[]) {
     return out
 }
 
-function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Material[]) {
+function colladaGeometries(humanMesh: HumanMesh, geometry: Geometry, materials: Material[]) {
 
     for (let m of materials) {
         prepareMesh(
@@ -185,7 +185,7 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Mate
             geometry)
     }
 
-    // prepareGeometry(scene.vertexMorphed, scene.baseMesh.indices, materials, geometry)
+    // prepareGeometry(humanMesh.vertexMorphed, humanMesh.baseMesh.indices, materials, geometry)
 
     let out = `  <library_geometries>
     <geometry id="${meshName}" name="${objectName}">
@@ -230,12 +230,12 @@ function colladaGeometries(scene: HumanMesh, geometry: Geometry, materials: Mate
     return out
 }
 
-function colladaControllers(scene: HumanMesh, geometry: Geometry, materials: Material[]) {
+function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials: Material[]) {
 
-    const allBoneNames = scene.skeleton.boneslist!.map(bone => bone.name)
+    const allBoneNames = humanMesh.skeleton.boneslist!.map(bone => bone.name)
 
     let ibmAll = ""
-    scene.skeleton.boneslist!.forEach((bone) => {
+    humanMesh.skeleton.boneslist!.forEach((bone) => {
         ibmAll += ibm(bone) + " "
     })
     ibmAll = ibmAll.trimEnd()
@@ -245,7 +245,7 @@ function colladaControllers(scene: HumanMesh, geometry: Geometry, materials: Mat
         prepareControllerAddBoneWeights(
             m.xyz,
             m.vertexWeights,
-            scene.skeleton.bones,
+            humanMesh.skeleton.bones,
             geometry,
             boneWeightPairs, weightMap
         )
@@ -374,12 +374,12 @@ function colladaAnimations() {
    </library_animations>\n`
 }
 
-function colladaVisualScenes(scene: HumanMesh, materials: Material[]) {
+function colladaVisualScenes(humanMesh: HumanMesh, materials: Material[]) {
     let out = `  <library_visual_scenes>
     <visual_scene id="${sceneName}" name="${sceneName}">
       <node id="${armatureName}" name="${armatureName}" type="NODE">
         <matrix sid="transform">${mat2txt(identity)}</matrix>
-${dumpBone(armatureName, scene.skeleton.roots[0])}\n`
+${dumpBone(armatureName, humanMesh.skeleton.roots[0])}\n`
     // what varies...
     // node: id, name
     // instance_controller: url
@@ -392,7 +392,7 @@ ${dumpBone(armatureName, scene.skeleton.roots[0])}\n`
     out += `        <node id="${objectName}" name="${objectName}" type="NODE">
           <matrix sid="transform">${mat2txt(identity)}</matrix>
           <instance_controller url="#${skinName}">
-            <skeleton>#${armatureName}_${scene.skeleton.roots[0].name}</skeleton>
+            <skeleton>#${armatureName}_${humanMesh.skeleton.roots[0].name}</skeleton>
             <bind_material>
               <technique_common>\n`
     // <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
@@ -546,7 +546,7 @@ export function prepareMesh(
 //     ], ...
 //   }
 //   geometry
-//   scene.skeleton.bones
+//   humanMesh.skeleton.bones
 // OUT:
 //   boneWeightPairs = [
 //     <vertexIndex>: [
