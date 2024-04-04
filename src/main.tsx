@@ -68,8 +68,7 @@ import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSettings } from "chordata/ChordataSettings"
 import { MediapipeTab } from "mediapipe/mediapipe"
-
-main()
+import { Skeleton } from "skeleton/Skeleton"
 
 export function main() {
     try {
@@ -85,29 +84,98 @@ export function main() {
     }
 }
 
+class Application {
+    // makehuman
+    human: Human // MorphManager / MorphController
+    scene: HumanMesh // base mesh, morphed mesh, posed mesh
+    skeleton: Skeleton
+
+    // application
+    sliderNodes: SliderNode
+    proxyManager: ProxyManager
+    renderMode: EnumModel<RenderMode>
+    morphControls: TreeNodeModel<SliderNode>
+    poseControls: TreeNodeModel<PoseNode>
+    expressionManager: ExpressionManager
+    poseModel: PoseModel
+    updateManager: UpdateManager
+    chordataSettings: ChordataSettings
+    tabModel: EnumModel<TAB>
+    references: any
+    // references: {
+    //         canvas!: HTMLCanvasElement
+    //         overlay!: HTMLElement
+    //     }
+
+    constructor() {
+        console.log("loading assets...")
+        this.human = new Human()
+        const obj = new WavefrontObj("data/3dobjs/base.obj")
+        this.scene = new HumanMesh(this.human, obj)
+        this.human.scene = this.scene
+        this.skeleton = loadSkeleton(this.scene, "data/rigs/default.mhskel")
+        this.scene.skeleton = this.skeleton
+        loadModifiers(this.human, "data/modifiers/modeling_modifiers.json")
+        loadModifiers(this.human, "data/modifiers/measurement_modifiers.json")
+
+        // setup application
+        this.sliderNodes = loadSliders(this.human, "data/modifiers/modeling_sliders.json")
+
+        console.log("everything is loaded...")
+
+        this.proxyManager = new ProxyManager(this.scene)
+        this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
+        this.morphControls = new TreeNodeModel(SliderNode, this.sliderNodes)
+        this.poseControls = new TreeNodeModel(PoseNode, this.skeleton.poseNodes)
+        this.expressionManager = new ExpressionManager(this.skeleton)
+        this.poseModel = new PoseModel(this.scene.skeleton)
+        this.updateManager = new UpdateManager(this.expressionManager, this.poseModel, this.sliderNodes)
+        this.chordataSettings = new ChordataSettings()
+
+        // some modifiers already have non-null values, hence we mark all modifiers as dirty
+        this.human.modifiers.forEach((modifer) => {
+            modifer.getModel().modified.trigger(ModelReason.VALUE)
+        })
+
+        this.references = {} as any
+
+        // FIXME: OOP SMELL => replace ENUM with OBJECT
+        this.tabModel = new EnumModel(TAB.PROXY, TAB)
+        this.tabModel.modified.add(() => {
+            if (this.references.overlay) {
+                this.references.overlay.replaceChildren()
+            }
+            switch (this.tabModel.value) {
+                case TAB.PROXY:
+                case TAB.MORPH:
+                case TAB.MEDIAPIPE:
+                    this.renderMode.value = RenderMode.MEDIAPIPE
+                    break
+                case TAB.POSE:
+                case TAB.EXPORT:
+                    this.renderMode.value = RenderMode.WIREFRAME
+                    break
+                case TAB.POSE2:
+                    this.renderMode.value = RenderMode.POSE
+                    break
+                case TAB.EXPRESSION:
+                    this.renderMode.value = RenderMode.EXPRESSION
+                    break
+                case TAB.CHORDATA:
+                    this.renderMode.value = RenderMode.CHORDATA
+                    break
+            }
+            this.updateManager.invalidateView()
+        })
+        initHistoryManager(this.tabModel)
+    }
+}
+
 // core/mhmain.py
 //   class MHApplication
 //     startupSequence()
 function run() {
-    console.log("loading assets...")
-    const human = new Human()
-    const obj = new WavefrontObj("data/3dobjs/base.obj")
-    const scene = new HumanMesh(human, obj)
-    human.scene = scene
-
-    const proxyManager = new ProxyManager(scene)
-
-    const skeleton = loadSkeleton(scene, "data/rigs/default.mhskel")
-    scene.skeleton = skeleton
-
-    // humanmodifier.loadModifiers(getpath.getSysDataPath('modifiers/modeling_modifiers.json'), app.selectedHuman)
-    loadModifiers(human, "data/modifiers/modeling_modifiers.json")
-    loadModifiers(human, "data/modifiers/measurement_modifiers.json")
-
-    // guimodifier.loadModifierTaskViews(getpath.getSysDataPath('modifiers/modeling_sliders.json'), app.selectedHuman, category)
-    const sliderNodes = loadSliders(human, "data/modifiers/modeling_sliders.json")
-
-    console.log("everything is loaded...")
+    const application = new Application()
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
@@ -115,95 +183,59 @@ function run() {
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
     TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: WTF???
 
-    const renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
-    const morphControls = new TreeNodeModel(SliderNode, sliderNodes)
-    const poseControls = new TreeNodeModel(PoseNode, skeleton.poseNodes)
-
-    const expressionManager = new ExpressionManager(skeleton)
-    const poseModel = new PoseModel(scene.skeleton)
-    const updateManager = new UpdateManager(expressionManager, poseModel, sliderNodes)
-    const chordataSettings = new ChordataSettings()
-
-    // some modifiers already have non-null values, hence we mark all modifiers as dirty
-    human.modifiers.forEach((modifer) => {
-        modifer.getModel().modified.trigger(ModelReason.VALUE)
-    })
-
-    const references = new (class {
-        canvas!: HTMLCanvasElement
-        overlay!: HTMLElement
-    })()
-
-    // FIXME: OOP SMELL => replace ENUM with OBJECT
-    const tabModel = new EnumModel(TAB.PROXY, TAB)
-    tabModel.modified.add(() => {
-        if (references.overlay) {
-            references.overlay.replaceChildren()
-        }
-        switch (tabModel.value) {
-            case TAB.PROXY:
-            case TAB.MORPH:
-            case TAB.MEDIAPIPE:
-                renderMode.value = RenderMode.MEDIAPIPE
-                break
-            case TAB.POSE:
-            case TAB.EXPORT:
-                renderMode.value = RenderMode.WIREFRAME
-                break
-            case TAB.POSE2:
-                renderMode.value = RenderMode.POSE
-                break
-            case TAB.EXPRESSION:
-                renderMode.value = RenderMode.EXPRESSION
-                break
-            case TAB.CHORDATA:
-                renderMode.value = RenderMode.CHORDATA
-                break
-        }
-        updateManager.invalidateView()
-    })
-    initHistoryManager(tabModel)
-
     document.body.replaceChildren(
         ...(
             <>
-                <Tabs model={tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
-                    <FileTab scene={scene} />
+                <Tabs
+                    model={application.tabModel}
+                    style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}
+                >
+                    <FileTab scene={application.scene} />
                     <Tab label="Morph" value={TAB.MORPH}>
-                        <Table model={morphControls} style={{ width: "100%", height: "100%" }} />
+                        <Table model={application.morphControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
                     <Tab label="Proxy" value={TAB.PROXY}>
                         <Form variant="narrow">
-                            {proxyManager.allProxyTypes.map((pid) => (
+                            {application.proxyManager.allProxyTypes.map((pid) => (
                                 <>
                                     <FormLabel>{ProxyType[pid]}</FormLabel>
                                     <FormField>
-                                        <Select id={ProxyType[pid]} model={proxyManager.list.get(pid)} />
+                                        <Select id={ProxyType[pid]} model={application.proxyManager.list.get(pid)} />
                                     </FormField>
-                                    <FormHelp model={proxyManager.list.get(pid) as any} />
+                                    <FormHelp model={application.proxyManager.list.get(pid) as any} />
                                 </>
                             ))}
                         </Form>
                     </Tab>
                     <Tab label="Pose" value={TAB.POSE}>
-                        <Table model={poseControls} style={{ width: "100%", height: "100%" }} />
+                        <Table model={application.poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
                     {/* {poseTab(scene, poseModel)} */}
                     {/* 
                         this one costs too much time when using motion capture
                         <ExpressionTab scene={scene} expressionManager={expressionManager} />
                     */}
-                    <MediapipeTab updateManager={updateManager} expressionModel={expressionManager.model} />
-                    {chordataTab(scene, updateManager, chordataSettings)}
+                    <MediapipeTab
+                        updateManager={application.updateManager}
+                        expressionModel={application.expressionManager.model}
+                    />
+                    {chordataTab(application.scene, application.updateManager, application.chordataSettings)}
                 </Tabs>
                 <GLView
-                    references={references}
+                    references={application.references}
                     style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}
                 />
             </>
         )
     )
-    render(references.canvas, references.overlay, scene, renderMode, updateManager, chordataSettings)
+    render(
+        application.references.canvas,
+        application.references.overlay,
+        application.scene,
+        application.renderMode,
+        application.updateManager,
+        application.chordataSettings
+    )
 }
 
 interface GLViewProps extends HTMLElementProps {
@@ -232,3 +264,5 @@ function GLView(props: GLViewProps) {
         </div>
     )
 }
+
+main()
