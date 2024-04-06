@@ -10,14 +10,66 @@ import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/renderHuman"
+import { GLView, Projection, RenderHandler } from "GLView"
+import { WavefrontObj } from "mesh/WavefrontObj"
+import {
+    createModelViewMatrix,
+    createNormalMatrix,
+    createProjectionMatrix,
+    prepareCanvas,
+    prepareViewport,
+} from "render/util"
+import { RenderMesh } from "render/RenderMesh"
 
 let orb: ORB | undefined
 let backend: Backend
 let frontend: Frontend_impl
 
+let head: WavefrontObj | undefined
+
+class FaceRenderer extends RenderHandler {
+    mesh?: RenderMesh
+    override paint(app: Application, view: GLView): void {
+        // throw new Error("Method not implemented.")
+        if (head === undefined) {
+            head = new WavefrontObj("data/blendshapes/Neutral.obj")
+            for(let i=0; i<head.vertex.length; ++i) {
+                head.vertex[i] = head.vertex[i] * 80
+            }
+            // console.log(`head loaded`)
+            // console.log(head)
+        }
+        // how do i render the head?
+
+        const gl = view.gl
+        const ctx = view.ctx
+        const programRGBA = view.programRGBA
+
+        const canvas = app.glview.canvas as HTMLCanvasElement
+        prepareCanvas(canvas)
+        prepareViewport(gl, canvas)
+        const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+        const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+        const normalMatrix = createNormalMatrix(modelViewMatrix)
+
+        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
+        gl.depthMask(true)
+        gl.disable(gl.BLEND)
+        if (!this.mesh) {
+            this.mesh = new RenderMesh(gl, head.vertex, head.fxyz, undefined, undefined, false)
+        }
+        programRGBA.setColor([1.0, 0.8, 0.7, 1])
+        this.mesh.bind(programRGBA)
+        gl.drawElements(gl.TRIANGLES, head.fxyz.length, gl.UNSIGNED_SHORT, 0)
+    }
+}
+
 export function MediapipeTab(props: { app: Application }) {
     return (
-        <Tab label="Mediapipe" value={TAB.MEDIAPIPE} visibilityChange={setRenderer(props.app, new RenderHuman())}>
+        <Tab label="Mediapipe" value={TAB.MEDIAPIPE} visibilityChange={setRenderer(props.app, new FaceRenderer())}>
             <Button action={() => callORB(props.app.updateManager, props.app.expressionManager.model)}>
                 The Orb of Osuvox
             </Button>
