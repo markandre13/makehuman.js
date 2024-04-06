@@ -20,19 +20,73 @@ import {
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Target } from "target/Target"
+import { isZero } from "mesh/HumanMesh"
 
 let orb: ORB | undefined
 let backend: Backend
 let frontend: Frontend_impl
 
+const blendshapeNames = [
+    "_neutral", // 0
+    "browDownLeft", // 1
+    "browDownRight", // 2
+    "browInnerUp", // 3
+    "browOuterUpLeft", // 4
+    "browOuterUpRight", // 5
+    "cheekPuff", // 6
+    "cheekSquintLeft", // 7
+    "cheekSquintRight", // 8
+    "eyeBlinkLeft", // 9
+    "eyeBlinkRight", // 10
+    "eyeLookDownLeft", // 11
+    "eyeLookDownRight", // 12
+    "eyeLookInLeft", // 13
+    "eyeLookInRight", // 14
+    "eyeLookOutLeft", // 15
+    "eyeLookOutRight", // 16
+    "eyeLookUpLeft", // 17
+    "eyeLookUpRight", // 18
+    "eyeSquintLeft", // 19
+    "eyeSquintRight", // 20
+    "eyeWideLeft", // 21
+    "eyeWideRight", // 22
+    "jawForward", // 23
+    "jawLeft", // 24
+    "jawOpen", // 25
+    "jawRight", // 26
+    "mouthClose", // 27
+    "mouthDimpleLeft", // 28
+    "mouthDimpleRight", // 29
+    "mouthFrownLeft", // 30
+    "mouthFrownRight", // 31
+    "mouthFunnel", // 32
+    "mouthLeft", // 33
+    "mouthLowerDownLeft", // 34
+    "mouthLowerDownRight", // 35
+    "mouthPressLeft", // 36
+    "mouthPressRight", // 37
+    "mouthPucker", // 38
+    "mouthRight", // 39
+    "mouthRollLower", // 40
+    "mouthRollUpper", // 41
+    "mouthShrugLower", // 42
+    "mouthShrugUpper", // 43
+    "mouthSmileLeft", // 44
+    "mouthSmileRight", // 45
+    "mouthStretchLeft", // 46
+    "mouthStretchRight", // 47
+    "mouthUpperUpLeft", // 48
+    "mouthUpperUpRight", // 49
+    "noseSneerLeft", // 50
+    "noseSneerRight", // 51
+]
+const targets = new Array<Target>(blendshapeNames.length)
+let weights = new Float32Array(blendshapeNames.length)
 let neutral: WavefrontObj | undefined
-let jawOpen: WavefrontObj | undefined
-
-let model = new NumberModel(0, { min: 0, max: 1, step: 0.01 })
+const scale = 80
 
 class FaceRenderer extends RenderHandler {
     mesh!: RenderMesh
-    target!: Target
 
     override paint(app: Application, view: GLView): void {
         const gl = view.gl
@@ -41,24 +95,38 @@ class FaceRenderer extends RenderHandler {
 
         if (neutral === undefined) {
             neutral = new WavefrontObj("data/blendshapes/Neutral.obj")
-            jawOpen = new WavefrontObj("data/blendshapes/jawOpen.obj")
             for (let i = 0; i < neutral.vertex.length; ++i) {
-                neutral.vertex[i] = neutral.vertex[i] * 80
-                jawOpen.vertex[i] = jawOpen.vertex[i] * 80
+                neutral.vertex[i] = neutral.vertex[i] * scale
             }
-            this.target = new Target()
-            this.target.diff(neutral.vertex, jawOpen.vertex)
+            for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
+                if (blendshape === 0) {
+                    continue
+                }
+                const name = blendshapeNames[blendshape]
+                const dst = new WavefrontObj(`data/blendshapes/${name}.obj`)
+                for (let i = 0; i < neutral.vertex.length; ++i) {
+                    dst.vertex[i] = dst.vertex[i] * scale
+                }
+                const target = new Target()
+                target.diff(neutral.vertex, dst.vertex)
+                targets[blendshape] = target
+                weights[blendshape] = 0
+            }
+
             this.mesh = new RenderMesh(gl, neutral.vertex, neutral.fxyz, undefined, undefined, false)
-            console.log(`face blendshapes: ${neutral.vertex.length / 3}, ${this.target.data.length}`)
-            model.modified.add( () => {
-                requestAnimationFrame(() => {
-                    const vertex = new Float32Array(neutral!.vertex)
-                    this.target.apply(vertex, model.value)
-                    this.mesh.update(vertex)
-                    this.paint(app, view)
-                })
-            })
         }
+
+        const vertex = new Float32Array(neutral!.vertex)
+        for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
+            if (blendshape === 0) {
+                continue
+            }
+            if (isZero(weights[blendshape])) {
+                continue
+            }
+            targets[blendshape].apply(vertex, weights[blendshape])
+        }
+        this.mesh.update(vertex)
 
         const canvas = app.glview.canvas as HTMLCanvasElement
         prepareCanvas(canvas)
@@ -86,7 +154,6 @@ export function MediapipeTab(props: { app: Application }) {
             <Button action={() => callORB(props.app.updateManager, props.app.expressionManager.model)}>
                 The Orb of Osuvox
             </Button>
-            <Slider model={model} />
         </Tab>
     )
 }
@@ -156,13 +223,16 @@ class Frontend_impl extends Frontend_skel {
         })
     }
     override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, timestamp_ms: bigint): void {
-        console.log(`rcvd  : latency ${Date.now() - Number(timestamp_ms)}ms`)
-        this.updateManager.mediapipe(landmarks, timestamp_ms)
-        this.blendshapeIndex2poseUnit.forEach((name, index) => {
-            if (index < blendshapes.length) {
-                this.expressionModel.setPoseUnit(name, blendshapes[index])
-            }
-        })
+        // console.log(`rcvd  : latency ${Date.now() - Number(timestamp_ms)}ms`)
+        weights = new Float32Array(blendshapes)
+        this.updateManager.invalidateView()
+        
+        // this.updateManager.mediapipe(landmarks, timestamp_ms)
+        // this.blendshapeIndex2poseUnit.forEach((name, index) => {
+        //     if (index < blendshapes.length) {
+        //         this.expressionModel.setPoseUnit(name, blendshapes[index])
+        //     }
+        // })
     }
     override async hello(): Promise<void> {
         console.log("HELLO FROM THE SERVER")
