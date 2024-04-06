@@ -6,13 +6,8 @@ import { isZero } from "mesh/HumanMesh"
  * morph target
  */
 export class Target {
-    data: Array<number> // index    // TODO: this should be an Uint16Array
-    verts: Array<number> // x, y, z // TODO: this should be an Float32Array
-
-    constructor() {
-        this.verts = new Array<number>()
-        this.data = new Array<number>()
-    }
+    data!: Uint16Array // index
+    verts!: Float32Array // x, y, z
 
     /**
      * load morph target from MakeHuman *.target file
@@ -22,21 +17,22 @@ export class Target {
     }
     parse(data: string) {
         // each line has the format index x y z
-        const reader = new StringToLine(data)
+        const idx: number[] = []
+        const vtx: number[] = []
 
+        const reader = new StringToLine(data)
         let lineNumber = 0
         for (let line of reader) {
             ++lineNumber
-            // console.log(line)
             line = line.trim()
             if (line.length === 0) continue
             if (line[0] === "#") continue
             const tokens = line.split(/\s+/)
-            this.data.push(parseInt(tokens[0], 10))
-            this.verts.push(parseFloat(tokens[1]))
-            this.verts.push(parseFloat(tokens[2]))
-            this.verts.push(parseFloat(tokens[3]))
+            idx.push(parseInt(tokens[0], 10))
+            vtx.push(parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3]))
         }
+        this.data = new Uint16Array(idx)
+        this.verts = new Float32Array(vtx)
     }
 
     /**
@@ -49,6 +45,8 @@ export class Target {
         if (src.length !== dst.length) {
             throw Error(`Target.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`)
         }
+        const idx: number[] = []
+        const vtx: number[] = []
         for(let v = 0, i=0; v<src.length; ++i) {
             const sx = src[v]
             const dx = dst[v++]
@@ -58,10 +56,12 @@ export class Target {
             const dz = dst[v++]
             const x = dx - sx, y = dy - sy, z = dz - sz
             if (!isZero(x) || !isZero(y) || !isZero(z)) {
-                this.data.push(i)
-                this.verts.push(x, y, z)
+                idx.push(i)
+                vtx.push(x, y, z)
             }
         }
+        this.data = new Uint16Array(idx)
+        this.verts = new Float32Array(vtx)
     }
 
     /**
