@@ -44,7 +44,11 @@ let animationTime = 0
 let animationStep = 0
 
 async function main() {
-    await downloadFaceBlendshapes()
+    if (!isDir("base/blendshapes")) {
+        mkdirSync("base/blendshapes")
+    }
+    await downloadARKitFaceBlendshapes()
+    await downloadICTFaceKitBlendshapes()
 
     if (isDir(assetDirectory)) {
         updateAssetDirectory(assetDirectory)
@@ -98,7 +102,17 @@ function cloneAssetDirectory(repository: string, branch: string, makehumanDir: s
 
 function copyFiles(sourceRoot: string, sourcePath: string = "") {
     const source = `${sourceRoot}${sep}${sourcePath}`
-    for (const file of readdirSync(source)) {
+    let dir 
+    try {
+        dir = readdirSync(source)
+    } catch(e) {
+        if (e instanceof Error) {
+            throw Error(`${source}: ${e.name} ${e.message}`)
+        } else {
+            throw Error(`${source}: ${e}`)
+        }
+    }
+    for (const file of dir) {
         const now = Date.now()
         if (now - animationTime > 125) {
             animationTime = now
@@ -197,38 +211,167 @@ function bytes2megabytes(num: number) {
     return Math.round((num / 1024 / 1024 + Number.EPSILON) * 100) / 100
 }
 
-// someone seems to have extracted the 52 blendshapes from Apple's ARKit
-// as Wavefront OBJ files.
-async function downloadFaceBlendshapes() {
-    const url = "https://arkit-face-blendshapes.com"
-    const blendshapeUrl = `${url}/static/js/main.fdacbc90.chunk.js`
+function isFile(path: string) {
+    try {
+        return lstatSync(path).isFile()
+    } catch (error) {
+        if ((error as any).code === "ENOENT") {
+            return false
+        }
+        throw error
+    }
+}
 
-    const dirOut = "base/blendshapes"
-    if (isDir(dirOut)) {
+const blendshapeNames = [
+    "_neutral", // 0
+    "browDownLeft", // 1
+    "browDownRight", // 2
+    "browInnerUp", // 3
+    "browOuterUpLeft", // 4
+    "browOuterUpRight", // 5
+    "cheekPuff", // 6
+    "cheekSquintLeft", // 7
+    "cheekSquintRight", // 8
+    "eyeBlinkLeft", // 9
+    "eyeBlinkRight", // 10
+    "eyeLookDownLeft", // 11
+    "eyeLookDownRight", // 12
+    "eyeLookInLeft", // 13
+    "eyeLookInRight", // 14
+    "eyeLookOutLeft", // 15
+    "eyeLookOutRight", // 16
+    "eyeLookUpLeft", // 17
+    "eyeLookUpRight", // 18
+    "eyeSquintLeft", // 19
+    "eyeSquintRight", // 20
+    "eyeWideLeft", // 21
+    "eyeWideRight", // 22
+    "jawForward", // 23
+    "jawLeft", // 24
+    "jawOpen", // 25
+    "jawRight", // 26
+    "mouthClose", // 27
+    "mouthDimpleLeft", // 28
+    "mouthDimpleRight", // 29
+    "mouthFrownLeft", // 30
+    "mouthFrownRight", // 31
+    "mouthFunnel", // 32
+    "mouthLeft", // 33
+    "mouthLowerDownLeft", // 34
+    "mouthLowerDownRight", // 35
+    "mouthPressLeft", // 36
+    "mouthPressRight", // 37
+    "mouthPucker", // 38
+    "mouthRight", // 39
+    "mouthRollLower", // 40
+    "mouthRollUpper", // 41
+    "mouthShrugLower", // 42
+    "mouthShrugUpper", // 43
+    "mouthSmileLeft", // 44
+    "mouthSmileRight", // 45
+    "mouthStretchLeft", // 46
+    "mouthStretchRight", // 47
+    "mouthUpperUpLeft", // 48
+    "mouthUpperUpRight", // 49
+    "noseSneerLeft", // 50
+    "noseSneerRight", // 51
+]
+
+// someone seems to have extracted the 52 blendshapes from Apple's ARKit as
+// Wavefront OBJ files and someone else used them for documentation
+async function downloadARKitFaceBlendshapes() {
+    const url = "https://arkit-face-blendshapes.com"
+    const dirOut = `base${sep}blendshapes${sep}arkit`
+
+    let missing = false
+    for (const name of blendshapeNames) {
+        if (!isFile(`${dirOut}/${name}.obj`)) {
+            missing = true
+            break
+        }
+    }
+    if (!missing) {
         return
     }
-
     mkdirSync(dirOut)
+
+    const blendshapeUrl = `${url}/static/js/main.fdacbc90.chunk.js`
     const chunkResponse = await fetch(blendshapeUrl)
     const chunk = await chunkResponse.text()
     if (!chunkResponse.ok) {
-        console.log(`failed to fetch ${blendshapeUrl}: ${chunkResponse.status} ${chunkResponse.statusText} ${chunk}`)
-        return
+        throw Error(`failed to fetch ${blendshapeUrl}: ${chunkResponse.status} ${chunkResponse.statusText} ${chunk}`)
     }
     const objFiles = chunk.match(/"static\/media\/[a-zA-Z]+\.[a-f0-9]+\.obj\"/g)!
 
     for (let filename of objFiles) {
         filename = filename.substring(1, filename.length - 1)
         let shortname = filename.match(/static\/media\/([a-zA-Z]+)\./)![1]
+
+        if (isFile(`${dirOut}/${shortname}.obj`)) {
+            continue
+        }
+
         console.log(`download ${url}/${filename} to ${dirOut}/${shortname}.obj`)
 
         const objResponse = await fetch(`${url}/${filename}`)
         const obj = await objResponse.text()
         if (!objResponse.ok) {
-            console.log(`failed to fetch ${url}/${filename}: ${objResponse.status} ${objResponse.statusText} ${obj}`)
-            return
+            throw Error(`failed to fetch ${url}/${filename}: ${objResponse.status} ${objResponse.statusText} ${obj}`)
         }
-        writeFileSync(`${dirOut}/${shortname}.obj`, obj)
+        writeFileSync(`${dirOut}${sep}${shortname}.obj`, obj)
+    }
+}
+
+async function downloadICTFaceKitBlendshapes() {
+    const url = `https://github.com/ICT-VGL/ICT-FaceKit/raw/master/FaceXModel`
+    const dirOut = `base${sep}blendshapes${sep}ict`
+    if (!isDir(dirOut)) {
+        mkdirSync(dirOut)
+    }
+    for (let dst of blendshapeNames) {
+        let srcs: string[] | undefined
+        if (["jawLeft", "jawRight", "mouthLeft", "mouthRight"].indexOf(dst) != -1) {
+            srcs = [dst]
+        }
+        if (!srcs && dst === "browInnerUp") {
+            srcs = ["browInnerUp_L", "browInnerUp_R"]
+        }
+        if (!srcs && dst === "cheekPuff") {
+            srcs = ["cheekPuff_L", "cheekPuff_R"]
+        }
+        if (!srcs && dst === "_neutral") {
+            srcs = ["generic_neutral_mesh"]
+        }
+        if (!srcs) {
+            const m = dst.match(/(\w+)Left/)
+            if (m !== null) {
+                srcs = [`${m[1]}_L`]
+            }
+        }
+        if (!srcs) {
+            const m = dst.match(/(\w+)Right/)
+            if (m !== null) {
+                srcs = [`${m[1]}_R`]
+            }
+        }
+        if (!srcs) {
+            srcs = [dst]
+        }
+        for (const src of srcs) {
+            if (srcs.length > 1) {
+                dst = src
+            }
+            if (!isFile(`${dirOut}${dst!}.obj`)) {
+                console.log(`download ${url}${sep}${src} to ${dirOut}/${dst}.obj`)
+
+                const objResponse = await fetch(`${url}${sep}${src}.obj`)
+                const obj = await objResponse.text()
+                if (!objResponse.ok) {
+                    throw Error(`failed to fetch ${url}${sep}${src}: ${objResponse.status} ${objResponse.statusText}`)
+                }
+                writeFileSync(`${dirOut}${sep}${dst}.obj`, obj)
+            }
+        }
     }
 }
 

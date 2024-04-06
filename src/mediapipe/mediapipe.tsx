@@ -94,7 +94,7 @@ class FaceRenderer extends RenderHandler {
         const programRGBA = view.programRGBA
 
         if (neutral === undefined) {
-            neutral = new WavefrontObj("data/blendshapes/Neutral.obj")
+            neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
             for (let i = 0; i < neutral.vertex.length; ++i) {
                 neutral.vertex[i] = neutral.vertex[i] * scale
             }
@@ -103,7 +103,7 @@ class FaceRenderer extends RenderHandler {
                     continue
                 }
                 const name = blendshapeNames[blendshape]
-                const dst = new WavefrontObj(`data/blendshapes/${name}.obj`)
+                const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
                 for (let i = 0; i < neutral.vertex.length; ++i) {
                     dst.vertex[i] = dst.vertex[i] * scale
                 }
