@@ -16,7 +16,7 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
-import { GLView } from "GLView"
+import { GLView, RenderHandler } from "GLView"
 
 export class Application {
     // makehuman
@@ -109,7 +109,9 @@ export class Application {
         initHistoryManager(this.tabModel)
     }
 
-    setRenderer() {
+    renderer?: RenderHandler
 
+    setRenderer(renderer?: RenderHandler) {
+        this.renderer = renderer
     }
 }

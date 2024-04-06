@@ -5,12 +5,29 @@ import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
 import { ProxyType } from "proxy/Proxy"
 import { RenderList } from "./RenderList"
-// import { cubeRotation } from "./render"
 import { prepareCanvas, prepareViewport, createProjectionMatrix, createModelViewMatrix, createNormalMatrix } from "./util"
 import { Context } from "./Context"
-import { Projection } from "./render"
+import { GLView, Projection, RenderHandler } from "GLView"
+import { Application } from "Application"
 
-export function renderHuman(
+export class RenderHuman extends RenderHandler {
+    override paint(app: Application, view: GLView): void {
+        app.updateManager.updateIt()
+        renderHuman(
+            view.ctx,
+            view.gl,
+            view.programRGBA,
+            view.programTex,
+            view.texture!,
+            view.renderList,
+            app.humanMesh,
+            app.renderMode.value,
+            false
+        )
+    }
+}
+
+function renderHuman(
     ctx: Context,
     gl: WebGL2RenderingContext,
     programRGBA: RGBAShader,

@@ -6,21 +6,24 @@ import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { exportCollada } from "mesh/Collada"
 import { loadSkeleton } from "../skeleton/loadSkeleton"
 import { Application } from "Application"
+import { RenderHuman } from "render/renderHuman"
 
-    const useBlenderProfile = new BooleanModel(true)
-    const limitPrecision = new BooleanModel(false)
-    useBlenderProfile.enabled = false
-    limitPrecision.enabled = false
+const useBlenderProfile = new BooleanModel(true)
+const limitPrecision = new BooleanModel(false)
+useBlenderProfile.enabled = false
+limitPrecision.enabled = false
 
-export default function (props: {app: Application}) {
+export default function (props: { app: Application }) {
     const humanMesh = props.app.humanMesh
 
     return (
-        <Tab label="File" value={TAB.EXPORT} visibilityChange={ state => {
-            if (state === "visible") {
-                props.app.setRenderer()
-            }
-        }}>
+        <Tab
+            label="File"
+            value={TAB.EXPORT}
+            visibilityChange={(state) => {
+                if (state === "visible") props.app.setRenderer(new RenderHuman())
+            }}
+        >
             <div style={{ padding: "10px" }}>
                 <h1>Morph</h1>
 

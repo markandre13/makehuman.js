@@ -11,12 +11,12 @@ import { RGBAShader } from "../render/shader/RGBAShader"
 import { ChordataSettings } from "./ChordataSettings"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Context } from "render/Context"
-import { Projection } from "render/render"
 import { SkeletonMesh } from "./SkeletonMesh"
 import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
 import { Skeleton } from "./Skeleton"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { Projection } from "GLView"
 
 export const D = 180 / Math.PI
 

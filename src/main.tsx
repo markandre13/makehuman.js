@@ -54,6 +54,7 @@ import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
 import { Application } from "Application"
 import { GLView } from "GLView"
+import { RenderHuman } from "render/renderHuman"
 
 export function main() {
     try {
@@ -123,6 +124,7 @@ function run() {
             </>
         )
     )
+    application.setRenderer(new RenderHuman())
     // render(
     //     application.references.canvas,
     //     application.references.overlay,

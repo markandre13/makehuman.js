@@ -1,18 +1,27 @@
 import { Application } from "Application"
 import { Context } from "render/Context"
 import { RenderList } from "render/RenderList"
-import { Projection } from "render/render"
-import { renderHuman } from "render/renderHuman"
 import { RGBAShader } from "render/shader/RGBAShader"
 import { TextureShader } from "render/shader/TextureShader"
 import { loadTexture } from "render/util"
 import { HTMLElementProps, View, ref } from "toad.js"
+
+export enum Projection {
+    ORTHOGONAL,
+    PERSPECTIVE,
+}
+
+export abstract class RenderHandler {
+    abstract paint(app: Application, view: GLView): void
+}
 
 interface GLViewProps extends HTMLElementProps {
     app: Application
 }
 
 export class GLView extends View {
+    renderHandler?: RenderHandler
+
     app: Application
 
     // DOM
@@ -30,6 +39,7 @@ export class GLView extends View {
     constructor(props: GLViewProps) {
         super(props)
         this.app = props.app
+        this.app.glview = this
         this.init = this.init.bind(this)
         this.paint = this.paint.bind(this)
 
@@ -83,20 +93,10 @@ export class GLView extends View {
         // schedule initial paint
         requestAnimationFrame(this.paint)
     }
-
     private paint() {
-        this.app.updateManager.updateIt()
-        renderHuman(
-            this.ctx,
-            this.gl,
-            this.programRGBA,
-            this.programTex,
-            this.texture!,
-            this.renderList,
-            this.app.humanMesh,
-            this.app.renderMode.value,
-            false
-        )
+        if (this.app.renderer) {
+            this.app.renderer.paint(this.app, this)
+        }
     }
 
     private initRender() {
