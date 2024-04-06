@@ -54,9 +54,9 @@ export class UpdateManager {
         forEachMorphSliderNode(sliderNodes, (node) =>
             node.model?.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: slider node '${node.label}' has changed to ${node.model?.value}`)
+                    console.log(`UpdateManager: morph slider '${node.label}' has changed to ${node.model?.value}`)
                     this.invalidateView()
-                    this.modifiedMorphNodes.add(node)
+                    this.modifiedMorphNodes.add(node) // keep track of what has changed
                 }
             })
         )

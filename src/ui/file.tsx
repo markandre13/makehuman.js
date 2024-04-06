@@ -5,17 +5,22 @@ import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { exportCollada } from "mesh/Collada"
 import { loadSkeleton } from "../skeleton/loadSkeleton"
+import { Application } from "Application"
 
     const useBlenderProfile = new BooleanModel(true)
     const limitPrecision = new BooleanModel(false)
     useBlenderProfile.enabled = false
     limitPrecision.enabled = false
 
-export default function (props: {humanMesh: HumanMesh}) {
-    const humanMesh = props.humanMesh
+export default function (props: {app: Application}) {
+    const humanMesh = props.app.humanMesh
 
     return (
-        <Tab label="File" value={TAB.EXPORT}>
+        <Tab label="File" value={TAB.EXPORT} visibilityChange={ state => {
+            if (state === "visible") {
+                props.app.setRenderer()
+            }
+        }}>
             <div style={{ padding: "10px" }}>
                 <h1>Morph</h1>
 
