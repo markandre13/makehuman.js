@@ -1,72 +1,36 @@
-import { StringToLine } from '../lib/StringToLine'
-import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
+import { StringToLine } from "../lib/StringToLine"
+import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
+import { isZero } from "mesh/HumanMesh"
 
-// import { vec3 } from 'gl-matrix'
-
-// lib/targets.py
-// getTargets()
-
-// FILE: data/modifiers/modeling_modifiers.json
-// points to the files in the data/targets/ directory: data/targets/<group>/<target>-(<min>|<max>).target
-//
-// [
-// {
-//    "group": "<group>"
-//    "modifiers": [
-//       { "macrovar": "<name>" [, "modifierType": "EthnicModifier"]
-//       { "target": "<target>", "min": "<min>", "max": "<max>" },
-//    ]
-// }
-// ]
-//
-// 
-// data/targets/macrodetails/(african|asian|caucasian)-(male|female)-(baby|child|young|old).target
-// data/targets/macrodetails/universal-(male|female)-(baby|child|young|old)-(minweight|averageweight|maxweight).target
-// data/targets/macrodetails/height/(male|female)-(minmuscle|averagemuscle|maxmuscle)-(minweight|averageweight|maxweight)-(minheight|maxheight).target
-// data/targets/macrodetails/proportions/(male|female)-(minmuscle|averagemuscle|maxmuscle)-(minweight|averageweight|maxweight)-(idealproportions|uncommonproportions).target
-// FILE: data/modifiers/modeling_modifiers_desc.json
-// additional description for the UI
-//
-// FILE: data/modifiers/modeling_sliders.json
-//
-// ./compile_targets.py: create a binary representation of the target files?
-// ./lib/targets.py    : load target files?
-// apps/human.py
-// apps/compat.py
-// apps/devtests.py
-// apps/humanmodifier.py
-// apps/warpmodifier.py
-// core/algos3d.py: class Target!
-// number: 64bit double float
-// should use these instead to save memory and to improve performance:
-// Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array
-// Float32Array, Float32Array
-// BigInt64Array, BigUint64Array
-
-// morph target
+/**
+ * morph target
+ */
 export class Target {
-    verts: Array<number>; // x, y, z
-    data: Array<number>; // index
+    data: Array<number> // index    // TODO: this should be an Uint16Array
+    verts: Array<number> // x, y, z // TODO: this should be an Float32Array
 
     constructor() {
         this.verts = new Array<number>()
         this.data = new Array<number>()
     }
 
+    /**
+     * load morph target from MakeHuman *.target file
+     */
     load(filename: string) {
-        const data = FileSystemAdapter.readFile(filename)
-        // index x y, z
+        this.parse(FileSystemAdapter.readFile(filename))
+    }
+    parse(data: string) {
+        // each line has the format index x y z
         const reader = new StringToLine(data)
-        //  const reader = readline.createInterface(input)
+
         let lineNumber = 0
         for (let line of reader) {
             ++lineNumber
             // console.log(line)
             line = line.trim()
-            if (line.length === 0)
-                continue
-            if (line[0] === '#')
-                continue
+            if (line.length === 0) continue
+            if (line[0] === "#") continue
             const tokens = line.split(/\s+/)
             this.data.push(parseInt(tokens[0], 10))
             this.verts.push(parseFloat(tokens[1]))
@@ -75,10 +39,43 @@ export class Target {
         }
     }
 
+    /**
+     * calculate morph target from two lists of vertices
+     * 
+     * @param src 
+     * @param dst 
+     */
+    diff(src: Float32Array, dst: Float32Array) {
+        if (src.length !== dst.length) {
+            throw Error(`Target.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`)
+        }
+        for(let v = 0, i=0; v<src.length; ++i) {
+            const sx = src[v]
+            const dx = dst[v++]
+            const sy = src[v]
+            const dy = dst[v++]
+            const sz = src[v]
+            const dz = dst[v++]
+            const x = dx - sx, y = dy - sy, z = dz - sz
+            if (!isZero(x) || !isZero(y) || !isZero(z)) {
+                this.data.push(i)
+                this.verts.push(x, y, z)
+            }
+        }
+    }
+
+    /**
+     * apply morph target to vertices
+     * 
+     * @param verts destination
+     * @param scale a value between 0 and 1
+     */
+
     apply(verts: Float32Array, scale: number) {
         // console.log(`morphing ${this.data.length} vertices by ${scale}`)
-        let dataIndex = 0, vertexIndex = 0
-        while(dataIndex < this.data.length) {
+        let dataIndex = 0,
+            vertexIndex = 0
+        while (dataIndex < this.data.length) {
             let index = this.data[dataIndex++] * 3
             verts[index++] += this.verts[vertexIndex++] * scale
             verts[index++] += this.verts[vertexIndex++] * scale

@@ -9,7 +9,6 @@ import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehu
 import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
 import { Application, setRenderer } from "Application"
-import { RenderHuman } from "render/renderHuman"
 import { GLView, Projection, RenderHandler } from "GLView"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import {
@@ -20,27 +19,31 @@ import {
     prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
+import { Target } from "target/Target"
 
 let orb: ORB | undefined
 let backend: Backend
 let frontend: Frontend_impl
 
-let head: WavefrontObj | undefined
+let neutral: WavefrontObj | undefined
+let jawOpen: WavefrontObj | undefined
 
 class FaceRenderer extends RenderHandler {
     mesh?: RenderMesh
+    target?: Target
     override paint(app: Application, view: GLView): void {
         // throw new Error("Method not implemented.")
-        if (head === undefined) {
-            head = new WavefrontObj("data/blendshapes/Neutral.obj")
-            for(let i=0; i<head.vertex.length; ++i) {
-                head.vertex[i] = head.vertex[i] * 80
+        if (neutral === undefined) {
+            neutral = new WavefrontObj("data/blendshapes/Neutral.obj")
+            jawOpen = new WavefrontObj("data/blendshapes/jawOpen.obj")
+            for(let i=0; i<neutral.vertex.length; ++i) {
+                neutral.vertex[i] = neutral.vertex[i] * 80
+                jawOpen.vertex[i] = jawOpen.vertex[i] * 80
             }
-            // console.log(`head loaded`)
-            // console.log(head)
+            this.target = new Target()
+            this.target.diff(neutral.vertex, jawOpen.vertex)
+            console.log(`face blendshapes: ${neutral.vertex.length / 3}, ${this.target.data.length}`)
         }
-        // how do i render the head?
-
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
@@ -59,11 +62,11 @@ class FaceRenderer extends RenderHandler {
         gl.depthMask(true)
         gl.disable(gl.BLEND)
         if (!this.mesh) {
-            this.mesh = new RenderMesh(gl, head.vertex, head.fxyz, undefined, undefined, false)
+            this.mesh = new RenderMesh(gl, neutral.vertex, neutral.fxyz, undefined, undefined, false)
         }
         programRGBA.setColor([1.0, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, head.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
     }
 }
 
