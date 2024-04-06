@@ -18,6 +18,14 @@ import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
 import { GLView, RenderHandler } from "GLView"
 
+// the Tab.visibilityChange callback is a bit too boilerplaty to handle,
+// smooth my crappy API design for now
+export function setRenderer(app: Application, renderer: RenderHandler) {
+    return (state: "visible" | "hidden") => {
+        if (state === "visible") app.setRenderer(renderer)
+    }
+}
+
 export class Application {
     // makehuman
     human: Human // MorphManager / MorphController

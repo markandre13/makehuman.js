@@ -12,6 +12,8 @@ import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
 import { HumanMesh } from "mesh/HumanMesh"
+import { Application } from "Application"
+import { RenderHuman } from "render/renderHuman"
 
 let socket: WebSocket | undefined
 let mgr: UpdateManager
@@ -614,12 +616,19 @@ function VectorView(props: { model: Rot3Model }) {
     )
 }
 
-export default function (humanMesh: HumanMesh, updateManager: UpdateManager, settings: ChordataSettings) {
+export default function ChordataApp(props: {app: Application}) {
+    const humanMesh = props.app.humanMesh
+    const updateManager = props.app.updateManager
+    const settings = props.app.chordataSettings
+
     notochord = new Notochord(settings)
     mgr = updateManager
     settings.modified.add(() => updateManager.chordataChanged(skeleton))
     return (
-        <Tab label="Chordata" value={TAB.CHORDATA} visibilityChange={notochord.visibilityChange}>
+        <Tab label="Chordata" value={TAB.CHORDATA} visibilityChange={(state) => {
+            if (state === "visible") props.app.setRenderer(new RenderHuman())
+            notochord.visibilityChange(state)
+        }}>
             {/* <Button variant={ButtonVariant.ACCENT} action={start}>
                 Start
             </Button>

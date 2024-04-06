@@ -8,15 +8,19 @@ import { Tab } from "toad.js/view/Tab"
 import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
+import { Application, setRenderer } from "Application"
+import { RenderHuman } from "render/renderHuman"
 
 let orb: ORB | undefined
 let backend: Backend
 let frontend: Frontend_impl
 
-export function MediapipeTab(props: { updateManager: UpdateManager; expressionModel: ExpressionModel }) {
+export function MediapipeTab(props: { app: Application }) {
     return (
-        <Tab label="Mediapipe" value={TAB.MEDIAPIPE}>
-            <Button action={() => callORB(props.updateManager, props.expressionModel)}>The Orb of Osuvox</Button>
+        <Tab label="Mediapipe" value={TAB.MEDIAPIPE} visibilityChange={setRenderer(props.app, new RenderHuman())}>
+            <Button action={() => callORB(props.app.updateManager, props.app.expressionManager.model)}>
+                The Orb of Osuvox
+            </Button>
         </Tab>
     )
 }

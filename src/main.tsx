@@ -32,7 +32,7 @@ import { ProxyType } from "proxy/Proxy"
 
 import ExpressionTab from "ui/expression"
 import FileTab from "ui/file"
-import chordataTab from "chordata/chordata"
+import ChordataTab from "chordata/chordata"
 import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
 import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
@@ -52,7 +52,7 @@ import { HTMLElementProps, Select, TableAdapter, ref } from "toad.js"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
-import { Application } from "Application"
+import { Application, setRenderer } from "Application"
 import { GLView } from "GLView"
 import { RenderHuman } from "render/renderHuman"
 
@@ -71,7 +71,7 @@ export function main() {
 }
 
 function run() {
-    const application = new Application()
+    const app = new Application()
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
@@ -82,57 +82,42 @@ function run() {
     document.body.replaceChildren(
         ...(
             <>
-                <Tabs
-                    model={application.tabModel}
-                    style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}
-                >
-                    <FileTab app={application} />
-                    <Tab label="Morph" value={TAB.MORPH}>
-                        <Table model={application.morphControls} style={{ width: "100%", height: "100%" }} />
+                <Tabs model={app.tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
+                    <FileTab app={app} />
+                    <Tab label="Morph" value={TAB.MORPH} visibilityChange={setRenderer(app, new RenderHuman())}>
+                        <Table model={app.morphControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
-                    <Tab label="Proxy" value={TAB.PROXY}>
+                    <Tab label="Proxy" value={TAB.PROXY} visibilityChange={setRenderer(app, new RenderHuman())}>
                         <Form variant="narrow">
-                            {application.proxyManager.allProxyTypes.map((pid) => (
+                            {app.proxyManager.allProxyTypes.map((pid) => (
                                 <>
                                     <FormLabel>{ProxyType[pid]}</FormLabel>
                                     <FormField>
-                                        <Select id={ProxyType[pid]} model={application.proxyManager.list.get(pid)} />
+                                        <Select id={ProxyType[pid]} model={app.proxyManager.list.get(pid)} />
                                     </FormField>
-                                    <FormHelp model={application.proxyManager.list.get(pid) as any} />
+                                    <FormHelp model={app.proxyManager.list.get(pid) as any} />
                                 </>
                             ))}
                         </Form>
                     </Tab>
-                    <Tab label="Pose" value={TAB.POSE}>
-                        <Table model={application.poseControls} style={{ width: "100%", height: "100%" }} />
+                    <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(app, new RenderHuman())}>
+                        <Table model={app.poseControls} style={{ width: "100%", height: "100%" }} />
                     </Tab>
                     {/* {poseTab(scene, poseModel)} */}
                     {/* 
                         this one costs too much time when using motion capture
                         <ExpressionTab scene={scene} expressionManager={expressionManager} />
                     */}
-                    <MediapipeTab
-                        updateManager={application.updateManager}
-                        expressionModel={application.expressionManager.model}
-                    />
-                    {chordataTab(application.humanMesh, application.updateManager, application.chordataSettings)}
+                    <MediapipeTab app={app} />
+                    <ChordataTab app={app} />
                 </Tabs>
                 <GLView
-                    app={application}
+                    app={app}
                     style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}
                 />
             </>
         )
     )
-    application.setRenderer(new RenderHuman())
-    // render(
-    //     application.references.canvas,
-    //     application.references.overlay,
-    //     application.humanMesh,
-    //     application.renderMode,
-    //     application.updateManager,
-    //     application.chordataSettings
-    // )
 }
 
 main()
