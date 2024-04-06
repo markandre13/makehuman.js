@@ -41,13 +41,19 @@ export class Target {
      * @param src 
      * @param dst 
      */
-    diff(src: Float32Array, dst: Float32Array) {
+    diff(src: Float32Array, dst: Float32Array, size?: number) {
         if (src.length !== dst.length) {
             throw Error(`Target.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`)
         }
+        let length: number
+        if (size === undefined) {
+            length = src.length
+        } else {
+            length = size * 3
+        }
         const idx: number[] = []
         const vtx: number[] = []
-        for(let v = 0, i=0; v<src.length; ++i) {
+        for(let v = 0, i=0; v<length; ++i) {
             const sx = src[v]
             const dx = dst[v++]
             const sy = src[v]

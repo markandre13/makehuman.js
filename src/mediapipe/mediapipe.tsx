@@ -83,7 +83,8 @@ const blendshapeNames = [
 const targets = new Array<Target>(blendshapeNames.length)
 let weights = new Float32Array(blendshapeNames.length)
 let neutral: WavefrontObj | undefined
-const scale = 80
+// const scale = 80
+const scale = 0.7
 
 class FaceRenderer extends RenderHandler {
     mesh!: RenderMesh
@@ -93,8 +94,31 @@ class FaceRenderer extends RenderHandler {
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
+        // if (neutral === undefined) {
+        //     neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+        //     for (let i = 0; i < neutral.vertex.length; ++i) {
+        //         neutral.vertex[i] = neutral.vertex[i] * scale
+        //     }
+        //     for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
+        //         if (blendshape === 0) {
+        //             continue
+        //         }
+        //         const name = blendshapeNames[blendshape]
+        //         const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
+        //         for (let i = 0; i < neutral.vertex.length; ++i) {
+        //             dst.vertex[i] = dst.vertex[i] * scale
+        //         }
+        //         const target = new Target()
+        //         target.diff(neutral.vertex, dst.vertex)
+        //         targets[blendshape] = target
+        //         weights[blendshape] = 0
+        //     }
+
+        //     this.mesh = new RenderMesh(gl, neutral.vertex, neutral.fxyz, undefined, undefined, false)
+        // }
+
         if (neutral === undefined) {
-            neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+            neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
             for (let i = 0; i < neutral.vertex.length; ++i) {
                 neutral.vertex[i] = neutral.vertex[i] * scale
             }
@@ -102,21 +126,49 @@ class FaceRenderer extends RenderHandler {
                 if (blendshape === 0) {
                     continue
                 }
-                const name = blendshapeNames[blendshape]
-                const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
+                let name = blendshapeNames[blendshape]
+                switch(name) {
+                    case "browInnerUp":
+                        name = "browInnerUp_L"
+                        break
+                    case "cheekPuff":
+                        name = "cheekPuff_L"
+                        break
+                }
+                let dst = new WavefrontObj(`data/blendshapes/ict/${name}.obj`)
                 for (let i = 0; i < neutral.vertex.length; ++i) {
                     dst.vertex[i] = dst.vertex[i] * scale
                 }
                 const target = new Target()
                 target.diff(neutral.vertex, dst.vertex)
+
+                if (name === "browInnerUp_L") {
+                    dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)
+                    for (let i = 0; i < neutral.vertex.length; ++i) {
+                        dst.vertex[i] = dst.vertex[i] * scale
+                    }
+                    target.apply(dst.vertex, 1)
+                    target.diff(neutral.vertex, dst.vertex)
+                }
+                if (name === "cheekPuff_L") {
+                    dst = new WavefrontObj(`data/blendshapes/ict/cheekPuff_R.obj`)
+                    for (let i = 0; i < neutral.vertex.length; ++i) {
+                        dst.vertex[i] = dst.vertex[i] * scale
+                    }
+                    target.apply(dst.vertex, 1)
+                    target.diff(neutral.vertex, dst.vertex)
+                }
+
                 targets[blendshape] = target
                 weights[blendshape] = 0
             }
 
-            this.mesh = new RenderMesh(gl, neutral.vertex, neutral.fxyz, undefined, undefined, false)
+            
         }
 
-        const vertex = new Float32Array(neutral!.vertex)
+        // const vertex = neutral!.vertex
+        const vertex = new Float32Array(neutral!.vertex.length)
+        vertex.set(neutral!.vertex)
         for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
@@ -126,7 +178,11 @@ class FaceRenderer extends RenderHandler {
             }
             targets[blendshape].apply(vertex, weights[blendshape])
         }
-        this.mesh.update(vertex)
+        if (this.mesh) {
+            this.mesh.update(vertex)
+        } else {
+            this.mesh = new RenderMesh(gl, vertex, neutral.fxyz, undefined, undefined, true)
+        }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
         prepareCanvas(canvas)
@@ -225,6 +281,7 @@ class Frontend_impl extends Frontend_skel {
     override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, timestamp_ms: bigint): void {
         // console.log(`rcvd  : latency ${Date.now() - Number(timestamp_ms)}ms`)
         weights = new Float32Array(blendshapes)
+        // weights[25] = blendshapes[25]
         this.updateManager.invalidateView()
         
         // this.updateManager.mediapipe(landmarks, timestamp_ms)
