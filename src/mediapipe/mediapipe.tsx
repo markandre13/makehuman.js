@@ -3,7 +3,7 @@ import { ORB } from "corba.js"
 import { WsProtocol } from "corba.js/net/browser"
 import { Backend } from "net/makehuman_stub"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
-import { Button } from "toad.js/view/Button"
+import { FormButton } from "toad.js/view/FormButton"
 import { Tab } from "toad.js/view/Tab"
 import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 import { UpdateManager } from "UpdateManager"
@@ -22,6 +22,8 @@ import { RenderMesh } from "render/RenderMesh"
 import { Target } from "target/Target"
 import { isZero } from "mesh/HumanMesh"
 import { renderFace } from "render/renderFace"
+import { Action } from "toad.js"
+import { Form, FormField, FormHelp } from "toad.js/view/Form"
 
 let orb: ORB | undefined
 let backend: Backend | undefined
@@ -154,12 +156,12 @@ class FaceRenderer extends RenderHandler {
                 for (let i = 0; i < neutral.vertex.length; ++i) {
                     neutral.vertex[i] = neutral.vertex[i] * scale
                 }
-                for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
+                for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
                     if (blendshape === 0) {
                         continue
                     }
                     let name = blendshapeNames[blendshape]
-                    switch(name) {
+                    switch (name) {
                         case "browInnerUp":
                             name = "browInnerUp_L"
                             break
@@ -198,7 +200,7 @@ class FaceRenderer extends RenderHandler {
         //
         // Mediapipe Landmarks
         //
-/*
+        /*
         if (neutral === undefined) {
             neutral = new WavefrontObj("data/3dobjs/mediapipe_canonical_face_model.obj")
             //     for (let i = 0; i < neutral.vertex.length; ++i) {
@@ -268,16 +270,23 @@ class FaceRenderer extends RenderHandler {
         programRGBA.setColor([1.0, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
-
     }
 }
 
+let connectToBackend: Action
+
+
+
 export function MediapipeTab(props: { app: Application }) {
+    connectToBackend = new Action(() => callORB(props.app.updateManager, props.app.expressionManager.model), {
+        label: "Connect to Backend",
+    })
+
     return (
         <Tab label="Mediapipe" value={TAB.MEDIAPIPE} visibilityChange={setRenderer(props.app, new FaceRenderer())}>
-            <Button action={() => callORB(props.app.updateManager, props.app.expressionManager.model)}>
-                The Orb of Osuvox
-            </Button>
+            <Form>
+                <FormButton action={connectToBackend} />
+            </Form>
         </Tab>
     )
 }
@@ -289,16 +298,26 @@ async function callORB(updateManager: UpdateManager, expressionModel: Expression
         orb.addProtocol(new WsProtocol())
     }
     if (backend === undefined) {
-        console.log(`CONNECT TO BACKEND`)
-        backend = Backend.narrow(await orb.stringToObject("corbaname::localhost:9001#Backend"))
-        ORB.installSystemExceptionHandler(backend, () => {
-            console.log(`LOST CONNECTION TO BACKEND`)
-            backend = undefined
-        })
-        frontend = new Frontend_impl(orb, updateManager, expressionModel)
-        backend.setFrontend(frontend)
+        try {
+            connectToBackend.error = undefined
+            const object = await orb.stringToObject("corbaname::localhost:9001#Backend")
+            backend = Backend.narrow(object)
+            ORB.installSystemExceptionHandler(backend, () => {
+                console.log(`LOST CONNECTION TO BACKEND`)
+                backend = undefined
+                connectToBackend.error = `lost connection`
+                connectToBackend.enabled = true
+            })
+            frontend = new Frontend_impl(orb, updateManager, expressionModel)
+            backend.setFrontend(frontend)
+            connectToBackend.enabled = false
+            backend.setEngine(MotionCaptureEngine.MEDIAPIPE, MotionCaptureType.FACE, EngineStatus.ON)
+        } catch (e) {
+            console.log(`set button to error`)
+            connectToBackend.error = `${e}`
+            console.log(connectToBackend)
+        }
     }
-    backend.setEngine(MotionCaptureEngine.MEDIAPIPE, MotionCaptureType.FACE, EngineStatus.ON)
 }
 
 class Frontend_impl extends Frontend_skel {

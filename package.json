@@ -21,8 +21,6 @@
     "build:idl": "corba-idl --ts-interface --ts-skeleton --ts-stub src/net/makehuman.idl",
     "rebuild:data": "rm -f data/directory.json && npm run build:data",
     "build:watch": "rollup --config rollup.config.js --watch",
-    "lint": "eslint src",
-    "lint:fix": "eslint --fix src",
     "build:client": "rollup --bundleConfigAsCjs --config rollup-client.config.js",
     "dev:prepare": "npm run build:data && npm run build:chai && npm run build:idl",
     "dev:build": "npm run build:idl && tspc -w -p tsconfig.dev.json",
@@ -31,10 +29,10 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "corba.js": "^0.1.10",
+    "corba.js": "^0.1.12",
     "fflate": "^0.8.2",
     "gl-matrix": "^3.4.3",
-    "toad.js": "0.1.13"
+    "toad.js": "0.1.14"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
@@ -45,18 +43,15 @@
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.12.2",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
-    "@web/dev-server": "^0.4.3",
+    "@types/node": "^20.12.7",
+    "@web/dev-server": "^0.4.4",
     "@web/test-runner": "^0.18.1",
     "chai": "^5.1.0",
-    "eslint": "^8.57.0",
     "mocha": "^10.4.0",
-    "rollup": "^4.13.2",
+    "rollup": "^4.16.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.1.2",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.5"
   }
 }
