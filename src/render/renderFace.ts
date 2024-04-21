@@ -5,12 +5,13 @@ import { RGBAShader } from "./shader/RGBAShader"
 
 let lastXYZ: Float32Array | undefined
 
-export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
+export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: number[]) {
     // console.log("render face")
     const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
     if (gl == null) {
         throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
     }
+
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
@@ -19,15 +20,8 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas)
-    // const modelViewMatrix = createModelViewMatrix(RenderMode.POLYGON)
-
     const modelViewMatrix = mat4.create()
-    // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -5.0]) // test cube
-    // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -30.0]) // obj file face
     mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -0.5]) // obj file face centered
-    // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -1.5]) // obj file face
-    mat4.rotate(modelViewMatrix, modelViewMatrix, 0.0 * .7, [0, 1, 0])
-
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
@@ -37,21 +31,10 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array) {
         lastXYZ = xyz
     }
 
-    // function r(num: number) {
-    //     // return Math.round((num + Number.EPSILON) * 10000000) / 10000000
-    //     return num
-    // }
-    //
-    // let l = ""
-    // for (let i = 3; i < xyz.length; i += 3) {
-    //     l=`${l}v ${r(xyz[i])} ${r(xyz[i+1])} ${r(xyz[i+2])}\n`
-    // }
-    // console.log(l)
-
     // DRAW POINT CLOUD
 
     // drawPointCloud(gl, programRGBA, xyz)
-    drawLineArt(gl, programRGBA, xyz)
+    drawLineArt(gl, programRGBA, xyz, fxyz)
 }
 
 function center(xyz: Float32Array) {
@@ -89,7 +72,7 @@ function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 }
 
-function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array) {
+function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array, fxyz: number[]) {
     // DRAW LINE ART
     programRGBA.setColor([0.0, 1.8, 0.0, 1])
     const lineStrips = [[
@@ -261,4 +244,18 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: F
             programRGBA.setColor([8.0, 0.0, 0.0, 1])
         }
     }
+
+    const face = fxyz
+
+    // const face = [
+    //     10, 338, 151,
+    //     151, 338, 337,
+    //     338, 297, 337,
+    //     337, 297, 299,
+    //     297, 332, 299,
+    //     299, 332, 333,
+    // ]
+    programRGBA.setColor([1.0, 1.0, 1.0, 1])
+    const mesh0 = new RenderMesh(gl, xyz, face, undefined, undefined, false)
+    gl.drawElements(gl.TRIANGLES, face.length, gl.UNSIGNED_SHORT, 0)
 }
