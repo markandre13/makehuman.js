@@ -284,7 +284,10 @@ async function downloadARKitFaceBlendshapes() {
     const dirOut = `base${sep}blendshapes${sep}arkit`
 
     let missing = false
-    for (const name of blendshapeNames) {
+    for (let name of blendshapeNames) {
+        if (name === "_neutral") {
+            name = "Neutral"
+        }
         if (!isFile(`${dirOut}/${name}.obj`)) {
             missing = true
             break
@@ -293,7 +296,9 @@ async function downloadARKitFaceBlendshapes() {
     if (!missing) {
         return
     }
-    mkdirSync(dirOut)
+    if (!isDir(dirOut)) {
+        mkdirSync(dirOut)
+    }
 
     const blendshapeUrl = `${url}/static/js/main.fdacbc90.chunk.js`
     const chunkResponse = await fetch(blendshapeUrl)
