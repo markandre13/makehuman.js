@@ -299,7 +299,6 @@ async function callORB(updateManager: UpdateManager, expressionModel: Expression
     }
     if (backend === undefined) {
         try {
-            connectToBackend.error = undefined
             const object = await orb.stringToObject("corbaname::localhost:9001#Backend")
             backend = Backend.narrow(object)
             ORB.installSystemExceptionHandler(backend, () => {
@@ -311,6 +310,7 @@ async function callORB(updateManager: UpdateManager, expressionModel: Expression
             frontend = new Frontend_impl(orb, updateManager, expressionModel)
             backend.setFrontend(frontend)
             connectToBackend.enabled = false
+            connectToBackend.error = undefined
             backend.setEngine(MotionCaptureEngine.MEDIAPIPE, MotionCaptureType.FACE, EngineStatus.ON)
         } catch (e) {
             console.log(`set button to error`)
