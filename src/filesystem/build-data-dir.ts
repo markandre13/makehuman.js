@@ -306,19 +306,21 @@ async function downloadARKitFaceBlendshapes() {
     for (let filename of objFiles) {
         filename = filename.substring(1, filename.length - 1)
         let shortname = filename.match(/static\/media\/([a-zA-Z]+)\./)![1]
+        const fileIn = `${url}/${filename}`
+        const fileOut = `${dirOut}${sep}${shortname}.obj`
 
-        if (isFile(`${dirOut}/${shortname}.obj`)) {
+        if (isFile(fileOut)) {
             continue
         }
 
-        console.log(`download ${url}/${filename} to ${dirOut}/${shortname}.obj`)
+        console.log(`download ${fileIn} to ${fileOut}`)
 
-        const objResponse = await fetch(`${url}/${filename}`)
+        const objResponse = await fetch(fileIn)
         const obj = await objResponse.text()
         if (!objResponse.ok) {
-            throw Error(`failed to fetch ${url}/${filename}: ${objResponse.status} ${objResponse.statusText} ${obj}`)
+            throw Error(`failed to fetch ${fileIn}: ${objResponse.status} ${objResponse.statusText} ${obj}`)
         }
-        writeFileSync(`${dirOut}${sep}${shortname}.obj`, obj)
+        writeFileSync(fileOut, obj)
     }
 }
 
@@ -361,16 +363,18 @@ async function downloadICTFaceKitBlendshapes() {
             if (srcs.length > 1) {
                 dst = src
             }
-            if (!isFile(`${dirOut}${dst!}.obj`)) {
-                console.log(`download ${url}${sep}${src} to ${dirOut}/${dst}.obj`)
-
-                const objResponse = await fetch(`${url}${sep}${src}.obj`)
-                const obj = await objResponse.text()
-                if (!objResponse.ok) {
-                    throw Error(`failed to fetch ${url}${sep}${src}: ${objResponse.status} ${objResponse.statusText}`)
-                }
-                writeFileSync(`${dirOut}${sep}${dst}.obj`, obj)
+            const fileIn = `${url}${sep}${src}.obj`
+            const fileOut = `${dirOut}${sep}${dst}.obj`
+            if (isFile(fileOut)) {
+                continue
             }
+            console.log(`download ${fileIn} to ${fileOut}`)
+            const objResponse = await fetch(fileIn)
+            const obj = await objResponse.text()
+            if (!objResponse.ok) {
+                throw Error(`failed to fetch ${fileIn}: ${objResponse.status} ${objResponse.statusText}`)
+            }
+            writeFileSync(fileOut, obj)
         }
     }
 }
