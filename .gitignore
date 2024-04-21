@@ -3,6 +3,7 @@ DEADJOE
 *~
 node_modules
 data
+base/blendshapes
 src/net/makehuman.ts
 src/net/makehuman_skel.ts       
 src/net/makehuman_stub.ts
