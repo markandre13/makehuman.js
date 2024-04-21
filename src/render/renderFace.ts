@@ -38,26 +38,32 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: n
 }
 
 function center(xyz: Float32Array) {
-    let minX, maxX, minY, maxY, minZ, maxZ
-    minX = maxX = xyz[0]
-    minY = maxY = xyz[1]
-    minZ = maxZ = xyz[2]
-    for (let i = 3; i < xyz.length-3; i += 3) {
-        minX = Math.min(minX, xyz[i])
-        maxX = Math.max(maxX, xyz[i])
-        minY = Math.min(minY, xyz[i + 1])
-        maxY = Math.max(maxY, xyz[i + 1])
-        minZ = Math.min(minZ, xyz[i + 2])
-        maxZ = Math.max(maxZ, xyz[i + 2])
-    }
-    // console.log(`X:${minX}:${maxX}`)
-    // console.log(`Y:${minY}:${maxY}`)
-    // console.log(`Z:${minZ}:${maxZ}`)
-    const originX = minX += (maxX - minX) / 2, originY = minY += (maxY - minY) / 2, originZ = minZ += (maxZ - minZ) / 2
-    for (let i = 3; i < xyz.length; i += 3) {
+    // let minX, maxX, minY, maxY, minZ, maxZ
+    // minX = maxX = xyz[0]
+    // minY = maxY = xyz[1]
+    // minZ = maxZ = xyz[2]
+    // for (let i = 3; i < xyz.length-3; i += 3) {
+    //     minX = Math.min(minX, xyz[i])
+    //     maxX = Math.max(maxX, xyz[i])
+    //     minY = Math.min(minY, xyz[i + 1])
+    //     maxY = Math.max(maxY, xyz[i + 1])
+    //     minZ = Math.min(minZ, xyz[i + 2])
+    //     maxZ = Math.max(maxZ, xyz[i + 2])
+    // }
+    // // console.log(`X:${minX}:${maxX}`)
+    // // console.log(`Y:${minY}:${maxY}`)
+    // // console.log(`Z:${minZ}:${maxZ}`)
+    // const originX = minX += (maxX - minX) / 2, originY = minY += (maxY - minY) / 2, originZ = minZ += (maxZ - minZ) / 2
+    // // console.log(`origin = ${originX}, ${originY}, ${originZ}`)
+
+    const originX = 0.5
+    const originY = 0.5
+    const originZ = -0.2
+
+    for (let i = 0; i < xyz.length; i += 3) {
         xyz[i] -= originX
-        xyz[i + 1] = (xyz[i + 1] - originY) * -1
-        xyz[i + 2] = (xyz[i + 2] - originZ)
+        xyz[i + 1] = (originY - xyz[i + 1]) * 0.8
+        xyz[i + 2] = (originZ - xyz[i + 2])
     }
 }
 
@@ -74,7 +80,8 @@ function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz
 
 function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array, fxyz: number[]) {
     // DRAW LINE ART
-    programRGBA.setColor([0.0, 1.8, 0.0, 1])
+    // programRGBA.setColor([0.0, 1.8, 0.0, 1])
+    programRGBA.setColor([0.0, 5.0, 10.0, 1])
     const lineStrips = [[
         // RING 0
         10, 338, 297, 332, 284, 251, 389, 356,
@@ -204,7 +211,7 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: F
         // NOSE BOTTOM
         278, 294, 327, 326, 97, 98, 64, 48
     ], [
-        // RIGHT BELOW LIBS
+        // RIGHT BELOW LIPS
         43, 106, 182, 83, 18, 313, 406, 335, 273
     ], [
         264, 342
@@ -234,28 +241,23 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: F
         314, 17, 84, 181, 91, 146, 61, 185, 40, 39, 37, 11, 267, 269, 270, 409, 291, 375, 321, 405, 314
     ]]
     for (const line of lineStrips) {
+        if (line[0] !== 474 && line[0] !== 469) {
+            continue
+        }
         // if (line === lineStrips[lineStrips.length - 1]) {
         //     programRGBA.color([0.0, 0.0, 10.0, 1])
         // }
         const mesh0 = new RenderMesh(gl, xyz, line, undefined, undefined, false)
         mesh0.bind(programRGBA)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
-        if (line[0] === 34) {
-            programRGBA.setColor([8.0, 0.0, 0.0, 1])
-        }
+        // if (line[0] === 34) {
+        //     programRGBA.setColor([8.0, 0.0, 0.0, 1])
+        // }
     }
 
-    const face = fxyz
-
-    // const face = [
-    //     10, 338, 151,
-    //     151, 338, 337,
-    //     338, 297, 337,
-    //     337, 297, 299,
-    //     297, 332, 299,
-    //     299, 332, 333,
-    // ]
-    programRGBA.setColor([1.0, 1.0, 1.0, 1])
-    const mesh0 = new RenderMesh(gl, xyz, face, undefined, undefined, false)
-    gl.drawElements(gl.TRIANGLES, face.length, gl.UNSIGNED_SHORT, 0)
+    // draw solid face
+    programRGBA.setColor([1, 0.8, 0.7, 1])
+    const mesh0 = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
+    mesh0.bind(programRGBA)
+    gl.drawElements(gl.TRIANGLES, fxyz.length, gl.UNSIGNED_SHORT, 0)
 }

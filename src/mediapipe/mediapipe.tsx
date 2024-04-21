@@ -90,6 +90,12 @@ let neutral: WavefrontObj | undefined
 // const scale = 80
 const scale = 0.7
 
+enum FaceRenderType {
+    MP_LANDMARKS,
+    ARKIT,
+    ICTFACEKIT,
+}
+
 class FaceRenderer extends RenderHandler {
     mesh!: RenderMesh
 
@@ -98,9 +104,9 @@ class FaceRenderer extends RenderHandler {
             neutral = new WavefrontObj("data/3dobjs/mediapipe_canonical_face_model.obj")
         }
 
-        let a = 0
+        let a: FaceRenderType = FaceRenderType.MP_LANDMARKS
 
-        if (a === 0) {
+        if (a === FaceRenderType.MP_LANDMARKS) {
             if (landmarks) {
                 renderFace(view.canvas, landmarks, neutral.fxyz)
             }
@@ -121,7 +127,7 @@ class FaceRenderer extends RenderHandler {
         // ARKit
         //
 
-        if (a === 1) {
+        if (a === FaceRenderType.ARKIT) {
             if (neutral === undefined) {
                 neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
                 for (let i = 0; i < neutral.vertex.length; ++i) {
@@ -150,7 +156,7 @@ class FaceRenderer extends RenderHandler {
         // ICT Facekit
         //
 
-        if (a === 2) {
+        if (a === FaceRenderType.ICTFACEKIT) {
             if (neutral === undefined) {
                 neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
                 for (let i = 0; i < neutral.vertex.length; ++i) {
@@ -371,11 +377,11 @@ class Frontend_impl extends Frontend_skel {
         })
     }
     override faceLandmarks(lm: Float32Array, blendshapes: Float32Array, timestamp_ms: bigint): void {
-        console.log(`rcvd  : latency ${Date.now() - Number(timestamp_ms)}ms`)
+        // console.log(`rcvd  : latency ${Date.now() - Number(timestamp_ms)}ms`)
         weights = new Float32Array(blendshapes)
-        if (landmarks === undefined) {
-            console.log(`neutral: ${neutral?.vertex.length}, landmarks: ${lm.length}`)
-        }
+        // if (landmarks === undefined) {
+        //     console.log(`neutral: ${neutral?.vertex.length}, landmarks: ${lm.length}`)
+        // }
         landmarks = new Float32Array(lm)
         // for (let i = 0; i < landmarks.length; ++i) {
         //     landmarks[i] = landmarks[i] * 100
