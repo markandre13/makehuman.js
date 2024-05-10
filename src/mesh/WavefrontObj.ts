@@ -8,13 +8,15 @@ export class WavefrontObj {
 
     // makehuman: fverts, fuvs, fnorm; verts, uvs(texco)
 
-    vertex: Float32Array  // x,y,z (coord in makehuman)
+    vertex: Float32Array  // x,y,z (coord in makehuman) TODO: rename into xyz
     uv: Float32Array // u,v (texco in makehuman)
     // normal: number[]  // x,y,z (due to morphing & skinning, normals are calculated in makehuman)
 
-    // list of quads
+    // vertices per face
     vcount: number[] = []
+    // face index for vertex
     fxyz: number[] = [] // (fvert in makehuman)
+    // face index for uv
     fuv: number[] = []
 
     groups: Group[]   // name, startIndex, length

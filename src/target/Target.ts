@@ -40,6 +40,7 @@ export class Target {
      * 
      * @param src 
      * @param dst 
+     * @parem size an optional size
      */
     diff(src: Float32Array, dst: Float32Array, size?: number) {
         if (src.length !== dst.length) {
@@ -76,7 +77,6 @@ export class Target {
      * @param verts destination
      * @param scale a value between 0 and 1
      */
-
     apply(verts: Float32Array, scale: number) {
         // console.log(`morphing ${this.data.length} vertices by ${scale}`)
         let dataIndex = 0,

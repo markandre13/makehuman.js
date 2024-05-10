@@ -38,8 +38,6 @@ import { SliderTreeAdapter } from "ui/morphView"
 import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
 import { TAB } from "HistoryManager"
 
-import { renderFace } from "render/renderFace"
-
 import { FileSystemAdapter } from "./filesystem/FileSystemAdapter"
 import { HTTPFSAdapter } from "./filesystem/HTTPFSAdapter"
 
@@ -48,7 +46,7 @@ import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
 import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { HTMLElementProps, Select, TableAdapter, ref } from "toad.js"
+import { Select, TableAdapter } from "toad.js"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
@@ -84,30 +82,10 @@ function run() {
             <>
                 <Tabs model={app.tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
                     <FileTab app={app} />
-                    <Tab label="Morph" value={TAB.MORPH} visibilityChange={setRenderer(app, new RenderHuman())}>
-                        <Table model={app.morphControls} style={{ width: "100%", height: "100%" }} />
-                    </Tab>
-                    <Tab label="Proxy" value={TAB.PROXY} visibilityChange={setRenderer(app, new RenderHuman())}>
-                        <Form variant="narrow">
-                            {app.proxyManager.allProxyTypes.map((pid) => (
-                                <>
-                                    <FormLabel>{ProxyType[pid]}</FormLabel>
-                                    <FormField>
-                                        <Select id={ProxyType[pid]} model={app.proxyManager.list.get(pid)} />
-                                    </FormField>
-                                    <FormHelp model={app.proxyManager.list.get(pid) as any} />
-                                </>
-                            ))}
-                        </Form>
-                    </Tab>
-                    <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(app, new RenderHuman())}>
-                        <Table model={app.poseControls} style={{ width: "100%", height: "100%" }} />
-                    </Tab>
-                    {/* {poseTab(scene, poseModel)} */}
-                    {/* 
-                        this one costs too much time when using motion capture
-                        <ExpressionTab scene={scene} expressionManager={expressionManager} />
-                    */}
+                    <MorphTab app={app} />
+                    <ProxyTab app={app} />
+                    <PoseTab app={app} />
+                    <ExpressionTab app={app} />
                     <MediapipeTab app={app} />
                     <ChordataTab app={app} />
                 </Tabs>
@@ -117,6 +95,40 @@ function run() {
                 />
             </>
         )
+    )
+}
+
+function MorphTab(props: { app: Application }) {
+    return (
+        <Tab label="Morph" value={TAB.MORPH} visibilityChange={setRenderer(props.app, new RenderHuman())}>
+            <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
+        </Tab>
+    )
+}
+
+function ProxyTab(props: { app: Application }) {
+    return (
+        <Tab label="Proxy" value={TAB.PROXY} visibilityChange={setRenderer(props.app, new RenderHuman())}>
+            <Form variant="narrow">
+                {props.app.proxyManager.allProxyTypes.map((pid) => (
+                    <>
+                        <FormLabel>{ProxyType[pid]}</FormLabel>
+                        <FormField>
+                            <Select id={ProxyType[pid]} model={props.app.proxyManager.list.get(pid)} />
+                        </FormField>
+                        <FormHelp model={props.app.proxyManager.list.get(pid) as any} />
+                    </>
+                ))}
+            </Form>
+        </Tab>
+    )
+}
+
+function PoseTab(props: { app: Application }) {
+    return (
+        <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(props.app, new RenderHuman())}>
+            <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} />
+        </Tab>
     )
 }
 

@@ -20,10 +20,9 @@ import {
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Target } from "target/Target"
-import { isZero } from "mesh/HumanMesh"
 import { renderFace } from "render/renderFace"
 import { Action } from "toad.js"
-import { Form, FormField, FormHelp } from "toad.js/view/Form"
+import { Form } from "toad.js/view/Form"
 
 let orb: ORB | undefined
 let backend: Backend | undefined
@@ -90,6 +89,17 @@ let neutral: WavefrontObj | undefined
 // const scale = 80
 const scale = 0.7
 
+// NEXT STEPS: 
+// [X] for finetuning the animation in realtime, render in the backend
+// [ ] google chrome does not detect loosing the connection
+// [ ] facial_transformation_matrixes
+// [ ] replace enum with object
+// [ ] switch between them
+// [ ] render side by side
+// [ ] render overlay
+// [ ] write editor to tweak the blendshapes
+// [ ] write an editor to create pose units matching the blendshapes
+
 enum FaceRenderType {
     MP_LANDMARKS,
     ARKIT,
@@ -116,12 +126,6 @@ class FaceRenderer extends RenderHandler {
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
-
-        // next steps
-        // [ ] render the landmarks themselves
-        // [ ] switch between the face meshes
-        // [ ] overlay with the makehuman head
-        // [ ] write an editor to create pose units matching the blendshapes
 
         //
         // ARKit
@@ -280,8 +284,6 @@ class FaceRenderer extends RenderHandler {
 }
 
 let connectToBackend: Action
-
-
 
 export function MediapipeTab(props: { app: Application }) {
     connectToBackend = new Action(() => callORB(props.app.updateManager, props.app.expressionManager.model), {
