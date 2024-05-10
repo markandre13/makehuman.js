@@ -21,8 +21,7 @@ export class RenderHuman extends RenderHandler {
             view.texture!,
             view.renderList,
             app.humanMesh,
-            app.renderMode.value,
-            false
+            app.humanMesh.wireframe.value
         )
     }
 }
@@ -35,7 +34,6 @@ function renderHuman(
     texture: WebGLTexture,
     renderList: RenderList,
     humanMesh: HumanMesh,
-    renderMode: RenderMode,
     wireframe: boolean
 ): void {
     const WORD_LENGTH = 2
@@ -129,9 +127,6 @@ function renderHuman(
     //
     // PROXIES
     //
-    // let glMode = wireframe ? gl.LINES : gl.TRIANGLES
-    let glMode = gl.TRIANGLES
-
     renderList.proxies.forEach((renderMesh, proxyType) => {
         let rgba: number[] = [0.5, 0.5, 0.5, alpha]
         if (proxyType !== ProxyType.Proxymeshes && wireframe) {
@@ -166,7 +161,7 @@ function renderHuman(
                 break
         }
         programRGBA.setColor(rgba)
-        renderMesh.draw(programRGBA, glMode)
+        renderMesh.draw(programRGBA, gl.TRIANGLES)
     })
 
     //
