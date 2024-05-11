@@ -10,6 +10,7 @@ import { Form } from "toad.js/view/Form"
 import { Frontend_impl } from "./Frontend_impl"
 import { FaceLandmarkRenderer } from "./FaceLandmarkRenderer"
 import { FaceARKitRenderer } from "./FaceARKitRenderer"
+import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 
 // let orb: ORB | undefined
 // let backend: Backend | undefined
@@ -56,7 +57,7 @@ export function MediapipeTab(props: { app: Application }) {
             <Tab
                 label="Mediapipe"
                 value={TAB.MEDIAPIPE}
-                visibilityChange={setRenderer(props.app, new FaceARKitRenderer(frontend))}
+                visibilityChange={setRenderer(props.app, new FaceICTKitRenderer(frontend))}
             >
                 <Form>
                     <FormButton action={connectToBackend} />

@@ -41,110 +41,6 @@ export class FaceLandmarkRenderer extends RenderHandler {
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
-        //
-        // ARKit
-        //
-        if (a === FaceRenderType.ARKIT) {
-            // if (neutral === undefined) {
-            //     neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
-            //     for (let i = 0; i < neutral.vertex.length; ++i) {
-            //         neutral.vertex[i] = neutral.vertex[i] * scale
-            //     }
-            //     for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
-            //         if (blendshape === 0) {
-            //             continue
-            //         }
-            //         const name = blendshapeNames[blendshape]
-            //         const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
-            //         for (let i = 0; i < neutral.vertex.length; ++i) {
-            //             dst.vertex[i] = dst.vertex[i] * scale
-            //         }
-            //         const target = new Target()
-            //         target.diff(neutral.vertex, dst.vertex)
-            //         targets[blendshape] = target
-            //         weights[blendshape] = 0
-            //     }
-            //     this.mesh = new RenderMesh(gl, neutral.vertex, neutral.fxyz, undefined, undefined, false)
-            // }
-        }
-
-        //
-        // ICT Facekit
-        //
-        if (a === FaceRenderType.ICTFACEKIT) {
-            // if (neutral === undefined) {
-            //     neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
-            //     for (let i = 0; i < neutral.vertex.length; ++i) {
-            //         neutral.vertex[i] = neutral.vertex[i] * scale
-            //     }
-            //     for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
-            //         if (blendshape === 0) {
-            //             continue
-            //         }
-            //         let name = blendshapeNames[blendshape]
-            //         switch (name) {
-            //             case "browInnerUp":
-            //                 name = "browInnerUp_L"
-            //                 break
-            //             case "cheekPuff":
-            //                 name = "cheekPuff_L"
-            //                 break
-            //         }
-            //         let dst = new WavefrontObj(`data/blendshapes/ict/${name}.obj`)
-            //         for (let i = 0; i < neutral.vertex.length; ++i) {
-            //             dst.vertex[i] = dst.vertex[i] * scale
-            //         }
-            //         const target = new Target()
-            //         target.diff(neutral.vertex, dst.vertex)
-            //         if (name === "browInnerUp_L") {
-            //             dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)
-            //             for (let i = 0; i < neutral.vertex.length; ++i) {
-            //                 dst.vertex[i] = dst.vertex[i] * scale
-            //             }
-            //             target.apply(dst.vertex, 1)
-            //             target.diff(neutral.vertex, dst.vertex)
-            //         }
-            //         if (name === "cheekPuff_L") {
-            //             dst = new WavefrontObj(`data/blendshapes/ict/cheekPuff_R.obj`)
-            //             for (let i = 0; i < neutral.vertex.length; ++i) {
-            //                 dst.vertex[i] = dst.vertex[i] * scale
-            //             }
-            //             target.apply(dst.vertex, 1)
-            //             target.diff(neutral.vertex, dst.vertex)
-            //         }
-            //         targets[blendshape] = target
-            //         weights[blendshape] = 0
-            //     }
-            // }
-        }
-
-        //
-        // Mediapipe Landmarks
-        //
-        /*
-        if (neutral === undefined) {
-            neutral = new WavefrontObj("data/3dobjs/mediapipe_canonical_face_model.obj")
-            //     for (let i = 0; i < neutral.vertex.length; ++i) {
-            //         neutral.vertex[i] = neutral.vertex[i] * scale
-            //     }
-            //     for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
-            //         if (blendshape === 0) {
-            //             continue
-            //         }
-            //         const name = blendshapeNames[blendshape]
-            //         const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
-            //         for (let i = 0; i < neutral.vertex.length; ++i) {
-            //             dst.vertex[i] = dst.vertex[i] * scale
-            //         }
-            //         const target = new Target()
-            //         target.diff(neutral.vertex, dst.vertex)
-            //         targets[blendshape] = target
-            //         weights[blendshape] = 0
-            //     }
-
-            // this.mesh = new RenderMesh(gl, neutral.vertex, neutral.fxyz, undefined, undefined, false)
-        }
-*/
         if (this.mesh !== undefined) {
             if (this.frontend.landmarks !== undefined) {
                 // console.log(`update from landmarks ${landmarks[0]}, ${landmarks[1]}, ${landmarks[2]}, ...`)
@@ -155,24 +51,6 @@ export class FaceLandmarkRenderer extends RenderHandler {
             this.mesh = new RenderMesh(gl, this.neutral.vertex, this.neutral.fxyz, undefined, undefined, false)
         }
 
-        // const vertex = neutral!.vertex
-        // const vertex = landmarks !== undefined ? landmarks : neutral.vertex
-        // const vertex = new Float32Array(neutral!.vertex.length)
-        // vertex.set(neutral!.vertex)
-        // for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
-        //     if (blendshape === 0) {
-        //         continue
-        //     }
-        //     if (isZero(weights[blendshape])) {
-        //         continue
-        //     }
-        //     targets[blendshape].apply(vertex, weights[blendshape])
-        // }
-        // if (this.mesh) {
-        //     this.mesh.update(vertex)
-        // } else {
-        //     this.mesh = new RenderMesh(gl, vertex, neutral.fxyz, undefined, undefined, true)
-        // }
         const canvas = app.glview.canvas as HTMLCanvasElement
         prepareCanvas(canvas)
         prepareViewport(gl, canvas)

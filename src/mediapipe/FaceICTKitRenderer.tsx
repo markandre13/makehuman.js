@@ -6,7 +6,7 @@ import {
     createNormalMatrix,
     createProjectionMatrix,
     prepareCanvas,
-    prepareViewport
+    prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "./Frontend_impl"
@@ -15,9 +15,9 @@ import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
 
 /**
- * Render MediaPipe's blendshape using Apples ARKit Mesh
+ * Render MediaPipe's blendshape using ICT's FaceKit Mesh
  */
-export class FaceARKitRenderer extends RenderHandler {
+export class FaceICTKitRenderer extends RenderHandler {
     mesh!: RenderMesh
     frontend: Frontend_impl
     neutral: WavefrontObj
@@ -27,8 +27,8 @@ export class FaceARKitRenderer extends RenderHandler {
         super()
         this.frontend = frontend
 
-        const scale = 80
-        this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+        const scale = 0.6
+        this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
         for (let i = 0; i < this.neutral.vertex.length; ++i) {
             this.neutral.vertex[i] = this.neutral.vertex[i] * scale
         }
@@ -36,13 +36,37 @@ export class FaceARKitRenderer extends RenderHandler {
             if (blendshape === 0) {
                 continue
             }
-            const name = blendshapeNames[blendshape]
-            const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
+            let name = blendshapeNames[blendshape]
+            switch (name) {
+                case "browInnerUp":
+                    name = "browInnerUp_L"
+                    break
+                case "cheekPuff":
+                    name = "cheekPuff_L"
+                    break
+            }
+            let dst = new WavefrontObj(`data/blendshapes/ict/${name}.obj`)
             for (let i = 0; i < this.neutral.vertex.length; ++i) {
                 dst.vertex[i] = dst.vertex[i] * scale
             }
             const target = new Target()
             target.diff(this.neutral.vertex, dst.vertex)
+            if (name === "browInnerUp_L") {
+                dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)
+                for (let i = 0; i < this.neutral.vertex.length; ++i) {
+                    dst.vertex[i] = dst.vertex[i] * scale
+                }
+                target.apply(dst.vertex, 1)
+                target.diff(this.neutral.vertex, dst.vertex)
+            }
+            if (name === "cheekPuff_L") {
+                dst = new WavefrontObj(`data/blendshapes/ict/cheekPuff_R.obj`)
+                for (let i = 0; i < this.neutral.vertex.length; ++i) {
+                    dst.vertex[i] = dst.vertex[i] * scale
+                }
+                target.apply(dst.vertex, 1)
+                target.diff(this.neutral.vertex, dst.vertex)
+            }
             this.targets[blendshape] = target
         }
     }
@@ -54,7 +78,7 @@ export class FaceARKitRenderer extends RenderHandler {
 
         const vertex = new Float32Array(this.neutral.vertex.length)
         vertex.set(this.neutral!.vertex)
-        for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
+        for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
             }
@@ -67,7 +91,7 @@ export class FaceARKitRenderer extends RenderHandler {
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {
-            this.mesh = new RenderMesh(gl, vertex, this.neutral.fxyz, undefined, undefined, false)
+            this.mesh = new RenderMesh(gl, vertex, this.neutral.fxyz, undefined, undefined, true)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
