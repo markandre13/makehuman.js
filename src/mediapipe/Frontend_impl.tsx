@@ -13,7 +13,8 @@ export class Frontend_impl extends Frontend_skel {
     backend?: Backend
 
     // data received from mediapipe
-    blendshapeIndex2poseUnit = new Map<number, string>();
+    blendshapeName2Index = new Map<string, number>()
+    blendshapeIndex2poseUnit = new Map<number, string>()
     landmarks?: Float32Array
     blendshapes?: Float32Array
 
@@ -78,10 +79,23 @@ export class Frontend_impl extends Frontend_skel {
         }
     }
 
+    getBlendshapeWeight(name: string): number {
+        if (this.blendshapes === undefined) {
+            return 0.0
+        }
+        const index = this.blendshapeName2Index.get(name)
+        if (index === undefined) {
+            return 0.0
+        }
+        return this.blendshapes[index]
+    }
+
     // list of blendshape names that will be send to faceLandmarks()
     override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
         this.blendshapeIndex2poseUnit.clear()
+        this.blendshapeName2Index.clear()
         faceBlendshapeNames.forEach((name, index) => {
+            this.blendshapeName2Index.set(name, index)
             const poseUnitName = this.blendshape2poseUnit.get(name)
             if (poseUnitName) {
                 this.blendshapeIndex2poseUnit.set(index, poseUnitName)
