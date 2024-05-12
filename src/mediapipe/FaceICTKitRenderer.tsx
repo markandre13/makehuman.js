@@ -32,6 +32,7 @@ export class FaceICTKitRenderer extends RenderHandler {
         for (let i = 0; i < this.neutral.vertex.length; ++i) {
             this.neutral.vertex[i] = this.neutral.vertex[i] * scale
         }
+        const indices = 11247
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
@@ -50,14 +51,14 @@ export class FaceICTKitRenderer extends RenderHandler {
                 dst.vertex[i] = dst.vertex[i] * scale
             }
             const target = new Target()
-            target.diff(this.neutral.vertex, dst.vertex)
+            target.diff(this.neutral.vertex, dst.vertex, indices)
             if (name === "browInnerUp_L") {
                 dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)
                 for (let i = 0; i < this.neutral.vertex.length; ++i) {
                     dst.vertex[i] = dst.vertex[i] * scale
                 }
                 target.apply(dst.vertex, 1)
-                target.diff(this.neutral.vertex, dst.vertex)
+                target.diff(this.neutral.vertex, dst.vertex, indices)
             }
             if (name === "cheekPuff_L") {
                 dst = new WavefrontObj(`data/blendshapes/ict/cheekPuff_R.obj`)
@@ -65,7 +66,7 @@ export class FaceICTKitRenderer extends RenderHandler {
                     dst.vertex[i] = dst.vertex[i] * scale
                 }
                 target.apply(dst.vertex, 1)
-                target.diff(this.neutral.vertex, dst.vertex)
+                target.diff(this.neutral.vertex, dst.vertex, indices)
             }
             this.targets[blendshape] = target
         }
@@ -110,6 +111,8 @@ export class FaceICTKitRenderer extends RenderHandler {
 
         programRGBA.setColor([1, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, this.neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        // const length = this.neutral.fxyz.length
+        const length = 11144 * 6 // head and neck
+        gl.drawElements(gl.TRIANGLES, length, gl.UNSIGNED_SHORT, 0)
     }
 }
