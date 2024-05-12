@@ -29,7 +29,7 @@ export default function (props: { app: Application }) {
             label="Expression"
             value={TAB.EXPRESSION}
             style={{ overflow: "none" }}
-            visibilityChange={setRenderer(props.app, new RenderHuman())}
+            visibilityChange={setRenderer(props.app, new RenderHuman(true))}
         >
             <Form>
                 <FormSelect model={expressionList} />

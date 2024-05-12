@@ -1,6 +1,5 @@
 import { BaseMeshGroup } from "../mesh/BaseMeshGroup"
 import { HumanMesh } from "../mesh/HumanMesh"
-import { RenderMode } from "./RenderMode"
 import { RGBAShader } from "./shader/RGBAShader"
 import { TextureShader } from "./shader/TextureShader"
 import { ProxyType } from "proxy/Proxy"
@@ -11,6 +10,11 @@ import { GLView, Projection, RenderHandler } from "GLView"
 import { Application } from "Application"
 
 export class RenderHuman extends RenderHandler {
+    private viewHead: boolean
+    constructor(viewHead: boolean = false) {
+        super()
+        this.viewHead = viewHead
+    }
     override paint(app: Application, view: GLView): void {
         app.updateManager.updateIt()
         renderHuman(
@@ -21,7 +25,8 @@ export class RenderHuman extends RenderHandler {
             view.texture!,
             view.renderList,
             app.humanMesh,
-            app.humanMesh.wireframe.value
+            app.humanMesh.wireframe.value,
+            this.viewHead
         )
     }
 }
@@ -34,7 +39,8 @@ function renderHuman(
     texture: WebGLTexture,
     renderList: RenderList,
     humanMesh: HumanMesh,
-    wireframe: boolean
+    wireframe: boolean,
+    viewHead: boolean
 ): void {
     const WORD_LENGTH = 2
 
@@ -42,7 +48,7 @@ function renderHuman(
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
     const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-    const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+    const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, viewHead)
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
     programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)

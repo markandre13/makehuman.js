@@ -17,12 +17,22 @@ export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasEl
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-export function createModelViewMatrix(x: number, y: number) {
+export function createModelViewMatrix(rotX: number, rotY: number, head: boolean = false) {
     const D = 180 / Math.PI
     const modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -25])
-    mat4.rotateY(modelViewMatrix, modelViewMatrix, y / D)
-    mat4.rotateX(modelViewMatrix, modelViewMatrix, x / D)
+
+    if (!head) {
+        // full body view
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -25])
+        mat4.rotateY(modelViewMatrix, modelViewMatrix, rotY / D)
+        mat4.rotateX(modelViewMatrix, modelViewMatrix, rotX / D)
+    } else {
+        // head view (works unless the model is morphed...)
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5])
+        mat4.rotateX(modelViewMatrix, modelViewMatrix, rotX / D)
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, -7, 0])
+        mat4.rotateY(modelViewMatrix, modelViewMatrix, rotY / D)
+    }
     return modelViewMatrix
 }
 

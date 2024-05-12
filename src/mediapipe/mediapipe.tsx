@@ -13,24 +13,14 @@ import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { RenderHandler } from "GLView"
-
-// let orb: ORB | undefined
-// let backend: Backend | undefined
-// let frontend: Frontend_impl
-
-// const targets = new Array<Target>(blendshapeNames.length)
-// let weights = new Float32Array(blendshapeNames.length)
-// let landmarks: Float32Array | undefined
-// let neutral: WavefrontObj | undefined
-// // const scale = 80
-// const scale = 0.7
+import { RenderHuman } from "render/renderHuman"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend
 // [ ] google chrome does not detect loosing the connection
 // [ ] facial_transformation_matrixes
-// [ ] replace enum with object
-// [ ] switch between them
+// [X] replace enum with object
+// [X] switch between them
 // [ ] render side by side
 // [ ] render overlay
 // [ ] write editor to tweak the blendshapes
@@ -47,12 +37,14 @@ export function MediapipeTab(props: { app: Application }) {
         const frontend = new Frontend_impl(orb, props.app.updateManager, props.app.expressionManager.model)
 
         const lm = new FaceLandmarkRenderer(frontend)
-        // const ar = new FaceARKitRenderer(frontend)
+        const ar = new FaceARKitRenderer(frontend)
         // const ict = new FaceICTKitRenderer(frontend)
-        faceRenderer = new OptionModel(lm, [
+        const mh = new RenderHuman(true)
+        faceRenderer = new OptionModel<RenderHandler>(lm, [
             [lm, "Mediapipe Landmarks"],
-            // [ar, "ARKit Blendshape"],
-            // [ict, "ICTKit Blendshape"]
+            [ar, "ARKit Blendshape"],
+            // [ict, "ICTKit Blendshape"],
+            [mh, "MakeHuman"]
         ], {label: "Render Engine"})
         faceRenderer.modified.add(() => {
             props.app.setRenderer(faceRenderer.value)
