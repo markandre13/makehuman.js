@@ -29,26 +29,60 @@ export class Frontend_impl extends Frontend_skel {
     //     to approximate also shown)
     // [ ] create a tool to manage custom pose unit sets
     blendshape2poseUnit = new Map<string, string>([
-        ["jawOpen", "JawDrop"],
-        ["jawForward", "ChinForward"],
-        ["mouthSmileRight", "MouthRightPullUp"],
-        ["mouthSmileLeft", "MouthLeftPullUp"],
-        ["mouthStrechLeft", "MouthLeftPlatysma"],
-        ["mouthRightLeft", "MouthRightPlatysma"],
-        ["eyeWideRight", "RightUpperLidOpen"],
-        ["eyeWideLeft", "LeftUpperLidOpen"],
-        ["eyeBlinkLeft", "LeftUpperLidClosed"],
-        ["eyeBlinkRight", "RightUpperLidClosed"],
-        ["mouthPucker", "LipsKiss"],
-        ["jawLeft", "ChinLeft"],
-        ["jawRight", "ChinRight"],
-        ["browInnerUp", "LeftInnerBrowUp"],
-        ["browInnerUp", "RightInnerBrowUp"],
+        ["browDownLeft", ""], // left brow outside
+        ["browDownRight", ""], // right brow outside
+        ["browInnerUp", ""],
+        // ["browInnerUp", "LeftInnerBrowUp"],
+        // ["browInnerUp", "RightInnerBrowUp"],
         ["browOuterUpLeft", "LeftOuterBrowUp"],
         ["browOuterUpRight", "RightOuterBrowUp"],
-        ["browDownLeft", "LeftBrowDown"],
-        ["browDownRight", "RightBrowDown"],
-    ]);
+        ["cheekPuff", "CheeksPump"],
+        ["cheekSquintLeft", ""],
+        ["cheekSquintRight", ""],
+        ["eyeBlinkLeft", "LeftUpperLidClosed"],
+        ["eyeBlinkRight", "RightUpperLidClosed"],
+        ["eyeLookDownLeft", "LeftEyeDown"],
+        ["eyeLookDownRight", "RightEyeDown"],
+        ["eyeLookInLeft", "LeftEyeturnRight"],
+        ["eyeLookInRight", "RightEyeturnLeft"],
+        ["eyeLookOutLeft", "LeftEyeturnLeft"],
+        ["eyeLookOutRight", "RightEyeturnRight"],
+        ["eyeLookUpLeft", "LeftEyeUp"],
+        ["eyeLookUpRight", "RightEyeUp"],
+        ["eyeSquintLeft", ""],
+        ["eyeSquintRight", ""],
+        ["eyeWideLeft", "LeftUpperLidOpen"],
+        ["eyeWideRight", "RightUpperLidOpen"],
+        ["jawForward", "ChinForward"],
+        ["jawLeft", "ChinLeft"],
+        ["jawOpen", "JawDrop"],
+        ["jawRight", "ChinRight"],
+        ["mouthClose", ""],
+        ["mouthDimpleLeft", ""],
+        ["mouthDimpleRight", ""],
+        ["mouthFrownLeft", ""],
+        ["mouthFrownRight", ""],
+        ["mouthFunnel", ""],
+        ["mouthLeft", "MouthMoveRight"],
+        ["mouthLowerDownLeft", ""],
+        ["mouthLowerDownRight", ""],
+        ["mouthPressLeft", ""],
+        ["mouthPressRight", ""],
+        ["mouthPucker", "LipsKiss"],
+        ["mouthRight", "MouthMoveLeft"],
+        ["mouthRollLower", ""],
+        ["mouthRollUpper", ""],
+        ["mouthShrugLower", ""],
+        ["mouthShrugUpper", ""],
+        ["mouthSmileLeft", "MouthLeftPullUp"],
+        ["mouthSmileRight", "MouthRightPullUp"],
+        ["mouthStretchLeft", "MouthLeftPlatysma"],
+        ["mouthStretchRight", "MouthRightPlatysma"],
+        ["mouthUpperUpLeft", ""],
+        ["mouthUpperUpRight", ""],
+        ["noseSneerLeft", ""],
+        ["noseSneerRight", ""],
+    ])
 
     constructor(orb: ORB, updateManager: UpdateManager, expressionModel: ExpressionModel) {
         super(orb)
@@ -108,7 +142,7 @@ export class Frontend_impl extends Frontend_skel {
         this.blendshapes = blendshapes
         this.updateManager.invalidateView()
 
-        // this.updateManager.mediapipe(landmarks, timestamp_ms)
+        // set pose units from blendshapes
         // this.blendshapeIndex2poseUnit.forEach((name, index) => {
         //     if (index < blendshapes.length) {
         //         this.expressionModel.setPoseUnit(name, blendshapes[index])

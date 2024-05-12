@@ -52,7 +52,8 @@ import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
 import { Application, setRenderer } from "Application"
 import { GLView } from "GLView"
-import { RenderHuman } from "render/renderHuman"
+import { RenderHuman } from "render/RenderHuman"
+import { BlendShapeTab } from "BlendShapeTab"
 
 export function main() {
     try {
@@ -85,7 +86,8 @@ function run() {
                     <MorphTab app={app} />
                     <ProxyTab app={app} />
                     <PoseTab app={app} />
-                    <ExpressionTab app={app} />
+                    <BlendShapeTab app={app} />
+                    {/* <ExpressionTab app={app} /> */}
                     <MediapipeTab app={app} />
                     <ChordataTab app={app} />
                 </Tabs>

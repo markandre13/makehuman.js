@@ -13,7 +13,7 @@ import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { RenderHandler } from "GLView"
-import { RenderHuman } from "render/renderHuman"
+import { RenderHuman } from "render/RenderHuman"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend

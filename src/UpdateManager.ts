@@ -26,7 +26,7 @@ export class UpdateManager {
             return
         }
         this.invalidated = true
-        requestAnimationFrame( () => {
+        requestAnimationFrame(() => {
             this.invalidated = false
             if (this.render !== undefined) {
                 this.render()
@@ -34,11 +34,7 @@ export class UpdateManager {
         })
     }
 
-    constructor(
-        expressionManager: ExpressionManager,
-        poseModel: PoseModel,
-        sliderNodes: SliderNode
-    ) {
+    constructor(expressionManager: ExpressionManager, poseModel: PoseModel, sliderNodes: SliderNode) {
         this.expressionManager = expressionManager
         this.poseModel = poseModel
 

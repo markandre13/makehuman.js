@@ -71,7 +71,7 @@ export class RenderHuman extends RenderHandler {
             const count = humanMesh.baseMesh.groups[2].length * NUMBER_OF_JOINTS
     
             programRGBA.setColor([1, 1, 1, 1])
-            renderList.base.drawSubset(gl.TRIANGLES, offset, count) 
+            renderList.base.drawSubset(gl.TRIANGLES, offset, count)
             renderList.skeleton.draw(programRGBA, gl.LINES)
         }
         

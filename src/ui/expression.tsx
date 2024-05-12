@@ -7,7 +7,7 @@ import { Form } from "toad.js/view/Form"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { Application, setRenderer } from "Application"
-import { RenderHuman } from "render/renderHuman"
+import { RenderHuman } from "render/RenderHuman"
 
 export default function (props: { app: Application }) {
     const expressionList = new OptionModel(

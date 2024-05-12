@@ -13,7 +13,7 @@ import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Application } from "Application"
-import { RenderHuman } from "render/renderHuman"
+import { RenderHuman } from "render/RenderHuman"
 
 let socket: WebSocket | undefined
 let mgr: UpdateManager

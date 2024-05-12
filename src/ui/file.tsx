@@ -6,7 +6,7 @@ import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { exportCollada } from "mesh/Collada"
 import { loadSkeleton } from "../skeleton/loadSkeleton"
 import { Application, setRenderer } from "Application"
-import { RenderHuman } from "render/renderHuman"
+import { RenderHuman } from "render/RenderHuman"
 
 const useBlenderProfile = new BooleanModel(true)
 const limitPrecision = new BooleanModel(false)
