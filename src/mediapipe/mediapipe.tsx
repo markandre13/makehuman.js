@@ -5,12 +5,14 @@ import { Backend } from "net/makehuman_stub"
 import { FormButton } from "toad.js/view/FormButton"
 import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
-import { Action } from "toad.js"
+import { Action, OptionModel } from "toad.js"
 import { Form } from "toad.js/view/Form"
 import { Frontend_impl } from "./Frontend_impl"
 import { FaceLandmarkRenderer } from "./FaceLandmarkRenderer"
 import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
+import { FormSelect } from "toad.js/view/FormSelect"
+import { RenderHandler } from "GLView"
 
 // let orb: ORB | undefined
 // let backend: Backend | undefined
@@ -34,13 +36,8 @@ import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 // [ ] write editor to tweak the blendshapes
 // [ ] write an editor to create pose units matching the blendshapes
 
-export enum FaceRenderType {
-    MP_LANDMARKS,
-    ARKIT,
-    ICTFACEKIT,
-}
-
 let connectToBackend: Action | undefined
+let faceRenderer: OptionModel<RenderHandler>
 export function MediapipeTab(props: { app: Application }) {
     if (connectToBackend === undefined) {
         const orb = new ORB()
@@ -49,22 +46,29 @@ export function MediapipeTab(props: { app: Application }) {
 
         const frontend = new Frontend_impl(orb, props.app.updateManager, props.app.expressionManager.model)
 
+        const lm = new FaceLandmarkRenderer(frontend)
+        const ar = new FaceARKitRenderer(frontend)
+        const ict = new FaceICTKitRenderer(frontend)
+        faceRenderer = new OptionModel(lm, [
+            [lm, "Mediapipe Landmarks"],
+            [ar, "ARKit Blendshape"],
+            [ict, "ICTKit Blendshape"]
+        ], {label: "Render Engine"})
+        faceRenderer.modified.add(() => {
+            props.app.setRenderer(faceRenderer.value)
+        })
+
         connectToBackend = new Action(() => frontend.connectToORB(connectToBackend!), {
             label: "Connect to Backend",
         })
-
-        return (
-            <Tab
-                label="Mediapipe"
-                value={TAB.MEDIAPIPE}
-                visibilityChange={setRenderer(props.app, new FaceICTKitRenderer(frontend))}
-            >
-                <Form>
-                    <FormButton action={connectToBackend} />
-                </Form>
-            </Tab>
-        )
     }
+
+    return (
+        <Tab label="Mediapipe" value={TAB.MEDIAPIPE} visibilityChange={setRenderer(props.app, faceRenderer.value)}>
+            <Form>
+                <FormSelect model={faceRenderer} />
+                <FormButton action={connectToBackend} />
+            </Form>
+        </Tab>
+    )
 }
-// let backend: Backend | undefined
-// TODO: move this into Frontend_impl ??? well no, the Action is View layer
