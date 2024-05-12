@@ -241,18 +241,18 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: F
         314, 17, 84, 181, 91, 146, 61, 185, 40, 39, 37, 11, 267, 269, 270, 409, 291, 375, 321, 405, 314
     ]]
     for (const line of lineStrips) {
-        if (line[0] !== 474 && line[0] !== 469) {
-            continue
-        }
+        // if (line[0] !== 474 && line[0] !== 469) {
+        //     continue
+        // }
         // if (line === lineStrips[lineStrips.length - 1]) {
         //     programRGBA.color([0.0, 0.0, 10.0, 1])
         // }
         const mesh0 = new RenderMesh(gl, xyz, line, undefined, undefined, false)
         mesh0.bind(programRGBA)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
-        // if (line[0] === 34) {
-        //     programRGBA.setColor([8.0, 0.0, 0.0, 1])
-        // }
+        if (line[0] === 34) {
+            programRGBA.setColor([8.0, 0.0, 0.0, 1])
+        }
     }
 
     // draw solid face

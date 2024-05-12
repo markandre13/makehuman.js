@@ -47,12 +47,12 @@ export function MediapipeTab(props: { app: Application }) {
         const frontend = new Frontend_impl(orb, props.app.updateManager, props.app.expressionManager.model)
 
         const lm = new FaceLandmarkRenderer(frontend)
-        const ar = new FaceARKitRenderer(frontend)
-        const ict = new FaceICTKitRenderer(frontend)
+        // const ar = new FaceARKitRenderer(frontend)
+        // const ict = new FaceICTKitRenderer(frontend)
         faceRenderer = new OptionModel(lm, [
             [lm, "Mediapipe Landmarks"],
-            [ar, "ARKit Blendshape"],
-            [ict, "ICTKit Blendshape"]
+            // [ar, "ARKit Blendshape"],
+            // [ict, "ICTKit Blendshape"]
         ], {label: "Render Engine"})
         faceRenderer.modified.add(() => {
             props.app.setRenderer(faceRenderer.value)
