@@ -18,7 +18,6 @@ export function calculateNormalsQuads(
         const i3 = indices[i++] * 3
         const i4 = indices[i++] * 3
     
-
         const p1 = vec3.fromValues(vertex[i1], vertex[i1 + 1], vertex[i1 + 2])
         const p2 = vec3.fromValues(vertex[i2], vertex[i2 + 1], vertex[i2 + 2])
         const p3 = vec3.fromValues(vertex[i3], vertex[i3 + 1], vertex[i3 + 2])
@@ -27,6 +26,7 @@ export function calculateNormalsQuads(
         vec3.subtract(u, p2, p1)
         vec3.subtract(v, p3, p1)
         vec3.cross(n, u, v)
+        vec3.normalize(n, n)
 
         addNormal(i1, n)
         addNormal(i2, n)
@@ -70,6 +70,7 @@ export function calculateNormalsTriangles(
         vec3.subtract(u, p2, p1)
         vec3.subtract(v, p3, p1)
         vec3.cross(n, u, v)
+        vec3.normalize(n, n)
 
         addNormal(i1, n)
         addNormal(i2, n)

@@ -8,6 +8,7 @@ import { prepareCanvas, prepareViewport, createProjectionMatrix, createModelView
 import { Context } from "./Context"
 import { GLView, Projection, RenderHandler } from "GLView"
 import { Application } from "Application"
+import { RenderMesh } from "./RenderMesh"
 
 export class RenderHuman extends RenderHandler {
     private viewHead: boolean
@@ -16,6 +17,21 @@ export class RenderHuman extends RenderHandler {
         this.viewHead = viewHead
     }
     override paint(app: Application, view: GLView): void {
+        const humanMesh = app.humanMesh
+        const renderList = view.renderList
+        if (humanMesh.changedProxy !== undefined) {
+            if (humanMesh.proxies.has(humanMesh.changedProxy)) {
+                const proxy = humanMesh.proxies.get(humanMesh.changedProxy)!
+                renderList.proxies.set(
+                    proxy.type,
+                    new RenderMesh(view.gl, proxy.getCoords(humanMesh.vertexRigged), proxy.mesh.fxyz)
+                )
+            } else {
+                renderList.proxies.delete(humanMesh.changedProxy)
+            }
+            humanMesh.changedProxy = undefined
+        }
+
         app.updateManager.updateIt()
         renderHuman(
             view.ctx,

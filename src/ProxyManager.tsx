@@ -1,7 +1,7 @@
-import { HumanMesh } from './mesh/HumanMesh'
-import { loadProxy, ProxyType } from 'proxy/Proxy'
-import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
-import { OptionModel } from 'toad.js'
+import { HumanMesh } from "./mesh/HumanMesh"
+import { loadProxy, ProxyType } from "proxy/Proxy"
+import { FileSystemAdapter } from "./filesystem/FileSystemAdapter"
+import { OptionModel } from "toad.js"
 
 // NOT WORKING YET
 // female_casualsuit01
@@ -17,21 +17,23 @@ import { OptionModel } from 'toad.js'
 export class ProxyManager {
     humanMesh: HumanMesh
     // list of all known proxies by type
-    list = new Map<ProxyType, OptionModel<string>>;
+    list = new Map<ProxyType, OptionModel<string>>()
 
-    allProxyTypes = [ProxyType.Proxymeshes,
-    ProxyType.Clothes,
-    ProxyType.Hair,
-    ProxyType.Eyes,
-    ProxyType.Eyebrows,
-    ProxyType.Eyelashes,
-    ProxyType.Teeth,
-    ProxyType.Tongue];
+    allProxyTypes = [
+        ProxyType.Proxymeshes,
+        ProxyType.Clothes,
+        ProxyType.Hair,
+        ProxyType.Eyes,
+        ProxyType.Eyebrows,
+        ProxyType.Eyelashes,
+        ProxyType.Teeth,
+        ProxyType.Tongue,
+    ]
 
     constructor(humanMesh: HumanMesh) {
         this.humanMesh = humanMesh
         for (const type of this.allProxyTypes) {
-            const proxyList: string[] = ["none"]          
+            const proxyList: string[] = ["none"]
             for (const file of FileSystemAdapter.listDir(ProxyType[type].toLowerCase())) {
                 if (file === "materials") {
                     continue
@@ -61,8 +63,7 @@ export class ProxyManager {
 function exists(path: string): boolean {
     try {
         FileSystemAdapter.isFile(path)
-    }
-    catch (e) {
+    } catch (e) {
         return false
     }
     return true
