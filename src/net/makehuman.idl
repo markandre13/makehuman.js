@@ -15,12 +15,12 @@ enum EngineStatus {
 };
 
 interface Frontend {
-    void hello();
 //    oneway void chordata(in sequence<octet> data);
     oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
     oneway void faceLandmarks(
         in sequence<float> landmarks,
         in sequence<float> blendshapes,
+        in sequence<float> transform,
         in unsigned long long timestamp_ms);
 };
 

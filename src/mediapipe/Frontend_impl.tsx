@@ -17,6 +17,7 @@ export class Frontend_impl extends Frontend_skel {
     blendshapeIndex2poseUnit = new Map<number, string>()
     landmarks?: Float32Array
     blendshapes?: Float32Array
+    transform?: Float32Array
 
     // map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names
     // ideally, we would need new poseunits matching the blendshapes
@@ -137,9 +138,10 @@ export class Frontend_impl extends Frontend_skel {
         })
     }
 
-    override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, timestamp_ms: bigint): void {
+    override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
         this.landmarks = landmarks
         this.blendshapes = blendshapes
+        this.transform = transform
         this.updateManager.invalidateView()
 
         // set pose units from blendshapes
@@ -148,8 +150,5 @@ export class Frontend_impl extends Frontend_skel {
                 this.expressionModel.setPoseUnit(name, blendshapes[index])
             }
         })
-    }
-    override async hello(): Promise<void> {
-        console.log("HELLO FROM THE SERVER")
     }
 }
