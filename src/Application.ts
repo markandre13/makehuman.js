@@ -22,7 +22,10 @@ import { GLView, RenderHandler } from "GLView"
 // smooth my crappy API design for now
 export function setRenderer(app: Application, renderer: RenderHandler) {
     return (state: "visible" | "hidden") => {
-        if (state === "visible") app.setRenderer(renderer)
+        // console.log(`setRenderer(state=${state}, renderer='${renderer.constructor.name})`)
+        if (state === "visible") {
+            app.setRenderer(renderer)
+        }
     }
 }
 
@@ -31,7 +34,7 @@ export class Application {
     human: Human // MorphManager / MorphController
     humanMesh: HumanMesh // base mesh, morphed mesh, posed mesh
     skeleton: Skeleton
-   
+
     glview!: GLView
 
     // application

@@ -55,33 +55,33 @@ export class Frontend_impl extends Frontend_skel {
         ["eyeWideRight", "RightUpperLidOpen"],
         ["jawForward", "ChinForward"],
         ["jawLeft", "ChinLeft"],
-        ["jawOpen", "JawDrop"],
+        ["jawOpen", "JawDropStretched"],
         ["jawRight", "ChinRight"],
         ["mouthClose", ""],
         ["mouthDimpleLeft", ""],
         ["mouthDimpleRight", ""],
-        ["mouthFrownLeft", ""],
-        ["mouthFrownRight", ""],
-        ["mouthFunnel", ""],
+        ["mouthFrownLeft", "MouthLeftPlatysma"],
+        ["mouthFrownRight", "MouthLeftPlatysma"],
+        ["mouthFunnel", "LipsKiss"],
         ["mouthLeft", "MouthMoveRight"],
         ["mouthLowerDownLeft", ""],
         ["mouthLowerDownRight", ""],
         ["mouthPressLeft", ""],
         ["mouthPressRight", ""],
-        ["mouthPucker", "LipsKiss"],
+        // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
         ["mouthRight", "MouthMoveLeft"],
-        ["mouthRollLower", ""],
-        ["mouthRollUpper", ""],
+        ["mouthRollLower", "lowerLipBackward"],
+        ["mouthRollUpper", "lowerLipBackward"],
         ["mouthShrugLower", ""],
         ["mouthShrugUpper", ""],
         ["mouthSmileLeft", "MouthLeftPullUp"],
         ["mouthSmileRight", "MouthRightPullUp"],
         ["mouthStretchLeft", "MouthLeftPlatysma"],
         ["mouthStretchRight", "MouthRightPlatysma"],
-        ["mouthUpperUpLeft", ""],
+        ["mouthUpperUpLeft", ""], // no match
         ["mouthUpperUpRight", ""],
-        ["noseSneerLeft", ""],
-        ["noseSneerRight", ""],
+        ["noseSneerLeft", "NasolabialDeepener"],
+        // ["noseSneerRight", "NasolabialDeepener"],
     ])
 
     constructor(orb: ORB, updateManager: UpdateManager, expressionModel: ExpressionModel) {
@@ -143,11 +143,11 @@ export class Frontend_impl extends Frontend_skel {
         this.updateManager.invalidateView()
 
         // set pose units from blendshapes
-        // this.blendshapeIndex2poseUnit.forEach((name, index) => {
-        //     if (index < blendshapes.length) {
-        //         this.expressionModel.setPoseUnit(name, blendshapes[index])
-        //     }
-        // })
+        this.blendshapeIndex2poseUnit.forEach((name, index) => {
+            if (index < blendshapes.length) {
+                this.expressionModel.setPoseUnit(name, blendshapes[index])
+            }
+        })
     }
     override async hello(): Promise<void> {
         console.log("HELLO FROM THE SERVER")

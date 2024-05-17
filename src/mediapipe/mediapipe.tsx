@@ -56,7 +56,13 @@ export function MediapipeTab(props: { app: Application }) {
     }
 
     return (
-        <Tab label="Mediapipe" value={TAB.MEDIAPIPE} visibilityChange={setRenderer(props.app, faceRenderer.value)}>
+        <Tab
+            label="Mediapipe"
+            value={TAB.MEDIAPIPE}
+            visibilityChange={(state) => {
+                setRenderer(props.app, faceRenderer.value)(state)
+            }}
+        >
             <Form>
                 <FormSelect model={faceRenderer} />
                 <FormButton action={connectToBackend} />
