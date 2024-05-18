@@ -13,7 +13,9 @@ import {
     prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import { SelectionModel, Table, TableEditMode, TableEvent } from "toad.js"
+import { NumberModel, SelectionModel, Table, TableEditMode, TableEvent } from "toad.js"
+import { Form } from "toad.js/view/Form"
+import { FormText } from "toad.js/view/FormText"
 
 class BlendShapeEditor extends RenderHandler {
     static instance: BlendShapeEditor | undefined
@@ -24,37 +26,74 @@ class BlendShapeEditor extends RenderHandler {
         return BlendShapeEditor.instance
     }
 
+    xyz?: Float32Array
+    initialized = false
+    update = false
+    scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
+    dy = new NumberModel(7.03, {min: 6.6, max: 7.4,  step: 0.001, label: "dy"})
+    dz = new NumberModel(0.392, {min: 0.08, max: 0.82,  step: 0.001, label: "dz"})
+
     neutral: WavefrontObj
     renderMeshICT?: RenderMesh
     renderMeshMH?: RenderMesh
     constructor() {
         super()
+        this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
-        this.neutral = new WavefrontObj("data/blendshapes/ict/cheekSquintLeft.obj")
+        // this.neutral = new WavefrontObj("data/blendshapes/ict/cheekSquintLeft.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/noseSneerLeft.obj")
-        const scale = 0.088
-        for (let i = 0; i < this.neutral.vertex.length; ++i) {
-            this.neutral.vertex[i] = this.neutral.vertex[i] * scale
-        }
-        const dy = 6.97
-        const dz = 0.55 // 0.43
-        for (let i = 1; i < this.neutral.vertex.length; i += 3) {
-            this.neutral.vertex[i] += dy
-        }
-        for (let i = 2; i < this.neutral.vertex.length; i += 3) {
-            this.neutral.vertex[i] += dz
-        }
+        // const scale = 0.088
+        // const scale = 0.1
+        // const dy = 7 // 6.67
+        // const dz = 0.43 // 0.43
     }
 
     override paint(app: Application, view: GLView): void {
+        console.log(`paint with scale ${this.scale.value}`)
+        if (!this.initialized) {
+            this.scale.modified.add( () => {
+                console.log(`scale changed to ${this.scale.value}`)
+                this.update = true
+                app.updateManager.invalidateView()
+            })
+            this.dy.modified.add( () => {
+                this.update = true
+                app.updateManager.invalidateView()
+            })
+            this.dz.modified.add( () => {
+                this.update = true
+                app.updateManager.invalidateView()
+            })
+            this.initialized = true
+        }
         app.updateManager.updateIt()
 
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
+        if (this.xyz === undefined) {
+            this.xyz = new Float32Array(this.neutral.vertex.length)
+            this.update = true
+        }
+        if (this.update) {
+            for (let i = 0; i < this.neutral.vertex.length; ++i) {
+                this.xyz[i] = this.neutral.vertex[i] * this.scale.value
+            }
+            for (let i = 1; i < this.neutral.vertex.length; i += 3) {
+                this.xyz[i] += this.dy.value
+            }
+            for (let i = 2; i < this.neutral.vertex.length; i += 3) {
+                this.xyz[i] += this.dz.value
+            }
+            this.update = false;
+            if (this.renderMeshICT !== undefined) {
+                this.renderMeshICT.update(this.xyz)
+            }
+        }
+
         if (this.renderMeshICT === undefined) {
-            this.renderMeshICT = new RenderMesh(gl, this.neutral.vertex, this.neutral.fxyz, undefined, undefined, true)
+            this.renderMeshICT = new RenderMesh(gl, this.xyz, this.neutral.fxyz, undefined, undefined, true)
             this.renderMeshMH = new RenderMesh(
                 gl,
                 app.humanMesh.baseMesh.vertex,
@@ -78,7 +117,7 @@ class BlendShapeEditor extends RenderHandler {
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
 
-        gl.disable(gl.BLEND)
+        gl.enable(gl.BLEND)
         programRGBA.setColor([1, 0.8, 0.7, 1])
         const WORD_LENGTH = 2
         let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
@@ -104,18 +143,24 @@ class BlendShapeEditor extends RenderHandler {
 }
 
 export function BlendShapeTab(props: { app: Application }) {
+    const editor = BlendShapeEditor.getInstance()
     const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
     return (
-        <Tab label="Blend" value={TAB.MORPH2} visibilityChange={setRenderer(props.app, BlendShapeEditor.getInstance())}>
+        <Tab label="Blend" value={TAB.MORPH2} visibilityChange={setRenderer(props.app, editor)}>
             This is an experimental face morph editor to create blend shapes based on the ICT FaceKit.
-            {/* <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} /> */}
+            <Form>
+                <FormText model={editor.scale}/>
+                <FormText model={editor.dy}/>
+                <FormText model={editor.dz}/>
+            </Form>
+            <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
-            <Table
+            {/* <Table
                 selectionModel={sm}
                 model={props.app.expressionManager.model}
                 style={{ width: "487px", height: "100%" }}
-            />
+            /> */}
         </Tab>
     )
 }
