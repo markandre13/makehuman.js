@@ -29,8 +29,8 @@ export class FaceARKitRenderer extends RenderHandler {
 
         const scale = 80
         this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
-        for (let i = 0; i < this.neutral.vertex.length; ++i) {
-            this.neutral.vertex[i] = this.neutral.vertex[i] * scale
+        for (let i = 0; i < this.neutral.xyz.length; ++i) {
+            this.neutral.xyz[i] = this.neutral.xyz[i] * scale
         }
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
@@ -38,11 +38,11 @@ export class FaceARKitRenderer extends RenderHandler {
             }
             const name = blendshapeNames[blendshape]
             const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
-            for (let i = 0; i < this.neutral.vertex.length; ++i) {
-                dst.vertex[i] = dst.vertex[i] * scale
+            for (let i = 0; i < this.neutral.xyz.length; ++i) {
+                dst.xyz[i] = dst.xyz[i] * scale
             }
             const target = new Target()
-            target.diff(this.neutral.vertex, dst.vertex)
+            target.diff(this.neutral.xyz, dst.xyz)
             this.targets[blendshape] = target
         }
     }
@@ -52,8 +52,8 @@ export class FaceARKitRenderer extends RenderHandler {
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
-        const vertex = new Float32Array(this.neutral.vertex.length)
-        vertex.set(this.neutral!.vertex)
+        const vertex = new Float32Array(this.neutral.xyz.length)
+        vertex.set(this.neutral!.xyz)
         for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue

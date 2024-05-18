@@ -73,17 +73,17 @@ class BlendShapeEditor extends RenderHandler {
         const programRGBA = view.programRGBA
 
         if (this.xyz === undefined) {
-            this.xyz = new Float32Array(this.neutral.vertex.length)
+            this.xyz = new Float32Array(this.neutral.xyz.length)
             this.update = true
         }
         if (this.update) {
-            for (let i = 0; i < this.neutral.vertex.length; ++i) {
-                this.xyz[i] = this.neutral.vertex[i] * this.scale.value
+            for (let i = 0; i < this.neutral.xyz.length; ++i) {
+                this.xyz[i] = this.neutral.xyz[i] * this.scale.value
             }
-            for (let i = 1; i < this.neutral.vertex.length; i += 3) {
+            for (let i = 1; i < this.neutral.xyz.length; i += 3) {
                 this.xyz[i] += this.dy.value
             }
-            for (let i = 2; i < this.neutral.vertex.length; i += 3) {
+            for (let i = 2; i < this.neutral.xyz.length; i += 3) {
                 this.xyz[i] += this.dz.value
             }
             this.update = false;
@@ -96,7 +96,7 @@ class BlendShapeEditor extends RenderHandler {
             this.renderMeshICT = new RenderMesh(gl, this.xyz, this.neutral.fxyz, undefined, undefined, true)
             this.renderMeshMH = new RenderMesh(
                 gl,
-                app.humanMesh.baseMesh.vertex,
+                app.humanMesh.baseMesh.xyz,
                 app.humanMesh.baseMesh.fxyz,
                 undefined,
                 undefined,

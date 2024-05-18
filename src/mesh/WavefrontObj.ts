@@ -6,9 +6,7 @@ import { Group } from './Group'
 export class WavefrontObj {
     name = ""
 
-    // makehuman: fverts, fuvs, fnorm; verts, uvs(texco)
-
-    vertex: Float32Array  // x,y,z (coord in makehuman) TODO: rename into xyz
+    xyz: Float32Array  // x,y,z (coord in makehuman)
     uv: Float32Array // u,v (texco in makehuman)
     // normal: number[]  // x,y,z (due to morphing & skinning, normals are calculated in makehuman)
 
@@ -23,7 +21,7 @@ export class WavefrontObj {
     material: Group[] // name, startIndex, length
 
     toString(): string {
-        return `WavefrontObj {name: '${this.name}', vertices: ${this.vertex.length / 3}, quads: ${this.fxyz.length / 6}, groups: ${this.groups.length}} `
+        return `WavefrontObj {name: '${this.name}', vertices: ${this.xyz.length / 3}, quads: ${this.fxyz.length / 6}, groups: ${this.groups.length}} `
     }
 
     constructor(filename: string, data?: string) {
@@ -143,7 +141,7 @@ export class WavefrontObj {
             }
         }
         this.vcount = vcount
-        this.vertex = new Float32Array(vertex)
+        this.xyz = new Float32Array(vertex)
         this.uv = new Float32Array(texcoord)
         
         // set group's lengths
@@ -203,6 +201,6 @@ export class WavefrontObj {
         if (groupNames.length !== 0) {
             groupNames = ` and ${groupNames}`
         }
-        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.vertex.length / 3} vertices, ${this.uv.length / 2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
+        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.xyz.length / 3} vertices, ${this.uv.length / 2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
     }
 }

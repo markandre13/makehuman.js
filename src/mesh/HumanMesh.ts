@@ -25,7 +25,7 @@ export class HumanMesh {
     constructor(human: Human, obj: WavefrontObj) {
         this.human = human
         this.baseMesh = obj
-        this.vertexRigged = this.vertexMorphed = obj.vertex
+        this.vertexRigged = this.vertexMorphed = obj.xyz
     }
 
     getRestposeCoordinates() {
@@ -34,7 +34,7 @@ export class HumanMesh {
 
     calculateVertexMorphed() {
         // console.log(`HumanMesh.calculateVertexMorphed()`)
-        this.vertexMorphed = new Float32Array(this.baseMesh.vertex)
+        this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
         this.human.targetsDetailStack.forEach((value, targetName) => {
             if (isNaN(value)) {
                 // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)

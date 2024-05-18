@@ -29,8 +29,8 @@ export class FaceICTKitRenderer extends RenderHandler {
 
         const scale = 0.6
         this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
-        for (let i = 0; i < this.neutral.vertex.length; ++i) {
-            this.neutral.vertex[i] = this.neutral.vertex[i] * scale
+        for (let i = 0; i < this.neutral.xyz.length; ++i) {
+            this.neutral.xyz[i] = this.neutral.xyz[i] * scale
         }
         const indices = 11247
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
@@ -47,26 +47,26 @@ export class FaceICTKitRenderer extends RenderHandler {
                     break
             }
             let dst = new WavefrontObj(`data/blendshapes/ict/${name}.obj`)
-            for (let i = 0; i < this.neutral.vertex.length; ++i) {
-                dst.vertex[i] = dst.vertex[i] * scale
+            for (let i = 0; i < this.neutral.xyz.length; ++i) {
+                dst.xyz[i] = dst.xyz[i] * scale
             }
             const target = new Target()
-            target.diff(this.neutral.vertex, dst.vertex, indices)
+            target.diff(this.neutral.xyz, dst.xyz, indices)
             if (name === "browInnerUp_L") {
                 dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)
-                for (let i = 0; i < this.neutral.vertex.length; ++i) {
-                    dst.vertex[i] = dst.vertex[i] * scale
+                for (let i = 0; i < this.neutral.xyz.length; ++i) {
+                    dst.xyz[i] = dst.xyz[i] * scale
                 }
-                target.apply(dst.vertex, 1)
-                target.diff(this.neutral.vertex, dst.vertex, indices)
+                target.apply(dst.xyz, 1)
+                target.diff(this.neutral.xyz, dst.xyz, indices)
             }
             if (name === "cheekPuff_L") {
                 dst = new WavefrontObj(`data/blendshapes/ict/cheekPuff_R.obj`)
-                for (let i = 0; i < this.neutral.vertex.length; ++i) {
-                    dst.vertex[i] = dst.vertex[i] * scale
+                for (let i = 0; i < this.neutral.xyz.length; ++i) {
+                    dst.xyz[i] = dst.xyz[i] * scale
                 }
-                target.apply(dst.vertex, 1)
-                target.diff(this.neutral.vertex, dst.vertex, indices)
+                target.apply(dst.xyz, 1)
+                target.diff(this.neutral.xyz, dst.xyz, indices)
             }
             this.targets[blendshape] = target
         }
@@ -77,8 +77,8 @@ export class FaceICTKitRenderer extends RenderHandler {
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
-        const vertex = new Float32Array(this.neutral.vertex.length)
-        vertex.set(this.neutral!.vertex)
+        const vertex = new Float32Array(this.neutral.xyz.length)
+        vertex.set(this.neutral!.xyz)
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue

@@ -117,7 +117,7 @@ f 5/1 6/2 7/3 8/4
             0, 1, 2, 3, 0, 2,
             4, 5, 6, 7, 4, 6
         ])
-        expect(obj.vertex).to.deep.equal(new Float32Array([
+        expect(obj.xyz).to.deep.equal(new Float32Array([
             -1.0, -1.0, 1.0,
             1.0, -1.0, 1.0,
             1.0, 1.0, 1.0,
