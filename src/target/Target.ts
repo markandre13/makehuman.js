@@ -37,14 +37,16 @@ export class Target {
 
     /**
      * calculate morph target from two lists of vertices
-     * 
-     * @param src 
-     * @param dst 
+     *
+     * @param src
+     * @param dst
      * @parem size an optional size
      */
     diff(src: Float32Array, dst: Float32Array, size?: number) {
         if (src.length !== dst.length) {
-            throw Error(`Target.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`)
+            throw Error(
+                `Target.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`
+            )
         }
         let length: number
         if (size === undefined) {
@@ -54,14 +56,16 @@ export class Target {
         }
         const idx: number[] = []
         const vtx: number[] = []
-        for(let v = 0, i=0; v<length; ++i) {
+        for (let v = 0, i = 0; v < length; ++i) {
             const sx = src[v]
             const dx = dst[v++]
             const sy = src[v]
             const dy = dst[v++]
             const sz = src[v]
             const dz = dst[v++]
-            const x = dx - sx, y = dy - sy, z = dz - sz
+            const x = dx - sx,
+                y = dy - sy,
+                z = dz - sz
             if (!isZero(x) || !isZero(y) || !isZero(z)) {
                 idx.push(i)
                 vtx.push(x, y, z)
@@ -73,7 +77,7 @@ export class Target {
 
     /**
      * apply morph target to vertices
-     * 
+     *
      * @param verts destination
      * @param scale a value between 0 and 1
      */

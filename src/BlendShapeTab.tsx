@@ -33,16 +33,15 @@ import { FormText } from "toad.js/view/FormText"
 import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FormSelect } from "toad.js/view/FormSelect"
-import { ModelViewProps } from "toad.js/view/ModelView"
-import { ValueModel } from "toad.js/model/ValueModel"
+import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
 
 class BlendShapeEditor extends RenderHandler {
-    static instance: BlendShapeEditor | undefined
+    private static _instance: BlendShapeEditor | undefined
     static getInstance(app: Application) {
-        if (BlendShapeEditor.instance === undefined) {
-            BlendShapeEditor.instance = new BlendShapeEditor(app)
+        if (BlendShapeEditor._instance === undefined) {
+            BlendShapeEditor._instance = new BlendShapeEditor(app)
         }
-        return BlendShapeEditor.instance
+        return BlendShapeEditor._instance
     }
 
     app: Application
@@ -53,7 +52,7 @@ class BlendShapeEditor extends RenderHandler {
     blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
         label: "Blendshape",
     })
-
+    
     // ictkit
     // scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
     // dy = new NumberModel(7.03, {min: 6.6, max: 7.4,  step: 0.001, label: "dy"})
@@ -64,16 +63,25 @@ class BlendShapeEditor extends RenderHandler {
     dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" })
     dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
 
+    blendshapeSet: FaceARKitLoader
+
     neutral: WavefrontObj
     renderMeshBS?: RenderMesh
     renderMeshMH?: RenderMesh
     constructor(app: Application) {
         super()
         this.app = app
+        this.blendshapeSet = FaceARKitLoader.getInstance()
+        this.neutral = this.blendshapeSet.neutral
+
+        this.blendshape.modified.add( () => {
+            this.update = true
+            app.updateManager.invalidateView()
+        })
         // this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
         // JawDrop 1, JawDropStretched 0.3
         // create classes which handle loading & caching the blendshapes
-        this.neutral = new WavefrontObj("data/blendshapes/arkit/jawOpen.obj.z")
+        // this.neutral = new WavefrontObj("data/blendshapes/arkit/jawOpen.obj.z")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/cheekSquintLeft.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/noseSneerLeft.obj")
@@ -84,10 +92,10 @@ class BlendShapeEditor extends RenderHandler {
     }
 
     override paint(app: Application, view: GLView): void {
-        console.log(`paint with scale ${this.scale.value}`)
+        // console.log(`paint with scale ${this.scale.value}`)
         if (!this.initialized) {
             this.scale.modified.add(() => {
-                console.log(`scale changed to ${this.scale.value}`)
+                // console.log(`scale changed to ${this.scale.value}`)
                 this.update = true
                 app.updateManager.invalidateView()
             })
@@ -108,12 +116,13 @@ class BlendShapeEditor extends RenderHandler {
         const programRGBA = view.programRGBA
 
         if (this.xyz === undefined) {
-            this.xyz = new Float32Array(this.neutral.xyz.length)
             this.update = true
         }
         if (this.update) {
+            this.xyz = new Float32Array(this.neutral.xyz)
+            this.blendshapeSet.getTarget(this.blendshape.value)?.apply(this.xyz, 1)
             for (let i = 0; i < this.neutral.xyz.length; ++i) {
-                this.xyz[i] = this.neutral.xyz[i] * this.scale.value
+                this.xyz[i] = this.xyz[i] * this.scale.value
             }
             for (let i = 1; i < this.neutral.xyz.length; i += 3) {
                 this.xyz[i] += this.dy.value
@@ -128,7 +137,7 @@ class BlendShapeEditor extends RenderHandler {
         }
 
         if (this.renderMeshBS === undefined) {
-            this.renderMeshBS = new RenderMesh(gl, this.xyz, this.neutral.fxyz, undefined, undefined, false)
+            this.renderMeshBS = new RenderMesh(gl, this.xyz!!, this.neutral.fxyz, undefined, undefined, false)
 
             this.renderMeshMH = new RenderMesh(
                 gl,
@@ -219,7 +228,7 @@ export function BlendShapeTab(props: { app: Application }) {
     const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
     return (
-        <Tab label="Blend" value={TAB.MORPH2} visibilityChange={setRenderer(props.app, editor)}>
+        <Tab label="Face" value={TAB.FACE} visibilityChange={setRenderer(props.app, editor)}>
             Face Blendshape Editor (under construction)
             <Form>
                 <FormText model={editor.scale} />

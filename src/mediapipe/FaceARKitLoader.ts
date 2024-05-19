@@ -5,7 +5,6 @@ import { blendshapeNames } from "./blendshapeNames"
 /**
  * Load and cache ARKit Face Blendshapes
  */
-
 export class FaceARKitLoader {
     private static _instance?: FaceARKitLoader
     static getInstance() {
@@ -15,16 +14,16 @@ export class FaceARKitLoader {
         return FaceARKitLoader._instance
     }
 
-    private scale = 80;
+    // private scale = 1;
     private targets: Target[]
+    private name2index: Map<string, number>
     neutral: WavefrontObj
 
     constructor() {
         this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
         this.targets = new Array<Target>(blendshapeNames.length)
-        for (let i = 0; i < this.neutral.xyz.length; ++i) {
-            this.neutral.xyz[i] = this.neutral.xyz[i] * this.scale
-        }
+        this.name2index = new Map<string, number>()
+        blendshapeNames.forEach((name, index) => this.name2index.set(name, index))
     }
 
     /**
@@ -37,15 +36,21 @@ export class FaceARKitLoader {
         return this
     }
 
-    getTarget(blendshape: number): Target {
+    getTarget(blendshape: number | string): Target | undefined {
+        if (typeof blendshape === "string") {
+            blendshape = this.name2index.get(blendshape)!
+        }
+        if (blendshape === 0) {
+            return undefined
+        }
         if (this.targets[blendshape] !== undefined) {
             return this.targets[blendshape]
         }
         const name = blendshapeNames[blendshape]
         const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
-        for (let i = 0; i < this.neutral.xyz.length; ++i) {
-            dst.xyz[i] = dst.xyz[i] * this.scale
-        }
+        // for (let i = 0; i < this.neutral.xyz.length; ++i) {
+        //     dst.xyz[i] = dst.xyz[i] * this.scale
+        // }
         const target = new Target()
         target.diff(this.neutral.xyz, dst.xyz)
         this.targets[blendshape] = target

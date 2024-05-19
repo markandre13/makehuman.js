@@ -5,7 +5,7 @@ export enum TAB {
     PROXY = "proxy",
     EXPRESSION = "expression",
     MORPH = "morph",
-    MORPH2 = "morph2",
+    FACE = "morph2",
     POSE = "pose",
     POSE2 = "pose2",
     EXPORT = "export",

@@ -45,7 +45,7 @@ export class FaceARKitRenderer extends RenderHandler {
             if (isZero(weight)) {
                 continue
             }
-            this.blendshapeSet.getTarget(blendshape).apply(vertex, weight)
+            this.blendshapeSet.getTarget(blendshape)?.apply(vertex, weight)
         }
         if (this.mesh) {
             this.mesh.update(vertex)
