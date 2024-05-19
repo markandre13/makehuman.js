@@ -1,18 +1,17 @@
 import { Application } from "Application"
 import { GLView, Projection, RenderHandler } from "GLView"
-import { WavefrontObj } from "mesh/WavefrontObj"
 import {
     createModelViewMatrix,
     createNormalMatrix,
     createProjectionMatrix,
     prepareCanvas,
-    prepareViewport
+    prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "./Frontend_impl"
-import { Target } from "target/Target"
 import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
+import { FaceARKitLoader } from "./FaceARKitLoader"
 
 /**
  * Render MediaPipe's blendshape using Apples ARKit Mesh
@@ -20,41 +19,25 @@ import { blendshapeNames } from "./blendshapeNames"
 export class FaceARKitRenderer extends RenderHandler {
     mesh!: RenderMesh
     frontend: Frontend_impl
-    neutral: WavefrontObj
-    targets = new Array<Target>(blendshapeNames.length)
+    blendshapeSet: FaceARKitLoader
+    // neutral: WavefrontObj
+    // targets = new Array<Target>(blendshapeNames.length)
 
     constructor(frontend: Frontend_impl) {
         super()
+        this.blendshapeSet = FaceARKitLoader.getInstance().preload()
         this.frontend = frontend
-
-        const scale = 80
-        this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
-        for (let i = 0; i < this.neutral.xyz.length; ++i) {
-            this.neutral.xyz[i] = this.neutral.xyz[i] * scale
-        }
-        for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
-            if (blendshape === 0) {
-                continue
-            }
-            const name = blendshapeNames[blendshape]
-            const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
-            for (let i = 0; i < this.neutral.xyz.length; ++i) {
-                dst.xyz[i] = dst.xyz[i] * scale
-            }
-            const target = new Target()
-            target.diff(this.neutral.xyz, dst.xyz)
-            this.targets[blendshape] = target
-        }
     }
 
     override paint(app: Application, view: GLView): void {
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
+        const neutral = this.blendshapeSet.neutral
 
-        const vertex = new Float32Array(this.neutral.xyz.length)
-        vertex.set(this.neutral!.xyz)
-        for(let blendshape=0; blendshape<blendshapeNames.length; ++blendshape) {
+        const vertex = new Float32Array(neutral.xyz.length)
+        vertex.set(this.blendshapeSet.neutral!.xyz)
+        for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
             }
@@ -62,12 +45,12 @@ export class FaceARKitRenderer extends RenderHandler {
             if (isZero(weight)) {
                 continue
             }
-            this.targets[blendshape].apply(vertex, weight)
+            this.blendshapeSet.getTarget(blendshape).apply(vertex, weight)
         }
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {
-            this.mesh = new RenderMesh(gl, vertex, this.neutral.fxyz, undefined, undefined, false)
+            this.mesh = new RenderMesh(gl, vertex, neutral.fxyz, undefined, undefined, false)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
@@ -86,6 +69,6 @@ export class FaceARKitRenderer extends RenderHandler {
 
         programRGBA.setColor([1, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, this.neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
     }
 }
