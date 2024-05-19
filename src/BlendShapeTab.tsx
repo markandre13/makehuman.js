@@ -52,7 +52,7 @@ class BlendShapeEditor extends RenderHandler {
     blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
         label: "Blendshape",
     })
-    
+
     // ictkit
     // scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
     // dy = new NumberModel(7.03, {min: 6.6, max: 7.4,  step: 0.001, label: "dy"})
@@ -74,7 +74,7 @@ class BlendShapeEditor extends RenderHandler {
         this.blendshapeSet = FaceARKitLoader.getInstance()
         this.neutral = this.blendshapeSet.neutral
 
-        this.blendshape.modified.add( () => {
+        this.blendshape.modified.add(() => {
             this.update = true
             app.updateManager.invalidateView()
         })
@@ -206,11 +206,14 @@ class BlendShapeEditor extends RenderHandler {
         const obj = ev.target as HTMLObjectElement
         const content = obj.contentDocument!
         // console.log(content)
-        headBones.forEach((bone) => {
-            const eye = content.getElementById(bone) as any
+        headBones.forEach((boneName) => {
+            const eye = content.getElementById(boneName) as any
             if (eye != null) {
                 const g = eye as SVGGElement
                 const e = g.children[0] as SVGEllipseElement
+                const title = document.createElementNS("http://www.w3.org/2000/svg", "title")
+                title.appendChild(document.createTextNode(boneName))
+                e.appendChild(title)
                 e.onpointerenter = () => (e.style.fill = "#f00")
                 e.onpointerleave = () => (e.style.fill = "")
             }
