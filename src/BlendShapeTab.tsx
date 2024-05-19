@@ -33,6 +33,7 @@ import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { ModelViewProps } from "toad.js/view/ModelView"
+import { ValueModel } from "toad.js/model/ValueModel"
 
 class BlendShapeEditor extends RenderHandler {
     static instance: BlendShapeEditor | undefined
@@ -227,31 +228,34 @@ interface IfPropsTrue extends HTMLElementProps {
 interface IfPropsFalse extends HTMLElementProps {
     isFalse: BooleanModel
 }
+interface IfPropsEqual<T> extends HTMLElementProps {
+    model: ValueModel<T>
+    isEqual: T
+}
 
-export class If extends ModelView<BooleanModel> {
-    negate: boolean
-
-    constructor(props: IfPropsTrue | IfPropsFalse) {
+export class If<T> extends ModelView<ValueModel<T>> {
+    value: T
+    constructor(props: IfPropsTrue | IfPropsFalse | IfPropsEqual<T>) {
         const newProps = props as ModelViewProps<BooleanModel>
-        let negate: boolean
+        let value: any
         if ("isTrue" in props) {
-            negate = false
+            value = true
             newProps.model = props.isTrue
-        } else {
-            negate = true
+        }
+        if ("isFalse" in props) {
+            value = false
             newProps.model = props.isFalse
         }
+        if ("isEqual" in props) {
+            value = props.isEqual
+        }
         super(props)
-        this.negate = negate
+        this.value = value
     }
 
     override updateView() {
         if (this.model) {
-            if (this.negate) {
-                this.show(!this.model.value)
-            } else {
-                this.show(this.model.value)
-            }
+            this.show(this.model.value === this.value)
         }
     }
     private show(show: boolean) {
@@ -279,6 +283,7 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSelect model={editor.blendshape} />
             </Form>
             <If isTrue={morphToMatchNeutral}>
+            {/* <If model={morphToMatchNeutral} isEqual={true}> */}
                 <p>morph face to match neutral blendshape</p>
                 <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
             </If>
@@ -293,7 +298,6 @@ export function BlendShapeTab(props: { app: Application }) {
                     onload={(ev) => editor.prepare(ev)}
                 />
             </If>
-            {/* <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} /> */}
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
             {/* <Table
                 selectionModel={sm}
