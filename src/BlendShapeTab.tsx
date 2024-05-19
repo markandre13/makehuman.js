@@ -24,9 +24,10 @@ import {
     Table,
     TableEditMode,
     TableEvent,
-    ToadIf,
     View,
 } from "toad.js"
+import { If } from "toad.js/view/If"
+import { Condition } from "toad.js/model/Condition"
 import { Form } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
 import { Bone } from "skeleton/Bone"
@@ -71,6 +72,7 @@ class BlendShapeEditor extends RenderHandler {
         this.app = app
         // this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
         // JawDrop 1, JawDropStretched 0.3
+        // create classes which handle loading & caching the blendshapes
         this.neutral = new WavefrontObj("data/blendshapes/arkit/jawOpen.obj.z")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/cheekSquintLeft.obj")
@@ -207,63 +209,6 @@ class BlendShapeEditor extends RenderHandler {
     }
 }
 
-class Condition extends BooleanModel {
-    condition: () => boolean
-    constructor(condition: () => boolean, dependencies: Model<any, any>[]) {
-        super(condition())
-        this.condition = condition
-        this.evaluate = this.evaluate.bind(this)
-        for (const model of dependencies) {
-            model.modified.add(this.evaluate)
-        }
-    }
-    evaluate() {
-        this.value = this.condition()
-    }
-}
-
-interface IfPropsTrue extends HTMLElementProps {
-    isTrue: BooleanModel
-}
-interface IfPropsFalse extends HTMLElementProps {
-    isFalse: BooleanModel
-}
-interface IfPropsEqual<T> extends HTMLElementProps {
-    model: ValueModel<T>
-    isEqual: T
-}
-
-export class If<T> extends ModelView<ValueModel<T>> {
-    value: T
-    constructor(props: IfPropsTrue | IfPropsFalse | IfPropsEqual<T>) {
-        const newProps = props as ModelViewProps<BooleanModel>
-        let value: any
-        if ("isTrue" in props) {
-            value = true
-            newProps.model = props.isTrue
-        }
-        if ("isFalse" in props) {
-            value = false
-            newProps.model = props.isFalse
-        }
-        if ("isEqual" in props) {
-            value = props.isEqual
-        }
-        super(props)
-        this.value = value
-    }
-
-    override updateView() {
-        if (this.model) {
-            this.show(this.model.value === this.value)
-        }
-    }
-    private show(show: boolean) {
-        this.style.display = show ? "" : "none"
-    }
-}
-If.define("tx-enhanced-if", If)
-
 export function BlendShapeTab(props: { app: Application }) {
     const editor = BlendShapeEditor.getInstance(props.app)
 
@@ -283,13 +228,11 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSelect model={editor.blendshape} />
             </Form>
             <If isTrue={morphToMatchNeutral}>
-            {/* <If model={morphToMatchNeutral} isEqual={true}> */}
                 <p>morph face to match neutral blendshape</p>
                 <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
             </If>
             <If isFalse={morphToMatchNeutral}>
                 <p>pose face to match blendshape</p>
-
                 <object
                     id="face"
                     type="image/svg+xml"
