@@ -201,6 +201,6 @@ export class WavefrontObj {
         if (groupNames.length !== 0) {
             groupNames = ` and ${groupNames}`
         }
-        console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.xyz.length / 3} vertices, ${this.uv.length / 2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
+        // console.log(`Loaded ${this.groups.length} groups (${joints} joints, ${helpers} helpers${groupNames}), ${this.material.length} materials, ${this.xyz.length / 3} vertices, ${this.uv.length / 2} uvs, ${this.fxyz.length / 3} triangles from file '${filename}'`)
     }
 }
