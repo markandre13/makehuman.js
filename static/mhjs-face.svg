@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 525 773" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-130.704,-158.54)">
+        <path d="M391.119,928.281C516.322,925.693 625.198,681.368 639.073,576.123C672.231,324.621 606.868,160.867 385.64,161.542C126.051,162.333 129.311,416.11 142.099,566.646C145.788,610.062 219.295,931.833 391.119,928.281Z" style="fill:rgb(0,64,81);stroke:white;stroke-width:6px;"/>
+        <path d="M305.64,776.254C323.936,739.339 352.411,731.323 366.929,730.973C381.446,730.623 382.798,734.737 390.833,734.745C398.869,734.753 399.939,730.306 415.184,731.131C430.43,731.955 473.26,756.024 478.342,778.089C472.993,802.22 431.466,823.73 390.915,823.961C350.364,824.192 305.531,799.622 305.64,776.254Z" style="fill:rgb(0,64,81);stroke:black;stroke-width:6px;"/>
+        <path id="eyeL" d="M212.141,510.638C234.902,488.979 288.896,480.942 317.504,513.152C306.694,544.498 221.193,533.876 212.141,510.638Z" style="fill:white;stroke:black;stroke-width:4px;"/>
+        <g id="irisL" transform="matrix(1.02132,0,0,1.09264,-2.57938,-48.1959)">
+            <ellipse cx="266.858" cy="512.756" rx="20.036" ry="18.239" style="fill:rgb(0,95,255);stroke:black;stroke-width:3.78px;"/>
+        </g>
+        <g id="eyeL1" serif:id="eyeL" transform="matrix(-1,0,0,1,783.603,0)">
+            <path d="M212.141,510.638C234.902,488.979 288.896,480.942 317.504,513.152C306.694,544.498 221.193,533.876 212.141,510.638Z" style="fill:white;stroke:black;stroke-width:4px;"/>
+        </g>
+        <g id="irisL1" serif:id="irisL" transform="matrix(-1.02132,0,0,1.09264,786.183,-48.1959)">
+            <ellipse cx="266.858" cy="512.756" rx="20.036" ry="18.239" style="fill:rgb(0,95,255);stroke:black;stroke-width:3.78px;"/>
+        </g>
+        <path d="M144.591,573.906L171.887,554.682L200.679,652.193L199.821,725.368" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M643.928,577.155L611.201,552.949L581.6,651.618L582.734,722.564" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M142.151,479.933L170.452,477.705L254.29,398.647L322.989,387.344" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M641.952,480.884L610.433,478.432L533.713,400.924L459.979,387.75" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M258.663,454.315L273.734,511.819L259.718,560.374" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M524.405,455.306L513.597,511.052L525.018,557.363" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M405.465,560.981L490.068,603.486L513.383,665.254L509.735,738.729L495.886,776.294" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M390.685,864.272L391.222,806.243" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M391.848,863.329L354.535,857.38L329.191,808.039" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M391.414,863.017L431.954,855.918L454.205,807.396" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <g transform="matrix(0.73339,-0.097698,-0.097698,0.964199,163.47,59.9027)">
+            <path d="M328.698,642.822L371.796,658.615" style="fill:none;stroke:rgb(235,235,235);stroke-width:7.9px;"/>
+        </g>
+        <g transform="matrix(0.721113,0.102406,0.102406,0.962397,47.5788,-17.4707)">
+            <path d="M454.526,642.514L412.233,658.044" style="fill:none;stroke:rgb(235,235,235);stroke-width:6.3px;"/>
+        </g>
+        <path d="M392.62,709.348L391.39,768.822" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M392.425,708.19L339.186,724.687L327.071,754.772" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <path d="M392.351,709.209L442.132,723.4L459.596,752.949" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        <g transform="matrix(-1,0,0,1,779.283,-0.507202)">
+            <path d="M405.465,560.981L490.068,603.486L513.383,665.254L509.735,738.729L495.886,776.294" style="fill:none;stroke:rgb(235,235,235);stroke-width:6px;"/>
+        </g>
+        <g id="anchor" transform="matrix(0.439708,0,0,0.486846,25.0821,323.042)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor1" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,24.3077,230.242)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor2" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,257.187,309.944)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor3" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,251.544,408.412)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor4" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,291.791,409.4)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor5" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,288.011,310.668)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor6" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,524.523,326.294)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor7" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,272.086,613.006)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor8" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,274.033,458.047)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="anchor9" serif:id="anchor" transform="matrix(0.439708,0,0,0.486846,521.6,231.22)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="fill:rgb(0,64,81);stroke:black;stroke-width:8.62px;"/>
+        </g>
+        <g id="eye.R" transform="matrix(0.439708,0,0,0.486846,153.46,262.522)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="orbicularis03.R" transform="matrix(0.439708,0,0,0.486846,139.717,208.339)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris05" transform="matrix(0.439708,0,0,0.486846,272.824,518.302)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris06" transform="matrix(0.439708,0,0,0.486846,273.375,485.296)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris03.R" transform="matrix(0.439708,0,0,0.486846,207.199,502.745)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris04.R" transform="matrix(0.439708,0,0,0.486846,219.312,474.785)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris03.L" transform="matrix(0.439708,0,0,0.486846,340.758,503.128)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris04.L" transform="matrix(0.439708,0,0,0.486846,322.998,473.09)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris07.L" transform="matrix(0.439708,0,0,0.486846,335.782,557.145)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris07.R" transform="matrix(0.439708,0,0,0.486846,210.895,558.792)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris01" transform="matrix(0.439708,0,0,0.486846,272.175,557.806)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris06.R" transform="matrix(0.439708,0,0,0.486846,235.306,607.072)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris06.L" transform="matrix(0.439708,0,0,0.486846,312.836,605.272)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oris02" transform="matrix(0.439708,0,0,0.486846,272.515,585.765)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="orbicularis03.L" transform="matrix(0.439708,0,0,0.486846,404.173,206.243)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator05.L" transform="matrix(0.439708,0,0,0.486846,377.579,527.502)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator02.L" transform="matrix(0.439708,0,0,0.486846,372.733,354.302)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator03.L" transform="matrix(0.439708,0,0,0.486846,394.62,414.888)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator04.L" transform="matrix(0.439708,0,0,0.486846,390.486,488.461)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator05.R" transform="matrix(-0.439708,0,0,0.486846,401.704,526.995)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator02.R" transform="matrix(-0.439708,0,0,0.486846,406.55,353.795)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator03.R" transform="matrix(-0.439708,0,0,0.486846,384.663,414.381)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator04.R" transform="matrix(-0.439708,0,0,0.486846,388.797,487.954)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="orbicularis04.R" transform="matrix(0.439708,0,0,0.486846,405.103,306.737)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="risorius03.L" transform="matrix(0.439708,0,0,0.486846,461.993,472.163)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oculi01.L" transform="matrix(0.439708,0,0,0.486846,342.168,138.699)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="temporalis01.L" transform="matrix(0.439708,0,0,0.486846,491.992,229.428)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oculi02.L" transform="matrix(0.439708,0,0,0.486846,414.403,150.856)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oculi01.R" transform="matrix(0.439708,0,0,0.486846,203.84,138.06)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="jaw" transform="matrix(0.439708,0,0,0.486846,272.663,661.021)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="temporalis01.R" transform="matrix(0.439708,0,0,0.486846,52.1942,228.984)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="oculi02.R" transform="matrix(0.439708,0,0,0.486846,134.203,149)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="risorius02.R" transform="matrix(0.439708,0,0,0.486846,81.2129,401.846)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="temporalis02.R" transform="matrix(0.439708,0,0,0.486846,52.7165,303.581)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="risorius03.R" transform="matrix(0.439708,0,0,0.486846,80.2286,475.174)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="temporalis02.L" transform="matrix(0.439708,0,0,0.486846,492.076,303.581)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="risorius02.L" transform="matrix(0.439708,0,0,0.486846,461.657,401.846)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator06.R" transform="matrix(0.439708,0,0,0.486846,223.045,397.638)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="levator06.L" transform="matrix(0.439708,0,0,0.486846,323.389,397.741)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="orbicularis04.L" transform="matrix(0.439708,0,0,0.486846,139.717,310.111)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+        <g id="eye.L" transform="matrix(0.439708,0,0,0.486846,395.425,262.024)">
+            <ellipse cx="269.262" cy="512.993" rx="22.742" ry="20.54" style="stroke:rgb(255,245,0);stroke-width:8.62px;"/>
+        </g>
+    </g>
+</svg>

@@ -13,32 +13,64 @@ import {
     prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import { NumberModel, SelectionModel, Table, TableEditMode, TableEvent } from "toad.js"
+import {
+    BooleanModel,
+    HTMLElementProps,
+    Model,
+    ModelView,
+    NumberModel,
+    OptionModel,
+    SelectionModel,
+    Table,
+    TableEditMode,
+    TableEvent,
+    ToadIf,
+    View,
+} from "toad.js"
 import { Form } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
+import { Bone } from "skeleton/Bone"
+import { blendshapeNames } from "mediapipe/blendshapeNames"
+import { FormSelect } from "toad.js/view/FormSelect"
+import { ModelViewProps } from "toad.js/view/ModelView"
 
 class BlendShapeEditor extends RenderHandler {
     static instance: BlendShapeEditor | undefined
-    static getInstance() {
+    static getInstance(app: Application) {
         if (BlendShapeEditor.instance === undefined) {
-            BlendShapeEditor.instance = new BlendShapeEditor()
+            BlendShapeEditor.instance = new BlendShapeEditor(app)
         }
         return BlendShapeEditor.instance
     }
 
+    app: Application
     xyz?: Float32Array
     initialized = false
     update = false
-    scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
-    dy = new NumberModel(7.03, {min: 6.6, max: 7.4,  step: 0.001, label: "dy"})
-    dz = new NumberModel(0.392, {min: 0.08, max: 0.82,  step: 0.001, label: "dz"})
+
+    blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
+        label: "Blendshape",
+    })
+
+    // ictkit
+    // scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
+    // dy = new NumberModel(7.03, {min: 6.6, max: 7.4,  step: 0.001, label: "dy"})
+    // dz = new NumberModel(0.392, {min: 0.08, max: 0.82,  step: 0.001, label: "dz"})
+
+    // arkit
+    scale = new NumberModel(9.5, { min: 9, max: 11, step: 0.1, label: "scale" })
+    dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" })
+    dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
 
     neutral: WavefrontObj
-    renderMeshICT?: RenderMesh
+    renderMeshBS?: RenderMesh
     renderMeshMH?: RenderMesh
-    constructor() {
+    constructor(app: Application) {
         super()
-        this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+        this.app = app
+        // this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+        // JawDrop 1, JawDropStretched 0.3
+        this.neutral = new WavefrontObj("data/blendshapes/arkit/jawOpen.obj.z")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/cheekSquintLeft.obj")
         // this.neutral = new WavefrontObj("data/blendshapes/ict/noseSneerLeft.obj")
@@ -51,16 +83,16 @@ class BlendShapeEditor extends RenderHandler {
     override paint(app: Application, view: GLView): void {
         console.log(`paint with scale ${this.scale.value}`)
         if (!this.initialized) {
-            this.scale.modified.add( () => {
+            this.scale.modified.add(() => {
                 console.log(`scale changed to ${this.scale.value}`)
                 this.update = true
                 app.updateManager.invalidateView()
             })
-            this.dy.modified.add( () => {
+            this.dy.modified.add(() => {
                 this.update = true
                 app.updateManager.invalidateView()
             })
-            this.dz.modified.add( () => {
+            this.dz.modified.add(() => {
                 this.update = true
                 app.updateManager.invalidateView()
             })
@@ -86,21 +118,22 @@ class BlendShapeEditor extends RenderHandler {
             for (let i = 2; i < this.neutral.xyz.length; i += 3) {
                 this.xyz[i] += this.dz.value
             }
-            this.update = false;
-            if (this.renderMeshICT !== undefined) {
-                this.renderMeshICT.update(this.xyz)
+            this.update = false
+            if (this.renderMeshBS !== undefined) {
+                this.renderMeshBS.update(this.xyz)
             }
         }
 
-        if (this.renderMeshICT === undefined) {
-            this.renderMeshICT = new RenderMesh(gl, this.xyz, this.neutral.fxyz, undefined, undefined, true)
+        if (this.renderMeshBS === undefined) {
+            this.renderMeshBS = new RenderMesh(gl, this.xyz, this.neutral.fxyz, undefined, undefined, false)
+
             this.renderMeshMH = new RenderMesh(
                 gl,
                 app.humanMesh.baseMesh.xyz,
                 app.humanMesh.baseMesh.fxyz,
                 undefined,
                 undefined,
-                true
+                false
             )
         }
 
@@ -130,8 +163,10 @@ class BlendShapeEditor extends RenderHandler {
         const alpha = 0.5
 
         programRGBA.setColor([0.0, 0.5, 1, alpha])
-        this.renderMeshICT.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, 11144 * 6, gl.UNSIGNED_SHORT, 0)
+        // this.renderMeshBS.bind(programRGBA)
+        // gl.drawElements(gl.TRIANGLES, 100, gl.UNSIGNED_SHORT, 0)
+
+        this.renderMeshBS.draw(programRGBA, gl.TRIANGLES)
 
         // programRGBA.setColor([1, 0.8, 0.7, alpha])
         // const WORD_LENGTH = 2
@@ -140,21 +175,125 @@ class BlendShapeEditor extends RenderHandler {
         // view.renderList.base.bind(programRGBA)
         // view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
     }
+
+    prepare(ev: Event) {
+        const skeleton = this.app.humanMesh.skeleton
+        const headBones = new Set<string>()
+
+        function r(b: Bone) {
+            if (!b.name.startsWith("special")) {
+                // console.log(b.name)
+                headBones.add(b.name)
+            }
+            b.children.forEach((child) => {
+                r(child)
+            })
+        }
+        r(skeleton.getBone("head"))
+
+        const obj = ev.target as HTMLObjectElement
+        const content = obj.contentDocument!
+        // console.log(content)
+        headBones.forEach((bone) => {
+            const eye = content.getElementById(bone) as any
+            if (eye != null) {
+                const g = eye as SVGGElement
+                const e = g.children[0] as SVGEllipseElement
+                e.onpointerenter = () => (e.style.fill = "#f00")
+                e.onpointerleave = () => (e.style.fill = "")
+            }
+        })
+    }
 }
 
+class Condition extends BooleanModel {
+    condition: () => boolean
+    constructor(condition: () => boolean, dependencies: Model<any, any>[]) {
+        super(condition())
+        this.condition = condition
+        this.evaluate = this.evaluate.bind(this)
+        for (const model of dependencies) {
+            model.modified.add(this.evaluate)
+        }
+    }
+    evaluate() {
+        this.value = this.condition()
+    }
+}
+
+interface IfPropsTrue extends HTMLElementProps {
+    isTrue: BooleanModel
+}
+interface IfPropsFalse extends HTMLElementProps {
+    isFalse: BooleanModel
+}
+
+export class If extends ModelView<BooleanModel> {
+    negate: boolean
+
+    constructor(props: IfPropsTrue | IfPropsFalse) {
+        const newProps = props as ModelViewProps<BooleanModel>
+        let negate: boolean
+        if ("isTrue" in props) {
+            negate = false
+            newProps.model = props.isTrue
+        } else {
+            negate = true
+            newProps.model = props.isFalse
+        }
+        super(props)
+        this.negate = negate
+    }
+
+    override updateView() {
+        if (this.model) {
+            if (this.negate) {
+                this.show(!this.model.value)
+            } else {
+                this.show(this.model.value)
+            }
+        }
+    }
+    private show(show: boolean) {
+        this.style.display = show ? "" : "none"
+    }
+}
+If.define("tx-enhanced-if", If)
+
 export function BlendShapeTab(props: { app: Application }) {
-    const editor = BlendShapeEditor.getInstance()
+    const editor = BlendShapeEditor.getInstance(props.app)
+
+    const morphToMatchNeutral = new Condition(() => {
+        return editor.blendshape.value == blendshapeNames[0]
+    }, [editor.blendshape])
+
     const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
     return (
         <Tab label="Blend" value={TAB.MORPH2} visibilityChange={setRenderer(props.app, editor)}>
-            This is an experimental face morph editor to create blend shapes based on the ICT FaceKit.
+            Face Blendshape Editor (under construction)
             <Form>
-                <FormText model={editor.scale}/>
-                <FormText model={editor.dy}/>
-                <FormText model={editor.dz}/>
+                <FormText model={editor.scale} />
+                <FormText model={editor.dy} />
+                <FormText model={editor.dz} />
+                <FormSelect model={editor.blendshape} />
             </Form>
-            <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
+            <If isTrue={morphToMatchNeutral}>
+                <p>morph face to match neutral blendshape</p>
+                <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
+            </If>
+            <If isFalse={morphToMatchNeutral}>
+                <p>pose face to match blendshape</p>
+
+                <object
+                    id="face"
+                    type="image/svg+xml"
+                    width="250px"
+                    data="static/mhjs-face.svg"
+                    onload={(ev) => editor.prepare(ev)}
+                />
+            </If>
+            {/* <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} /> */}
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
             {/* <Table
                 selectionModel={sm}
