@@ -488,13 +488,13 @@ export class BiovisionHierarchy {
             let offset: vec3
             let joint: BVHJoint
 
-            if (jointName === "lowerarm02.L") {
-                console.log(
-                    `lowerarm02.L: dummyJoints=${dummyJoints} parent=${
-                        bone.parent?.name
-                    } ${bone.getRestHeadPos()} ${bone.parent?.getRestTailPos()}`
-                )
-            }
+            // if (jointName === "lowerarm02.L") {
+            //     console.log(
+            //         `lowerarm02.L: dummyJoints=${dummyJoints} parent=${
+            //             bone.parent?.name
+            //         } ${bone.getRestHeadPos()} ${bone.parent?.getRestTailPos()}`
+            //     )
+            // }
 
             if (
                 dummyJoints &&
@@ -569,12 +569,12 @@ export class BiovisionHierarchy {
                     }
                     joint.rotOrder = "syxz" // not needed
                     const { x, y, z } = euler_from_matrix(poseMat, "syxz")
-                    if (joint.name === "root") {
-                        console.log(
-                            `fromSkeleton(): euler_from_matrix(poseMat, "syxz") -> xyz = ${x / D}, ${y / D}, ${z / D}`
-                        )
-                        console.log(mat4.str(poseMat))
-                    }
+                    // if (joint.name === "root") {
+                    //     console.log(
+                    //         `fromSkeleton(): euler_from_matrix(poseMat, "syxz") -> xyz = ${x / D}, ${y / D}, ${z / D}`
+                    //     )
+                    //     console.log(mat4.str(poseMat))
+                    // }
                     // joint.frames.push(z / D, x / D, y / D) // python
                     joint.frames.push(z / D, y / D, x / D) // me... but why?
                 })
