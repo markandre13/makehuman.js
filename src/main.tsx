@@ -31,7 +31,7 @@ import { PoseUnitsModel } from "expression/PoseUnitsModel"
 import { ProxyType } from "proxy/Proxy"
 
 import ExpressionTab from "ui/expression"
-import FileTab from "ui/file"
+import FileTab from "FileTab"
 import ChordataTab from "chordata/chordata"
 import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
