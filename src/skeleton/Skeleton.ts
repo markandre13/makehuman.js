@@ -7,7 +7,7 @@ import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
 import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
-import { euler_from_matrix } from "lib/euler_matrix"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { Skeleton as ChordataSkeleton } from "chordata/Skeleton"
 
 export class Skeleton {
@@ -177,9 +177,34 @@ export class Skeleton {
      *   other than needed to import the face-poseunits.bvh file.
      * 
      * Hence I added *.mhp and made it similar to the already existing *.mhm format.
+     * 
+     * NOTE: not sure yet if storing relative matPoses will work across different morphs.
+     *       well, global matPoses also won't yield perfect results
      */
-    getMHP() {
-        return ""
+    // should i use the pose nodes instead? 
+    toMHP(): string {
+        let out = `version v1.2.0\n`
+        out += `name makehuman.js\n`
+        this.poseNodes.forEach(node => {
+            out += `bone ${node.bone.name} ${node.x.value} ${node.y.value} ${node.z.value}\n`
+        })
+        return out
+    }
+    fromMHP(content: string) {
+        // this.reset()
+        for (const line of content.split("\n")) {
+            const token = line.split(" ")
+            if (token[0] === "bone") {
+                const poseNode = this.poseNodes.find(token[1])
+                if (poseNode === undefined) {
+                    console.log(`unknown bone '${token[1]}' in mhp file`)
+                } else {
+                    poseNode.x.value = parseFloat(token[2])
+                    poseNode.y.value = parseFloat(token[3])
+                    poseNode.z.value = parseFloat(token[4])
+                }
+            }
+        }
     }
 
     getPose(): mat4[] {
