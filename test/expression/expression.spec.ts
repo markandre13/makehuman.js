@@ -9,7 +9,7 @@ import { mat4, vec3, quat2 } from 'gl-matrix'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
-import { Human } from '../../src/modifier/Human'
+import { MorphManager } from '../../src/modifier/MorphManager'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 import { ExpressionManager, calcWebGL } from '../../src/expression/ExpressionManager'
@@ -284,7 +284,7 @@ describe("`(face) expression", function () {
     it("createAnimationTrack()", function () {
         // GIVEN some real world MH data
         
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -314,7 +314,7 @@ describe("`(face) expression", function () {
 
     xit("poseFromUnitPose()", function () {
         
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")

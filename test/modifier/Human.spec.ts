@@ -3,24 +3,24 @@ import { chaiString } from "../chai/chaiString"
 use(chaiString)
 
 import { ManagedTargetModifier } from "../../src/modifier/ManagedTargetModifier"
-import { Human } from "../../src/modifier/Human"
+import { MorphManager } from "../../src/modifier/MorphManager"
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
-describe("Human", function() {
+describe("HumMorphManageran", function() {
     this.beforeAll(function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
     describe("modifiers", () => {
         it("adding a modifier with the same fullName is an error", () => {
-            const human = new Human()
+            const human = new MorphManager()
             human.addModifier(new ManagedTargetModifier("buttocks", "buttocks-volume"))
             expect(() => {
                 human.addModifier(new ManagedTargetModifier("buttocks", "buttocks-volume"))
             }).to.throw()
         })
         it("getModifier", () => {
-            const human = new Human()
+            const human = new MorphManager()
             const m0 = new ManagedTargetModifier("buttocks", "buttocks-volume")
             human.addModifier(m0)
 
@@ -28,7 +28,7 @@ describe("Human", function() {
             expect(m).to.equal(m0)
         })
         it("getModifiersByGroup", () => {
-            const human = new Human()
+            const human = new MorphManager()
             const m0 = new ManagedTargetModifier("buttocks", "buttocks-volume")
             human.addModifier(m0)
 

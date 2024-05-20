@@ -7,7 +7,7 @@ import { HumanMesh, isZero } from "mesh/HumanMesh"
 /**
  * Aggregate the morph modifiers
  */
-export class Human {
+export class MorphManager {
     humanMesh!: HumanMesh
 
     modified = new Signal()

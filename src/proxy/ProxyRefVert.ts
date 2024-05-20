@@ -1,10 +1,10 @@
-import { Human } from "modifier/Human"
+import { MorphManager } from "modifier/MorphManager"
 
 export class ProxyRefVert {
     _verts!: number[]
     _weights!: number[]
     _offset!: number[]
-    constructor(human: Human) {
+    constructor(human: MorphManager) {
     }
     fromSingle(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
         const v0 = parseInt(words[0])

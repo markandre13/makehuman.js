@@ -1,5 +1,5 @@
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { Human } from './Human'
+import { MorphManager } from './MorphManager'
 import { NumberModel } from 'toad.js/model/NumberModel'
 import { TreeNode } from 'toad.js/table/model/TreeNode'
 import { Modifier } from './Modifier'
@@ -28,7 +28,7 @@ export class SliderNode implements TreeNode {
     model?: NumberModel
     next?: SliderNode
     down?: SliderNode
-    constructor(human?: Human, label?: string, modifierSpec?: ModifierSpec) {
+    constructor(human?: MorphManager, label?: string, modifierSpec?: ModifierSpec) {
         SliderNode.count++
         this.label = label || ''
         this.modifierSpec = modifierSpec
@@ -85,7 +85,7 @@ export function labelFromModifier(groupName: string, name: string): string {
  *
  * (the original is located in apps/gui/guimodifier.py)
  */
-export function loadSliders(human: Human, filename: string): SliderNode {
+export function loadSliders(human: MorphManager, filename: string): SliderNode {
     const root = parseSliders(
         human,
         FileSystemAdapter.readFile(filename),
@@ -94,7 +94,7 @@ export function loadSliders(human: Human, filename: string): SliderNode {
     return root
 }
 
-export function parseSliders(human: Human, data: string, filename = 'memory'): SliderNode {
+export function parseSliders(human: MorphManager, data: string, filename = 'memory'): SliderNode {
     const json = JSON.parse(data)
     let rootNode: SliderNode | undefined
     let lastTabNode: SliderNode | undefined

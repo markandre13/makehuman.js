@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { Human } from '../../src/modifier/Human'
+import { MorphManager } from '../../src/modifier/MorphManager'
 import { getTargetWeights } from '../../src/modifier/getTargetWeights'
 import { loadModifiers, parseModifiers } from '../../src/modifier/loadModifiers'
 import { TargetRef } from '../../src/modifier/TargetRef'
@@ -14,7 +14,7 @@ describe("Modifier", function() {
     it("initialize UniversalModifier from JSON", () => {
         // const url = "data/modifiers/modeling_modifiers.json" // "modifiers/measurement_modifiers.json"
         // loadModifiers(url)
-        const human = new Human()
+        const human = new MorphManager()
         const result = parseModifiers(human, `[
             { "group": "buttocks",
                 "modifiers": [
@@ -124,7 +124,7 @@ describe("Modifier", function() {
 
     it("can load the application's modifier files into a human", () => {
         // GIVEN a human with modifiers being loaded from a file
-        const human = new Human()
+        const human = new MorphManager()
         loadModifiers(human, "data/modifiers/modeling_modifiers.json")
         loadModifiers(human, "data/modifiers/measurement_modifiers.json")
 

@@ -4,7 +4,7 @@ use(chaiString)
 import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost())
 
-import { Human } from '../../src/modifier/Human'
+import { MorphManager } from '../../src/modifier/MorphManager'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 
@@ -207,7 +207,7 @@ describe("Collada", function () {
     })
 
     xit("exportCollada() with real world data", function () {
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
         const skeleton = loadSkeleton(humanMesh, 'data/rigs/default.mhskel.z')

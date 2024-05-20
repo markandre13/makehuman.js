@@ -2,7 +2,7 @@ import { EthnicModifier } from './EthnicModifier'
 import { MacroModifier } from './MacroModifier'
 import { UniversalModifier } from './UniversalModifier'
 import { Modifier } from './Modifier'
-import { Human } from './Human'
+import { MorphManager } from './MorphManager'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
 // {
@@ -16,14 +16,14 @@ import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 // }, ...
 
 // from apps/humanmodifier.py
-export function loadModifiers(human: Human, filename: string): Modifier[] {
+export function loadModifiers(human: MorphManager, filename: string): Modifier[] {
     return parseModifiers(
         human,
         FileSystemAdapter.readFile(filename),
         filename)
 }
 
-export function parseModifiers(human: Human, data: string, filename = 'memory'): Modifier[] {
+export function parseModifiers(human: MorphManager, data: string, filename = 'memory'): Modifier[] {
     const classesMapping = new Map<string, any>([
         // ['Modifier', Modifier],
         // ['SimpleModifier', SimpleModifier],

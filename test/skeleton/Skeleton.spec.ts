@@ -6,7 +6,7 @@ import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { Skeleton } from '../../src/skeleton/Skeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { Human } from '../../src/modifier/Human'
+import { MorphManager } from '../../src/modifier/MorphManager'
 
 import { vec4 } from 'gl-matrix'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
@@ -36,7 +36,7 @@ describe("Skeleton", function () {
 
     it("loads the default.mhskel", function () {
         // the skeleton references Human.meshData, hence we must load the mesh
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
 
@@ -118,7 +118,7 @@ describe("Skeleton", function () {
     })
 
     it.only("getJointNames()", function() {
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
         const skel = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -132,7 +132,7 @@ describe("Skeleton", function () {
 
     xit("xxx", function () {
         const obj = new WavefrontObj('data/3dobjs/base.obj')
-        const humanMesh = new HumanMesh(new Human(), obj)
+        const humanMesh = new HumanMesh(new MorphManager(), obj)
         new Skeleton(humanMesh, "memory", {
             name: "bones",
             version: "1.0",

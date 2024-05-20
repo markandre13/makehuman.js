@@ -1,7 +1,7 @@
 import { expect, use } from '@esm-bundle/chai'
 import { chaiString } from "../chai/chaiString"
 use(chaiString)
-import { Human } from "../../src/modifier/Human"
+import { MorphManager } from "../../src/modifier/MorphManager"
 
 import { loadSliders, labelFromModifier } from "../../src/modifier/loadSliders"
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
@@ -13,7 +13,7 @@ describe("Modifier", function() {
     })
 
     it("loadSliders", async ()=> {
-        const human = new Human()
+        const human = new MorphManager()
         loadSliders(human, "data/modifiers/modeling_sliders.json")
     })
 

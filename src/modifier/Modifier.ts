@@ -1,12 +1,12 @@
 import { TargetRef } from './TargetRef'
-import { Human } from './Human'
+import { MorphManager } from './MorphManager'
 import { getTargetWeights } from './getTargetWeights'
 
 import { NumberModel } from 'toad.js'
 
 // from apps/humanmodifier.py
 export abstract class Modifier {
-    human?: Human
+    human?: MorphManager
 
     groupName: string
     name: string
@@ -36,7 +36,7 @@ export abstract class Modifier {
     }
 
     // set/add/link/assign modifier to human
-    setHuman(human: Human) {
+    setHuman(human: MorphManager) {
         this.human = human
         human.addModifier(this)
     }

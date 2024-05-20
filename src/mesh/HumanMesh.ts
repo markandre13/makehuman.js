@@ -1,5 +1,5 @@
 import { Proxy, ProxyType } from "proxy/Proxy"
-import { Human } from "../modifier/Human"
+import { MorphManager } from "../modifier/MorphManager"
 import { getTarget } from "../target/TargetFactory"
 import { Skeleton } from "../skeleton/Skeleton"
 import { WavefrontObj } from "./WavefrontObj"
@@ -12,7 +12,7 @@ export function isZero(a: number): boolean {
 }
 
 export class HumanMesh {
-    human: Human
+    human: MorphManager
     baseMesh: WavefrontObj
     vertexMorphed: Float32Array
     vertexRigged: Float32Array
@@ -22,7 +22,7 @@ export class HumanMesh {
     changedProxy: ProxyType | undefined
     wireframe = new BooleanModel(false, { label: "Wireframe" })
 
-    constructor(human: Human, obj: WavefrontObj) {
+    constructor(human: MorphManager, obj: WavefrontObj) {
         this.human = human
         this.baseMesh = obj
         this.vertexRigged = this.vertexMorphed = obj.xyz

@@ -1,4 +1,4 @@
-import { Human } from "./modifier/Human"
+import { MorphManager } from "./modifier/MorphManager"
 import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
@@ -31,7 +31,7 @@ export function setRenderer(app: Application, renderer: RenderHandler) {
 
 export class Application {
     // makehuman
-    human: Human // MorphManager / MorphController
+    human: MorphManager // MorphManager / MorphController
     humanMesh: HumanMesh // base mesh, morphed mesh, posed mesh
     skeleton: Skeleton
 
@@ -55,7 +55,7 @@ export class Application {
 
     constructor() {
         console.log("loading assets...")
-        this.human = new Human()
+        this.human = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         this.humanMesh = new HumanMesh(this.human, obj)
         this.human.humanMesh = this.humanMesh

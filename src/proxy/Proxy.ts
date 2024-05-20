@@ -1,7 +1,7 @@
 // Human has setProxy, setHairProxy, setEyesProxy, ...
 
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
-import { Human } from "modifier/Human"
+import { MorphManager } from "modifier/MorphManager"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
@@ -68,9 +68,9 @@ export class Proxy {
     deleteVerts?: any
     weightsCache?: any
     cacheSkel?: any
-    human: Human
+    human: MorphManager
 
-    constructor(file: string, type: ProxyType, human: Human) {
+    constructor(file: string, type: ProxyType, human: MorphManager) {
         this.file = file
         this.type = type
         const name = basename(splitext(file))
@@ -167,7 +167,7 @@ export class Proxy {
     }
 }
 
-export function loadProxy(human: Human, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
+export function loadProxy(human: MorphManager, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
     proxy.mesh = proxy.loadMeshAndObject() // separate to be able to test loadTextProxy without Obj file
@@ -178,7 +178,7 @@ const doRefVerts = 1
 const doWeights = 2
 const doDeleteVerts = 3
 
-export function loadTextProxy(human: Human, filepath: string, type: ProxyType = ProxyType.Clothes, data: string | undefined = undefined): Proxy {
+export function loadTextProxy(human: MorphManager, filepath: string, type: ProxyType = ProxyType.Clothes, data: string | undefined = undefined): Proxy {
     let lineNumber = 0
     if (data === undefined) {
         data = FileSystemAdapter.readFile(filepath)

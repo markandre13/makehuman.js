@@ -15,7 +15,7 @@ import { jaw_open_base_mesh } from "../testdata/jaw_open_base_mesh"
 import { jaw_open_proxy_teeth_base } from "../testdata/jaw_open_proxy_teeth_base"
 import { jaw_open_proxy_teeth_base_weights } from "../testdata/jaw_open_proxy_teeth_base_weights"
 import { teeth_proxy_intermediate_weights } from "../testdata/teeth_proxy_intermediate_weights"
-import { Human } from '../../src/modifier/Human'
+import { MorphManager } from '../../src/modifier/MorphManager'
 import { HumanMesh } from '../../src/mesh/HumanMesh'
 import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
@@ -80,7 +80,7 @@ describe("Proxy", function () {
     })
 
     it("weights", function () {
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
         human.humanMesh = humanMesh
@@ -105,7 +105,7 @@ describe("Proxy", function () {
     })
 
     it("weights (intermediate)", function () {
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
         human.humanMesh = humanMesh
@@ -261,7 +261,7 @@ describe("Proxy", function () {
             humanMesh: {
                 vertexMorphed: hcoord
             }
-        } as Human
+        } as MorphManager
 
         const proxy = loadTextProxy(human, filepath, type, `
             x_scale 1 2 2.3

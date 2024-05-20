@@ -11,7 +11,7 @@ import { HTTPFSAdapter } from "../../src/filesystem/HTTPFSAdapter"
 import { mat4, vec3 } from "gl-matrix"
 import { Skeleton } from "../../src/skeleton/Skeleton"
 import { Bone } from "../../src/skeleton/Bone"
-import { Human } from "../../src/modifier/Human"
+import { MorphManager } from "../../src/modifier/MorphManager"
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
 import { HumanMesh, isZero } from "../../src/mesh/HumanMesh"
 import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
@@ -327,7 +327,7 @@ Frame Time: 0.041667
         })
 
         // check createAnimationTrack()
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const humanMesh = new HumanMesh(human, obj)
         const skel = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -348,7 +348,7 @@ Frame Time: 0.041667
     })
     describe("fromSkeleton()", function () {
         it("compare with python code results (no animation track)", function () {
-            const human = new Human()
+            const human = new MorphManager()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
             const humanMesh = new HumanMesh(human, obj)
             const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -392,7 +392,7 @@ Frame Time: 0.041667
         // TODO: try a somewhat smaller test to approach the actual bug
 
         it("load and write face-poseunits.bvh", function () {
-            const human = new Human()
+            const human = new MorphManager()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
             const humanMesh = new HumanMesh(human, obj)
             const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -448,7 +448,7 @@ Frame Time: 0.041667
             expect(bvh.writeToFile()).endsWith(frames)
         })
         it("load and write face-poseunits.bvh (fromFile -> writeToFile -> fromFile)", function () {
-            const human = new Human()
+            const human = new MorphManager()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
             const humanMesh = new HumanMesh(human, obj)
             const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -469,7 +469,7 @@ Frame Time: 0.041667
             }
         })
         it("load and write run01.bvh (fromFile -> fromSkeleton -> writeToFile -> fromFile)", function () {
-            const human = new Human()
+            const human = new MorphManager()
             const obj = new WavefrontObj("data/3dobjs/base.obj")
             const humanMesh = new HumanMesh(human, obj)
             const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
@@ -550,7 +550,7 @@ Frame Time: 0.041667
         })
     })
     it("revert from pose to anim track", function () {
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const humanMesh = new HumanMesh(human, obj)
         human.humanMesh = humanMesh
@@ -669,7 +669,7 @@ Frame Time: 0.041667
 
         const bvh_file = new BiovisionHierarchy().fromFile("data/poses/run01.bvh", "auto")
 
-        const human = new Human()
+        const human = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const humanMesh = new HumanMesh(human, obj)
         const skel = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
