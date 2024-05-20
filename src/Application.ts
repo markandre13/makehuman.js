@@ -3,7 +3,7 @@ import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { HumanMesh } from "./mesh/HumanMesh"
+import { HumanMesh, isZero } from "./mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
 import { ExpressionManager } from "expression/ExpressionManager"
 import { PoseModel } from "pose/PoseModel"
@@ -117,7 +117,7 @@ export class Application {
             }
             this.updateManager.invalidateView()
         })
-        initHistoryManager(this.tabModel)
+        initHistoryManager(this.tabModel)    
     }
 
     renderer?: RenderHandler

@@ -86,25 +86,8 @@ function downloadCollada(humanMesh: HumanMesh) {
 
 function saveMHM(humanMesh: HumanMesh) {
     console.log(`saveMHM`)
-
-    let out = `version v1.2.0\n`
-    out += `name makehuman.js\n`
-    out += `camera 0.0 0.0 0.0 0.0 0.0 1.0\n`
-
-    humanMesh.human.modifiers.forEach((modifer, name) => {
-        const value = modifer.getValue()
-        if (!isZero(value)) {
-            out += `modifier ${name} ${value.toPrecision(6)}\n`
-        }
-    })
-    // out += `eyes HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6\n`
-    out += `clothesHideFaces True\n`
-    // out += `skinMaterial skins/default.mhmat\n`
-    // out += `material HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6 eyes/materials/brown.mhmat\n`
-    out += `subdivide False\n`
-
     download.download = "makehuman.mhm"
-    download.href = URL.createObjectURL(new Blob([out], { type: "text/plain" }))
+    download.href = URL.createObjectURL(new Blob([humanMesh.human.toMHM()], { type: "text/plain" }))
     download.dispatchEvent(new MouseEvent("click"))
 }
 
@@ -117,20 +100,7 @@ function loadMHM(humanMesh: HumanMesh) {
             const buffer = await file.arrayBuffer()
             const te = new TextDecoder()
             const content = te.decode(buffer)
-            humanMesh.human.modifiers.forEach((modifier) => {
-                modifier.getModel().value = modifier.getDefaultValue()
-            })
-            for (const line of content.split("\n")) {
-                const token = line.split(" ")
-                if (token[0] === "modifier") {
-                    const modifier = humanMesh.human.modifiers.get(token[1])
-                    if (modifier === undefined) {
-                        console.log(`unknown modifier '${token[1]}' in file`)
-                    } else {
-                        modifier.getModel().value = parseFloat(token[2])
-                    }
-                }
-            }
+            humanMesh.human.fromMHM(content)
         }
     }
     upload.dispatchEvent(new MouseEvent("click"))

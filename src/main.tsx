@@ -72,11 +72,19 @@ export function main() {
 function run() {
     const app = new Application()
 
+    const mhm = localStorage.getItem("MakeHumanMorph")
+    if (mhm != null) {
+        app.humanMesh.human.fromMHM(mhm)
+    }
+    document.onvisibilitychange = (e) => {
+        localStorage.setItem("MakeHumanMorph", app.humanMesh.human.toMHM())
+    }
+
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
-    TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: WTF???
+    TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: cast to 'any'??? WTF???
 
     document.body.replaceChildren(
         ...(

@@ -1,7 +1,7 @@
-import { Modifier } from './Modifier'
-import { NumberModel } from 'toad.js/model/NumberModel'
-import { Signal } from 'toad.js/Signal'
-import { HumanMesh, isZero } from 'mesh/HumanMesh'
+import { Modifier } from "./Modifier"
+import { NumberModel } from "toad.js/model/NumberModel"
+import { Signal } from "toad.js/Signal"
+import { HumanMesh, isZero } from "mesh/HumanMesh"
 
 // apps/human.py class Human
 /**
@@ -151,7 +151,8 @@ export class Human {
 
     setDetail(targetName: string, value: number | undefined) {
         // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
-        if (value !== undefined && !isZero(value)) { // TODO: check if '&& isZero(value)' is a valid optimization
+        if (value !== undefined && !isZero(value)) {
+            // TODO: check if '&& isZero(value)' is a valid optimization
             // console.log(`Human.setDetail('${targetName}', ${value})`)
             this.targetsDetailStack.set(targetName, value)
         } else {
@@ -162,8 +163,7 @@ export class Human {
     getDetail(targetName: string): number {
         // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
         let value = this.targetsDetailStack.get(targetName)
-        if (value === undefined)
-            value = 0
+        if (value === undefined) value = 0
         // console.log(`Human.getDetail('${name}') -> ${value}`)
         return value
     }
@@ -216,7 +216,7 @@ export class Human {
         //        0  0.1875 0.5      1
         if (this.age.value < 0.5) {
             this.oldVal.value = 0.0
-            this.babyVal.value = Math.max(0.0, 1 - this.age.value * 5.333)  // 1/0.1875 = 5.333
+            this.babyVal.value = Math.max(0.0, 1 - this.age.value * 5.333) // 1/0.1875 = 5.333
             this.youngVal.value = Math.max(0.0, (this.age.value - 0.1875) * 3.2) // 1/(0.5-0.1875) = 3.2
             this.childVal.value = Math.max(0.0, Math.min(1.0, 5.333 * this.age.value) - this.youngVal.value)
         } else {
@@ -283,8 +283,7 @@ export class Human {
 
     flag = false
     _setEthnicVals(exclude: undefined | "African" | "Asian" | "Caucasian") {
-        if (this.flag)
-            return
+        if (this.flag) return
         this.flag = true
         this.africanVal.modified.lock()
         this.asianVal.modified.lock()
@@ -321,8 +320,7 @@ export class Human {
                 this.caucasianVal.value = 1 / 3
                 this.asianVal.value = 1 / 3
                 this.africanVal.value = 1 / 3
-            }
-            else if (Math.abs(remaining) < 0.001) {
+            } else if (Math.abs(remaining) < 0.001) {
                 // One ethnicity is 1, the rest is 0
                 if (exclude !== "African") {
                     this.africanVal.value = 1
@@ -354,13 +352,13 @@ export class Human {
             }
         } else {
             if (exclude !== "African") {
-                this.africanVal.value = remaining * this.africanVal.value / otherTotal
+                this.africanVal.value = (remaining * this.africanVal.value) / otherTotal
             }
             if (exclude !== "Asian") {
-                this.asianVal.value = remaining * this.asianVal.value / otherTotal
+                this.asianVal.value = (remaining * this.asianVal.value) / otherTotal
             }
             if (exclude !== "Caucasian") {
-                this.caucasianVal.value = remaining * this.caucasianVal.value / otherTotal
+                this.caucasianVal.value = (remaining * this.caucasianVal.value) / otherTotal
             }
         }
     }
@@ -372,5 +370,51 @@ export class Human {
         // if self.proxy and self.__proxyMesh:
         //     self.proxy.update(self.__proxyMesh, fit_to_posed)
         //     self.__proxyMesh.update()
+    }
+
+    reset() {
+        this.modifiers.forEach((modifier) => {
+            modifier.getModel().value = modifier.getDefaultValue()
+        })
+    }
+
+    /**
+     * Return morph settings as text in *.mhm file format.
+     */
+    toMHM(): string {
+        let out = `version v1.2.0\n`
+        out += `name makehuman.js\n`
+        out += `camera 0.0 0.0 0.0 0.0 0.0 1.0\n`
+
+        this.modifiers.forEach((modifer, name) => {
+            const value = modifer.getValue()
+            if (!isZero(value)) {
+                out += `modifier ${name} ${value.toPrecision(6)}\n`
+            }
+        })
+        // out += `eyes HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6\n`
+        out += `clothesHideFaces True\n`
+        // out += `skinMaterial skins/default.mhmat\n`
+        // out += `material HighPolyEyes 2c12f43b-1303-432c-b7ce-d78346baf2e6 eyes/materials/brown.mhmat\n`
+        out += `subdivide False\n`
+        return out
+    }
+
+    /**
+     * Set morph settings from text in *.mhm file format
+     */
+    fromMHM(content: string) {
+        this.reset()
+        for (const line of content.split("\n")) {
+            const token = line.split(" ")
+            if (token[0] === "modifier") {
+                const modifier = this.modifiers.get(token[1])
+                if (modifier === undefined) {
+                    console.log(`unknown modifier '${token[1]}' in file`)
+                } else {
+                    modifier.getModel().value = parseFloat(token[2])
+                }
+            }
+        }
     }
 }

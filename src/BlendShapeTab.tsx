@@ -1,7 +1,6 @@
 import { TAB } from "HistoryManager"
 import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
-import { RenderHuman } from "render/RenderHuman"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { GLView, Projection, RenderHandler } from "GLView"
 import { RenderMesh } from "render/RenderMesh"
@@ -13,22 +12,10 @@ import {
     prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import {
-    BooleanModel,
-    HTMLElementProps,
-    Model,
-    ModelView,
-    NumberModel,
-    OptionModel,
-    SelectionModel,
-    Table,
-    TableEditMode,
-    TableEvent,
-    View,
-} from "toad.js"
+import { NumberModel, OptionModel, SelectionModel, Table, TableEditMode, TextField, TextModel, ref } from "toad.js"
 import { If } from "toad.js/view/If"
 import { Condition } from "toad.js/model/Condition"
-import { Form } from "toad.js/view/Form"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FormText } from "toad.js/view/FormText"
 import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
@@ -52,6 +39,7 @@ class BlendShapeEditor extends RenderHandler {
     blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
         label: "Blendshape",
     })
+    currentBone = new TextModel()
 
     // ictkit
     // scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
@@ -192,30 +180,41 @@ class BlendShapeEditor extends RenderHandler {
         const skeleton = this.app.humanMesh.skeleton
         const headBones = new Set<string>()
 
-        function r(b: Bone) {
+        function collectHeadBoneNames(b: Bone) {
             if (!b.name.startsWith("special")) {
-                // console.log(b.name)
                 headBones.add(b.name)
             }
             b.children.forEach((child) => {
-                r(child)
+                collectHeadBoneNames(child)
             })
         }
-        r(skeleton.getBone("head"))
+        collectHeadBoneNames(skeleton.getBone("head"))
 
         const obj = ev.target as HTMLObjectElement
         const content = obj.contentDocument!
         // console.log(content)
         headBones.forEach((boneName) => {
-            const eye = content.getElementById(boneName) as any
-            if (eye != null) {
-                const g = eye as SVGGElement
+            const element = content.getElementById(boneName) as any
+            if (element != null) {
+                const g = element as SVGGElement
                 const e = g.children[0] as SVGEllipseElement
                 const title = document.createElementNS("http://www.w3.org/2000/svg", "title")
                 title.appendChild(document.createTextNode(boneName))
                 e.appendChild(title)
-                e.onpointerenter = () => (e.style.fill = "#f00")
-                e.onpointerleave = () => (e.style.fill = "")
+                e.onpointerenter = () => (e.style.fill = "#fff")
+                e.onpointerleave = () => {
+                    if (boneName !== this.currentBone.value) {
+                        e.style.fill = ""
+                    }
+                }
+                e.onpointerdown = () => {
+                    if (this.currentBone.value.length !== 0) {
+                        const currentElement = content.getElementById(this.currentBone.value) as any
+                        currentElement.children[0].style.fill = ""
+                    }
+                    e.style.fill = "#fff"
+                    this.currentBone.value = boneName
+                }
             }
         })
     }
@@ -230,6 +229,16 @@ export function BlendShapeTab(props: { app: Application }) {
 
     const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
+    const elements: { x?: TextField; y?: TextField; z?: TextField } = {}
+    editor.currentBone.modified.add(() => {
+        const poseNode = props.app.skeleton.poseNodes.find(editor.currentBone.value)
+        if (poseNode !== undefined) {
+            elements.x!.setModel(poseNode.x)
+            elements.y!.setModel(poseNode.y)
+            elements.z!.setModel(poseNode.z)
+        }
+    })
+
     return (
         <Tab label="Face" value={TAB.FACE} visibilityChange={setRenderer(props.app, editor)}>
             Face Blendshape Editor (under construction)
@@ -241,7 +250,7 @@ export function BlendShapeTab(props: { app: Application }) {
             </Form>
             <If isTrue={morphToMatchNeutral}>
                 <p>morph face to match neutral blendshape</p>
-                <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
+                <Table model={props.app.morphControls} style={{ width: "498px", height: "500px" }} />
             </If>
             <If isFalse={morphToMatchNeutral}>
                 <p>pose face to match blendshape</p>
@@ -251,7 +260,25 @@ export function BlendShapeTab(props: { app: Application }) {
                     width="250px"
                     data="static/mhjs-face.svg"
                     onload={(ev) => editor.prepare(ev)}
+                    style={{ float: "left" }}
                 />
+                <Form>
+                    <FormLabel>X</FormLabel>
+                    <FormField>
+                        <TextField set={ref(elements, "x")} />
+                    </FormField>
+                    <FormHelp />
+                    <FormLabel>Y</FormLabel>
+                    <FormField>
+                        <TextField set={ref(elements, "y")} />
+                    </FormField>
+                    <FormHelp />
+                    <FormLabel>Z</FormLabel>
+                    <FormField>
+                        <TextField set={ref(elements, "z")} />
+                    </FormField>
+                    <FormHelp />
+                </Form>
             </If>
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
             {/* <Table
