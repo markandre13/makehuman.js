@@ -21,7 +21,7 @@ export class Bone {
     level: number
     reference_bones = []
 
-    // user defined value
+    // user defined relative pose
     matPose: mat4
 
     // calculated rest position

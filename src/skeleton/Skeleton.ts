@@ -163,6 +163,7 @@ export class Skeleton {
 
     getPose(): mat4[] {
         return this.boneslist!.map((bone) => {
+            // convert relative pose to global pose
             const m = mat4.invert(mat4.create(), bone.matRestGlobal!)
             mat4.mul(m, bone.matPose, m)
             mat4.mul(m, bone.matRestGlobal!, m)
