@@ -12,7 +12,18 @@ import {
     prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import { NumberModel, OptionModel, SelectionModel, Table, TableEditMode, TextField, TextModel, ref } from "toad.js"
+import {
+    Button,
+    NumberModel,
+    OptionModel,
+    SelectionModel,
+    Table,
+    TableEditMode,
+    TextField,
+    TextModel,
+    css,
+    ref,
+} from "toad.js"
 import { If } from "toad.js/view/If"
 import { Condition } from "toad.js/model/Condition"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
@@ -229,7 +240,7 @@ export function BlendShapeTab(props: { app: Application }) {
 
     const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
-    const elements: { x?: TextField; y?: TextField; z?: TextField } = {}
+    const elements: { x?: TextField; y?: TextField; z?: TextField; dialog?: HTMLDialogElement } = {}
     editor.currentBone.modified.add(() => {
         const poseNode = props.app.skeleton.poseNodes.find(editor.currentBone.value)
         if (poseNode !== undefined) {
@@ -278,14 +289,29 @@ export function BlendShapeTab(props: { app: Application }) {
                         <TextField set={ref(elements, "z")} />
                     </FormField>
                     <FormHelp />
+                    <style>
+                        {css`
+                        dialog {
+                            height: auto;
+                            /* width: 400px; */
+                            background: var(--tx-gray-200);
+                            color: var(--tx-gray-800);
+                            border: none;
+                        }
+                        `}
+                    </style>
+                    <dialog set={ref(elements, "dialog")}>
+                        <Table
+                            selectionModel={sm}
+                            model={props.app.expressionManager.model}
+                            style={{ width: "470px", height: "500px" }}
+                        />
+                        <Button action={() => elements.dialog?.close()}>Close</Button>
+                    </dialog>
+                    <Button action={() => elements.dialog?.show()}>MH Pose Units</Button>
                 </Form>
             </If>
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
-            {/* <Table
-                selectionModel={sm}
-                model={props.app.expressionManager.model}
-                style={{ width: "487px", height: "100%" }}
-            /> */}
         </Tab>
     )
 }
