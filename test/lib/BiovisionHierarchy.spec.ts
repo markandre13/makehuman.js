@@ -483,7 +483,7 @@ Frame Time: 0.041667
 
             // set pose & copy pose to bone.matPose
             skeleton.setPose(ani0, 0)
-            skeleton.poseNodes.forEach((poseNode) => poseNode.updateBonesMatPose())
+            skeleton.poseNodes.copyAllToSkeleton()
             skeleton.build()
             skeleton.update()
             const anim1 = new AnimationTrack("makehuman", skeleton.getPose(), 1, 1 / 24)
@@ -565,7 +565,7 @@ Frame Time: 0.041667
         // set pose
         skeleton.setPose(anim0, 0)
         // copy pose to bone.matPose
-        skeleton.poseNodes.forEach((poseNode) => poseNode.updateBonesMatPose())
+        skeleton.poseNodes.copyAllToSkeleton()
         skeleton.build()
         skeleton.update()
 

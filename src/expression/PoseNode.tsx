@@ -25,29 +25,6 @@ export class PoseNode implements TreeNode {
 
         this.bone = bone
 
-        // TODO: reduce nesting
-        // E.g. instead of
-        //     spine05
-        //       spine04
-        //         spine03
-        //           spine02
-        //             spine01
-        //               neck01
-        //               clavicle.R
-        //               clavicle.L
-        //             breast.R
-        //             breast.L
-        // arrange it as
-        //     spine05
-        //       spine04
-        //       spine03
-        //       spine02
-        //         spine01
-        //           neck01
-        //           clavicle.R
-        //           clavicle.L
-        //         breast.R
-        //         breast.L
         bone.children.forEach((childBone) => {
             if (this.down === undefined) {
                 this.down = new PoseNode(childBone, signal)
@@ -59,7 +36,11 @@ export class PoseNode implements TreeNode {
         })
     }
 
-    updateBonesMatPose() {
+    copyAllToSkeleton() {
+        this.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
+    }
+
+    copyEulerToBoneMatPose() {
         this.bone.matPose = euler_matrix(
             (this.x.value / 360) * 2 * Math.PI,
             (this.y.value / 360) * 2 * Math.PI,
@@ -83,7 +64,7 @@ export class PoseNode implements TreeNode {
         return undefined
     }
 
-    forEach(cb: (node: PoseNode)=> void) {
+    private forEach(cb: (node: PoseNode)=> void) {
         cb(this)
         this.next?.forEach(cb)
         this.down?.forEach(cb)

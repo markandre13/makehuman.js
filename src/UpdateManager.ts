@@ -170,7 +170,8 @@ export class UpdateManager {
         // from PoseUnit.(x|y|z) to Bone.matPose
         if (this.modifiedPoseNodes.size > 0) {
             // console.log(`UpdateManager::update(): pose nodes have changed -> set Bone.matPose`)
-            this.modifiedPoseNodes.forEach((poseNode) => poseNode.updateBonesMatPose())
+            // this.expressionManager.skeleton.poseNodes.copyAllToSkeleton()
+            this.modifiedPoseNodes.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
             this.modifiedPoseNodes.clear()
             skeletonChanged = true
         }

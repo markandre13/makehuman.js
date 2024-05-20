@@ -161,6 +161,27 @@ export class Skeleton {
         this.poseNodes = new PoseNode(this.roots[0], this.poseChanged)
     }
 
+    /**
+     * return the pose as an *.mhp file
+     * 
+     * *.mhp files are a makehuman.js extension.
+     * 
+     * MakeHuman stores poses in BVH files, which is nice if one wants to exchange a
+     * pose/animation with other programs but
+     * 
+     * * it needs some computation (convert matPose from relative to global coordinate space
+     *   and euler rotations).
+     * * BVH files are rather large as they also include the whole skeleton.
+     * * I had some trouble getting it to work correctly (and sometimes it still doesn't)
+     * * I intend to use Collada to export animations so I don't want to spend more time on BVH
+     *   other than needed to import the face-poseunits.bvh file.
+     * 
+     * Hence I added *.mhp and made it similar to the already existing *.mhm format.
+     */
+    getMHP() {
+        return ""
+    }
+
     getPose(): mat4[] {
         return this.boneslist!.map((bone) => {
             // convert relative pose to global pose
