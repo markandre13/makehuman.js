@@ -51,7 +51,7 @@ import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
 import { Application, setRenderer } from "Application"
-import { GLView } from "GLView"
+import { GLView } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { BlendShapeTab } from "BlendShapeTab"
 

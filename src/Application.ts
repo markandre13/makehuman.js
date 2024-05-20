@@ -16,7 +16,7 @@ import { EnumModel } from "toad.js/model/EnumModel"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
-import { GLView, RenderHandler } from "GLView"
+import { GLView, RenderHandler } from "render/GLView"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now

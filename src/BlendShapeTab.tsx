@@ -2,7 +2,7 @@ import { TAB } from "HistoryManager"
 import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { GLView, Projection, RenderHandler } from "GLView"
+import { GLView, Projection, RenderHandler } from "render/GLView"
 import { RenderMesh } from "render/RenderMesh"
 import {
     createModelViewMatrix,

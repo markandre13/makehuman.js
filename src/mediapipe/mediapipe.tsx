@@ -12,7 +12,7 @@ import { FaceLandmarkRenderer } from "./FaceLandmarkRenderer"
 import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 import { FormSelect } from "toad.js/view/FormSelect"
-import { RenderHandler } from "GLView"
+import { RenderHandler } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 
 // NEXT STEPS:

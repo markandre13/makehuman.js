@@ -1,4 +1,4 @@
-import { Projection } from "GLView"
+import { Projection } from "render/GLView"
 
 export interface Context {
     rotateX: number
