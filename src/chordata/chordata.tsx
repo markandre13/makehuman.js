@@ -616,7 +616,7 @@ function VectorView(props: { model: Rot3Model }) {
     )
 }
 
-export default function ChordataApp(props: {app: Application}) {
+export default function ChordataTab(props: {app: Application}) {
     const humanMesh = props.app.humanMesh
     const updateManager = props.app.updateManager
     const settings = props.app.chordataSettings

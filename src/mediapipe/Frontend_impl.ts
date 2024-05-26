@@ -11,80 +11,7 @@ export class Frontend_impl extends Frontend_skel {
     expressionModel: ExpressionModel
 
     backend?: Backend
-
-    // data received from mediapipe
-    blendshapeName2Index = new Map<string, number>()
-    blendshapeIndex2poseUnit = new Map<number, string>()
-    landmarks?: Float32Array
-    blendshapes?: Float32Array
-    transform?: Float32Array
-
-    // map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names
-    // ideally, we would need new poseunits matching the blendshapes
-    // TODO:
-    // [ ] render the real blendshapes
-    //   [ ] render the mediapipe mesh
-    //   [ ] create morphtargets for the mediapipe blendshapes
-    //   [ ] apply the morphtargets using the mediapipe blendshape coefficnets
-    // [ ] create a tool to create custom poseunits (with the blendshapes we try
-    //     to approximate also shown)
-    // [ ] create a tool to manage custom pose unit sets
-    blendshape2poseUnit = new Map<string, string>([
-        ["browDownLeft", ""], // left brow outside
-        ["browDownRight", ""], // right brow outside
-        ["browInnerUp", ""],
-        // ["browInnerUp", "LeftInnerBrowUp"],
-        // ["browInnerUp", "RightInnerBrowUp"],
-        ["browOuterUpLeft", "LeftOuterBrowUp"],
-        ["browOuterUpRight", "RightOuterBrowUp"],
-        ["cheekPuff", "CheeksPump"],
-        ["cheekSquintLeft", ""],
-        ["cheekSquintRight", ""],
-        ["eyeBlinkLeft", "LeftUpperLidClosed"],
-        ["eyeBlinkRight", "RightUpperLidClosed"],
-        ["eyeLookDownLeft", "LeftEyeDown"],
-        ["eyeLookDownRight", "RightEyeDown"],
-        ["eyeLookInLeft", "LeftEyeturnRight"],
-        ["eyeLookInRight", "RightEyeturnLeft"],
-        ["eyeLookOutLeft", "LeftEyeturnLeft"],
-        ["eyeLookOutRight", "RightEyeturnRight"],
-        ["eyeLookUpLeft", "LeftEyeUp"],
-        ["eyeLookUpRight", "RightEyeUp"],
-        ["eyeSquintLeft", ""],
-        ["eyeSquintRight", ""],
-        ["eyeWideLeft", "LeftUpperLidOpen"],
-        ["eyeWideRight", "RightUpperLidOpen"],
-        ["jawForward", "ChinForward"],
-        ["jawLeft", "ChinLeft"],
-        ["jawOpen", "JawDropStretched"],
-        ["jawRight", "ChinRight"],
-        ["mouthClose", ""],
-        ["mouthDimpleLeft", ""],
-        ["mouthDimpleRight", ""],
-        ["mouthFrownLeft", "MouthLeftPlatysma"],
-        ["mouthFrownRight", "MouthLeftPlatysma"],
-        ["mouthFunnel", "LipsKiss"],
-        ["mouthLeft", "MouthMoveRight"],
-        ["mouthLowerDownLeft", ""],
-        ["mouthLowerDownRight", ""],
-        ["mouthPressLeft", ""],
-        ["mouthPressRight", ""],
-        // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
-        ["mouthRight", "MouthMoveLeft"],
-        ["mouthRollLower", "lowerLipBackward"],
-        ["mouthRollUpper", "lowerLipBackward"],
-        ["mouthShrugLower", ""],
-        ["mouthShrugUpper", ""],
-        ["mouthSmileLeft", "MouthLeftPullUp"],
-        ["mouthSmileRight", "MouthRightPullUp"],
-        ["mouthStretchLeft", "MouthLeftPlatysma"],
-        ["mouthStretchRight", "MouthRightPlatysma"],
-        ["mouthUpperUpLeft", ""], // no match
-        ["mouthUpperUpRight", ""],
-        ["noseSneerLeft", "NasolabialDeepener"],
-        // ["noseSneerRight", "NasolabialDeepener"],
-    ])
-
+  
     constructor(orb: ORB, updateManager: UpdateManager, expressionModel: ExpressionModel) {
         super(orb)
         this.updateManager = updateManager
@@ -113,6 +40,90 @@ export class Frontend_impl extends Frontend_skel {
             connectToBackend.error = `${e}`
         }
     }
+
+    /*
+     * 
+     */
+    override chordata(data: Uint8Array): void {
+        console.log(`got ${data.length} byte chordata packet`)
+    }
+
+    /*
+     * blendshapes
+     */
+
+     // data received from mediapipe
+     blendshapeName2Index = new Map<string, number>()
+     blendshapeIndex2poseUnit = new Map<number, string>()
+     landmarks?: Float32Array
+     blendshapes?: Float32Array
+     transform?: Float32Array
+ 
+     // map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names
+     // ideally, we would need new poseunits matching the blendshapes
+     // TODO:
+     // [ ] render the real blendshapes
+     //   [ ] render the mediapipe mesh
+     //   [ ] create morphtargets for the mediapipe blendshapes
+     //   [ ] apply the morphtargets using the mediapipe blendshape coefficnets
+     // [ ] create a tool to create custom poseunits (with the blendshapes we try
+     //     to approximate also shown)
+     // [ ] create a tool to manage custom pose unit sets
+     blendshape2poseUnit = new Map<string, string>([
+         ["browDownLeft", ""], // left brow outside
+         ["browDownRight", ""], // right brow outside
+         ["browInnerUp", ""],
+         // ["browInnerUp", "LeftInnerBrowUp"],
+         // ["browInnerUp", "RightInnerBrowUp"],
+         ["browOuterUpLeft", "LeftOuterBrowUp"],
+         ["browOuterUpRight", "RightOuterBrowUp"],
+         ["cheekPuff", "CheeksPump"],
+         ["cheekSquintLeft", ""],
+         ["cheekSquintRight", ""],
+         ["eyeBlinkLeft", "LeftUpperLidClosed"],
+         ["eyeBlinkRight", "RightUpperLidClosed"],
+         ["eyeLookDownLeft", "LeftEyeDown"],
+         ["eyeLookDownRight", "RightEyeDown"],
+         ["eyeLookInLeft", "LeftEyeturnRight"],
+         ["eyeLookInRight", "RightEyeturnLeft"],
+         ["eyeLookOutLeft", "LeftEyeturnLeft"],
+         ["eyeLookOutRight", "RightEyeturnRight"],
+         ["eyeLookUpLeft", "LeftEyeUp"],
+         ["eyeLookUpRight", "RightEyeUp"],
+         ["eyeSquintLeft", ""],
+         ["eyeSquintRight", ""],
+         ["eyeWideLeft", "LeftUpperLidOpen"],
+         ["eyeWideRight", "RightUpperLidOpen"],
+         ["jawForward", "ChinForward"],
+         ["jawLeft", "ChinLeft"],
+         ["jawOpen", "JawDropStretched"],
+         ["jawRight", "ChinRight"],
+         ["mouthClose", ""],
+         ["mouthDimpleLeft", ""],
+         ["mouthDimpleRight", ""],
+         ["mouthFrownLeft", "MouthLeftPlatysma"],
+         ["mouthFrownRight", "MouthLeftPlatysma"],
+         ["mouthFunnel", "LipsKiss"],
+         ["mouthLeft", "MouthMoveRight"],
+         ["mouthLowerDownLeft", ""],
+         ["mouthLowerDownRight", ""],
+         ["mouthPressLeft", ""],
+         ["mouthPressRight", ""],
+         // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
+         ["mouthRight", "MouthMoveLeft"],
+         ["mouthRollLower", "lowerLipBackward"],
+         ["mouthRollUpper", "lowerLipBackward"],
+         ["mouthShrugLower", ""],
+         ["mouthShrugUpper", ""],
+         ["mouthSmileLeft", "MouthLeftPullUp"],
+         ["mouthSmileRight", "MouthRightPullUp"],
+         ["mouthStretchLeft", "MouthLeftPlatysma"],
+         ["mouthStretchRight", "MouthRightPlatysma"],
+         ["mouthUpperUpLeft", ""], // no match
+         ["mouthUpperUpRight", ""],
+         ["noseSneerLeft", "NasolabialDeepener"],
+         // ["noseSneerRight", "NasolabialDeepener"],
+     ])
 
     getBlendshapeWeight(name: string): number {
         if (this.blendshapes === undefined) {
