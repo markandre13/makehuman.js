@@ -5,7 +5,7 @@ import { SliderNode } from "modifier/loadSliders"
 import { PoseModel } from "pose/PoseModel"
 import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
-import { Skeleton as ChordataSkeleton } from "chordata/Skeleton"
+import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 
 /**
  * All presentation models report changes to the update manager

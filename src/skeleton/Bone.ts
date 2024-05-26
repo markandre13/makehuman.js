@@ -1,7 +1,7 @@
 import { vec3, mat4, vec4 } from "gl-matrix"
 import { getMatrix, get_normal } from "./loadSkeleton"
 import { Skeleton } from "./Skeleton"
-import { Skeleton as ChordataSkeleton } from "chordata/Skeleton"
+import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export class Bone {

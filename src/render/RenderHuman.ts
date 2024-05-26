@@ -12,6 +12,9 @@ export class RenderHuman extends RenderHandler {
         this.viewHead = viewHead
     }
     override paint(app: Application, view: GLView): void {
+        if (view.overlay.children.length !== 0) {
+            view.overlay.replaceChildren()
+        }
         const humanMesh = app.humanMesh
         const renderList = view.renderList
         if (humanMesh.changedProxy !== undefined) {

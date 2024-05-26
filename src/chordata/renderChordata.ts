@@ -14,14 +14,14 @@ import { Context } from "render/Context"
 import { SkeletonMesh } from "./SkeletonMesh"
 import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
-import { Skeleton } from "./Skeleton"
+import { ChordataSkeleton } from "./Skeleton"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { Projection } from "render/GLView"
 
 export const D = 180 / Math.PI
 
 // const skeleton = new Skeleton()
-export let skeleton: Skeleton
+export let skeleton: ChordataSkeleton
 
 // in no avatar/scan has been configured
 const kceptorName2boneName = new Map<string, string>([
@@ -73,6 +73,9 @@ function chordataQuat2glMatrix(chordataQuaternion: number[]) {
 
 // save the result of a decoded COOP packet
 export function setBones(newBones: Map<string, number[]>) {
+    if (skeleton === undefined) {
+        initSkeleton()
+    }
     // console.log(newBones)
     newBones.forEach((value, key) => {
         if (value.length !== 4) {
@@ -99,6 +102,30 @@ export function resetCalibration() {
     skeleton.resetCalibration()
 }
 
+function initSkeleton() {
+    skeleton = new ChordataSkeleton()
+    // set an initial COOP packet
+    setBones(
+        new Map<string, number[]>([
+            ["/%/base", [0, 0, 0, 0]],
+            ["/%/dorsal", [0, 0, 0, 0]],
+            ["/%/neck", [0, 0, 0, 0]],
+            ["/%/l-upperarm", [0, 0, 0, 0]],
+            ["/%/l-lowerarm", [0, 0, 0, 0]],
+            ["/%/l-hand", [0, 0, 0, 0]],
+            ["/%/r-upperarm", [0, 0, 0, 0]],
+            ["/%/r-lowerarm", [0, 0, 0, 0]],
+            ["/%/r-hand", [0, 0, 0, 0]],
+            ["/%/l-upperleg", [0, 0, 0, 0]],
+            ["/%/l-lowerleg", [0, 0, 0, 0]],
+            ["/%/l-foot", [0, 0, 0, 0]],
+            ["/%/r-upperleg", [0, 0, 0, 0]],
+            ["/%/r-lowerleg", [0, 0, 0, 0]],
+            ["/%/r-foot", [0, 0, 0, 0]],
+        ])
+    )
+}
+
 export function renderChordata(
     ctx: Context,
     gl: WebGL2RenderingContext,
@@ -108,27 +135,7 @@ export function renderChordata(
     settings: ChordataSettings
 ) {
     if (skeleton === undefined) {
-        skeleton = new Skeleton()
-        // set an initial COOP packet
-        setBones(
-            new Map<string, number[]>([
-                ["/%/base", [0, 0, 0, 0]],
-                ["/%/dorsal", [0, 0, 0, 0]],
-                ["/%/neck", [0, 0, 0, 0]],
-                ["/%/l-upperarm", [0, 0, 0, 0]],
-                ["/%/l-lowerarm", [0, 0, 0, 0]],
-                ["/%/l-hand", [0, 0, 0, 0]],
-                ["/%/r-upperarm", [0, 0, 0, 0]],
-                ["/%/r-lowerarm", [0, 0, 0, 0]],
-                ["/%/r-hand", [0, 0, 0, 0]],
-                ["/%/l-upperleg", [0, 0, 0, 0]],
-                ["/%/l-lowerleg", [0, 0, 0, 0]],
-                ["/%/l-foot", [0, 0, 0, 0]],
-                ["/%/r-upperleg", [0, 0, 0, 0]],
-                ["/%/r-lowerleg", [0, 0, 0, 0]],
-                ["/%/r-foot", [0, 0, 0, 0]],
-            ])
-        )
+        initSkeleton()
     }
 
     const canvas = gl.canvas as HTMLCanvasElement

@@ -2,7 +2,7 @@ import { mat4, vec3 } from "gl-matrix"
 import { Joint } from "./Joint"
 import { D } from "./renderChordata"
 
-export class Skeleton {
+export class ChordataSkeleton {
     root: Joint
     protected chordataName2Joint = new Map<string, Joint>()
     protected makehumanName2Joint = new Map<string, Joint>()

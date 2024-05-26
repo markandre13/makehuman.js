@@ -5,6 +5,7 @@ import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehu
 import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
 import { Action } from "toad.js"
+import { handleChordata } from "chordata/chordata"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
@@ -22,7 +23,8 @@ export class Frontend_impl extends Frontend_skel {
      * 
      */
     override chordata(data: Uint8Array): void {
-        console.log(`got ${data.length} byte chordata packet`)
+        // console.log(`got ${data.length} byte chordata packet`)
+        handleChordata(this.updateManager, data)
     }
 
     /*
@@ -115,7 +117,7 @@ export class Frontend_impl extends Frontend_skel {
 
     // list of blendshape names that will be send to faceLandmarks()
     override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
-        console.log(`got blendshape names`)
+        // console.log(`got blendshape names`)
         this.blendshapeIndex2poseUnit.clear()
         this.blendshapeName2Index.clear()
         faceBlendshapeNames.forEach((name, index) => {

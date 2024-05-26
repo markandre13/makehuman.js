@@ -1,6 +1,12 @@
 import { TAB } from "HistoryManager"
 import { COOPDecoder } from "chordata/COOPDecoder"
-import { calibrateNPose as startCalibration, resetCalibration, setBones, skeleton } from "chordata/renderChordata"
+import {
+    calibrateNPose as startCalibration,
+    resetCalibration,
+    setBones,
+    skeleton,
+    renderChordata,
+} from "chordata/renderChordata"
 import { Action, Display, NumberModel, TextField, TextModel } from "toad.js"
 import { Button, ButtonVariant } from "toad.js/view/Button"
 import { Tab } from "toad.js/view/Tab"
@@ -12,11 +18,9 @@ import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
 import { HumanMesh } from "mesh/HumanMesh"
-import { Application } from "Application"
+import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
-
-let socket: WebSocket | undefined
-let mgr: UpdateManager
+import { GLView, RenderHandler } from "render/GLView"
 
 class Notochord {
     processState = new TextModel("UNAVAILABLE", {
@@ -144,13 +148,13 @@ class Notochord {
                 console.log(`UNKNOWN STATE ${this.processState.value}`)
         }
 
-        if (this.processState.value === "RUNNING" && socket === undefined) {
-            // socket = runChordata(mgr)
-        }
-        if (this.processState.value !== "RUNNING" && socket !== undefined) {
-            socket.close()
-            socket = undefined
-        }
+        // if (this.processState.value === "RUNNING" && socket === undefined) {
+        //     // socket = runChordata(mgr)
+        // }
+        // if (this.processState.value !== "RUNNING" && socket !== undefined) {
+        //     socket.close()
+        //     socket = undefined
+        // }
     }
 
     protected updateConfigs(data: Document) {
@@ -208,10 +212,6 @@ class Notochord {
     async doStop() {
         const url = `http://${this.hostname.value}/notochord/end`
         console.log(`${new Date()} STOP ${url}`)
-        if (socket !== undefined) {
-            socket!.close()
-            socket = undefined
-        }
         const response = await fetch(url)
         if (!response.ok) {
             const msg = `${response.status} ${response.statusText}: ${await response.text()}`
@@ -241,10 +241,6 @@ class Notochord {
         const url = `http://${this.hostname.value}/pose/disconnect`
         // const url = `http://${this.hostname.value}/notochord/end`
         console.log(`${new Date()} STOP POSE ${url}`)
-        if (socket !== undefined) {
-            socket!.close()
-            socket = undefined
-        }
         const response = await fetch(url)
         console.log(`${new Date()} STOP POSE -> ${response.status} ${response.statusText}`)
         const parser = new window.DOMParser()
@@ -339,55 +335,27 @@ class Notochord {
     }
 }
 
-// function runChordata(mgr: UpdateManager) {
-//     let initialMessage = true
-//     const enc = new TextEncoder()
-//     const host = "localhost"
-//     const port = 9001
-//     const client = new WebSocket(`ws://${host}:${port}`) // CHECK: is there a WS port on the Notochord itself?
-//     client.binaryType = "arraybuffer"
-//     client.onerror = (e) => {
-//         console.log(`${new Date()} ERROR COMMUNICATING WITH COOP PROXY`)
-//         notochord.start.enabled = true
-//         notochord.stop.enabled = false
-//         client!.close()
-//         socket = undefined
-//     }
-//     client.onopen = () => {
-//         console.log(`${new Date()} CONNECTED TO COOP PROXY`)
-//         client!.onmessage = async (msg: MessageEvent) => {
-//             let arrayBuffer: ArrayBuffer
-//             if (msg.data instanceof Blob) {
-//                 arrayBuffer = await msg.data.arrayBuffer()
-//             } else if (msg.data instanceof ArrayBuffer) {
-//                 arrayBuffer = msg.data
-//             } else {
-//                 console.log("neither blob nor arraybuffer")
-//                 return
-//             }
-//             // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
-//             const decoder = new COOPDecoder(arrayBuffer)
-//             try {
-//                 const msg = decoder.decode()
-//                 setBones(msg)
-//                 mgr.chordataChanged(skeleton)
-//                 client!.send(enc.encode("GET CHORDATA"))
-//             } catch (error) {
-//                 notochord.start.enabled = true
-//                 notochord.stop.enabled = false
-//                 client!.close()
-//                 socket = undefined
-//                 console.log(`failed to decode chordata: ${error}`)
-//                 // hexdump(decoder.bytes)
-//             }
-//         }
-//         client!.send(enc.encode("GET CHORDATA"))
-//     }
-//     client.onclose = (e: CloseEvent) => {
-//         console.log(`${new Date()} DISCONNECTED FROM COOP PROXY`)
-//     }
-//     return client
-// }
+function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
+    return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
+}
+
+export function handleChordata(mgr: UpdateManager, data: Uint8Array) {
+    const decoder = new COOPDecoder(typedArrayToBuffer(data))
+    try {
+        const msg = decoder.decode()
+        setBones(msg)
+        mgr.chordataChanged(skeleton)
+        // client!.send(enc.encode("GET CHORDATA"))
+    } catch (error) {
+        notochord.start.enabled = true
+        notochord.stop.enabled = false
+        // client!.close()
+        // socket = undefined
+        console.log(`failed to decode chordata: ${error}`)
+        console.log(error)
+        // hexdump(decoder.bytes)
+    }
+}
 
 let notochord: Notochord
 
@@ -616,19 +584,35 @@ function VectorView(props: { model: Rot3Model }) {
     )
 }
 
-export default function ChordataTab(props: {app: Application}) {
+class ChordataRenderer extends RenderHandler {
+    rh = new RenderHuman(false)
+    override paint(app: Application, view: GLView): void {
+        // throw new Error("Method not implemented.")
+        if (app.chordataSettings.mountKCeptorView.value) {
+            renderChordata(view.ctx, view.gl, view.programRGBA, view.overlay, app.humanMesh, app.chordataSettings)
+        } else {
+            this.rh.paint(app, view)
+        }
+    }
+}
+
+export default function ChordataTab(props: { app: Application }) {
     const humanMesh = props.app.humanMesh
     const updateManager = props.app.updateManager
     const settings = props.app.chordataSettings
 
     notochord = new Notochord(settings)
-    mgr = updateManager
+    const mgr = updateManager
     settings.modified.add(() => updateManager.chordataChanged(skeleton))
     return (
-        <Tab label="Chordata" value={TAB.CHORDATA} visibilityChange={(state) => {
-            if (state === "visible") props.app.setRenderer(new RenderHuman())
-            notochord.visibilityChange(state)
-        }}>
+        <Tab
+            label="Chordata"
+            value={TAB.CHORDATA}
+            visibilityChange={(state) => {
+                if (state === "visible") props.app.setRenderer(new ChordataRenderer())
+                notochord.visibilityChange(state)
+            }}
+        >
             {/* <Button variant={ButtonVariant.ACCENT} action={start}>
                 Start
             </Button>
@@ -671,7 +655,7 @@ export default function ChordataTab(props: {app: Application}) {
                 <FormHelp model={notochord.calibration} /> */}
 
                 <FormSwitch model={settings.mountKCeptorView} />
-                <FormSwitch model={humanMesh.wireframe}/>
+                <FormSwitch model={humanMesh.wireframe} />
 
                 {/* <FormLabel>Custom Pre Calibrate</FormLabel>
                 <FormField>
@@ -690,8 +674,7 @@ export default function ChordataTab(props: {app: Application}) {
                         }}
                     >
                         Calibrate
-                    </Button>
-                    {" "}
+                    </Button>{" "}
                     <Button
                         action={() => {
                             resetCalibration()
