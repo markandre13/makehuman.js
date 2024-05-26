@@ -24,7 +24,7 @@ describe("Skeleton", function () {
         obj = new WavefrontObj('data/3dobjs/base.obj')
         humanMesh = new HumanMesh(human, obj)
         skel = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
-        const node = skel.poseNodes.find("toe5-1.R")
+        const node = skel.poseNodes.find("toe5-1.R")!
         node.x.value = 15
         node.y.value = 10
         node.z.value = 5

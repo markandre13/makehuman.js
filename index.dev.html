@@ -18,6 +18,17 @@
             import("./index.dev.js")
         }
     </script>
+    <style>
+        @keyframes fade {
+            from { color: var(--tx-gray-700) }
+            50% { color: var(--tx-gray-500) }
+            to { color: var(--tx-gray-700) }
+        }
+        .connecting {
+            animation-timing-function: ease;
+            animation:fade 2000ms infinite;
+        }
+    </style>
 </head>
 
 <body onload="run()">

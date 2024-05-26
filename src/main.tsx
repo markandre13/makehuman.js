@@ -46,7 +46,7 @@ import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
 import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { Select, TableAdapter } from "toad.js"
+import { Action, Select, Signal, TableAdapter } from "toad.js"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
@@ -91,10 +91,16 @@ function run() {
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
     TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: cast to 'any'??? WTF???
 
+    const oiah = "calc((12/16) * 1rem + 8px"
+    const connector = new Connector()
+
     document.body.replaceChildren(
         ...(
             <>
-                <Tabs model={app.tabModel} style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: 0 }}>
+                <Tabs
+                    model={app.tabModel}
+                    style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: oiah }}
+                >
                     <FileTab app={app} />
                     <MorphTab app={app} />
                     <ProxyTab app={app} />
@@ -108,9 +114,105 @@ function run() {
                     app={app}
                     style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}
                 />
+                <div
+                    style={{
+                        background: "var(--tx-gray-50)",
+                        padding: "2px",
+                        paddingLeft: "8px",
+                        margin: 0,
+                        border: "none",
+                        position: "absolute",
+                        left: 0,
+                        width: "490px",
+                        height: "calc((12/16) * 1rem + 4px",
+                        bottom: 0,
+                        overflow: "hidden",
+                    }}
+                >
+                    <ConnectButton connector={connector} /> | human.mh
+                </div>
             </>
         )
     )
+}
+
+function sleep(milliseconds: number = 0) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve("success")
+        }, milliseconds)
+    })
+}
+
+// IBM 3270 terminology
+// * Operator Information Area: the status line at the bottom of the terminal window
+// * Communication Check: the area displaying the communication status to the host
+// * Communication Reminder Symbol: the crossed out Z symbol
+
+enum ConnectionState {
+    NOT_CONNECTED,
+    CONNECTING,
+    CONNECTED,
+}
+
+class Connector {
+    signal = new Signal()
+    private m_state = ConnectionState.NOT_CONNECTED
+    peer = "localhost:9001"
+
+    async connect() {
+        this.state = ConnectionState.CONNECTING
+        await sleep(2000)
+        this.state = ConnectionState.CONNECTED
+    }
+
+    get state() {
+        return this.m_state
+    }
+    set state(state: ConnectionState) {
+        if (this.state === state) {
+            return
+        }
+        this.m_state = state
+        this.signal.trigger()
+    }
+}
+
+function ConnectButton(props: { connector: Connector }) {
+    const connector = props.connector
+    const s = document.createElement("span")
+    // s.replaceChildren(document.createTextNode(connector.peer))
+    const update = () => {
+        // console.log(`update state to ${connector.state}`)
+        switch (connector.state) {
+            case ConnectionState.NOT_CONNECTED:
+                s.classList.remove("connecting")
+                s.style.color = "var(--tx-warning-color)"
+                // s.title = "NOT CONNECTED"
+                s.replaceChildren(document.createTextNode("NOT CONNECTED"))
+                break
+            case ConnectionState.CONNECTING:
+                s.classList.add("connecting")
+                s.style.color = ""
+                // s.title = "CONNECTING"
+                s.replaceChildren(document.createTextNode("CONNECTING"))
+                break
+            case ConnectionState.CONNECTED:
+                s.classList.remove("connecting")
+                s.style.color = "var(--tx-gray-700)"
+                // s.title = "CONNECTED"
+                s.replaceChildren(document.createTextNode("CONNECTED"))
+                break
+        }
+    }
+    update()
+    connector.signal.add(update)
+    s.style.cursor = "default"
+    s.onpointerdown = (ev: MouseEvent) => {
+        ev.preventDefault()
+        connector.connect()
+    }
+    return s
 }
 
 function MorphTab(props: { app: Application }) {

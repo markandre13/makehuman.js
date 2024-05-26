@@ -20,6 +20,17 @@
             import("./dist/makehuman.js")
         }
     </script>
+    <style>
+        @keyframes fade {
+            from { color: var(--tx-gray-700) }
+            50% { color: var(--tx-gray-500) }
+            to { color: var(--tx-gray-700) }
+        }
+        .connecting {
+            animation-timing-function: ease;
+            animation:fade 2000ms infinite;
+        }
+    </style>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'none'"/>
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'none'"/> -->

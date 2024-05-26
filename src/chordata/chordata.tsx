@@ -145,7 +145,7 @@ class Notochord {
         }
 
         if (this.processState.value === "RUNNING" && socket === undefined) {
-            socket = runChordata(mgr)
+            // socket = runChordata(mgr)
         }
         if (this.processState.value !== "RUNNING" && socket !== undefined) {
             socket.close()
@@ -339,55 +339,55 @@ class Notochord {
     }
 }
 
-function runChordata(mgr: UpdateManager) {
-    let initialMessage = true
-    const enc = new TextEncoder()
-    const host = "localhost"
-    const port = 9001
-    const client = new WebSocket(`ws://${host}:${port}`) // CHECK: is there a WS port on the Notochord itself?
-    client.binaryType = "arraybuffer"
-    client.onerror = (e) => {
-        console.log(`${new Date()} ERROR COMMUNICATING WITH COOP PROXY`)
-        notochord.start.enabled = true
-        notochord.stop.enabled = false
-        client!.close()
-        socket = undefined
-    }
-    client.onopen = () => {
-        console.log(`${new Date()} CONNECTED TO COOP PROXY`)
-        client!.onmessage = async (msg: MessageEvent) => {
-            let arrayBuffer: ArrayBuffer
-            if (msg.data instanceof Blob) {
-                arrayBuffer = await msg.data.arrayBuffer()
-            } else if (msg.data instanceof ArrayBuffer) {
-                arrayBuffer = msg.data
-            } else {
-                console.log("neither blob nor arraybuffer")
-                return
-            }
-            // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
-            const decoder = new COOPDecoder(arrayBuffer)
-            try {
-                const msg = decoder.decode()
-                setBones(msg)
-                mgr.chordataChanged(skeleton)
-                client!.send(enc.encode("GET CHORDATA"))
-            } catch (error) {
-                notochord.start.enabled = true
-                notochord.stop.enabled = false
-                client!.close()
-                socket = undefined
-                console.log(`failed to decode chordata: ${error}`)
-                // hexdump(decoder.bytes)
-            }
-        }
-        client!.send(enc.encode("GET CHORDATA"))
-    }
-    client.onclose = (e: CloseEvent) => {
-        console.log(`${new Date()} DISCONNECTED FROM COOP PROXY`)
-    }
-    return client
-}
+// function runChordata(mgr: UpdateManager) {
+//     let initialMessage = true
+//     const enc = new TextEncoder()
+//     const host = "localhost"
+//     const port = 9001
+//     const client = new WebSocket(`ws://${host}:${port}`) // CHECK: is there a WS port on the Notochord itself?
+//     client.binaryType = "arraybuffer"
+//     client.onerror = (e) => {
+//         console.log(`${new Date()} ERROR COMMUNICATING WITH COOP PROXY`)
+//         notochord.start.enabled = true
+//         notochord.stop.enabled = false
+//         client!.close()
+//         socket = undefined
+//     }
+//     client.onopen = () => {
+//         console.log(`${new Date()} CONNECTED TO COOP PROXY`)
+//         client!.onmessage = async (msg: MessageEvent) => {
+//             let arrayBuffer: ArrayBuffer
+//             if (msg.data instanceof Blob) {
+//                 arrayBuffer = await msg.data.arrayBuffer()
+//             } else if (msg.data instanceof ArrayBuffer) {
+//                 arrayBuffer = msg.data
+//             } else {
+//                 console.log("neither blob nor arraybuffer")
+//                 return
+//             }
+//             // console.log(`chordata rcvd ${arrayBuffer.byteLength} octets`)
+//             const decoder = new COOPDecoder(arrayBuffer)
+//             try {
+//                 const msg = decoder.decode()
+//                 setBones(msg)
+//                 mgr.chordataChanged(skeleton)
+//                 client!.send(enc.encode("GET CHORDATA"))
+//             } catch (error) {
+//                 notochord.start.enabled = true
+//                 notochord.stop.enabled = false
+//                 client!.close()
+//                 socket = undefined
+//                 console.log(`failed to decode chordata: ${error}`)
+//                 // hexdump(decoder.bytes)
+//             }
+//         }
+//         client!.send(enc.encode("GET CHORDATA"))
+//     }
+//     client.onclose = (e: CloseEvent) => {
+//         console.log(`${new Date()} DISCONNECTED FROM COOP PROXY`)
+//     }
+//     return client
+// }
 
 let notochord: Notochord
 
