@@ -18,29 +18,6 @@ export class Frontend_impl extends Frontend_skel {
         this.expressionModel = expressionModel
     }
 
-    async connectToORB(connectToBackend: Action) {
-        if (this.backend !== undefined) {
-            return
-        }
-
-        try {
-            const object = await this.orb.stringToObject("corbaname::localhost:9001#Backend")
-            this.backend = Backend.narrow(object)
-            ORB.installSystemExceptionHandler(this.backend, () => {
-                this.backend = undefined
-                connectToBackend.error = `lost connection`
-                connectToBackend.enabled = true
-            })
-
-            this.backend.setFrontend(this)
-            connectToBackend.enabled = false
-            connectToBackend.error = undefined
-            this.backend.setEngine(MotionCaptureEngine.MEDIAPIPE, MotionCaptureType.FACE, EngineStatus.ON)
-        } catch (e) {
-            connectToBackend.error = `${e}`
-        }
-    }
-
     /*
      * 
      */
@@ -138,6 +115,7 @@ export class Frontend_impl extends Frontend_skel {
 
     // list of blendshape names that will be send to faceLandmarks()
     override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
+        console.log(`got blendshape names`)
         this.blendshapeIndex2poseUnit.clear()
         this.blendshapeName2Index.clear()
         faceBlendshapeNames.forEach((name, index) => {
@@ -150,6 +128,7 @@ export class Frontend_impl extends Frontend_skel {
     }
 
     override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        // console.log(`got blendshape`)
         this.landmarks = landmarks
         this.blendshapes = blendshapes
         this.transform = transform

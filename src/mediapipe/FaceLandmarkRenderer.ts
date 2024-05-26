@@ -8,7 +8,7 @@ import {
     prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
-import { Frontend_impl } from "./Frontend_impl"
+import { Frontend_impl } from "../net/Frontend_impl"
 import { RGBAShader } from "render/shader/RGBAShader"
 import { mat4 } from "gl-matrix"
 

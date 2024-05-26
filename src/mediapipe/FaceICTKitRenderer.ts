@@ -9,7 +9,7 @@ import {
     prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
-import { Frontend_impl } from "./Frontend_impl"
+import { Frontend_impl } from "../net/Frontend_impl"
 import { Target } from "target/Target"
 import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"

@@ -8,7 +8,7 @@ import {
     prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
-import { Frontend_impl } from "./Frontend_impl"
+import { Frontend_impl } from "../net/Frontend_impl"
 import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
 import { FaceARKitLoader } from "./FaceARKitLoader"
@@ -47,6 +47,7 @@ export class FaceARKitRenderer extends RenderHandler {
             }
             this.blendshapeSet.getTarget(blendshape)?.apply(vertex, weight)
         }
+        vertex.forEach( (v,i) => {vertex[i] = v * 80})
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {

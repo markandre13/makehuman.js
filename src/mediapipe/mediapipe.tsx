@@ -7,7 +7,7 @@ import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
 import { Action, OptionModel } from "toad.js"
 import { Form } from "toad.js/view/Form"
-import { Frontend_impl } from "./Frontend_impl"
+import { Frontend_impl } from "../net/Frontend_impl"
 import { FaceLandmarkRenderer } from "./FaceLandmarkRenderer"
 import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
@@ -26,18 +26,11 @@ import { RenderHuman } from "render/RenderHuman"
 // [ ] write editor to tweak the blendshapes
 // [ ] write an editor to create pose units matching the blendshapes
 
-let connectToBackend: Action | undefined
 let faceRenderer: OptionModel<RenderHandler>
 export function MediapipeTab(props: { app: Application }) {
-    if (connectToBackend === undefined) {
-        const orb = new ORB()
-        orb.registerStubClass(Backend)
-        orb.addProtocol(new WsProtocol())
-
-        const frontend = new Frontend_impl(orb, props.app.updateManager, props.app.expressionManager.model)
-
-        const lm = new FaceLandmarkRenderer(frontend)
-        const ar = new FaceARKitRenderer(frontend)
+    if (faceRenderer === undefined) {
+        const lm = new FaceLandmarkRenderer(props.app.frontend)
+        const ar = new FaceARKitRenderer(props.app.frontend)
         // const ict = new FaceICTKitRenderer(frontend)
         const mh = new RenderHuman(true)
         faceRenderer = new OptionModel<RenderHandler>(lm, [
@@ -48,10 +41,6 @@ export function MediapipeTab(props: { app: Application }) {
         ], {label: "Render Engine"})
         faceRenderer.modified.add(() => {
             props.app.setRenderer(faceRenderer.value)
-        })
-
-        connectToBackend = new Action(() => frontend.connectToORB(connectToBackend!), {
-            label: "Connect to Backend",
         })
     }
 
@@ -65,7 +54,6 @@ export function MediapipeTab(props: { app: Application }) {
         >
             <Form>
                 <FormSelect model={faceRenderer} />
-                <FormButton action={connectToBackend} />
             </Form>
         </Tab>
     )

@@ -17,6 +17,10 @@ import { ModelReason } from "toad.js/model/Model"
 import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
 import { GLView, RenderHandler } from "render/GLView"
+import { ORB } from "corba.js"
+import { Backend } from "net/makehuman_stub"
+import { WsProtocol } from "corba.js/net/browser"
+import { Frontend_impl } from "net/Frontend_impl"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
@@ -30,6 +34,9 @@ export function setRenderer(app: Application, renderer: RenderHandler) {
 }
 
 export class Application {
+    orb: ORB
+    frontend: Frontend_impl
+
     // makehuman
     human: MorphManager // MorphManager / MorphController
     humanMesh: HumanMesh // base mesh, morphed mesh, posed mesh
@@ -117,7 +124,12 @@ export class Application {
             }
             this.updateManager.invalidateView()
         })
-        initHistoryManager(this.tabModel)    
+        initHistoryManager(this.tabModel)
+
+        this.orb = new ORB()
+        this.orb.registerStubClass(Backend)
+        this.orb.addProtocol(new WsProtocol())
+        this.frontend = new Frontend_impl(this.orb, this.updateManager, this.expressionManager.model)
     }
 
     renderer?: RenderHandler
