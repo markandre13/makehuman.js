@@ -33,6 +33,166 @@ import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
 
+export interface BlendshapeDescription {
+    group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
+    pattern: string
+    symmetric?: boolean // true means there is a Left|Right variant
+    description: string
+}
+
+export const blendshapeDescriptions: BlendshapeDescription[] = [
+    {
+        group: "eyebrow",
+        pattern: "browInnerUp",
+        description: "insides, to be combined with browOuter(Up|Down)(Left|Right)",
+    },
+    {
+        group: "eyebrow",
+        pattern: "browDown",
+        symmetric: true,
+        description: "the whole brow down, to be combined with browInnerUp*",
+    },
+    {
+        group: "eyebrow",
+        pattern: "browOuterDown",
+        symmetric: true,
+        description: "",
+    },
+    {
+        group: "eyebrow",
+        pattern: "browOuterUp",
+        symmetric: true,
+        description: "",
+    },
+
+    {
+        group: "eye",
+        pattern: "eyeLook(Up|Down|In|Out)",
+        symmetric: true,
+        description:
+            `this moves the eye and eyelid. movement is also visible on a ` +
+            `closed eye due to the bulge that is the corona`,
+    },
+
+    {
+        group: "eyelid",
+        pattern: "eyeBlink",
+        symmetric: true,
+        description: "normal: close upper eyelid, to be combined",
+    },
+    {
+        group: "eyelid",
+        pattern: "eyeSquint",
+        symmetric: true,
+        description: "smile, move upper and lower eyelid closer but not closed",
+    },
+    {
+        group: "eyelid",
+        pattern: "eyeWide",
+        symmetric: true,
+        description: "surprise, upper eyelid up",
+    },
+
+    {
+        group: "check",
+        pattern: "noseSneer",
+        symmetric: true,
+        description: "inner nose and check up, inner brow down, to be combined with browDown",
+    },
+    {
+        group: "check",
+        pattern: "cheekSquint",
+        symmetric: true,
+        description: "outer check up, outer brow down",
+    },
+    {
+        group: "check",
+        pattern: "cheekPuff",
+        description: "fill checks with air, to be combined with mouthPucker",
+    },
+
+    {
+        group: "jaw",
+        pattern: "jaw(Open|Forward|Left|Right)",
+        description: "jaw forward",
+    },
+    {
+        group: "jaw",
+        pattern: "mouthClose",
+        description: "to close mouth to counter jawOpen",
+    },
+
+    {
+        group: "mouth",
+        pattern: "mouthFunnel", // trichter
+        description: "o shaped lips, open",
+    },
+    {
+        group: "mouth",
+        pattern: "mouthPucker", // zusammenziehen
+        description: "o shaped lips, closed",
+    },
+    {
+        group: "mouth",
+        pattern: "mouth(Left|Right)",
+        description: "move whole mouth left and right",
+    },
+    {
+        group: "mouth",
+        pattern: "mouthDimple", // grübchen
+        symmetric: true,
+        description: "widen mouth",
+    },
+    {
+        group: "mouth",
+        pattern: "mouth(UpperUp|LowerDown)",
+        symmetric: true,
+        description: "open mouth",
+    },
+
+    {
+        group: "mouthExpression",
+        pattern: "mouthSmile",
+        symmetric: true,
+        description: "smile",
+    },
+    {
+        group: "mouthExpression",
+        pattern: "mouthFrown",
+        symmetric: true,
+        description: "frown",
+    },
+    {
+        group: "mouthExpression",
+        pattern: "mouthPress",
+        symmetric: true,
+        description: "forced smile",
+    },
+    {
+        group: "mouthExpression",
+        pattern: "mouthStretch",
+        symmetric: true,
+        description: "forced frown",
+    },
+
+    {
+        group: "lips",
+        pattern: "mouthRoll(Upper|Lower)",
+        description: "roll upper/lower lips inwards",
+    },
+    {
+        group: "lips",
+        pattern: "mouthShrug(Upper|Lower)",
+        description: "move upper/lower lip up",
+    },
+
+    {
+        group: "tongue",
+        pattern: "tongueOut",
+        description: "tongueOut (not tracked by mediapipe but arkit)",
+    },
+]
+
 class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
     static getInstance(app: Application) {
@@ -291,13 +451,13 @@ export function BlendShapeTab(props: { app: Application }) {
                     <FormHelp />
                     <style>
                         {css`
-                        dialog {
-                            height: auto;
-                            /* width: 400px; */
-                            background: var(--tx-gray-200);
-                            color: var(--tx-gray-800);
-                            border: none;
-                        }
+                            dialog {
+                                height: auto;
+                                /* width: 400px; */
+                                background: var(--tx-gray-200);
+                                color: var(--tx-gray-800);
+                                border: none;
+                            }
                         `}
                     </style>
                     <dialog set={ref(elements, "dialog")}>

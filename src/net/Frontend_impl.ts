@@ -49,13 +49,12 @@ export class Frontend_impl extends Frontend_skel {
      //     to approximate also shown)
      // [ ] create a tool to manage custom pose unit sets
      blendshape2poseUnit = new Map<string, string>([
-         ["browDownLeft", ""], // left brow outside
-         ["browDownRight", ""], // right brow outside
-         ["browInnerUp", ""],
-         // ["browInnerUp", "LeftInnerBrowUp"],
-         // ["browInnerUp", "RightInnerBrowUp"],
+         ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
+         ["browDownRight", "RightBrowDown"], // (see above)
+         ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
          ["browOuterUpLeft", "LeftOuterBrowUp"],
          ["browOuterUpRight", "RightOuterBrowUp"],
+
          ["cheekPuff", "CheeksPump"],
          ["cheekSquintLeft", ""],
          ["cheekSquintRight", ""],
@@ -100,7 +99,7 @@ export class Frontend_impl extends Frontend_skel {
          ["mouthStretchRight", "MouthRightPlatysma"],
          ["mouthUpperUpLeft", ""], // no match
          ["mouthUpperUpRight", ""],
-         ["noseSneerLeft", "NasolabialDeepener"],
+         ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
          // ["noseSneerRight", "NasolabialDeepener"],
      ])
 
