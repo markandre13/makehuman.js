@@ -24,7 +24,7 @@
     "build:client": "rollup --bundleConfigAsCjs --config rollup-client.config.js",
     "dev:prepare": "npm run build:data && npm run build:chai && npm run build:idl",
     "dev:build": "npm run build:idl && tspc -w -p tsconfig.dev.json",
-    "dev:test": "if test -z \"$npm_config_file\" ; then wtr --watch 'build/test/**/*.spec.js' ; else wtr --watch \"$npm_config_file\" ; fi",
+    "dev:test": "npm run build:chai && if test -z \"$npm_config_file\" ; then wtr --watch 'build/test/**/*.spec.js' ; else wtr --watch \"$npm_config_file\" ; fi",
     "dev:serve": "wds --node-resolve --watch --open --app-index index.dev.html",
     "update": "npx npm-check-updates -u && npm install"
   },
