@@ -6,12 +6,17 @@ import { PoseModel } from "pose/PoseModel"
 import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
+import { Application } from "Application"
+import { mat4, quat2 } from "gl-matrix"
+import { quaternion_slerp } from "lib/quaternion_slerp"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 /**
  * All presentation models report changes to the update manager
  * which will the update the domain model.
  */
 export class UpdateManager {
+    app: Application
     expressionManager: ExpressionManager
     poseModel: PoseModel
     modifiedMorphNodes = new Set<SliderNode>()
@@ -34,9 +39,14 @@ export class UpdateManager {
         })
     }
 
-    constructor(expressionManager: ExpressionManager, poseModel: PoseModel, sliderNodes: SliderNode) {
-        this.expressionManager = expressionManager
-        this.poseModel = poseModel
+    constructor(app: Application) {
+        this.app = app
+        // expressionManager: ExpressionManager, poseModel: PoseModel, sliderNodes: SliderNode) {
+        this.expressionManager = app.expressionManager
+        this.poseModel = app.poseModel
+        const sliderNodes = app.sliderNodes
+        const expressionManager = app.expressionManager
+        const poseModel = app.poseModel
 
         // observe morph slider
         function forEachMorphSliderNode(node: SliderNode | undefined, cb: (node: SliderNode) => void) {
@@ -68,7 +78,7 @@ export class UpdateManager {
             })
         })
 
-        // observe pose pose units
+        // observe pose units
         poseModel.poseUnits.forEach((poseUnit) => {
             poseUnit.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
@@ -154,27 +164,61 @@ export class UpdateManager {
 
         // SET_POSE_UNITS
         // from all pose units to PoseNode.(x|y|z)
-        if (this.modifiedExpressionPoseUnits.size > 0) {
-            // console.log(`UpdateManager::update(): pose units have changed`)
-            this.expressionManager.poseUnitsToPoseNodes()
-            this.modifiedExpressionPoseUnits.clear()
-        }
+        // if (this.modifiedExpressionPoseUnits.size > 0) {
+        //     // console.log(`UpdateManager::update(): pose units have changed`)
+        //     this.expressionManager.poseUnitsToPoseNodes()
+        //     this.modifiedExpressionPoseUnits.clear()
+        // }
 
-        if (this.modifiedPosePoseUnits.size > 0) {
-            // console.log(`UpdateManager::update(): pose units have changed`)
-            this.poseModel.poseUnitsToPoseNodes()
-            this.modifiedPosePoseUnits.clear()
-        }
+        // if (this.modifiedPosePoseUnits.size > 0) {
+        //     // console.log(`UpdateManager::update(): pose units have changed`)
+        //     this.poseModel.poseUnitsToPoseNodes()
+        //     this.modifiedPosePoseUnits.clear()
+        // }
 
         // SET_POSE_MATRIX
         // from PoseUnit.(x|y|z) to Bone.matPose
-        if (this.modifiedPoseNodes.size > 0) {
-            // console.log(`UpdateManager::update(): pose nodes have changed -> set Bone.matPose`)
-            // this.expressionManager.skeleton.poseNodes.copyAllToSkeleton()
-            this.modifiedPoseNodes.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
-            this.modifiedPoseNodes.clear()
-            skeletonChanged = true
-        }
+        // if (this.modifiedPoseNodes.size > 0) {
+        //     // console.log(`UpdateManager::update(): pose nodes have changed -> set Bone.matPose`)
+        //     // this.expressionManager.skeleton.poseNodes.copyAllToSkeleton()
+        //     this.modifiedPoseNodes.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
+        //     this.modifiedPoseNodes.clear()
+        //     skeletonChanged = true
+        // }
+
+        // experimental head rotation
+        // data we do not have: head moving forward, backwards (when camera is not mounted to head,
+        // we could extrapolate that from the z translation
+        const neck1 = this.expressionManager.skeleton.getBone("neck01")
+        const neck2 = this.expressionManager.skeleton.getBone("neck02")
+        const neck3 = this.expressionManager.skeleton.getBone("neck03")
+        const head = this.expressionManager.skeleton.getBone("head")
+
+        const t = this.app.frontend.transform!
+        let m = mat4.fromValues(
+            t[0], t[1], t[2], 0,
+            t[4], t[5], t[6], 0,
+            t[8], t[9], t[10], 0,
+            0, 0, 0, 1
+        )
+        const {x,y,z} = euler_from_matrix(m)
+        head.matPose = euler_matrix(0,0,z)
+        const neckXY = euler_matrix(x,y,0)
+
+        let q = quat2.create()
+        quat2.fromMat4(q, neckXY)
+        const REST_QUAT = quat2.create()
+        q = quaternion_slerp(REST_QUAT, q, 0.3333333333)
+        mat4.fromQuat2(neck1.matPose, q)
+        mat4.fromQuat2(neck2.matPose, q)
+        mat4.fromQuat2(neck3.matPose, q)
+        // mat4.fromQuat2(head.matPose, q)
+        // mat4.multiply(head.matPose, headZ, head.matPose)
+
+        // for(let i of [0,1,2, 4,5,6, 8,9,10]) {
+        //     head.matPose[i] = m1[i]
+        // }
+        skeletonChanged = true
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {

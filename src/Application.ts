@@ -87,7 +87,7 @@ export class Application {
         this.chordataSettings = new ChordataSettings()
 
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
-        this.updateManager = new UpdateManager(this.expressionManager, this.poseModel, this.sliderNodes)
+        this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty
         this.human.modifiers.forEach((modifer) => {

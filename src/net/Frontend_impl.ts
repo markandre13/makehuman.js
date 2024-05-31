@@ -136,10 +136,10 @@ export class Frontend_impl extends Frontend_skel {
         this.updateManager.invalidateView()
 
         // set pose units from blendshapes
-        this.blendshapeIndex2poseUnit.forEach((name, index) => {
-            if (index < blendshapes.length) {
-                this.expressionModel.setPoseUnit(name, blendshapes[index])
-            }
-        })
+        // this.blendshapeIndex2poseUnit.forEach((name, index) => {
+        //     if (index < blendshapes.length) {
+        //         this.expressionModel.setPoseUnit(name, blendshapes[index])
+        //     }
+        // })
     }
 }
