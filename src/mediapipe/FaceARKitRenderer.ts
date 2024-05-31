@@ -12,6 +12,7 @@ import { Frontend_impl } from "../net/Frontend_impl"
 import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
 import { FaceARKitLoader } from "./FaceARKitLoader"
+import { mat4, vec3 } from "gl-matrix"
 
 /**
  * Render MediaPipe's blendshape using Apples ARKit Mesh
@@ -37,6 +38,7 @@ export class FaceARKitRenderer extends RenderHandler {
 
         const vertex = new Float32Array(neutral.xyz.length)
         vertex.set(this.blendshapeSet.neutral!.xyz)
+        // apply blendshapes
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
@@ -47,7 +49,30 @@ export class FaceARKitRenderer extends RenderHandler {
             }
             this.blendshapeSet.getTarget(blendshape)?.apply(vertex, weight)
         }
-        vertex.forEach( (v,i) => {vertex[i] = v * 80})
+
+        // scale and rotate
+        const t = this.frontend.transform!!
+        // prettier-ignore
+        const m = mat4.fromValues(
+             t[0],  t[1],  t[2],  t[3],
+             t[4],  t[5],  t[6],  t[7],
+             t[8],  t[9], t[10], t[11],
+            t[12], t[13], t[14], t[15]
+        )
+        const s = 160
+        mat4.scale(m, m, vec3.fromValues(s, s, s))
+
+        const v = vec3.create()
+        for (let i = 0; i < vertex.length; i += 3) {
+            v[0] = vertex[i]
+            v[1] = vertex[i + 1]
+            v[2] = vertex[i + 2]
+            vec3.transformMat4(v, v, m)
+            vertex[i] = v[0]
+            vertex[i + 1] = v[1]
+            vertex[i + 2] = v[2]
+        }
+
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {
