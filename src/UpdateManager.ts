@@ -10,8 +10,10 @@ import { Application } from "Application"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { Bone } from "skeleton/Bone"
+import { blendshape2poseUnit } from "net/Frontend_impl"
 
-let flag = true
+let em2: ExpressionManager2 | undefined
 
 /**
  * All presentation models report changes to the update manager
@@ -220,32 +222,22 @@ export class UpdateManager {
             // }
         }
         // experimental jawOpen
+        // TODO: extend to handle all blendshape weights:
+        // 1: have places for quat2s of all bones (inside the bone would be fastest)
+        // 2: fill them
+        // 3: copy them to matPose
+        // when done:
+        // tweak copying values to ExpressionManager2 to better resemble the ARKit blendshapes
         {
-            const identity = mat4.create()
-            const expressionManager =  this.expressionManager
-            const skeleton =  expressionManager.skeleton
+            if (em2 === undefined) {
+                em2 = new ExpressionManager2(this.expressionManager)
+            }
             const weight = this.app.frontend.getBlendshapeWeight("jawOpen")
-            const frame = expressionManager.poseUnitName2Frame.get("JawDrop")!
-            const nBones = expressionManager.skeleton.boneslist!.length
-            const base_anim = expressionManager.base_anim
-            // let txt = ""
-            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
-                const m = base_anim[frame * nBones + b_idx]
-                if (!mat4.equals(identity, m)) {
-                    const bone = skeleton.boneslist![b_idx]
-                    // txt = `${txt}, ${bone.name}`
-                    let q = quat2.create()
-                    quat2.fromMat4(q, m)
-                    q = quaternion_slerp(REST_QUAT, q, weight)
-                    mat4.fromQuat2(bone.matPose, q)
-                }
+            const a = em2.blendshapes.get("jawOpen")!
+            for(let b of a) {
+                const q = quaternion_slerp(REST_QUAT, b.q, weight)
+                mat4.fromQuat2(b.bone.matPose, q)
             }
-            if (flag) {
-                // console.log(txt)
-                flag = false
-            }
-            // const 
-            // console.log(weight)
         }
         skeletonChanged = true
 
@@ -269,6 +261,41 @@ export class UpdateManager {
                 // console.log(`UpdateManager::update(): skin has changed`)
                 this.expressionManager.skeleton.humanMesh.calculateVertexRigged()
                 this.renderList.update()
+            }
+        }
+    }
+}
+
+interface BQ {
+    bone: Bone
+    q: quat2
+}
+
+class ExpressionManager2 {
+    blendshapes = new Map<string, BQ[]>()
+    constructor(expressionManager: ExpressionManager) {
+        // convert the BVH file data in ExpressionManager into a simplified data structure with quaternions
+        const identity = mat4.create()
+        const skeleton =  expressionManager.skeleton
+        const base_anim = expressionManager.base_anim
+        const nBones = skeleton.boneslist!.length
+        for(let [name, frame] of expressionManager.poseUnitName2Frame) {
+            const list: BQ[] = []
+            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
+                const m = base_anim[frame * nBones + b_idx]
+                if (!mat4.equals(identity, m)) {
+                    list.push({
+                        bone: skeleton.boneslist![b_idx],
+                        q:  quat2.fromMat4(quat2.create(), m)
+                    })
+                }
+            }
+            if (list.length !== 0) {
+                for(let pair of blendshape2poseUnit) {
+                    if (pair[1] === name) {
+                        this.blendshapes.set(pair[0], list)
+                    }
+                }
             }
         }
     }

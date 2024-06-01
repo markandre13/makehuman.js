@@ -12,7 +12,7 @@ export class Frontend_impl extends Frontend_skel {
     expressionModel: ExpressionModel
 
     backend?: Backend
-  
+
     constructor(orb: ORB, updateManager: UpdateManager, expressionModel: ExpressionModel) {
         super(orb)
         this.updateManager = updateManager
@@ -20,7 +20,7 @@ export class Frontend_impl extends Frontend_skel {
     }
 
     /*
-     * 
+     *
      */
     override chordata(data: Uint8Array): void {
         // console.log(`got ${data.length} byte chordata packet`)
@@ -31,77 +31,12 @@ export class Frontend_impl extends Frontend_skel {
      * blendshapes
      */
 
-     // data received from mediapipe
-     blendshapeName2Index = new Map<string, number>()
-     blendshapeIndex2poseUnit = new Map<number, string>()
-     landmarks?: Float32Array
-     blendshapes?: Float32Array
-     transform?: Float32Array
- 
-     // map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names
-     // ideally, we would need new poseunits matching the blendshapes
-     // TODO:
-     // [ ] render the real blendshapes
-     //   [ ] render the mediapipe mesh
-     //   [ ] create morphtargets for the mediapipe blendshapes
-     //   [ ] apply the morphtargets using the mediapipe blendshape coefficnets
-     // [ ] create a tool to create custom poseunits (with the blendshapes we try
-     //     to approximate also shown)
-     // [ ] create a tool to manage custom pose unit sets
-     blendshape2poseUnit = new Map<string, string>([
-         ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
-         ["browDownRight", "RightBrowDown"], // (see above)
-         ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
-         ["browOuterUpLeft", "LeftOuterBrowUp"],
-         ["browOuterUpRight", "RightOuterBrowUp"],
-
-         ["cheekPuff", "CheeksPump"],
-         ["cheekSquintLeft", ""],
-         ["cheekSquintRight", ""],
-         ["eyeBlinkLeft", "LeftUpperLidClosed"],
-         ["eyeBlinkRight", "RightUpperLidClosed"],
-         ["eyeLookDownLeft", "LeftEyeDown"],
-         ["eyeLookDownRight", "RightEyeDown"],
-         ["eyeLookInLeft", "LeftEyeturnRight"],
-         ["eyeLookInRight", "RightEyeturnLeft"],
-         ["eyeLookOutLeft", "LeftEyeturnLeft"],
-         ["eyeLookOutRight", "RightEyeturnRight"],
-         ["eyeLookUpLeft", "LeftEyeUp"],
-         ["eyeLookUpRight", "RightEyeUp"],
-         ["eyeSquintLeft", ""],
-         ["eyeSquintRight", ""],
-         ["eyeWideLeft", "LeftUpperLidOpen"],
-         ["eyeWideRight", "RightUpperLidOpen"],
-         ["jawForward", "ChinForward"],
-         ["jawLeft", "ChinLeft"],
-         ["jawOpen", "JawDropStretched"],
-         ["jawRight", "ChinRight"],
-         ["mouthClose", ""],
-         ["mouthDimpleLeft", ""],
-         ["mouthDimpleRight", ""],
-         ["mouthFrownLeft", "MouthLeftPlatysma"],
-         ["mouthFrownRight", "MouthLeftPlatysma"],
-         ["mouthFunnel", "LipsKiss"],
-         ["mouthLeft", "MouthMoveRight"],
-         ["mouthLowerDownLeft", ""],
-         ["mouthLowerDownRight", ""],
-         ["mouthPressLeft", ""],
-         ["mouthPressRight", ""],
-         // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
-         ["mouthRight", "MouthMoveLeft"],
-         ["mouthRollLower", "lowerLipBackward"],
-         ["mouthRollUpper", "lowerLipBackward"],
-         ["mouthShrugLower", ""],
-         ["mouthShrugUpper", ""],
-         ["mouthSmileLeft", "MouthLeftPullUp"],
-         ["mouthSmileRight", "MouthRightPullUp"],
-         ["mouthStretchLeft", "MouthLeftPlatysma"],
-         ["mouthStretchRight", "MouthRightPlatysma"],
-         ["mouthUpperUpLeft", ""], // no match
-         ["mouthUpperUpRight", ""],
-         ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
-         // ["noseSneerRight", "NasolabialDeepener"],
-     ])
+    // data received from mediapipe
+    blendshapeName2Index = new Map<string, number>()
+    blendshapeIndex2poseUnit = new Map<number, string>()
+    landmarks?: Float32Array
+    blendshapes?: Float32Array
+    transform?: Float32Array
 
     getBlendshapeWeight(name: string): number {
         if (this.blendshapes === undefined) {
@@ -121,14 +56,19 @@ export class Frontend_impl extends Frontend_skel {
         this.blendshapeName2Index.clear()
         faceBlendshapeNames.forEach((name, index) => {
             this.blendshapeName2Index.set(name, index)
-            const poseUnitName = this.blendshape2poseUnit.get(name)
+            const poseUnitName = blendshape2poseUnit.get(name)
             if (poseUnitName) {
                 this.blendshapeIndex2poseUnit.set(index, poseUnitName)
             }
         })
     }
 
-    override faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+    override faceLandmarks(
+        landmarks: Float32Array,
+        blendshapes: Float32Array,
+        transform: Float32Array,
+        timestamp_ms: bigint
+    ): void {
         // console.log(`got blendshape`)
         this.landmarks = landmarks
         this.blendshapes = blendshapes
@@ -143,3 +83,68 @@ export class Frontend_impl extends Frontend_skel {
         // })
     }
 }
+
+// map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names
+// ideally, we would need new poseunits matching the blendshapes
+// TODO:
+// [ ] render the real blendshapes
+//   [ ] render the mediapipe mesh
+//   [ ] create morphtargets for the mediapipe blendshapes
+//   [ ] apply the morphtargets using the mediapipe blendshape coefficnets
+// [ ] create a tool to create custom poseunits (with the blendshapes we try
+//     to approximate also shown)
+// [ ] create a tool to manage custom pose unit sets
+export const blendshape2poseUnit = new Map<string, string>([
+    ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
+    ["browDownRight", "RightBrowDown"], // (see above)
+    ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
+    ["browOuterUpLeft", "LeftOuterBrowUp"],
+    ["browOuterUpRight", "RightOuterBrowUp"],
+
+    ["cheekPuff", "CheeksPump"],
+    ["cheekSquintLeft", ""],
+    ["cheekSquintRight", ""],
+    ["eyeBlinkLeft", "LeftUpperLidClosed"],
+    ["eyeBlinkRight", "RightUpperLidClosed"],
+    ["eyeLookDownLeft", "LeftEyeDown"],
+    ["eyeLookDownRight", "RightEyeDown"],
+    ["eyeLookInLeft", "LeftEyeturnRight"],
+    ["eyeLookInRight", "RightEyeturnLeft"],
+    ["eyeLookOutLeft", "LeftEyeturnLeft"],
+    ["eyeLookOutRight", "RightEyeturnRight"],
+    ["eyeLookUpLeft", "LeftEyeUp"],
+    ["eyeLookUpRight", "RightEyeUp"],
+    ["eyeSquintLeft", ""],
+    ["eyeSquintRight", ""],
+    ["eyeWideLeft", "LeftUpperLidOpen"],
+    ["eyeWideRight", "RightUpperLidOpen"],
+    ["jawForward", "ChinForward"],
+    ["jawLeft", "ChinLeft"],
+    ["jawOpen", "JawDropStretched"],
+    ["jawRight", "ChinRight"],
+    ["mouthClose", ""],
+    ["mouthDimpleLeft", ""],
+    ["mouthDimpleRight", ""],
+    ["mouthFrownLeft", "MouthLeftPlatysma"],
+    ["mouthFrownRight", "MouthLeftPlatysma"],
+    ["mouthFunnel", "LipsKiss"],
+    ["mouthLeft", "MouthMoveRight"],
+    ["mouthLowerDownLeft", ""],
+    ["mouthLowerDownRight", ""],
+    ["mouthPressLeft", ""],
+    ["mouthPressRight", ""],
+    // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
+    ["mouthRight", "MouthMoveLeft"],
+    ["mouthRollLower", "lowerLipBackward"],
+    ["mouthRollUpper", "lowerLipBackward"],
+    ["mouthShrugLower", ""],
+    ["mouthShrugUpper", ""],
+    ["mouthSmileLeft", "MouthLeftPullUp"],
+    ["mouthSmileRight", "MouthRightPullUp"],
+    ["mouthStretchLeft", "MouthLeftPlatysma"],
+    ["mouthStretchRight", "MouthRightPlatysma"],
+    ["mouthUpperUpLeft", ""], // no match
+    ["mouthUpperUpRight", ""],
+    ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
+    // ["noseSneerRight", "NasolabialDeepener"],
+])
