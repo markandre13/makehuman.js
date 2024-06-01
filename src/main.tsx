@@ -95,6 +95,7 @@ function run() {
 
     const oiah = "calc((12/16) * 1rem + 8px"
     const connector = new Connector(app.frontend)
+    connector.connect()
 
     document.body.replaceChildren(
         ...(

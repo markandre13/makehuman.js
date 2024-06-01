@@ -413,6 +413,7 @@ export function BlendShapeTab(props: { app: Application }) {
     return (
         <Tab label="Face" value={TAB.FACE} visibilityChange={setRenderer(props.app, editor)}>
             Face Blendshape Editor (under construction)
+            <a href="https://hinzka.hatenablog.com/entry/2021/12/21/222635">blendshapes explained</a>
             <Form>
                 <FormText model={editor.scale} />
                 <FormText model={editor.dy} />

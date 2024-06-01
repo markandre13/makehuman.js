@@ -33,7 +33,7 @@ export function MediapipeTab(props: { app: Application }) {
         const ar = new FaceARKitRenderer(props.app.frontend)
         // const ict = new FaceICTKitRenderer(frontend)
         const mh = new RenderHuman(true)
-        faceRenderer = new OptionModel<RenderHandler>(lm, [
+        faceRenderer = new OptionModel<RenderHandler>(mh, [
             [lm, "Mediapipe Landmarks"],
             [ar, "ARKit Blendshape"],
             // [ict, "ICTKit Blendshape"],

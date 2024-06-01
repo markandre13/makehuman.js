@@ -11,6 +11,8 @@ import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
+let flag = true
+
 /**
  * All presentation models report changes to the update manager
  * which will the update the domain model.
@@ -189,35 +191,62 @@ export class UpdateManager {
         // experimental head rotation
         // data we do not have: head moving forward, backwards (when camera is not mounted to head,
         // we could extrapolate that from the z translation
-        const neck1 = this.expressionManager.skeleton.getBone("neck01")
-        const neck2 = this.expressionManager.skeleton.getBone("neck02")
-        const neck3 = this.expressionManager.skeleton.getBone("neck03")
-        const head = this.expressionManager.skeleton.getBone("head")
 
-        const t = this.app.frontend.transform!
-        let m = mat4.fromValues(
-            t[0], t[1], t[2], 0,
-            t[4], t[5], t[6], 0,
-            t[8], t[9], t[10], 0,
-            0, 0, 0, 1
-        )
-        const {x,y,z} = euler_from_matrix(m)
-        head.matPose = euler_matrix(0,0,z)
-        const neckXY = euler_matrix(x,y,0)
-
-        let q = quat2.create()
-        quat2.fromMat4(q, neckXY)
         const REST_QUAT = quat2.create()
-        q = quaternion_slerp(REST_QUAT, q, 0.3333333333)
-        mat4.fromQuat2(neck1.matPose, q)
-        mat4.fromQuat2(neck2.matPose, q)
-        mat4.fromQuat2(neck3.matPose, q)
-        // mat4.fromQuat2(head.matPose, q)
-        // mat4.multiply(head.matPose, headZ, head.matPose)
 
-        // for(let i of [0,1,2, 4,5,6, 8,9,10]) {
-        //     head.matPose[i] = m1[i]
-        // }
+        if (this.app.frontend.transform) {
+            const neck1 = this.expressionManager.skeleton.getBone("neck01")
+            const neck2 = this.expressionManager.skeleton.getBone("neck02")
+            const neck3 = this.expressionManager.skeleton.getBone("neck03")
+            const head = this.expressionManager.skeleton.getBone("head")
+
+            const t = this.app.frontend.transform
+            let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
+            const { x, y, z } = euler_from_matrix(m)
+            head.matPose = euler_matrix(0, 0, z)
+            const neckXY = euler_matrix(x, y, 0)
+
+            let q = quat2.create()
+            quat2.fromMat4(q, neckXY)
+            q = quaternion_slerp(REST_QUAT, q, 0.3333333333)
+            mat4.fromQuat2(neck1.matPose, q)
+            mat4.fromQuat2(neck2.matPose, q)
+            mat4.fromQuat2(neck3.matPose, q)
+            // mat4.fromQuat2(head.matPose, q)
+            // mat4.multiply(head.matPose, headZ, head.matPose)
+
+            // for(let i of [0,1,2, 4,5,6, 8,9,10]) {
+            //     head.matPose[i] = m1[i]
+            // }
+        }
+        // experimental jawOpen
+        {
+            const identity = mat4.create()
+            const expressionManager =  this.expressionManager
+            const skeleton =  expressionManager.skeleton
+            const weight = this.app.frontend.getBlendshapeWeight("jawOpen")
+            const frame = expressionManager.poseUnitName2Frame.get("JawDrop")!
+            const nBones = expressionManager.skeleton.boneslist!.length
+            const base_anim = expressionManager.base_anim
+            // let txt = ""
+            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
+                const m = base_anim[frame * nBones + b_idx]
+                if (!mat4.equals(identity, m)) {
+                    const bone = skeleton.boneslist![b_idx]
+                    // txt = `${txt}, ${bone.name}`
+                    let q = quat2.create()
+                    quat2.fromMat4(q, m)
+                    q = quaternion_slerp(REST_QUAT, q, weight)
+                    mat4.fromQuat2(bone.matPose, q)
+                }
+            }
+            if (flag) {
+                // console.log(txt)
+                flag = false
+            }
+            // const 
+            // console.log(weight)
+        }
         skeletonChanged = true
 
         // UPDATE_SKINNING_MATRIX
