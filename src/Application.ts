@@ -24,11 +24,11 @@ import { Frontend_impl } from "net/Frontend_impl"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
-export function setRenderer(app: Application, renderer: RenderHandler) {
+export function setRenderer(app: Application, renderer: RenderHandler, classic: boolean = true) {
     return (state: "visible" | "hidden") => {
         // console.log(`setRenderer(state=${state}, renderer='${renderer.constructor.name})`)
         if (state === "visible") {
-            app.setRenderer(renderer)
+            app.setRenderer(renderer, classic)
         }
     }
 }
@@ -43,6 +43,7 @@ export class Application {
     skeleton: Skeleton
 
     glview!: GLView
+    classic = true
 
     // application
     sliderNodes: SliderNode
@@ -134,7 +135,8 @@ export class Application {
 
     renderer?: RenderHandler
 
-    setRenderer(renderer?: RenderHandler) {
+    setRenderer(renderer: RenderHandler, classic: boolean = true) {
         this.renderer = renderer
+        this.classic = classic
     }
 }

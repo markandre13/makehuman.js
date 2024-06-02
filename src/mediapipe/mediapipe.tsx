@@ -40,7 +40,7 @@ export function MediapipeTab(props: { app: Application }) {
             [mh, "MakeHuman"]
         ], {label: "Render Engine"})
         faceRenderer.modified.add(() => {
-            props.app.setRenderer(faceRenderer.value)
+            props.app.setRenderer(faceRenderer.value, faceRenderer.value !== mh)
         })
     }
 
@@ -49,7 +49,7 @@ export function MediapipeTab(props: { app: Application }) {
             label="Mediapipe"
             value={TAB.MEDIAPIPE}
             visibilityChange={(state) => {
-                setRenderer(props.app, faceRenderer.value)(state)
+                setRenderer(props.app, faceRenderer.value, false)(state)
             }}
         >
             <Form>

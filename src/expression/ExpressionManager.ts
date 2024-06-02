@@ -97,16 +97,16 @@ export class ExpressionManager {
             // iterate over all bones in the skeleton
             for (let b_idx = 0; b_idx < nBones; ++b_idx) {
                 // begin with frame 0 and 1
-                const m1 = base_anim[f_idxs[0] * nBones + b_idx]
-                const m2 = base_anim[f_idxs[1] * nBones + b_idx]
+                const m1 = base_anim[f_idxs[0] * nBones + b_idx] // frame 0
+                const m2 = base_anim[f_idxs[1] * nBones + b_idx] // frame 1
 
                 let q1 = quat2.fromMat4(quat2.create(), m1)
                 let q2 = quat2.fromMat4(quat2.create(), m2)
 
-                q1 = quaternion_slerp(REST_QUAT, q1, weights[0])
-                q2 = quaternion_slerp(REST_QUAT, q2, weights[1])
+                q1 = quaternion_slerp(REST_QUAT, q1, weights[0]) // slerp frame 0 quat2 by weight 0
+                q2 = quaternion_slerp(REST_QUAT, q2, weights[1]) // slerp frame 1 quat2 by weight 1
 
-                let quat = quat2.multiply(quat2.create(), q2, q1)
+                let quat = quat2.multiply(quat2.create(), q2, q1) // q = frame 0 q * frame 1 q
 
                 // continue with frame 2 onward
                 for (let i = 2; i < f_idxs.length; ++i) {

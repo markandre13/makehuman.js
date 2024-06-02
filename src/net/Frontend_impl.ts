@@ -97,13 +97,12 @@ export class Frontend_impl extends Frontend_skel {
 export const blendshape2poseUnit = new Map<string, string>([
     ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
     ["browDownRight", "RightBrowDown"], // (see above)
-    ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
+    // ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
     ["browOuterUpLeft", "LeftOuterBrowUp"],
     ["browOuterUpRight", "RightOuterBrowUp"],
 
-    ["cheekPuff", "CheeksPump"],
-    ["cheekSquintLeft", ""],
-    ["cheekSquintRight", ""],
+    // ["cheekSquintLeft", ""],
+    // ["cheekSquintRight", ""],
     ["eyeBlinkLeft", "LeftUpperLidClosed"],
     ["eyeBlinkRight", "RightUpperLidClosed"],
     ["eyeLookDownLeft", "LeftEyeDown"],
@@ -114,37 +113,44 @@ export const blendshape2poseUnit = new Map<string, string>([
     ["eyeLookOutRight", "RightEyeturnRight"],
     ["eyeLookUpLeft", "LeftEyeUp"],
     ["eyeLookUpRight", "RightEyeUp"],
-    ["eyeSquintLeft", ""],
-    ["eyeSquintRight", ""],
+    // ["eyeSquintLeft", ""],
+    // ["eyeSquintRight", ""],
     ["eyeWideLeft", "LeftUpperLidOpen"],
     ["eyeWideRight", "RightUpperLidOpen"],
     ["jawForward", "ChinForward"],
-    ["jawLeft", "ChinLeft"],
-    ["jawOpen", "JawDropStretched"],
+
+    // these are kind of okay
+    ["jawOpen", "JawDrop"],
     ["jawRight", "ChinRight"],
-    ["mouthClose", ""],
-    ["mouthDimpleLeft", ""],
-    ["mouthDimpleRight", ""],
+    ["jawLeft", "ChinLeft"],
+    ["mouthRight", "MouthMoveRight"],
+    ["mouthLeft", "MouthMoveLeft"],
+
+    // ["mouthClose", ""],
+    // ["mouthDimpleLeft", ""],
+    // ["mouthDimpleRight", ""],
     ["mouthFrownLeft", "MouthLeftPlatysma"],
     ["mouthFrownRight", "MouthLeftPlatysma"],
+
+    ["cheekPuff", "CheeksPump"],
     ["mouthFunnel", "LipsKiss"],
-    ["mouthLeft", "MouthMoveRight"],
-    ["mouthLowerDownLeft", ""],
-    ["mouthLowerDownRight", ""],
-    ["mouthPressLeft", ""],
-    ["mouthPressRight", ""],
-    // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
-    ["mouthRight", "MouthMoveLeft"],
+
+    // ["mouthLowerDownLeft", ""],
+    // ["mouthLowerDownRight", ""],
+    // ["mouthPressLeft", ""],
+    // ["mouthPressRight", ""],
+    // // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
+
     ["mouthRollLower", "lowerLipBackward"],
     ["mouthRollUpper", "lowerLipBackward"],
-    ["mouthShrugLower", ""],
-    ["mouthShrugUpper", ""],
+    // ["mouthShrugLower", ""],
+    // ["mouthShrugUpper", ""],
     ["mouthSmileLeft", "MouthLeftPullUp"],
     ["mouthSmileRight", "MouthRightPullUp"],
     ["mouthStretchLeft", "MouthLeftPlatysma"],
     ["mouthStretchRight", "MouthRightPlatysma"],
-    ["mouthUpperUpLeft", ""], // no match
-    ["mouthUpperUpRight", ""],
-    ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
+    // ["mouthUpperUpLeft", ""], // no match
+    // ["mouthUpperUpRight", ""],
+    // ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
     // ["noseSneerRight", "NasolabialDeepener"],
 ])
