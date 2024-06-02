@@ -219,13 +219,6 @@ export class UpdateManager {
             }
           
             // experimental jawOpen
-            // TODO: extend to handle all blendshape weights:
-            // 1: have places for quat2s of all bones (inside the bone would be fastest)
-            // 2: fill them
-            // 3: copy them to matPose
-            // when done:
-            // tweak copying values to ExpressionManager2 to better resemble the ARKit blendshapes
-
             const frontend = this.app.frontend
             if (frontend.blendshapes !== undefined) {
                 if (em2 === undefined) {
@@ -264,13 +257,6 @@ export class UpdateManager {
                         mat4.identity(this.expressionManager.skeleton.boneslist![i].matPose)
                     }
                 })
-
-                // const weight = this.app.frontend.getBlendshapeWeight("jawOpen")
-                // const a = em2.blendshapes.get("jawOpen")!
-                // for(let b of a) {
-                //     const q = quaternion_slerp(REST_QUAT, b.q, weight)
-                //     mat4.fromQuat2(b.bone.matPose, q)
-                // }
             }
             skeletonChanged = true
         }

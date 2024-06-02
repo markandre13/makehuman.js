@@ -231,7 +231,7 @@ class BlendShapeEditor extends RenderHandler {
         super()
         this.app = app
         this.blendshapeSet = FaceARKitLoader.getInstance()
-        this.neutral = this.blendshapeSet.neutral
+        this.neutral = this.blendshapeSet.getNeutral()
 
         this.blendshape.modified.add(() => {
             this.update = true

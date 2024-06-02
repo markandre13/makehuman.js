@@ -14,6 +14,7 @@ import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { RenderHandler } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
+import { FormSwitch } from "toad.js/view/FormSwitch"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend
@@ -31,12 +32,12 @@ export function MediapipeTab(props: { app: Application }) {
     if (faceRenderer === undefined) {
         const lm = new FaceLandmarkRenderer(props.app.frontend)
         const ar = new FaceARKitRenderer(props.app.frontend)
-        // const ict = new FaceICTKitRenderer(frontend)
+        const ict = new FaceICTKitRenderer(props.app.frontend)
         const mh = new RenderHuman(true)
         faceRenderer = new OptionModel<RenderHandler>(mh, [
             [lm, "Mediapipe Landmarks"],
             [ar, "ARKit Blendshape"],
-            // [ict, "ICTKit Blendshape"],
+            [ict, "ICTKit Blendshape"],
             [mh, "MakeHuman"]
         ], {label: "Render Engine"})
         faceRenderer.modified.add(() => {
@@ -54,6 +55,7 @@ export function MediapipeTab(props: { app: Application }) {
         >
             <Form>
                 <FormSelect model={faceRenderer} />
+                <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
         </Tab>
     )

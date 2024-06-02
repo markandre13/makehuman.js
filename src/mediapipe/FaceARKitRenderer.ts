@@ -20,21 +20,21 @@ import { mat4, vec3 } from "gl-matrix"
 export class FaceARKitRenderer extends RenderHandler {
     mesh!: RenderMesh
     frontend: Frontend_impl
-    blendshapeSet: FaceARKitLoader
-    // neutral: WavefrontObj
-    // targets = new Array<Target>(blendshapeNames.length)
+    blendshapeSet?: FaceARKitLoader
 
     constructor(frontend: Frontend_impl) {
         super()
-        this.blendshapeSet = FaceARKitLoader.getInstance().preload()
         this.frontend = frontend
     }
 
     override paint(app: Application, view: GLView): void {
+        if (this.blendshapeSet === undefined) {
+            this.blendshapeSet = FaceARKitLoader.getInstance().preload()
+        }
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
-        const neutral = this.blendshapeSet.neutral
+        const neutral = this.blendshapeSet.neutral!
 
         const vertex = new Float32Array(neutral.xyz.length)
         vertex.set(this.blendshapeSet.neutral!.xyz)

@@ -1,6 +1,5 @@
 import { Application } from "Application"
 import { GLView, Projection, RenderHandler } from "render/GLView"
-import { WavefrontObj } from "mesh/WavefrontObj"
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -10,9 +9,10 @@ import {
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "../net/Frontend_impl"
-import { Target } from "target/Target"
 import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
+import { FaceICTKitLoader } from "./FaceICTKitLoader"
+import { mat4, vec3 } from "gl-matrix"
 
 /**
  * Render MediaPipe's blendshape using ICT's FaceKit Mesh
@@ -20,65 +20,26 @@ import { blendshapeNames } from "./blendshapeNames"
 export class FaceICTKitRenderer extends RenderHandler {
     mesh!: RenderMesh
     frontend: Frontend_impl
-    neutral: WavefrontObj
-    targets = new Array<Target>(blendshapeNames.length)
+    blendshapeSet?: FaceICTKitLoader
+    // neutral: WavefrontObj
+    // 
 
     constructor(frontend: Frontend_impl) {
         super()
-        this.frontend = frontend
-
-        const scale = 0.6
-        this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
-        for (let i = 0; i < this.neutral.xyz.length; ++i) {
-            this.neutral.xyz[i] = this.neutral.xyz[i] * scale
-        }
-        const indices = 11247
-        for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
-            if (blendshape === 0) {
-                continue
-            }
-            let name = blendshapeNames[blendshape]
-            switch (name) {
-                case "browInnerUp":
-                    name = "browInnerUp_L"
-                    break
-                case "cheekPuff":
-                    name = "cheekPuff_L"
-                    break
-            }
-            let dst = new WavefrontObj(`data/blendshapes/ict/${name}.obj`)
-            for (let i = 0; i < this.neutral.xyz.length; ++i) {
-                dst.xyz[i] = dst.xyz[i] * scale
-            }
-            const target = new Target()
-            target.diff(this.neutral.xyz, dst.xyz, indices)
-            if (name === "browInnerUp_L") {
-                dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)
-                for (let i = 0; i < this.neutral.xyz.length; ++i) {
-                    dst.xyz[i] = dst.xyz[i] * scale
-                }
-                target.apply(dst.xyz, 1)
-                target.diff(this.neutral.xyz, dst.xyz, indices)
-            }
-            if (name === "cheekPuff_L") {
-                dst = new WavefrontObj(`data/blendshapes/ict/cheekPuff_R.obj`)
-                for (let i = 0; i < this.neutral.xyz.length; ++i) {
-                    dst.xyz[i] = dst.xyz[i] * scale
-                }
-                target.apply(dst.xyz, 1)
-                target.diff(this.neutral.xyz, dst.xyz, indices)
-            }
-            this.targets[blendshape] = target
-        }
+        this.frontend = frontend        
     }
 
     override paint(app: Application, view: GLView): void {
+        if (this.blendshapeSet === undefined) {
+            this.blendshapeSet = FaceICTKitLoader.getInstance() // .preload()
+        }
+
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
-        const vertex = new Float32Array(this.neutral.xyz.length)
-        vertex.set(this.neutral!.xyz)
+        const vertex = new Float32Array(this.blendshapeSet.neutral.xyz.length)
+        vertex.set(this.blendshapeSet.neutral!.xyz)
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
@@ -87,12 +48,38 @@ export class FaceICTKitRenderer extends RenderHandler {
             if (isZero(weight)) {
                 continue
             }
-            this.targets[blendshape].apply(vertex, weight)
+            this.blendshapeSet.targets[blendshape].apply(vertex, weight)
         }
+
+        // BEGIN COPY'N PASTE FROM FACEARKIT RENDERER
+        // scale and rotate
+        const t = this.frontend.transform!!
+        // prettier-ignore
+        const m = mat4.fromValues(
+             t[0],  t[1],  t[2],  t[3],
+             t[4],  t[5],  t[6],  t[7],
+             t[8],  t[9], t[10], t[11],
+            t[12], t[13], t[14], t[15]
+        )
+        const s = 1
+        mat4.scale(m, m, vec3.fromValues(s, s, s))
+
+        const v = vec3.create()
+        for (let i = 0; i < vertex.length; i += 3) {
+            v[0] = vertex[i]
+            v[1] = vertex[i + 1]
+            v[2] = vertex[i + 2]
+            vec3.transformMat4(v, v, m)
+            vertex[i] = v[0]
+            vertex[i + 1] = v[1]
+            vertex[i + 2] = v[2]
+        }
+        // END COPY'N PASTE FROM FACEARKIT RENDERER
+
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {
-            this.mesh = new RenderMesh(gl, vertex, this.neutral.fxyz, undefined, undefined, true)
+            this.mesh = new RenderMesh(gl, vertex, this.blendshapeSet.neutral.fxyz, undefined, undefined, true)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement

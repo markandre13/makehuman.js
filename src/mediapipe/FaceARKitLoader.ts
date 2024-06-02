@@ -17,10 +17,9 @@ export class FaceARKitLoader {
     // private scale = 1;
     private targets: Target[]
     private name2index: Map<string, number>
-    neutral: WavefrontObj
+    neutral?: WavefrontObj
 
     constructor() {
-        this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
         this.targets = new Array<Target>(blendshapeNames.length)
         this.name2index = new Map<string, number>()
         blendshapeNames.forEach((name, index) => this.name2index.set(name, index))
@@ -36,7 +35,15 @@ export class FaceARKitLoader {
         return this
     }
 
+    getNeutral(): WavefrontObj {
+        if (this.neutral === undefined) {
+            this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+        }
+        return this.neutral
+    }
+
     getTarget(blendshape: number | string): Target | undefined {
+        this.getNeutral()
         if (typeof blendshape === "string") {
             blendshape = this.name2index.get(blendshape)!
         }
@@ -52,7 +59,7 @@ export class FaceARKitLoader {
         //     dst.xyz[i] = dst.xyz[i] * this.scale
         // }
         const target = new Target()
-        target.diff(this.neutral.xyz, dst.xyz)
+        target.diff(this.neutral!.xyz, dst.xyz)
         this.targets[blendshape] = target
         return target
     }
