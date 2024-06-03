@@ -22,7 +22,7 @@ export class RenderHuman extends RenderHandler {
                 const proxy = humanMesh.proxies.get(humanMesh.changedProxy)!
                 renderList.proxies.set(
                     proxy.type,
-                    new RenderMesh(view.gl, proxy.getCoords(humanMesh.vertexRigged), proxy.mesh.fxyz)
+                    new RenderMesh(view.gl, proxy.getCoords(humanMesh.vertexRigged), proxy.getMesh().fxyz)
                 )
             } else {
                 renderList.proxies.delete(humanMesh.changedProxy)

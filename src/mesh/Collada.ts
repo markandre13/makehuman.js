@@ -65,12 +65,12 @@ export function exportCollada(humanMesh: HumanMesh) {
             name: "eyeR", r: 1.0, g: 0.0, b: 0.0
         }, {
             xyz: proxy.getCoords(humanMesh.vertexMorphed),
-            fxyz: proxy.mesh.fxyz,
-            uv: proxy.mesh.uv,
-            fuv: proxy.mesh.fuv,
+            fxyz: proxy.getMesh().fxyz,
+            uv: proxy.getMesh().uv,
+            fuv: proxy.getMesh().fuv,
             vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
             start: 0,
-            length: proxy.mesh.fxyz.length,
+            length: proxy.getMesh().fxyz.length,
             name: "teeth", r: 1.0, g: 1.0, b: 1.0
         }, {
             xyz: humanMesh.vertexMorphed,

@@ -28,7 +28,7 @@ export class Proxy {
     // license
     description: string = ""
     type: ProxyType
-    mesh!: WavefrontObj
+    mesh?: WavefrontObj
     file: string
     // mtime
     uuid?: string
@@ -79,9 +79,11 @@ export class Proxy {
         this.human = human
     }
 
-    loadMeshAndObject(): WavefrontObj {
-        const mesh = new WavefrontObj(this._obj_file!)
-        return mesh
+    getMesh(): WavefrontObj {
+        if (this.mesh === undefined) {
+            this.mesh = new WavefrontObj(this._obj_file!)
+        }
+        return this.mesh
     }
 
     _finalize(refVerts: ProxyRefVert[]) {
@@ -91,7 +93,7 @@ export class Proxy {
     }
 
     /**
-     * Return proxy meth vertices adjusted to base mesh
+     * Return proxy's mesh vertices adjusted to the base mesh
      * 
      * More suitable for morphing (translate) than posing (rotate), especially when the offset is noticable.
      * 
@@ -170,7 +172,7 @@ export class Proxy {
 export function loadProxy(human: MorphManager, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
     const proxy = loadTextProxy(human, asciipath, type)
-    proxy.mesh = proxy.loadMeshAndObject() // separate to be able to test loadTextProxy without Obj file
+    // proxy.loadMeshAndObject() // separate to be able to test loadTextProxy without Obj file
     return proxy
 }
 

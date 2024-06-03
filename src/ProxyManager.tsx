@@ -41,20 +41,35 @@ export class ProxyManager {
                 // model.add(file, file)
                 proxyList.push(file)
             }
-            const model = new OptionModel("none", proxyList)
+            let defaultValue: string
+            switch(type) {
+                case ProxyType.Eyes:
+                    defaultValue = "high-poly"
+                    break
+                case ProxyType.Teeth:
+                    defaultValue = "teeth_base"
+                    break
+                case ProxyType.Tongue:
+                    defaultValue = "tongue01"
+                    break
+                default:
+                    defaultValue = "none"
+            }
+            const model = new OptionModel(defaultValue, proxyList)
             model.modified.add(() => {
-                console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
+                // console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
                 if (model.value === "none") {
                     humanMesh.proxies.delete(type)
                 } else {
                     const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
                     const suffix = exists(`${prefix}.mhclo`) ? "mhclo" : "proxy"
-                    console.log(`try toad load '${prefix}.${suffix}'`)
+                    console.log(`load proxy mesh '${prefix}.${suffix}'`)
                     humanMesh.proxies.set(type, loadProxy(humanMesh.human, `${prefix}.${suffix}`, type))
                 }
                 humanMesh.changedProxy = type
                 humanMesh.human.modified.trigger()
             })
+            model.modified.trigger()
             this.list.set(type, model)
         }
     }
