@@ -17,12 +17,20 @@ export class RenderHuman extends RenderHandler {
         }
         const humanMesh = app.humanMesh
         const renderList = view.renderList
+
+        //
         if (humanMesh.changedProxy !== undefined) {
             if (humanMesh.proxies.has(humanMesh.changedProxy)) {
                 const proxy = humanMesh.proxies.get(humanMesh.changedProxy)!
                 renderList.proxies.set(
                     proxy.type,
-                    new RenderMesh(view.gl, proxy.getCoords(humanMesh.vertexRigged), proxy.getMesh().fxyz)
+                    new RenderMesh(
+                        view.gl,
+                        proxy.getCoords(humanMesh.vertexRigged),
+                        proxy.getMesh().fxyz,
+                        proxy.getMesh().uv,
+                        proxy.getMesh().fuv
+                    )
                 )
             } else {
                 renderList.proxies.delete(humanMesh.changedProxy)
@@ -36,7 +44,7 @@ export class RenderHuman extends RenderHandler {
         const gl = view.gl
         const programRGBA = view.programRGBA
         const programTex = view.programTex
-        const texture = view.texture!
+        // const texture = view.bodyTexture!
         const wireframe = app.humanMesh.wireframe.value
         const viewHead = this.viewHead
         
@@ -143,6 +151,7 @@ export class RenderHuman extends RenderHandler {
             }
             switch (proxyType) {
                 case ProxyType.Proxymeshes:
+                    return
                     rgba = [1, 0.8, 0.7, alpha]
                     break
                 case ProxyType.Clothes:
@@ -152,7 +161,8 @@ export class RenderHuman extends RenderHandler {
                     rgba = [0.2, 0.1, 0.1, alpha]
                     break
                 case ProxyType.Eyes:
-                    rgba = [0, 0.5, 1, alpha]
+                    return
+                //     rgba = [0, 0.5, 1, alpha]
                     break
                 case ProxyType.Eyebrows:
                     rgba = [0, 0, 0, alpha]
@@ -175,12 +185,20 @@ export class RenderHuman extends RenderHandler {
         // TEXTURED SKIN
         //
         programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programTex.texture(texture, alpha)
+        programTex.texture(view.bodyTexture!, alpha)
         if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
             let offset = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
             let length = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
             renderList.base.bind(programTex)
             renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+        }
+
+        {
+        // // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
+            const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
+            programTex.texture(view.eyeTexture!, alpha)           
+            renderMesh.bind(programTex)
+            renderMesh.draw(programTex, gl.TRIANGLES)
         }
 
         // renderList.base.bind(programTex)

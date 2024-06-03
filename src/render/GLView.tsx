@@ -34,7 +34,8 @@ export class GLView extends View {
     programRGBA!: RGBAShader
     programTex!: TextureShader
     renderList!: RenderList
-    texture: WebGLTexture | null = null
+    bodyTexture: WebGLTexture | null = null
+    eyeTexture: WebGLTexture | null = null
 
     constructor(props: GLViewProps) {
         super(props)
@@ -89,7 +90,8 @@ export class GLView extends View {
         })
 
         // load texture and repaint once loaded
-        this.texture = loadTexture(this.gl, "data/skins/textures/young_caucasian_female_special_suit.png", this.paint)!
+        this.bodyTexture = loadTexture(this.gl, "data/skins/textures/young_caucasian_female_special_suit.png", this.paint)!
+        this.eyeTexture = loadTexture(this.gl, "data/eyes/materials/green_eye.png", this.paint)!
         // schedule initial paint
         requestAnimationFrame(this.paint)
     }

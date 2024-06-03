@@ -16,7 +16,13 @@ export class RenderList {
         this.humanMesh = humanMesh
         this.base = new RenderMesh(gl, humanMesh.vertexRigged, humanMesh.baseMesh.fxyz, humanMesh.baseMesh.uv, humanMesh.baseMesh.fuv)
         humanMesh.proxies.forEach((proxy) => {
-            this.proxies.set(proxy.type, new RenderMesh(gl, proxy.getCoords(humanMesh.vertexRigged), proxy.getMesh().fxyz))
+            this.proxies.set(proxy.type, new RenderMesh(
+                gl,
+                proxy.getCoords(humanMesh.vertexRigged),
+                proxy.getMesh().fxyz,
+                proxy.getMesh().uv,
+                proxy.getMesh().fuv
+            ))
         })
         const skel = renderSkeletonGlobal(humanMesh)
         this.skeleton = new RenderMesh(gl, skel.vertex, skel.indices, undefined, undefined, false)
