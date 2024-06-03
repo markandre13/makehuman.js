@@ -101,8 +101,9 @@ export const blendshape2poseUnit = new Map<string, string>([
     ["browOuterUpLeft", "LeftOuterBrowUp"],
     ["browOuterUpRight", "RightOuterBrowUp"],
 
-    // ["cheekSquintLeft", ""],
-    // ["cheekSquintRight", ""],
+    ["cheekSquintRight", "RightCheekUp"],
+    ["cheekSquintLeft", "LeftCheekUp"],
+
     ["eyeBlinkLeft", "LeftUpperLidClosed"],
     ["eyeBlinkRight", "RightUpperLidClosed"],
     ["eyeLookDownLeft", "LeftEyeDown"],
@@ -127,30 +128,35 @@ export const blendshape2poseUnit = new Map<string, string>([
     ["mouthLeft", "MouthMoveLeft"],
 
     // ["mouthClose", ""],
-    // ["mouthDimpleLeft", ""],
-    // ["mouthDimpleRight", ""],
-    ["mouthFrownLeft", "MouthLeftPlatysma"],
-    ["mouthFrownRight", "MouthLeftPlatysma"],
+    ["mouthDimpleLeft", "MouthLeftPullSide"],
+    ["mouthDimpleRight", "MouthRightPullSide"],
 
     ["cheekPuff", "CheeksPump"],
     ["mouthFunnel", "LipsKiss"],
 
-    // ["mouthLowerDownLeft", ""],
-    // ["mouthLowerDownRight", ""],
-    // ["mouthPressLeft", ""],
-    // ["mouthPressRight", ""],
-    // // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
+    // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
 
     ["mouthRollLower", "lowerLipBackward"],
-    ["mouthRollUpper", "lowerLipBackward"],
-    // ["mouthShrugLower", ""],
-    // ["mouthShrugUpper", ""],
+    ["mouthRollUpper", "UpperLipBackward"],
+    ["mouthShrugLower", "lowerLipUp"], // lower lip up
+    ["mouthShrugUpper", "UpperLipUp"], // upper lip up
+
     ["mouthSmileLeft", "MouthLeftPullUp"],
     ["mouthSmileRight", "MouthRightPullUp"],
-    ["mouthStretchLeft", "MouthLeftPlatysma"],
-    ["mouthStretchRight", "MouthRightPlatysma"],
+    // ["mouthPressLeft", ""],
+    // ["mouthPressRight", ""],
+    ["mouthDimpleLeft", "MouthLeftPullSide"],
+    ["mouthDimpleRight", "MouthRightPullSide"],
+    ["mouthStretchLeft", "MouthLeftPullDown"],
+    ["mouthStretchRight", "MouthRightPullDown"],
+    ["mouthFrownLeft", "MouthLeftPlatysma"],
+    ["mouthFrownRight", "MouthLeftPlatysma"],
+
+    // ["mouthLowerDownLeft", ""],
+    // ["mouthLowerDownRight", ""],
     // ["mouthUpperUpLeft", ""], // no match
     // ["mouthUpperUpRight", ""],
+
     // ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
     // ["noseSneerRight", "NasolabialDeepener"],
 ])
