@@ -195,6 +195,7 @@ export class RenderHuman extends RenderHandler {
 
         {
         // // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
+            gl.depthMask(false) // must be false, otherwise the texture ain't visible
             const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
             programTex.texture(view.eyeTexture!, alpha)           
             renderMesh.bind(programTex)
