@@ -1,13 +1,8 @@
 import { TAB } from "HistoryManager"
-import { ORB } from "corba.js"
-import { WsProtocol } from "corba.js/net/browser"
-import { Backend } from "net/makehuman_stub"
-import { FormButton } from "toad.js/view/FormButton"
 import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
-import { Action, OptionModel } from "toad.js"
+import { OptionModel } from "toad.js"
 import { Form } from "toad.js/view/Form"
-import { Frontend_impl } from "../net/Frontend_impl"
 import { FaceLandmarkRenderer } from "./FaceLandmarkRenderer"
 import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
@@ -15,6 +10,7 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { RenderHandler } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { FormSwitch } from "toad.js/view/FormSwitch"
+import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend
@@ -27,21 +23,35 @@ import { FormSwitch } from "toad.js/view/FormSwitch"
 // [ ] write editor to tweak the blendshapes
 // [ ] write an editor to create pose units matching the blendshapes
 
-let faceRenderer: OptionModel<RenderHandler>
+let renderEngine: OptionModel<RenderHandler>
+let captureEngine: OptionModel<MotionCaptureEngine>
 export function MediapipeTab(props: { app: Application }) {
-    if (faceRenderer === undefined) {
+    if (renderEngine === undefined) {
         const lm = new FaceLandmarkRenderer(props.app.frontend)
         const ar = new FaceARKitRenderer(props.app.frontend)
         const ict = new FaceICTKitRenderer(props.app.frontend)
         const mh = new RenderHuman(true)
-        faceRenderer = new OptionModel<RenderHandler>(mh, [
+        renderEngine = new OptionModel<RenderHandler>(mh, [
             [lm, "Mediapipe Landmarks"],
             [ar, "ARKit Blendshape"],
             [ict, "ICTKit Blendshape"],
             [mh, "MakeHuman"]
         ], {label: "Render Engine"})
-        faceRenderer.modified.add(() => {
-            props.app.setRenderer(faceRenderer.value, faceRenderer.value !== mh)
+        renderEngine.modified.add(() => {
+            props.app.setRenderer(renderEngine.value, renderEngine.value !== mh)
+        })
+
+        captureEngine = new OptionModel<MotionCaptureEngine>(
+            MotionCaptureEngine.NONE, [
+                [MotionCaptureEngine.NONE, "None"],
+                [MotionCaptureEngine.MEDIAPIPE, "Mediapipe"],
+                [MotionCaptureEngine.LIVELINK, "Live Link"],
+            ], {
+                label: "Capture Engine"
+            }
+        )
+        captureEngine.modified.add( () => {
+            props.app.frontend.backend?.setEngine(MotionCaptureType.FACE, captureEngine.value)
         })
     }
 
@@ -50,11 +60,12 @@ export function MediapipeTab(props: { app: Application }) {
             label="Mediapipe"
             value={TAB.MEDIAPIPE}
             visibilityChange={(state) => {
-                setRenderer(props.app, faceRenderer.value, false)(state)
+                setRenderer(props.app, renderEngine.value, false)(state)
             }}
         >
             <Form>
-                <FormSelect model={faceRenderer} />
+                <FormSelect model={renderEngine} />
+                <FormSelect model={captureEngine} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
         </Tab>

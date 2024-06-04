@@ -35,5 +35,5 @@ interface Backend {
     void setFrontend(in Frontend frontend);
 
     // selects the kind of data the frontend wants to receive
-    void setEngine(in MotionCaptureEngine engine, in MotionCaptureType type);
+    void setEngine(in MotionCaptureType type, in MotionCaptureEngine engine);
 };
