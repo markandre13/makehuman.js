@@ -1,22 +1,26 @@
-enum MotionCaptureEngine {
-    MEDIAPIPE,
-    CHORDATA
-};
-
 enum MotionCaptureType {
     BODY,
     FACE,
     HAND
 };
 
-enum EngineStatus {
-    OFF,
-    ON
+enum MotionCaptureEngine {
+    NONE,
+    MEDIAPIPE,
+    LIVELINK,
+    CHORDATA
 };
 
+// the API for now isn't very much OO but it works for now
+
+// frontend is called by the backend
 interface Frontend {
+    // callback to receive raw chordata frame
     oneway void chordata(in sequence<octet> data);
 
+    // callbacks to receive face data
+    // names for the entries in faceLandmarks() blendshapes sequence
+    // send at the beginning or whenever that list of names changes
     oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
     oneway void faceLandmarks(
         in sequence<float> landmarks,
@@ -25,7 +29,11 @@ interface Frontend {
         in unsigned long long timestamp_ms);
 };
 
+// backend is called by the frontend
 interface Backend {
+    // called by the frontend to register itself to receive data
     void setFrontend(in Frontend frontend);
-    void setEngine(in MotionCaptureEngine engine, in MotionCaptureType type, in EngineStatus status);
+
+    // selects the kind of data the frontend wants to receive
+    void setEngine(in MotionCaptureEngine engine, in MotionCaptureType type);
 };

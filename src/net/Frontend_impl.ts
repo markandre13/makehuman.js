@@ -1,10 +1,9 @@
 import { ORB } from "corba.js"
 import { Backend } from "net/makehuman_stub"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
-import { EngineStatus, MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
+import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
-import { Action } from "toad.js"
 import { handleChordata } from "chordata/chordata"
 
 export class Frontend_impl extends Frontend_skel {
