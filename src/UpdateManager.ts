@@ -232,9 +232,10 @@ export class UpdateManager {
                         continue
                     }
                     let weight = frontend.blendshapes[index]
-                    if (name === "mouthFunnel") {
-                        weight *= 2.5
-                    }
+                    // tweaks for mediapipe
+                    // if (name === "mouthFunnel") {
+                    //     weight *= 2.5
+                    // }
                     if (name === "jawOpen") {
                         weight *= 1.5
                     }

@@ -149,7 +149,7 @@ export const blendshape2poseUnit = new Map<string, string>([
     ["mouthStretchLeft", "MouthLeftPullDown"],
     ["mouthStretchRight", "MouthRightPullDown"],
     ["mouthFrownLeft", "MouthLeftPlatysma"],
-    ["mouthFrownRight", "MouthLeftPlatysma"],
+    ["mouthFrownRight", "MouthRightPlatysma"],
 
     // ["mouthLowerDownLeft", ""],
     // ["mouthLowerDownRight", ""],
@@ -157,5 +157,7 @@ export const blendshape2poseUnit = new Map<string, string>([
     // ["mouthUpperUpRight", ""],
 
     // ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
-    // ["noseSneerRight", "NasolabialDeepener"],
+    ["noseSneerRight", "NasolabialDeepener"],
+
+    ["tongueOut", "TongueOut"]
 ])
