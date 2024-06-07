@@ -1,6 +1,9 @@
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { Target } from "target/Target"
 import { blendshapeNames } from "./blendshapeNames"
+import { Frontend_impl } from "net/Frontend_impl"
+import { isZero } from "mesh/HumanMesh"
+import { mat4, vec3 } from "gl-matrix"
 
 /**
  * Load and cache ARKit Face Blendshapes
@@ -62,5 +65,46 @@ export class FaceARKitLoader {
         target.diff(this.neutral!.xyz, dst.xyz)
         this.targets[blendshape] = target
         return target
+    }
+
+    getVertex(frontend: Frontend_impl): Float32Array {
+        const neutral = this.neutral!
+        const vertex = new Float32Array(neutral.xyz.length)
+        vertex.set(this.neutral!.xyz)
+        // apply blendshapes
+        for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
+            if (blendshape === 0) {
+                continue
+            }
+            const weight = frontend.getBlendshapeWeight(blendshapeNames[blendshape])
+            if (isZero(weight)) {
+                continue
+            }
+            this.getTarget(blendshape)?.apply(vertex, weight)
+        }
+
+        // scale and rotate
+        const t = frontend.transform!!
+        // prettier-ignore
+        const m = mat4.fromValues(
+             t[0],  t[1],  t[2], 0,
+             t[4],  t[5],  t[6], 0,
+             t[8],  t[9], t[10], 0,
+                0,     0,     0, 1
+        )
+        const s = 60
+        mat4.scale(m, m, vec3.fromValues(s, s, s))
+
+        const v = vec3.create()
+        for (let i = 0; i < vertex.length; i += 3) {
+            v[0] = vertex[i]
+            v[1] = vertex[i + 1]
+            v[2] = vertex[i + 2]
+            vec3.transformMat4(v, v, m)
+            vertex[i] = v[0]
+            vertex[i + 1] = v[1]
+            vertex[i + 2] = v[2]
+        }
+        return vertex
     }
 }

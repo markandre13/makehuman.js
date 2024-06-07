@@ -15,9 +15,9 @@ import { FaceARKitLoader } from "./FaceARKitLoader"
 import { mat4, vec3 } from "gl-matrix"
 
 /**
- * Render MediaPipe's blendshape using Apples ARKit Mesh
+ * Renders 4 views: 2x MakeHuman Head, 2x Blendshape
  */
-export class FaceARKitRenderer extends RenderHandler {
+export class QuadRenderer extends RenderHandler {
     mesh!: RenderMesh
     frontend: Frontend_impl
     blendshapeSet?: FaceARKitLoader
@@ -34,14 +34,13 @@ export class FaceARKitRenderer extends RenderHandler {
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
-
-        const vertex = this.blendshapeSet.getVertex(this.frontend)
         const neutral = this.blendshapeSet.neutral!
 
+        const vertex = this.blendshapeSet.getVertex(this.frontend)
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {
-            this.mesh = new RenderMesh(gl, vertex, neutral!.fxyz, undefined, undefined, false)
+            this.mesh = new RenderMesh(gl, vertex, neutral.fxyz, undefined, undefined, false)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
@@ -60,6 +59,22 @@ export class FaceARKitRenderer extends RenderHandler {
 
         programRGBA.setColor([1, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, neutral!.fxyz.length, gl.UNSIGNED_SHORT, 0)
+
+        const w = canvas.width/2
+        const h = canvas.height/2
+
+        gl.viewport(0, h, w,h)
+        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+
+        gl.viewport(w, h, w,h)
+        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+
+        programRGBA.initModelViewMatrix(createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45))
+
+        gl.viewport(0, 0, w,h)
+        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+
+        gl.viewport(w, 0, w,h)
+        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
     }
 }

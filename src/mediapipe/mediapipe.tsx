@@ -11,6 +11,7 @@ import { RenderHandler } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
+import { QuadRenderer } from "./QuadRenderer"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend
@@ -27,11 +28,13 @@ let renderEngine: OptionModel<RenderHandler>
 let captureEngine: OptionModel<MotionCaptureEngine>
 export function MediapipeTab(props: { app: Application }) {
     if (renderEngine === undefined) {
+        const qr = new QuadRenderer(props.app.frontend)
         const lm = new FaceLandmarkRenderer(props.app.frontend)
         const ar = new FaceARKitRenderer(props.app.frontend)
         const ict = new FaceICTKitRenderer(props.app.frontend)
         const mh = new RenderHuman(true)
-        renderEngine = new OptionModel<RenderHandler>(mh, [
+        renderEngine = new OptionModel<RenderHandler>(qr, [
+            [qr, "MakeHuman and ARKit"],
             [lm, "Mediapipe Landmarks"],
             [ar, "ARKit Blendshape"],
             [ict, "ICTKit Blendshape"],
@@ -42,7 +45,7 @@ export function MediapipeTab(props: { app: Application }) {
         })
 
         captureEngine = new OptionModel<MotionCaptureEngine>(
-            MotionCaptureEngine.NONE, [
+            MotionCaptureEngine.MEDIAPIPE, [
                 [MotionCaptureEngine.NONE, "None"],
                 [MotionCaptureEngine.MEDIAPIPE, "Mediapipe"],
                 [MotionCaptureEngine.LIVELINK, "Live Link"],
