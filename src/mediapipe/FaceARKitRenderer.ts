@@ -9,10 +9,7 @@ import {
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "../net/Frontend_impl"
-import { isZero } from "mesh/HumanMesh"
-import { blendshapeNames } from "./blendshapeNames"
 import { FaceARKitLoader } from "./FaceARKitLoader"
-import { mat4, vec3 } from "gl-matrix"
 
 /**
  * Render MediaPipe's blendshape using Apples ARKit Mesh

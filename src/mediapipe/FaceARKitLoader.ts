@@ -68,7 +68,7 @@ export class FaceARKitLoader {
     }
 
     getVertex(frontend: Frontend_impl): Float32Array {
-        const neutral = this.neutral!
+        const neutral = this.getNeutral()
         const vertex = new Float32Array(neutral.xyz.length)
         vertex.set(this.neutral!.xyz)
         // apply blendshapes
@@ -84,14 +84,19 @@ export class FaceARKitLoader {
         }
 
         // scale and rotate
-        const t = frontend.transform!!
-        // prettier-ignore
-        const m = mat4.fromValues(
-             t[0],  t[1],  t[2], 0,
-             t[4],  t[5],  t[6], 0,
-             t[8],  t[9], t[10], 0,
-                0,     0,     0, 1
-        )
+        let m: mat4
+        if (frontend.transform) {
+            const t = frontend.transform!!
+            // prettier-ignore
+            m = mat4.fromValues(
+                t[0],  t[1],  t[2], 0,
+                t[4],  t[5],  t[6], 0,
+                t[8],  t[9], t[10], 0,
+                    0,     0,     0, 1
+            )
+        } else {
+            m = mat4.create()
+        }
         const s = 60
         mat4.scale(m, m, vec3.fromValues(s, s, s))
 

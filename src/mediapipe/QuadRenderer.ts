@@ -13,6 +13,7 @@ import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
 import { FaceARKitLoader } from "./FaceARKitLoader"
 import { mat4, vec3 } from "gl-matrix"
+import { drawHumanCore } from "render/RenderHuman"
 
 /**
  * Renders 4 views: 2x MakeHuman Head, 2x Blendshape
@@ -34,6 +35,7 @@ export class QuadRenderer extends RenderHandler {
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
+        const programTex = view.programTex
         const neutral = this.blendshapeSet.neutral!
 
         const vertex = this.blendshapeSet.getVertex(this.frontend)
@@ -47,11 +49,12 @@ export class QuadRenderer extends RenderHandler {
         prepareCanvas(canvas)
         prepareViewport(gl, canvas)
         const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
+        programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-
+       
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
@@ -63,18 +66,33 @@ export class QuadRenderer extends RenderHandler {
         const w = canvas.width/2
         const h = canvas.height/2
 
-        gl.viewport(0, h, w,h)
-        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
-
         gl.viewport(w, h, w,h)
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        programRGBA.setModelViewMatrix(createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45))
 
-        programRGBA.initModelViewMatrix(createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45))
-
-        gl.viewport(0, 0, w,h)
-        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        app.updateManager.updateIt()
 
         gl.viewport(w, 0, w,h)
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+
+        gl.viewport(0, 0, w,h)
+        // gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+
+        gl.viewport(0, h, w,h)
+        modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
+        programRGBA.setModelViewMatrix(modelViewMatrix)
+        programTex.useProgram()
+        programTex.setModelViewMatrix(modelViewMatrix)
+        // programRGBA.useProgram()
+        drawHumanCore(app, view)
+
+        gl.viewport(0, 0, w,h)
+        modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45, true)
+        // programTex.useProgram()
+        programTex.setModelViewMatrix(modelViewMatrix)
+        programRGBA.useProgram()
+        programRGBA.setModelViewMatrix(modelViewMatrix)
+
+        drawHumanCore(app, view)
     }
 }

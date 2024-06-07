@@ -51,25 +51,25 @@ export abstract class AbstractShader {
     }
 
     init(projectionMatrix: mat4, modelViewMatrix: mat4, normalMatrix: mat4) {
-        this.initProgram()
-        this.initProjectionMatrix(projectionMatrix)
-        this.initModelViewMatrix(modelViewMatrix)
-        this.initNormalMatrix(normalMatrix)
+        this.useProgram()
+        this.setProjectionMatrix(projectionMatrix)
+        this.setModelViewMatrix(modelViewMatrix)
+        this.setNormalMatrix(normalMatrix)
     }
 
-    initProgram() {
+    useProgram() {
         this.gl.useProgram(this.program)
     }
 
-    initProjectionMatrix(projectionMatrix: mat4) {
+    setProjectionMatrix(projectionMatrix: mat4) {
         this.gl.uniformMatrix4fv(this.projectionMatrix, false, projectionMatrix)
     }
 
-    initModelViewMatrix(modelViewMatrix: mat4) {
+    setModelViewMatrix(modelViewMatrix: mat4) {
         this.gl.uniformMatrix4fv(this.modelViewMatrix, false, modelViewMatrix)
     }
 
-    initNormalMatrix(normalMatrix: mat4) {
+    setNormalMatrix(normalMatrix: mat4) {
         this.gl.uniformMatrix4fv(this.normalMatrix, false, normalMatrix)
     }
 
