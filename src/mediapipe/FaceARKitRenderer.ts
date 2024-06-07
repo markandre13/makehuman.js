@@ -54,12 +54,12 @@ export class FaceARKitRenderer extends RenderHandler {
         const t = this.frontend.transform!!
         // prettier-ignore
         const m = mat4.fromValues(
-             t[0],  t[1],  t[2],  t[3],
-             t[4],  t[5],  t[6],  t[7],
-             t[8],  t[9], t[10], t[11],
-            t[12], t[13], t[14], t[15]
+             t[0],  t[1],  t[2], 0,
+             t[4],  t[5],  t[6], 0,
+             t[8],  t[9], t[10], 0,
+                0,     0,     0, 1
         )
-        const s = 160
+        const s = 60
         mat4.scale(m, m, vec3.fromValues(s, s, s))
 
         const v = vec3.create()
