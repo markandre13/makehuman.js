@@ -28,17 +28,15 @@ let renderEngine: OptionModel<RenderHandler>
 let captureEngine: OptionModel<MotionCaptureEngine>
 export function MediapipeTab(props: { app: Application }) {
     if (renderEngine === undefined) {
-        const qr = new QuadRenderer(props.app.frontend)
         const lm = new FaceLandmarkRenderer(props.app.frontend)
         const ar = new FaceARKitRenderer(props.app.frontend)
         const ict = new FaceICTKitRenderer(props.app.frontend)
         const mh = new RenderHuman(true)
-        renderEngine = new OptionModel<RenderHandler>(qr, [
-            [qr, "MakeHuman and ARKit"],
-            [lm, "Mediapipe Landmarks"],
+        renderEngine = new OptionModel<RenderHandler>(mh, [
+            [mh, "MakeHuman"],
             [ar, "ARKit Blendshape"],
             [ict, "ICTKit Blendshape"],
-            [mh, "MakeHuman"]
+            [lm, "Mediapipe Landmarks"],
         ], {label: "Render Engine"})
         renderEngine.modified.add(() => {
             props.app.setRenderer(renderEngine.value, renderEngine.value !== mh)
