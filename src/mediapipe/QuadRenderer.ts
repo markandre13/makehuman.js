@@ -84,6 +84,7 @@ export class QuadRenderer extends RenderHandler {
         programTex.useProgram()
         programTex.setModelViewMatrix(modelViewMatrix)
         // programRGBA.useProgram()
+        app.updateManager.updateIt()
         drawHumanCore(app, view)
 
         gl.viewport(0, 0, w,h)

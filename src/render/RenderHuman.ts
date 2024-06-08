@@ -56,12 +56,13 @@ export class RenderHuman extends RenderHandler {
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
         programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
+        app.updateManager.updateIt()
         drawHumanCore(app, view)
     }
 }
 
 export function drawHumanCore(app: Application, view: GLView) {
-    app.updateManager.updateIt()
+    
 
     const humanMesh = app.humanMesh
     const renderList = view.renderList
