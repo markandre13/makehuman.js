@@ -1,5 +1,8 @@
 import { AbstractShader } from "./AbstractShader"
 
+/**
+ * Shader program which provides individual colors per pixel.
+ */
 export class ColorShader extends AbstractShader {
     protected vertexColor: number
     constructor(gl: WebGL2RenderingContext) {

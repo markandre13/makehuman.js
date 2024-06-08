@@ -5,6 +5,7 @@ import { RGBAShader } from "render/shader/RGBAShader"
 import { TextureShader } from "render/shader/TextureShader"
 import { loadTexture } from "render/util"
 import { HTMLElementProps, View, ref } from "toad.js"
+import { ColorShader } from "./shader/ColorShader"
 
 export enum Projection {
     ORTHOGONAL,
@@ -33,6 +34,7 @@ export class GLView extends View {
     gl!: WebGL2RenderingContext
     programRGBA!: RGBAShader
     programTex!: TextureShader
+    programColor!: ColorShader
     renderList!: RenderList
     bodyTexture: WebGLTexture | null = null
     eyeTexture: WebGLTexture | null = null
@@ -118,6 +120,8 @@ export class GLView extends View {
 
         this.programRGBA = new RGBAShader(this.gl)
         this.programTex = new TextureShader(this.gl)
+        this.programColor = new ColorShader(this.gl)
+
 
         this.renderList = new RenderList(this.gl, this.app.humanMesh)
         this.app.updateManager.setRenderList(this.renderList)

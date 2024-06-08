@@ -1,5 +1,8 @@
 import { AbstractShader } from "./AbstractShader"
 
+/**
+ * Shader program which provides one RGBA color for the whole mesh.
+ */
 export class RGBAShader extends AbstractShader {
     protected _color: WebGLUniformLocation
     constructor(gl: WebGL2RenderingContext) {

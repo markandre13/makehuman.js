@@ -1,5 +1,8 @@
 import { AbstractShader } from "./AbstractShader"
 
+/**
+ * Shader program which uses a texture.
+ */
 export class TextureShader extends AbstractShader {
     protected uSampler: WebGLUniformLocation
     protected uAlpha: WebGLUniformLocation
