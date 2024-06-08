@@ -61,6 +61,7 @@ export class BlendShapeEditor extends RenderHandler {
             this.update = true
             app.updateManager.invalidateView()
         })
+        this.currentBone.modified.add(() => app.updateManager.invalidateView()) 
         // this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
         // JawDrop 1, JawDropStretched 0.3
         // create classes which handle loading & caching the blendshapes

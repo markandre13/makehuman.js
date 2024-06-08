@@ -293,7 +293,7 @@ export function renderChordata(
     }
 }
 
-function drawArrow(m: mat4, rgb: number[],
+export function drawArrow(m: mat4, rgb: number[],
     vertex: number[],
     fvertex: number[],
     color: number[],

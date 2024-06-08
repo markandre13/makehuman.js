@@ -462,6 +462,10 @@ export class Skeleton {
         return bone
     }
 
+    hasBone(name: string) {
+        return this.bones.has(name)
+    }
+
     // line 666
     getBone(name: string): Bone {
         const bone = this.bones.get(name)

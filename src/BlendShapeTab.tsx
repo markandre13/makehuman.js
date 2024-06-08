@@ -18,6 +18,7 @@ import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { BlendShapeEditor } from "BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
+import { FormSwitch } from "toad.js/view/FormSwitch"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -198,23 +199,24 @@ export function BlendShapeTab(props: { app: Application }) {
         }
     })
 
-    const renderer = new QuadRenderer(props.app.frontend)
+    const renderer = new QuadRenderer(props.app.frontend, editor)
 
     return (
         <Tab label="Face" value={TAB.FACE} visibilityChange={setRenderer(props.app, renderer)}>
             Face Blendshape Editor (under construction)
             <a href="https://hinzka.hatenablog.com/entry/2021/12/21/222635">blendshapes explained</a>
             <Form>
-                <FormText model={editor.scale} />
+                {/* <FormText model={editor.scale} />
                 <FormText model={editor.dy} />
-                <FormText model={editor.dz} />
+                <FormText model={editor.dz} /> */}
                 <FormSelect model={editor.blendshape} />
+                <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
-            <If isTrue={morphToMatchNeutral}>
+            {/* <If isTrue={morphToMatchNeutral}>
                 <p>morph face to match neutral blendshape</p>
                 <Table model={props.app.morphControls} style={{ width: "498px", height: "500px" }} />
-            </If>
-            <If isFalse={morphToMatchNeutral}>
+            </If> */}
+            {/* <If isFalse={morphToMatchNeutral}> */}
                 <p>pose face to match blendshape</p>
                 <object
                     id="face"
@@ -261,7 +263,7 @@ export function BlendShapeTab(props: { app: Application }) {
                     </dialog>
                     <Button action={() => elements.dialog?.show()}>MH Pose Units</Button>
                 </Form>
-            </If>
+            {/* </If> */}
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
         </Tab>
     )
