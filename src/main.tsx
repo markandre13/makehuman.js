@@ -74,18 +74,18 @@ export function main() {
 function run() {
     const app = new Application()
 
-    const mhm = localStorage.getItem("MakeHumanMorph")
-    if (mhm != null) {
-        app.humanMesh.human.fromMHM(mhm)
-    }
-    const mhp = localStorage.getItem("MakeHumanPose")
-    if (mhp != null) {
-        app.skeleton.fromMHP(mhp)
-    }
-    document.onvisibilitychange = (e) => {
-        localStorage.setItem("MakeHumanMorph", app.humanMesh.human.toMHM())
-        localStorage.setItem("MakeHumanPose", app.skeleton.toMHP())
-    }
+    // const mhm = localStorage.getItem("MakeHumanMorph")
+    // if (mhm != null) {
+    //     app.humanMesh.human.fromMHM(mhm)
+    // }
+    // const mhp = localStorage.getItem("MakeHumanPose")
+    // if (mhp != null) {
+    //     app.skeleton.fromMHP(mhp)
+    // }
+    // document.onvisibilitychange = (e) => {
+    //     localStorage.setItem("MakeHumanMorph", app.humanMesh.human.toMHM())
+    //     localStorage.setItem("MakeHumanPose", app.skeleton.toMHP())
+    // }
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)

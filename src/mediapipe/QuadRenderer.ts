@@ -99,14 +99,10 @@ export class QuadRenderer extends RenderHandler {
 
         drawHumanCore(app, view)
 
-        // 
-
         if (app.skeleton.hasBone(this.editor.currentBone.value)) {
             const bone = app.skeleton.getBone(this.editor.currentBone.value)
 
-            let m = mat4.create()
-
-            mat4.translate(modelViewMatrix, modelViewMatrix, vec3.fromValues(bone.headPos[0], bone.headPos[1], bone.headPos[2]))
+            let m = mat4.copy(mat4.create(), bone.matPoseGlobal!)
             const s = 0.4
             mat4.scale(m, m, vec3.fromValues(s,s,s))
 
@@ -116,11 +112,11 @@ export class QuadRenderer extends RenderHandler {
             const index: number[] = []
 
             mat4.rotateY(m, m, (2 * Math.PI) / 4)
-            drawArrow(m, [1, 0, 0], vertex, fvertex, color, index)
-            mat4.rotateY(m, m, (2 * Math.PI) / 4)
-            drawArrow(m, [0, 1, 0], vertex, fvertex, color, index)
+            drawArrow(m, [.1, 0, 0], vertex, fvertex, color, index)
             mat4.rotateX(m, m, (-2 * Math.PI) / 4)
-            drawArrow(m, [0, 0, 1], vertex, fvertex, color, index)
+            drawArrow(m, [0, .1, 0], vertex, fvertex, color, index)
+            mat4.rotateY(m, m, (-2 * Math.PI) / 4)
+            drawArrow(m, [0, 0, .1], vertex, fvertex, color, index)
 
             const glVertex = gl.createBuffer()!
             gl.bindBuffer(gl.ARRAY_BUFFER, glVertex)

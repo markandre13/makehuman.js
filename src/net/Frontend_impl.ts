@@ -94,6 +94,7 @@ export class Frontend_impl extends Frontend_skel {
 //     to approximate also shown)
 // [ ] create a tool to manage custom pose unit sets
 export const blendshape2poseUnit = new Map<string, string>([
+    // makehuman's skeleton can not move the outer eyebrows
     ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
     ["browDownRight", "RightBrowDown"], // (see above)
     // ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
