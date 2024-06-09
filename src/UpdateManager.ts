@@ -169,30 +169,30 @@ export class UpdateManager {
 
         // SET_POSE_UNITS
         const REST_QUAT = quat2.create()
-        if (this.app.classic) {
-            // from all pose units to PoseNode.(x|y|z)
-            if (this.modifiedExpressionPoseUnits.size > 0) {
-                // console.log(`UpdateManager::update(): pose units have changed`)
-                this.expressionManager.poseUnitsToPoseNodes()
-                this.modifiedExpressionPoseUnits.clear()
-            }
+        // if (this.app.classic) {
+        //     // from all pose units to PoseNode.(x|y|z)
+        //     if (this.modifiedExpressionPoseUnits.size > 0) {
+        //         // console.log(`UpdateManager::update(): pose units have changed`)
+        //         this.expressionManager.poseUnitsToPoseNodes()
+        //         this.modifiedExpressionPoseUnits.clear()
+        //     }
 
-            if (this.modifiedPosePoseUnits.size > 0) {
-                // console.log(`UpdateManager::update(): pose units have changed`)
-                this.poseModel.poseUnitsToPoseNodes()
-                this.modifiedPosePoseUnits.clear()
-            }
+        //     if (this.modifiedPosePoseUnits.size > 0) {
+        //         // console.log(`UpdateManager::update(): pose units have changed`)
+        //         this.poseModel.poseUnitsToPoseNodes()
+        //         this.modifiedPosePoseUnits.clear()
+        //     }
 
-            // SET_POSE_MATRIX
-            // from PoseUnit.(x|y|z) to Bone.matPose
-            if (this.modifiedPoseNodes.size > 0) {
-                // console.log(`UpdateManager::update(): pose nodes have changed -> set Bone.matPose`)
-                // this.expressionManager.skeleton.poseNodes.copyAllToSkeleton()
-                this.modifiedPoseNodes.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
-                this.modifiedPoseNodes.clear()
-                skeletonChanged = true
-            }
-        } else {
+        //     // SET_POSE_MATRIX
+        //     // from PoseUnit.(x|y|z) to Bone.matPose
+        //     if (this.modifiedPoseNodes.size > 0) {
+        //         // console.log(`UpdateManager::update(): pose nodes have changed -> set Bone.matPose`)
+        //         // this.expressionManager.skeleton.poseNodes.copyAllToSkeleton()
+        //         this.modifiedPoseNodes.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
+        //         this.modifiedPoseNodes.clear()
+        //         skeletonChanged = true
+        //     }
+        // } else {
             // experimental head rotation
             // data we do not have: head moving forward, backwards (when camera is not mounted to head,
             // we could extrapolate that from the z translation
@@ -263,7 +263,7 @@ export class UpdateManager {
                 })
             }
             skeletonChanged = true
-        }
+        // }
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {
