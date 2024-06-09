@@ -5,6 +5,7 @@ import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
 import { handleChordata } from "chordata/chordata"
+import { FacelandmarkEngine } from "./FacelandmarkEngine"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
@@ -37,7 +38,13 @@ export class Frontend_impl extends Frontend_skel {
     blendshapes?: Float32Array
     transform?: Float32Array
 
+    facelandMarkEngine?: FacelandmarkEngine
+
     getBlendshapeWeight(name: string): number {
+        if (this.facelandMarkEngine) {
+            return this.facelandMarkEngine.getBlendshapeWeight(name)
+        }
+
         if (this.blendshapes === undefined) {
             return 0.0
         }
@@ -160,5 +167,5 @@ export const blendshape2poseUnit = new Map<string, string>([
     // ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
     ["noseSneerRight", "NasolabialDeepener"],
 
-    ["tongueOut", "TongueOut"]
+    ["tongueOut", "TongueOut"],
 ])

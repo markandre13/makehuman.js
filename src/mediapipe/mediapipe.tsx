@@ -11,7 +11,6 @@ import { RenderHandler } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
-import { QuadRenderer } from "./QuadRenderer"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend
