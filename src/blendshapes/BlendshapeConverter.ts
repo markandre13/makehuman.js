@@ -5,6 +5,7 @@ import { isZero } from "mesh/HumanMesh"
 import { ExpressionManager2 } from "blendshapes/ExpressionManager2"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
+import { MHFacePoseUnits } from "./MHFacePoseUnits"
 
 export class BlendshapeConverter {
     private blendshapeModel: BlendshapeModel
@@ -18,7 +19,7 @@ export class BlendshapeConverter {
 
     convert() {
         if (this.em2 === undefined) {
-            this.em2 = new ExpressionManager2(this.expressionManager)
+            this.em2 = new ExpressionManager2(new MHFacePoseUnits(this.expressionManager.skeleton))
         }
         const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
         this.blendshapeModel.forEach((name, weight) => {

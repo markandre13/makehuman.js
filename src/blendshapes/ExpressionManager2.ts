@@ -1,36 +1,23 @@
-import { ExpressionManager } from "expression/ExpressionManager"
-import { mat4, quat2 } from "gl-matrix"
 import { BoneQuat2 } from "blendshapes/BoneQuat2"
+import { MHFacePoseUnits } from "./MHFacePoseUnits"
 
+/**
+ * Take MakeHuman's face pose units and remap them to ARKit's blendshape names.
+ * 
+ * This is not a perfect mapping but serves as a demo and starting point for further
+ * refinements.
+ */
 export class ExpressionManager2 {
     blendshape2bone = new Map<string, BoneQuat2[]>()
 
-    constructor(expressionManager: ExpressionManager) {
-        // convert the BVH file data in ExpressionManager into a simplified data structure with quaternions
-        const identity = mat4.create()
-        const skeleton = expressionManager.skeleton
-        const base_anim = expressionManager.base_anim
-        const nBones = skeleton.boneslist!.length
-        for (let [name, frame] of expressionManager.poseUnitName2Frame) {
-            const list: BoneQuat2[] = []
-            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
-                const m = base_anim[frame * nBones + b_idx]
-                if (!mat4.equals(identity, m)) {
-                    list.push({
-                        bone: skeleton.boneslist![b_idx],
-                        q: quat2.fromMat4(quat2.create(), m),
-                    })
+    constructor(poseunits: MHFacePoseUnits) {
+        poseunits.blendshape2bone.forEach( (quat2s, name) => {
+            for (let pair of blendshape2poseUnit) {
+                if (pair[1] === name) {
+                    this.blendshape2bone.set(pair[0], quat2s)
                 }
             }
-            if (list.length !== 0) {
-                for (let pair of blendshape2poseUnit) {
-                    if (pair[1] === name) {
-                        this.blendshape2bone.set(pair[0], list)
-                        // console.log(`set blendshape ${name}`)
-                    }
-                }
-            }
-        }
+        })
     }
 }
 
@@ -44,7 +31,7 @@ export class ExpressionManager2 {
 // [ ] create a tool to create custom poseunits (with the blendshapes we try
 //     to approximate also shown)
 // [ ] create a tool to manage custom pose unit sets
-export const blendshape2poseUnit = new Map<string, string>([
+const blendshape2poseUnit = new Map<string, string>([
     // makehuman's skeleton can not move the outer eyebrows
     ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
     ["browDownRight", "RightBrowDown"], // (see above)
