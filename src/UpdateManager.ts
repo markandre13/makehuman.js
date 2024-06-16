@@ -168,7 +168,7 @@ export class UpdateManager {
 
         // SET_POSE_UNITS
         if (this.blendshapeConverter === undefined) {
-            this.blendshapeConverter = new BlendshapeConverter(this.app.frontend.blendshapeModel, this.app.expressionManager)
+            this.blendshapeConverter = new BlendshapeConverter(this.app.frontend.blendshapeModel, this.app.skeleton)
         }
         this.blendshapeConverter.convert()
 

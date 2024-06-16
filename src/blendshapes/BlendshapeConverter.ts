@@ -1,4 +1,4 @@
-import { ExpressionManager, calcWebGL } from "expression/ExpressionManager"
+import { calcWebGL } from "expression/ExpressionManager"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
@@ -6,22 +6,23 @@ import { MHFaceBlendshapes } from "blendshapes/MHFaceBlendshapes"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
+import { Skeleton } from "skeleton/Skeleton"
 
 export class BlendshapeConverter {
     private blendshapeModel: BlendshapeModel
-    private expressionManager: ExpressionManager
+    private skeleton: Skeleton
     private blendshapes2quat2s?: MHFaceBlendshapes
 
-    constructor(blendshapeModel: BlendshapeModel, expressionManager: ExpressionManager) {
+    constructor(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
         this.blendshapeModel = blendshapeModel
-        this.expressionManager = expressionManager
+        this.skeleton = skeleton
     }
 
     convert() {
         if (this.blendshapes2quat2s === undefined) {
-            this.blendshapes2quat2s = new MHFaceBlendshapes(new MHFacePoseUnits(this.expressionManager.skeleton))
+            this.blendshapes2quat2s = new MHFaceBlendshapes(new MHFacePoseUnits(this.skeleton))
         }
-        const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
+        const ql = new Array<quat2 | undefined>(this.skeleton.boneslist!.length)
         this.blendshapeModel.forEach((name, weight) => {
             const boneQuatList = this.blendshapes2quat2s!.blendshape2bone.get(name)
             if (boneQuatList === undefined) {
@@ -52,10 +53,10 @@ export class BlendshapeConverter {
         ql.forEach((q, i) => {
             if (q !== undefined) {
                 const poseMat = mat4.fromQuat2(mat4.create(), q)
-                const bone = this.expressionManager.skeleton.boneslist![i]
+                const bone = this.skeleton.boneslist![i]
                 bone.matPose = calcWebGL(poseMat, bone.matRestGlobal!)
             } else {
-                mat4.identity(this.expressionManager.skeleton.boneslist![i].matPose)
+                mat4.identity(this.skeleton.boneslist![i].matPose)
             }
         })
 
