@@ -3,16 +3,16 @@ import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
 import { ExpressionManager2 } from "blendshapes/ExpressionManager2"
-import { Frontend_impl } from "net/Frontend_impl"
 import { REST_QUAT } from "UpdateManager"
+import { BlendshapeModel } from "./BlendshapeModel"
 
 export class BlendshapeConverter {
-    private frontend: Frontend_impl
+    private blendshapeModel: BlendshapeModel
     private expressionManager: ExpressionManager
     private em2?: ExpressionManager2
 
-    constructor(frontend: Frontend_impl, expressionManager: ExpressionManager) {
-        this.frontend = frontend
+    constructor(blendshapeModel: BlendshapeModel, expressionManager: ExpressionManager) {
+        this.blendshapeModel = blendshapeModel
         this.expressionManager = expressionManager
     }
 
@@ -21,7 +21,7 @@ export class BlendshapeConverter {
             this.em2 = new ExpressionManager2(this.expressionManager)
         }
         const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
-        this.frontend.blendshapeModel.forEach((name, weight) => {
+        this.blendshapeModel.forEach((name, weight) => {
             const boneQuatList = this.em2!.blendshape2bone.get(name)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
