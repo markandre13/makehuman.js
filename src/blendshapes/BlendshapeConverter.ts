@@ -22,7 +22,7 @@ export class BlendshapeConverter {
         }
         const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
         this.frontend.blendshapeModel.forEach((name, weight) => {
-            const boneQuatList = this.em2!.blendshapes.get(name)
+            const boneQuatList = this.em2!.blendshape2bone.get(name)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
                 return

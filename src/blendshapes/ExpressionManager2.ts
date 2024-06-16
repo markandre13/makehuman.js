@@ -1,10 +1,10 @@
 import { ExpressionManager } from "expression/ExpressionManager"
 import { mat4, quat2 } from "gl-matrix"
-import { blendshape2poseUnit } from "net/Frontend_impl"
 import { BoneQuat2 } from "blendshapes/BoneQuat2"
 
 export class ExpressionManager2 {
-    blendshapes = new Map<string, BoneQuat2[]>();
+    blendshape2bone = new Map<string, BoneQuat2[]>()
+
     constructor(expressionManager: ExpressionManager) {
         // convert the BVH file data in ExpressionManager into a simplified data structure with quaternions
         const identity = mat4.create()
@@ -25,7 +25,7 @@ export class ExpressionManager2 {
             if (list.length !== 0) {
                 for (let pair of blendshape2poseUnit) {
                     if (pair[1] === name) {
-                        this.blendshapes.set(pair[0], list)
+                        this.blendshape2bone.set(pair[0], list)
                         // console.log(`set blendshape ${name}`)
                     }
                 }
@@ -33,3 +33,83 @@ export class ExpressionManager2 {
         }
     }
 }
+
+// map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names
+// ideally, we would need new poseunits matching the blendshapes
+// TODO:
+// [ ] render the real blendshapes
+//   [ ] render the mediapipe mesh
+//   [ ] create morphtargets for the mediapipe blendshapes
+//   [ ] apply the morphtargets using the mediapipe blendshape coefficnets
+// [ ] create a tool to create custom poseunits (with the blendshapes we try
+//     to approximate also shown)
+// [ ] create a tool to manage custom pose unit sets
+export const blendshape2poseUnit = new Map<string, string>([
+    // makehuman's skeleton can not move the outer eyebrows
+    ["browDownLeft", "LeftBrowDown"], // actually the whole brow but pose unit is only inside
+    ["browDownRight", "RightBrowDown"], // (see above)
+    // ["browInnerUp", "LeftInnerBrowUp"], // missing: plus RightInnerBrowUp
+    ["browOuterUpLeft", "LeftOuterBrowUp"],
+    ["browOuterUpRight", "RightOuterBrowUp"],
+
+    ["cheekSquintRight", "RightCheekUp"],
+    ["cheekSquintLeft", "LeftCheekUp"],
+
+    ["eyeBlinkLeft", "LeftUpperLidClosed"],
+    ["eyeBlinkRight", "RightUpperLidClosed"],
+    ["eyeLookDownLeft", "LeftEyeDown"],
+    ["eyeLookDownRight", "RightEyeDown"],
+    ["eyeLookInLeft", "LeftEyeturnRight"],
+    ["eyeLookInRight", "RightEyeturnLeft"],
+    ["eyeLookOutLeft", "LeftEyeturnLeft"],
+    ["eyeLookOutRight", "RightEyeturnRight"],
+    ["eyeLookUpLeft", "LeftEyeUp"],
+    ["eyeLookUpRight", "RightEyeUp"],
+    // ["eyeSquintLeft", ""],
+    // ["eyeSquintRight", ""],
+    ["eyeWideLeft", "LeftUpperLidOpen"],
+    ["eyeWideRight", "RightUpperLidOpen"],
+    ["jawForward", "ChinForward"],
+
+    // these are kind of okay
+    ["jawOpen", "JawDrop"],
+    ["jawRight", "ChinRight"],
+    ["jawLeft", "ChinLeft"],
+    ["mouthRight", "MouthMoveRight"],
+    ["mouthLeft", "MouthMoveLeft"],
+
+    // ["mouthClose", ""],
+    ["mouthDimpleLeft", "MouthLeftPullSide"],
+    ["mouthDimpleRight", "MouthRightPullSide"],
+
+    ["cheekPuff", "CheeksPump"],
+    ["mouthFunnel", "LipsKiss"],
+
+    // ["mouthPucker", "UpperLipForward"], // FIXME: should be less and also the lower lip
+
+    ["mouthRollLower", "lowerLipBackward"],
+    ["mouthRollUpper", "UpperLipBackward"],
+    ["mouthShrugLower", "lowerLipUp"], // lower lip up
+    ["mouthShrugUpper", "UpperLipUp"], // upper lip up
+
+    ["mouthSmileLeft", "MouthLeftPullUp"],
+    ["mouthSmileRight", "MouthRightPullUp"],
+    // ["mouthPressLeft", ""],
+    // ["mouthPressRight", ""],
+    ["mouthDimpleLeft", "MouthLeftPullSide"],
+    ["mouthDimpleRight", "MouthRightPullSide"],
+    ["mouthStretchLeft", "MouthLeftPullDown"],
+    ["mouthStretchRight", "MouthRightPullDown"],
+    ["mouthFrownLeft", "MouthLeftPlatysma"],
+    ["mouthFrownRight", "MouthRightPlatysma"],
+
+    // ["mouthLowerDownLeft", ""],
+    // ["mouthLowerDownRight", ""],
+    // ["mouthUpperUpLeft", ""], // no match
+    // ["mouthUpperUpRight", ""],
+
+    // ["noseSneerLeft", "NoseWrinkler"], // plus NasolabialDeepener and then split them into a left and right side
+    ["noseSneerRight", "NasolabialDeepener"],
+
+    ["tongueOut", "TongueOut"],
+])
