@@ -5,7 +5,7 @@ import { PoseUnitsModel } from "../expression/PoseUnitsModel"
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { NumberRelModel } from "expression/NumberRelModel"
 import { quaternion_slerp } from "lib/quaternion_slerp"
-import { calcWebGL } from "expression/ExpressionManager"
+import { calcWebGL } from "expression/calcWebGL"
 import { euler_from_matrix } from "lib/euler_matrix"
 import { isZero } from "mesh/HumanMesh"
 
@@ -169,7 +169,7 @@ export class PoseModel extends PoseUnitsModel {
             const m = calcWebGL(blendedPose[boneIdx], mrg)
             const poseNode = this.skeleton.poseNodes.find(bone.name)
             if (!poseNode) {
-                console.log(`ExpressionManager: no pose node found for bone ${bone.name}`)
+                console.log(`PoseModel: no pose node found for bone ${bone.name}`)
                 return
             }
 

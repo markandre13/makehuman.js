@@ -1,4 +1,4 @@
-import { calcWebGL } from "expression/ExpressionManager"
+import { calcWebGL } from "expression/calcWebGL"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"

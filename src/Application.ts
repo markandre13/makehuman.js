@@ -3,9 +3,8 @@ import { loadModifiers } from "./modifier/loadModifiers"
 import { loadSliders, SliderNode } from "./modifier/loadSliders"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { HumanMesh, isZero } from "./mesh/HumanMesh"
+import { HumanMesh } from "./mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
-import { ExpressionManager } from "expression/ExpressionManager"
 import { PoseModel } from "pose/PoseModel"
 import { ProxyManager } from "./ProxyManager"
 import { TAB, initHistoryManager } from "HistoryManager"
@@ -51,7 +50,7 @@ export class Application {
     renderMode: EnumModel<RenderMode>
     morphControls: TreeNodeModel<SliderNode>
     poseControls: TreeNodeModel<PoseNode>
-    expressionManager: ExpressionManager
+    // expressionManager: ExpressionManager
     poseModel: PoseModel
     updateManager: UpdateManager
     chordataSettings: ChordataSettings
@@ -82,7 +81,7 @@ export class Application {
         this.proxyManager = new ProxyManager(this.humanMesh)
 
         this.poseControls = new TreeNodeModel(PoseNode, this.skeleton.poseNodes)
-        this.expressionManager = new ExpressionManager(this.skeleton)
+        // this.expressionManager = new ExpressionManager(this.skeleton)
 
         this.poseModel = new PoseModel(this.humanMesh.skeleton)
         this.chordataSettings = new ChordataSettings()
@@ -130,7 +129,7 @@ export class Application {
         this.orb = new ORB()
         this.orb.registerStubClass(Backend)
         this.orb.addProtocol(new WsProtocol())
-        this.frontend = new Frontend_impl(this.orb, this.updateManager, this.expressionManager.model)
+        this.frontend = new Frontend_impl(this.orb, this.updateManager)
     }
 
     renderer?: RenderHandler

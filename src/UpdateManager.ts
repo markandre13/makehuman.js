@@ -1,4 +1,3 @@
-import { ExpressionManager } from "expression/ExpressionManager"
 import { NumberRelModel } from "expression/NumberRelModel"
 import { PoseNode } from "expression/PoseNode"
 import { SliderNode } from "modifier/loadSliders"
@@ -68,18 +67,6 @@ export class UpdateManager {
                 }
             })
         )
-
-        // observe expression pose units
-        const expressionManager = app.expressionManager
-        expressionManager.model.poseUnits.forEach((poseUnit) => {
-            poseUnit.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: face pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
-                    this.invalidateView()
-                    this.modifiedExpressionPoseUnits.add(poseUnit)
-                }
-            })
-        })
 
         // observe pose units
         poseModel.poseUnits.forEach((poseUnit) => {

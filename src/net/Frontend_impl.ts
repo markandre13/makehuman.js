@@ -2,21 +2,19 @@ import { ORB } from "corba.js"
 import { Backend } from "net/makehuman_stub"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { UpdateManager } from "UpdateManager"
-import { ExpressionModel } from "expression/ExpressionModel"
 import { handleChordata } from "chordata/chordata"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
-    expressionModel: ExpressionModel
+    // expressionModel: ExpressionModel
     blendshapeModel = new BlendshapeModel()
 
     backend?: Backend
 
-    constructor(orb: ORB, updateManager: UpdateManager, expressionModel: ExpressionModel) {
+    constructor(orb: ORB, updateManager: UpdateManager) {
         super(orb)
         this.updateManager = updateManager
-        this.expressionModel = expressionModel
     }
 
     /*

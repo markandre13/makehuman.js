@@ -2,18 +2,14 @@ import { TAB } from "HistoryManager"
 import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
 import {
-    Button,
     SelectionModel,
-    Table,
     TableEditMode,
     TextField,
     css,
     ref,
 } from "toad.js"
-import { If } from "toad.js/view/If"
 import { Condition } from "toad.js/model/Condition"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
-import { FormText } from "toad.js/view/FormText"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { BlendShapeEditor } from "BlendShapeEditor"
@@ -253,15 +249,6 @@ export function BlendShapeTab(props: { app: Application }) {
                             }
                         `}
                     </style>
-                    <dialog set={ref(elements, "dialog")}>
-                        <Table
-                            selectionModel={sm}
-                            model={props.app.expressionManager.model}
-                            style={{ width: "470px", height: "500px" }}
-                        />
-                        <Button action={() => elements.dialog?.close()}>Close</Button>
-                    </dialog>
-                    <Button action={() => elements.dialog?.show()}>MH Pose Units</Button>
                 </Form>
             {/* </If> */}
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
