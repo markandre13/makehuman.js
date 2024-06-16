@@ -6,10 +6,12 @@ import { UpdateManager } from "UpdateManager"
 import { ExpressionModel } from "expression/ExpressionModel"
 import { handleChordata } from "chordata/chordata"
 import { FacelandmarkEngine } from "./FacelandmarkEngine"
+import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
     expressionModel: ExpressionModel
+    blendshapeModel = new BlendshapeModel()
 
     backend?: Backend
 
@@ -32,41 +34,14 @@ export class Frontend_impl extends Frontend_skel {
      */
 
     // data received from mediapipe
-    blendshapeName2Index = new Map<string, number>()
-    blendshapeIndex2poseUnit = new Map<number, string>()
     landmarks?: Float32Array
-    blendshapes?: Float32Array
     transform?: Float32Array
 
     facelandMarkEngine?: FacelandmarkEngine
 
-    getBlendshapeWeight(name: string): number {
-        if (this.facelandMarkEngine) {
-            return this.facelandMarkEngine.getBlendshapeWeight(name)
-        }
-
-        if (this.blendshapes === undefined) {
-            return 0.0
-        }
-        const index = this.blendshapeName2Index.get(name)
-        if (index === undefined) {
-            return 0.0
-        }
-        return this.blendshapes[index]
-    }
-
     // list of blendshape names that will be send to faceLandmarks()
     override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
-        // console.log(`got blendshape names`)
-        this.blendshapeIndex2poseUnit.clear()
-        this.blendshapeName2Index.clear()
-        faceBlendshapeNames.forEach((name, index) => {
-            this.blendshapeName2Index.set(name, index)
-            const poseUnitName = blendshape2poseUnit.get(name)
-            if (poseUnitName) {
-                this.blendshapeIndex2poseUnit.set(index, poseUnitName)
-            }
-        })
+        this.blendshapeModel.setBlendshapeNames(faceBlendshapeNames)
     }
 
     override faceLandmarks(
@@ -75,18 +50,10 @@ export class Frontend_impl extends Frontend_skel {
         transform: Float32Array,
         timestamp_ms: bigint
     ): void {
-        // console.log(`got blendshape`)
         this.landmarks = landmarks
-        this.blendshapes = blendshapes
         this.transform = transform
         this.updateManager.invalidateView()
-
-        // set pose units from blendshapes
-        // this.blendshapeIndex2poseUnit.forEach((name, index) => {
-        //     if (index < blendshapes.length) {
-        //         this.expressionModel.setPoseUnit(name, blendshapes[index])
-        //     }
-        // })
+        this.blendshapeModel.setBlendshapeWeights(blendshapes)
     }
 }
 

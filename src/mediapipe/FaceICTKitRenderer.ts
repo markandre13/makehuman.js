@@ -21,8 +21,6 @@ export class FaceICTKitRenderer extends RenderHandler {
     mesh!: RenderMesh
     frontend: Frontend_impl
     blendshapeSet?: FaceICTKitLoader
-    // neutral: WavefrontObj
-    // 
 
     constructor(frontend: Frontend_impl) {
         super()
@@ -44,7 +42,7 @@ export class FaceICTKitRenderer extends RenderHandler {
             if (blendshape === 0) {
                 continue
             }
-            const weight = this.frontend.getBlendshapeWeight(blendshapeNames[blendshape])
+            const weight = this.frontend.blendshapeModel.getBlendshapeWeight(blendshapeNames[blendshape])
             if (isZero(weight)) {
                 continue
             }

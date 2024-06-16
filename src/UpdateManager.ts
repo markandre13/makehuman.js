@@ -10,9 +10,8 @@ import { Application } from "Application"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { Bone } from "skeleton/Bone"
-import { blendshape2poseUnit } from "net/Frontend_impl"
 import { isZero } from "mesh/HumanMesh"
+import { ExpressionManager2 } from "blendshapes/ExpressionManager2"
 
 let em2: ExpressionManager2 | undefined
 
@@ -194,6 +193,7 @@ export class UpdateManager {
         //     }
         // } else {
             // experimental head rotation
+            // neck and head would actually need two joints
             // data we do not have: head moving forward, backwards (when camera is not mounted to head,
             // we could extrapolate that from the z translation
             if (this.app.frontend.transform) {
@@ -219,49 +219,50 @@ export class UpdateManager {
             }
           
             // experimental jawOpen
-            const frontend = this.app.frontend
-            if (frontend.blendshapes !== undefined) {
-                if (em2 === undefined) {
-                    em2 = new ExpressionManager2(this.expressionManager)
-                }
-                const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
-                for (let [name, index] of frontend.blendshapeName2Index) {
-                    const boneQuatList = em2.blendshapes.get(name)
-                    if (boneQuatList === undefined) {
-                        // console.log(`could not find ${name}`)
-                        continue
-                    }
-                    let weight = frontend.blendshapes[index]
-                    // tweaks for mediapipe
-                    // if (name === "mouthFunnel") {
-                    //     weight *= 2.5
-                    // }
-                    if (name === "jawOpen") {
-                        weight *= 1.5
-                    }
-                    if (isZero(weight)) {
-                        continue
-                    }
-                    // console.log(`${name} has weight ${weight}`)
-                    for (let bq of boneQuatList) {
-                        const q = quaternion_slerp(REST_QUAT, bq.q, weight)
-                        if (ql[bq.bone.index] === undefined) {
-                            ql[bq.bone.index] = q
-                        } else {
-                            quat2.multiply(ql[bq.bone.index]!, q, ql[bq.bone.index]!)
-                        }
-                    }
-                }
-                ql.forEach((q, i) => {
-                    if (q !== undefined) {
-                        const poseMat = mat4.fromQuat2(mat4.create(), q)
-                        const bone = this.expressionManager.skeleton.boneslist![i]
-                        bone.matPose = calcWebGL(poseMat, bone.matRestGlobal!)
-                    } else {
-                        mat4.identity(this.expressionManager.skeleton.boneslist![i].matPose)
-                    }
-                })
-            }
+            // const frontend = this.app.frontend
+            // if (frontend.blendshapeModel.blendshapes !== undefined) {
+            //     if (em2 === undefined) {
+            //         em2 = new ExpressionManager2(this.expressionManager)
+            //     }
+            //     const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
+            //     for (let [name, index] of frontend.blendshapeName2Index) {
+            //         const boneQuatList = em2.blendshapes.get(name)
+            //         if (boneQuatList === undefined) {
+            //             // console.log(`could not find ${name}`)
+            //             continue
+            //         }
+            //         let weight = frontend.blendshapes[index]
+            //         // tweaks for mediapipe
+            //         // if (name === "mouthFunnel") {
+            //         //     weight *= 2.5
+            //         // }
+            //         if (name === "jawOpen") {
+            //             weight *= 1.5
+            //         }
+            //         if (isZero(weight)) {
+            //             continue
+            //         }
+            //         // console.log(`${name} has weight ${weight}`)
+            //         for (let bq of boneQuatList) {
+            //             const q = quaternion_slerp(REST_QUAT, bq.q, weight)
+            //             if (ql[bq.bone.index] === undefined) {
+            //                 ql[bq.bone.index] = q
+            //             } else {
+            //                 quat2.multiply(ql[bq.bone.index]!, q, ql[bq.bone.index]!)
+            //             }
+            //         }
+            //     }
+            //     // copy to skeleton
+            //     ql.forEach((q, i) => {
+            //         if (q !== undefined) {
+            //             const poseMat = mat4.fromQuat2(mat4.create(), q)
+            //             const bone = this.expressionManager.skeleton.boneslist![i]
+            //             bone.matPose = calcWebGL(poseMat, bone.matRestGlobal!)
+            //         } else {
+            //             mat4.identity(this.expressionManager.skeleton.boneslist![i].matPose)
+            //         }
+            //     })
+            // }
             skeletonChanged = true
         // }
 
@@ -290,38 +291,4 @@ export class UpdateManager {
     }
 }
 
-interface BQ {
-    bone: Bone
-    q: quat2
-}
 
-class ExpressionManager2 {
-    blendshapes = new Map<string, BQ[]>()
-    constructor(expressionManager: ExpressionManager) {
-        // convert the BVH file data in ExpressionManager into a simplified data structure with quaternions
-        const identity = mat4.create()
-        const skeleton = expressionManager.skeleton
-        const base_anim = expressionManager.base_anim
-        const nBones = skeleton.boneslist!.length
-        for (let [name, frame] of expressionManager.poseUnitName2Frame) {
-            const list: BQ[] = []
-            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
-                const m = base_anim[frame * nBones + b_idx]
-                if (!mat4.equals(identity, m)) {
-                    list.push({
-                        bone: skeleton.boneslist![b_idx],
-                        q: quat2.fromMat4(quat2.create(), m),
-                    })
-                }
-            }
-            if (list.length !== 0) {
-                for (let pair of blendshape2poseUnit) {
-                    if (pair[1] === name) {
-                        this.blendshapes.set(pair[0], list)
-                        // console.log(`set blendshape ${name}`)
-                    }
-                }
-            }
-        }
-    }
-}

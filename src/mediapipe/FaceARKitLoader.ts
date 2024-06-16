@@ -76,7 +76,7 @@ export class FaceARKitLoader {
             if (blendshape === 0) {
                 continue
             }
-            const weight = frontend.getBlendshapeWeight(blendshapeNames[blendshape])
+            const weight = frontend.blendshapeModel.getBlendshapeWeight(blendshapeNames[blendshape])
             if (isZero(weight)) {
                 continue
             }
