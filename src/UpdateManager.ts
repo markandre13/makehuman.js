@@ -1,4 +1,4 @@
-import { ExpressionManager, calcWebGL } from "expression/ExpressionManager"
+import { ExpressionManager } from "expression/ExpressionManager"
 import { NumberRelModel } from "expression/NumberRelModel"
 import { PoseNode } from "expression/PoseNode"
 import { SliderNode } from "modifier/loadSliders"
@@ -10,10 +10,9 @@ import { Application } from "Application"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { isZero } from "mesh/HumanMesh"
-import { ExpressionManager2 } from "blendshapes/ExpressionManager2"
+import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
 
-let em2: ExpressionManager2 | undefined
+export const REST_QUAT = quat2.create()
 
 /**
  * All presentation models report changes to the update manager
@@ -27,6 +26,7 @@ export class UpdateManager {
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
+    blendshapeConverter?: BlendshapeConverter
 
     render?: () => void
     private invalidated = false
@@ -167,103 +167,33 @@ export class UpdateManager {
         }
 
         // SET_POSE_UNITS
-        const REST_QUAT = quat2.create()
-        // if (this.app.classic) {
-        //     // from all pose units to PoseNode.(x|y|z)
-        //     if (this.modifiedExpressionPoseUnits.size > 0) {
-        //         // console.log(`UpdateManager::update(): pose units have changed`)
-        //         this.expressionManager.poseUnitsToPoseNodes()
-        //         this.modifiedExpressionPoseUnits.clear()
-        //     }
+        if (this.blendshapeConverter === undefined) {
+            this.blendshapeConverter = new BlendshapeConverter(this.app.frontend, this.app.expressionManager)
+        }
+        this.blendshapeConverter.convert()
 
-        //     if (this.modifiedPosePoseUnits.size > 0) {
-        //         // console.log(`UpdateManager::update(): pose units have changed`)
-        //         this.poseModel.poseUnitsToPoseNodes()
-        //         this.modifiedPosePoseUnits.clear()
-        //     }
+        // experimental head rotation
+        // real neck and head positioning would actually require two transforms: neck AND head.
+        // as an approximation, this just evenly distributes the head rotation over neck and head joints
+        if (this.app.frontend.transform) {
+            const neck1 = this.expressionManager.skeleton.getBone("neck01")
+            const neck2 = this.expressionManager.skeleton.getBone("neck02")
+            const neck3 = this.expressionManager.skeleton.getBone("neck03")
+            const head = this.expressionManager.skeleton.getBone("head")
 
-        //     // SET_POSE_MATRIX
-        //     // from PoseUnit.(x|y|z) to Bone.matPose
-        //     if (this.modifiedPoseNodes.size > 0) {
-        //         // console.log(`UpdateManager::update(): pose nodes have changed -> set Bone.matPose`)
-        //         // this.expressionManager.skeleton.poseNodes.copyAllToSkeleton()
-        //         this.modifiedPoseNodes.forEach((poseNode) => poseNode.copyEulerToBoneMatPose())
-        //         this.modifiedPoseNodes.clear()
-        //         skeletonChanged = true
-        //     }
-        // } else {
-            // experimental head rotation
-            // neck and head would actually need two joints
-            // data we do not have: head moving forward, backwards (when camera is not mounted to head,
-            // we could extrapolate that from the z translation
-            if (this.app.frontend.transform) {
-                const neck1 = this.expressionManager.skeleton.getBone("neck01")
-                const neck2 = this.expressionManager.skeleton.getBone("neck02")
-                const neck3 = this.expressionManager.skeleton.getBone("neck03")
-                const head = this.expressionManager.skeleton.getBone("head")
-    
-                const t = this.app.frontend.transform
-                let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
-                const { x, y, z } = euler_from_matrix(m)
-                head.matPose = euler_matrix(0, 0, z)
-                const neckXY = euler_matrix(x, y, 0)
-    
-                let q = quat2.create()
-                quat2.fromMat4(q, neckXY)
-                q = quaternion_slerp(REST_QUAT, q, 0.3333333333)
-                mat4.fromQuat2(neck1.matPose, q)
-                mat4.fromQuat2(neck2.matPose, q)
-                mat4.fromQuat2(neck3.matPose, q)
-                // mat4.fromQuat2(head.matPose, q)
-                // mat4.multiply(head.matPose, headZ, head.matPose)
-            }
-          
-            // experimental jawOpen
-            // const frontend = this.app.frontend
-            // if (frontend.blendshapeModel.blendshapes !== undefined) {
-            //     if (em2 === undefined) {
-            //         em2 = new ExpressionManager2(this.expressionManager)
-            //     }
-            //     const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
-            //     for (let [name, index] of frontend.blendshapeName2Index) {
-            //         const boneQuatList = em2.blendshapes.get(name)
-            //         if (boneQuatList === undefined) {
-            //             // console.log(`could not find ${name}`)
-            //             continue
-            //         }
-            //         let weight = frontend.blendshapes[index]
-            //         // tweaks for mediapipe
-            //         // if (name === "mouthFunnel") {
-            //         //     weight *= 2.5
-            //         // }
-            //         if (name === "jawOpen") {
-            //             weight *= 1.5
-            //         }
-            //         if (isZero(weight)) {
-            //             continue
-            //         }
-            //         // console.log(`${name} has weight ${weight}`)
-            //         for (let bq of boneQuatList) {
-            //             const q = quaternion_slerp(REST_QUAT, bq.q, weight)
-            //             if (ql[bq.bone.index] === undefined) {
-            //                 ql[bq.bone.index] = q
-            //             } else {
-            //                 quat2.multiply(ql[bq.bone.index]!, q, ql[bq.bone.index]!)
-            //             }
-            //         }
-            //     }
-            //     // copy to skeleton
-            //     ql.forEach((q, i) => {
-            //         if (q !== undefined) {
-            //             const poseMat = mat4.fromQuat2(mat4.create(), q)
-            //             const bone = this.expressionManager.skeleton.boneslist![i]
-            //             bone.matPose = calcWebGL(poseMat, bone.matRestGlobal!)
-            //         } else {
-            //             mat4.identity(this.expressionManager.skeleton.boneslist![i].matPose)
-            //         }
-            //     })
-            // }
-            skeletonChanged = true
+            const t = this.app.frontend.transform
+            let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
+            let q = quat2.create()
+            quat2.fromMat4(q, m)
+            q = quaternion_slerp(REST_QUAT, q, .25)
+            mat4.fromQuat2(head.matPose, q)
+            mat4.fromQuat2(neck1.matPose, q)
+            mat4.fromQuat2(neck2.matPose, q)
+            mat4.fromQuat2(neck3.matPose, q)
+        }
+
+
+        skeletonChanged = true
         // }
 
         // UPDATE_SKINNING_MATRIX
@@ -290,5 +220,3 @@ export class UpdateManager {
         }
     }
 }
-
-
