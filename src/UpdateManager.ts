@@ -9,8 +9,8 @@ import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
+import { Skeleton } from "skeleton/Skeleton"
 
 export const REST_QUAT = quat2.create()
 
@@ -20,7 +20,7 @@ export const REST_QUAT = quat2.create()
  */
 export class UpdateManager {
     app: Application
-    expressionManager: ExpressionManager
+    skeleton: Skeleton
     poseModel: PoseModel
     modifiedMorphNodes = new Set<SliderNode>()
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
@@ -45,11 +45,9 @@ export class UpdateManager {
 
     constructor(app: Application) {
         this.app = app
-        // expressionManager: ExpressionManager, poseModel: PoseModel, sliderNodes: SliderNode) {
-        this.expressionManager = app.expressionManager
+        this.skeleton = app.skeleton
         this.poseModel = app.poseModel
         const sliderNodes = app.sliderNodes
-        const expressionManager = app.expressionManager
         const poseModel = app.poseModel
 
         // observe morph slider
@@ -72,6 +70,7 @@ export class UpdateManager {
         )
 
         // observe expression pose units
+        const expressionManager = app.expressionManager
         expressionManager.model.poseUnits.forEach((poseUnit) => {
             poseUnit.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
@@ -102,7 +101,7 @@ export class UpdateManager {
             forEachBonePoseNode(node.next, cb)
             forEachBonePoseNode(node.down, cb)
         }
-        forEachBonePoseNode(expressionManager.skeleton.poseNodes, (poseNode) => {
+        forEachBonePoseNode(this.skeleton.poseNodes, (poseNode) => {
             poseNode.x.modified.add((reason) => {
                 if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
                     // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
@@ -159,9 +158,9 @@ export class UpdateManager {
             })
             this.modifiedMorphNodes.clear()
 
-            this.expressionManager.skeleton.humanMesh.calculateVertexMorphed()
-            this.expressionManager.skeleton.updateJoints()
-            this.expressionManager.skeleton.build()
+            this.skeleton.humanMesh.calculateVertexMorphed()
+            this.skeleton.updateJoints()
+            this.skeleton.build()
 
             skeletonChanged = true
         }
@@ -176,10 +175,10 @@ export class UpdateManager {
         // real neck and head positioning would actually require two transforms: neck AND head.
         // as an approximation, this just evenly distributes the head rotation over neck and head joints
         if (this.app.frontend.transform) {
-            const neck1 = this.expressionManager.skeleton.getBone("neck01")
-            const neck2 = this.expressionManager.skeleton.getBone("neck02")
-            const neck3 = this.expressionManager.skeleton.getBone("neck03")
-            const head = this.expressionManager.skeleton.getBone("head")
+            const neck1 = this.skeleton.getBone("neck01")
+            const neck2 = this.skeleton.getBone("neck02")
+            const neck3 = this.skeleton.getBone("neck03")
+            const head = this.skeleton.getBone("head")
 
             const t = this.app.frontend.transform
             let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
@@ -192,20 +191,19 @@ export class UpdateManager {
             mat4.fromQuat2(neck3.matPose, q)
         }
 
-
         skeletonChanged = true
-        // }
+
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {
             this._chordataChanged.update()
-            this.expressionManager.skeleton.updateChordata(this._chordataChanged)
+            this.skeleton.updateChordata(this._chordataChanged)
             skinChanged = true
             this._chordataChanged = undefined
         } else {
             if (skeletonChanged) {
                 // console.log(`UpdateManager::update(): skeleton has changed -> update skinning matrix`)
-                this.expressionManager.skeleton.update()
+                this.skeleton.update()
                 skinChanged = true
             }
         }
@@ -214,7 +212,7 @@ export class UpdateManager {
         if (this.renderList !== undefined) {
             if (skinChanged) {
                 // console.log(`UpdateManager::update(): skin has changed`)
-                this.expressionManager.skeleton.humanMesh.calculateVertexRigged()
+                this.skeleton.humanMesh.calculateVertexRigged()
                 this.renderList.update()
             }
         }
