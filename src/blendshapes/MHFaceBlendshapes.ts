@@ -7,7 +7,7 @@ import { MHFacePoseUnits } from "./MHFacePoseUnits"
  * This is not a perfect mapping but serves as a demo and starting point for further
  * refinements.
  */
-export class ExpressionManager2 {
+export class MHFaceBlendshapes {
     blendshape2bone = new Map<string, BoneQuat2[]>()
 
     constructor(poseunits: MHFacePoseUnits) {

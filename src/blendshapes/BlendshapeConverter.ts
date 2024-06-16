@@ -2,7 +2,7 @@ import { ExpressionManager, calcWebGL } from "expression/ExpressionManager"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
-import { ExpressionManager2 } from "blendshapes/ExpressionManager2"
+import { MHFaceBlendshapes } from "blendshapes/MHFaceBlendshapes"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
@@ -10,7 +10,7 @@ import { MHFacePoseUnits } from "./MHFacePoseUnits"
 export class BlendshapeConverter {
     private blendshapeModel: BlendshapeModel
     private expressionManager: ExpressionManager
-    private em2?: ExpressionManager2
+    private blendshapes2quat2s?: MHFaceBlendshapes
 
     constructor(blendshapeModel: BlendshapeModel, expressionManager: ExpressionManager) {
         this.blendshapeModel = blendshapeModel
@@ -18,12 +18,12 @@ export class BlendshapeConverter {
     }
 
     convert() {
-        if (this.em2 === undefined) {
-            this.em2 = new ExpressionManager2(new MHFacePoseUnits(this.expressionManager.skeleton))
+        if (this.blendshapes2quat2s === undefined) {
+            this.blendshapes2quat2s = new MHFaceBlendshapes(new MHFacePoseUnits(this.expressionManager.skeleton))
         }
         const ql = new Array<quat2 | undefined>(this.expressionManager.skeleton.boneslist!.length)
         this.blendshapeModel.forEach((name, weight) => {
-            const boneQuatList = this.em2!.blendshape2bone.get(name)
+            const boneQuatList = this.blendshapes2quat2s!.blendshape2bone.get(name)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
                 return
