@@ -25,7 +25,7 @@ export class UpdateManager {
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
-    blendshapeConverter?: BlendshapeConverter
+    blendshapeConverter: BlendshapeConverter
 
     render?: () => void
     private invalidated = false
@@ -46,6 +46,7 @@ export class UpdateManager {
         this.app = app
         this.skeleton = app.skeleton
         this.poseModel = app.poseModel
+        this.blendshapeConverter = app.blendshapeConverter
         const sliderNodes = app.sliderNodes
         const poseModel = app.poseModel
 
@@ -153,9 +154,6 @@ export class UpdateManager {
         }
 
         // SET_POSE_UNITS
-        if (this.blendshapeConverter === undefined) {
-            this.blendshapeConverter = new BlendshapeConverter(this.app.frontend.blendshapeModel, this.app.skeleton)
-        }
         this.blendshapeConverter.convert()
 
         // experimental head rotation

@@ -7,14 +7,14 @@ import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
-    // expressionModel: ExpressionModel
-    blendshapeModel = new BlendshapeModel()
+    blendshapeModel: BlendshapeModel
 
     backend?: Backend
 
-    constructor(orb: ORB, updateManager: UpdateManager) {
+    constructor(orb: ORB, updateManager: UpdateManager, blendshapeModel: BlendshapeModel) {
         super(orb)
         this.updateManager = updateManager
+        this.blendshapeModel = blendshapeModel
     }
 
     /*

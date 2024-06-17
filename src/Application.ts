@@ -20,6 +20,8 @@ import { ORB } from "corba.js"
 import { Backend } from "net/makehuman_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
+import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
+import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
@@ -35,6 +37,8 @@ export function setRenderer(app: Application, renderer: RenderHandler, classic: 
 export class Application {
     orb: ORB
     frontend: Frontend_impl
+    blendshapeModel: BlendshapeModel
+    blendshapeConverter: BlendshapeConverter
 
     // makehuman
     human: MorphManager // MorphManager / MorphController
@@ -87,6 +91,8 @@ export class Application {
         this.chordataSettings = new ChordataSettings()
 
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
+        this.blendshapeModel = new BlendshapeModel()
+        this.blendshapeConverter = new BlendshapeConverter(this.blendshapeModel, this.skeleton)
         this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty
@@ -129,7 +135,7 @@ export class Application {
         this.orb = new ORB()
         this.orb.registerStubClass(Backend)
         this.orb.addProtocol(new WsProtocol())
-        this.frontend = new Frontend_impl(this.orb, this.updateManager)
+        this.frontend = new Frontend_impl(this.orb, this.updateManager, this.blendshapeModel)
     }
 
     renderer?: RenderHandler
