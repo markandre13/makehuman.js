@@ -10,6 +10,7 @@ import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
 import { Skeleton } from "skeleton/Skeleton"
+import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 
 export const REST_QUAT = quat2.create()
 
@@ -25,7 +26,7 @@ export class UpdateManager {
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
-    blendshapeConverter: BlendshapeConverter
+    blendshapeConverter?: IBlendshapeConverter
 
     render?: () => void
     private invalidated = false
@@ -153,8 +154,10 @@ export class UpdateManager {
             skeletonChanged = true
         }
 
-        // SET_POSE_UNITS
-        this.blendshapeConverter.convert()
+        if (this.blendshapeConverter !== undefined && this.blendshapeConverter.hasWork()) {
+            this.blendshapeConverter.convert()
+            skeletonChanged = true
+        }
 
         // experimental head rotation
         // real neck and head positioning would actually require two transforms: neck AND head.
@@ -175,9 +178,7 @@ export class UpdateManager {
             mat4.fromQuat2(neck2.matPose, q)
             mat4.fromQuat2(neck3.matPose, q)
         }
-
         skeletonChanged = true
-
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {

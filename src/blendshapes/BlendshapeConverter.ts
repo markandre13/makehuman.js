@@ -7,8 +7,9 @@ import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
 import { Skeleton } from "skeleton/Skeleton"
+import { IBlendshapeConverter } from "./IBlendshapeConverter"
 
-export class BlendshapeConverter {
+export class BlendshapeConverter implements IBlendshapeConverter {
     private blendshapeModel: BlendshapeModel
     private skeleton: Skeleton
     private blendshapes2quat2s?: MHFaceBlendshapes
@@ -16,6 +17,10 @@ export class BlendshapeConverter {
     constructor(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
         this.blendshapeModel = blendshapeModel
         this.skeleton = skeleton
+    }
+
+    hasWork() {
+        return true
     }
 
     convert() {

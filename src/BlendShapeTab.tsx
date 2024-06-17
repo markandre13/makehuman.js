@@ -1,13 +1,7 @@
 import { TAB } from "HistoryManager"
 import { Tab } from "toad.js/view/Tab"
 import { Application, setRenderer } from "Application"
-import {
-    SelectionModel,
-    TableEditMode,
-    TextField,
-    css,
-    ref,
-} from "toad.js"
+import { SelectionModel, TableEditMode, TextField, css, ref } from "toad.js"
 import { Condition } from "toad.js/model/Condition"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
@@ -15,6 +9,7 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { BlendShapeEditor } from "BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
 import { FormSwitch } from "toad.js/view/FormSwitch"
+import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -176,6 +171,7 @@ export const blendshapeDescriptions: BlendshapeDescription[] = [
     },
 ]
 
+
 export function BlendShapeTab(props: { app: Application }) {
     const editor = BlendShapeEditor.getInstance(props.app)
 
@@ -197,8 +193,25 @@ export function BlendShapeTab(props: { app: Application }) {
 
     const renderer = new QuadRenderer(props.app.frontend, editor)
 
+    let defaultConverter: IBlendshapeConverter | undefined
+
     return (
-        <Tab label="Face" value={TAB.FACE} visibilityChange={setRenderer(props.app, renderer)}>
+        <Tab
+            label="Face"
+            value={TAB.FACE}
+            visibilityChange={(state) => {
+                switch (state) {
+                    case "visible":
+                        props.app.setRenderer(renderer)
+                        defaultConverter = props.app.updateManager.blendshapeConverter
+                        props.app.updateManager.blendshapeConverter = undefined
+                        break
+                    case "hidden":
+                        props.app.updateManager.blendshapeConverter = defaultConverter
+                        break
+                }
+            }}
+        >
             Face Blendshape Editor (under construction)
             <a href="https://hinzka.hatenablog.com/entry/2021/12/21/222635">blendshapes explained</a>
             <Form>
@@ -213,43 +226,43 @@ export function BlendShapeTab(props: { app: Application }) {
                 <Table model={props.app.morphControls} style={{ width: "498px", height: "500px" }} />
             </If> */}
             {/* <If isFalse={morphToMatchNeutral}> */}
-                <p>pose face to match blendshape</p>
-                <object
-                    id="face"
-                    type="image/svg+xml"
-                    width="250px"
-                    data="static/mhjs-face.svg"
-                    onload={(ev) => editor.prepare(ev)}
-                    style={{ float: "left" }}
-                />
-                <Form>
-                    <FormLabel>X</FormLabel>
-                    <FormField>
-                        <TextField set={ref(elements, "x")} />
-                    </FormField>
-                    <FormHelp />
-                    <FormLabel>Y</FormLabel>
-                    <FormField>
-                        <TextField set={ref(elements, "y")} />
-                    </FormField>
-                    <FormHelp />
-                    <FormLabel>Z</FormLabel>
-                    <FormField>
-                        <TextField set={ref(elements, "z")} />
-                    </FormField>
-                    <FormHelp />
-                    <style>
-                        {css`
-                            dialog {
-                                height: auto;
-                                /* width: 400px; */
-                                background: var(--tx-gray-200);
-                                color: var(--tx-gray-800);
-                                border: none;
-                            }
-                        `}
-                    </style>
-                </Form>
+            <p>pose face to match blendshape</p>
+            <object
+                id="face"
+                type="image/svg+xml"
+                width="250px"
+                data="static/mhjs-face.svg"
+                onload={(ev) => editor.prepare(ev)}
+                style={{ float: "left" }}
+            />
+            <Form>
+                <FormLabel>X</FormLabel>
+                <FormField>
+                    <TextField set={ref(elements, "x")} />
+                </FormField>
+                <FormHelp />
+                <FormLabel>Y</FormLabel>
+                <FormField>
+                    <TextField set={ref(elements, "y")} />
+                </FormField>
+                <FormHelp />
+                <FormLabel>Z</FormLabel>
+                <FormField>
+                    <TextField set={ref(elements, "z")} />
+                </FormField>
+                <FormHelp />
+                <style>
+                    {css`
+                        dialog {
+                            height: auto;
+                            /* width: 400px; */
+                            background: var(--tx-gray-200);
+                            color: var(--tx-gray-800);
+                            border: none;
+                        }
+                    `}
+                </style>
+            </Form>
             {/* </If> */}
             {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
         </Tab>
