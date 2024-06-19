@@ -8,7 +8,6 @@ import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
-import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 
@@ -162,13 +161,13 @@ export class UpdateManager {
         // experimental head rotation
         // real neck and head positioning would actually require two transforms: neck AND head.
         // as an approximation, this just evenly distributes the head rotation over neck and head joints
-        if (this.app.frontend.transform) {
+        if (this.app.frontend.blendshapeModel.transform) {
             const neck1 = this.skeleton.getBone("neck01")
             const neck2 = this.skeleton.getBone("neck02")
             const neck3 = this.skeleton.getBone("neck03")
             const head = this.skeleton.getBone("head")
 
-            const t = this.app.frontend.transform
+            const t = this.app.frontend.blendshapeModel.transform
             let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
             let q = quat2.create()
             quat2.fromMat4(q, m)

@@ -1,14 +1,16 @@
 import { TAB } from "HistoryManager"
+
 import { Tab } from "toad.js/view/Tab"
-import { Application, setRenderer } from "Application"
-import { SelectionModel, TableEditMode, TextField, css, ref } from "toad.js"
 import { Condition } from "toad.js/model/Condition"
-import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
-import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FormSelect } from "toad.js/view/FormSelect"
+import { FormSwitch } from "toad.js/view/FormSwitch"
+import { SelectionModel, TableEditMode, TextField, css, ref } from "toad.js"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
+
+import { Application } from "Application"
+import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { BlendShapeEditor } from "BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
-import { FormSwitch } from "toad.js/view/FormSwitch"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 
 export interface BlendshapeDescription {
@@ -191,7 +193,7 @@ export function BlendShapeTab(props: { app: Application }) {
         }
     })
 
-    const renderer = new QuadRenderer(props.app.frontend, editor)
+    const renderer = new QuadRenderer(editor)
 
     let defaultConverter: IBlendshapeConverter | undefined
 

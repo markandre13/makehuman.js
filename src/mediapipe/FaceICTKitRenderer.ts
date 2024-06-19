@@ -13,18 +13,19 @@ import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
 import { FaceICTKitLoader } from "./FaceICTKitLoader"
 import { mat4, vec3 } from "gl-matrix"
+import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 /**
  * Render MediaPipe's blendshape using ICT's FaceKit Mesh
  */
 export class FaceICTKitRenderer extends RenderHandler {
     mesh!: RenderMesh
-    frontend: Frontend_impl
+    blendshapeModel: BlendshapeModel
     blendshapeSet?: FaceICTKitLoader
 
-    constructor(frontend: Frontend_impl) {
+    constructor(blendshapeModel: BlendshapeModel) {
         super()
-        this.frontend = frontend        
+        this.blendshapeModel = blendshapeModel        
     }
 
     override paint(app: Application, view: GLView): void {
@@ -42,7 +43,7 @@ export class FaceICTKitRenderer extends RenderHandler {
             if (blendshape === 0) {
                 continue
             }
-            const weight = this.frontend.blendshapeModel.getBlendshapeWeight(blendshapeNames[blendshape])
+            const weight = this.blendshapeModel.getBlendshapeWeight(blendshapeNames[blendshape])
             if (isZero(weight)) {
                 continue
             }
@@ -51,7 +52,7 @@ export class FaceICTKitRenderer extends RenderHandler {
 
         // BEGIN COPY'N PASTE FROM FACEARKIT RENDERER
         // scale and rotate
-        const t = this.frontend.transform!!
+        const t = this.blendshapeModel.transform!!
         // prettier-ignore
         const m = mat4.fromValues(
             t[0],  t[1],  t[2], 0,

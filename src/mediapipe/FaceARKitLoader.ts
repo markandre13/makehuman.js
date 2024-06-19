@@ -1,9 +1,9 @@
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { Target } from "target/Target"
 import { blendshapeNames } from "./blendshapeNames"
-import { Frontend_impl } from "net/Frontend_impl"
 import { isZero } from "mesh/HumanMesh"
 import { mat4, vec3 } from "gl-matrix"
+import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 /**
  * Load and cache ARKit Face Blendshapes
@@ -67,7 +67,8 @@ export class FaceARKitLoader {
         return target
     }
 
-    getVertex(frontend: Frontend_impl): Float32Array {
+    // get blendshapemodel and transform from the frontend
+    getVertex(blendshapeModel: BlendshapeModel): Float32Array {
         const neutral = this.getNeutral()
         const vertex = new Float32Array(neutral.xyz.length)
         vertex.set(this.neutral!.xyz)
@@ -76,7 +77,7 @@ export class FaceARKitLoader {
             if (blendshape === 0) {
                 continue
             }
-            const weight = frontend.blendshapeModel.getBlendshapeWeight(blendshapeNames[blendshape])
+            const weight = blendshapeModel.getBlendshapeWeight(blendshapeNames[blendshape])
             if (isZero(weight)) {
                 continue
             }
@@ -85,8 +86,8 @@ export class FaceARKitLoader {
 
         // scale and rotate
         let m: mat4
-        if (frontend.transform) {
-            const t = frontend.transform!!
+        if (blendshapeModel.transform) {
+            const t = blendshapeModel.transform!!
             // prettier-ignore
             m = mat4.fromValues(
                 t[0],  t[1],  t[2], 0,

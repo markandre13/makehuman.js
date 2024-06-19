@@ -11,6 +11,8 @@ export class BlendshapeModel {
     private blendshapeNames?: string[]
     private blendshapesWeights?: Float32Array
 
+    transform!: Float32Array
+
     forEach(cb: (name: string, weight: number) => void) {
         if (this.blendshapeNames === undefined || this.blendshapesWeights === undefined) {
             return
@@ -39,8 +41,9 @@ export class BlendshapeModel {
         })
     }
 
-    setBlendshapeWeights(blendshapes: Float32Array): void {
+    setBlendshapeWeights(blendshapes: Float32Array, transform: Float32Array): void {
         this.blendshapesWeights = blendshapes
+        this.transform = transform
         this.modified.trigger()
     }
 }

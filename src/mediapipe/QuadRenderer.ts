@@ -19,16 +19,14 @@ import { ArrowMesh } from "./ArrowMesh"
  * Renders 4 views: 2x MakeHuman Head, 2x Blendshape
  */
 export class QuadRenderer extends RenderHandler {
-    frontend: Frontend_impl
     editor: BlendShapeEditor
 
     blendshapeSet?: FaceARKitLoader
     mesh!: RenderMesh
     arrowMesh!: ArrowMesh
 
-    constructor(frontend: Frontend_impl, editor: BlendShapeEditor) {
+    constructor(editor: BlendShapeEditor) {
         super()
-        this.frontend = frontend
         this.editor = editor
     }
 
@@ -45,7 +43,7 @@ export class QuadRenderer extends RenderHandler {
         const programTex = view.programTex
         const neutral = this.blendshapeSet.neutral!
 
-        const vertex = this.blendshapeSet.getVertex(this.frontend)
+        const vertex = this.blendshapeSet.getVertex(app.frontend.blendshapeModel)
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {
@@ -73,17 +71,16 @@ export class QuadRenderer extends RenderHandler {
         const w = canvas.width / 2
         const h = canvas.height / 2
 
+        // draw arkit blendshape
         gl.viewport(w, h, w, h)
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
-        programRGBA.setModelViewMatrix(createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45))
-
-        app.updateManager.updateIt()
 
         gl.viewport(w, 0, w, h)
+        programRGBA.setModelViewMatrix(createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45))
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
 
-        gl.viewport(0, 0, w, h)
-        // gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        // draw makehuman
+        app.updateManager.updateIt()
 
         gl.viewport(0, h, w, h)
         modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
@@ -103,6 +100,7 @@ export class QuadRenderer extends RenderHandler {
 
         drawHumanCore(app, view)
 
+        // draw arrow
         if (app.skeleton.hasBone(this.editor.currentBone.value)) {
             gl.enable(gl.CULL_FACE)
             gl.cullFace(gl.BACK)

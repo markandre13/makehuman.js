@@ -31,7 +31,6 @@ export class Frontend_impl extends Frontend_skel {
 
     // data received from mediapipe
     landmarks?: Float32Array
-    transform?: Float32Array
 
     // list of blendshape names that will be send to faceLandmarks()
     override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
@@ -45,8 +44,7 @@ export class Frontend_impl extends Frontend_skel {
         timestamp_ms: bigint
     ): void {
         this.landmarks = landmarks
-        this.transform = transform
         this.updateManager.invalidateView()
-        this.blendshapeModel.setBlendshapeWeights(blendshapes)
+        this.blendshapeModel.setBlendshapeWeights(blendshapes, transform)
     }
 }

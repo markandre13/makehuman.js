@@ -8,20 +8,20 @@ import {
     prepareViewport,
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
-import { Frontend_impl } from "../net/Frontend_impl"
 import { FaceARKitLoader } from "./FaceARKitLoader"
+import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
 /**
  * Render MediaPipe's blendshape using Apples ARKit Mesh
  */
 export class FaceARKitRenderer extends RenderHandler {
     mesh!: RenderMesh
-    frontend: Frontend_impl
+    blendshapeModel: BlendshapeModel
     blendshapeSet?: FaceARKitLoader
 
-    constructor(frontend: Frontend_impl) {
+    constructor(blendshapeModel: BlendshapeModel) {
         super()
-        this.frontend = frontend
+        this.blendshapeModel = blendshapeModel
     }
 
     override paint(app: Application, view: GLView): void {
@@ -32,7 +32,7 @@ export class FaceARKitRenderer extends RenderHandler {
         const ctx = view.ctx
         const programRGBA = view.programRGBA
 
-        const vertex = this.blendshapeSet.getVertex(this.frontend)
+        const vertex = this.blendshapeSet.getVertex(this.blendshapeModel)
         const neutral = this.blendshapeSet.neutral!
 
         if (this.mesh) {

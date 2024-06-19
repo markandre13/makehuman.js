@@ -28,8 +28,8 @@ let captureEngine: OptionModel<MotionCaptureEngine>
 export function MediapipeTab(props: { app: Application }) {
     if (renderEngine === undefined) {
         const lm = new FaceLandmarkRenderer(props.app.frontend)
-        const ar = new FaceARKitRenderer(props.app.frontend)
-        const ict = new FaceICTKitRenderer(props.app.frontend)
+        const ar = new FaceARKitRenderer(props.app.frontend.blendshapeModel)
+        const ict = new FaceICTKitRenderer(props.app.frontend.blendshapeModel)
         const mh = new RenderHuman(true)
         renderEngine = new OptionModel<RenderHandler>(mh, [
             [mh, "MakeHuman"],
