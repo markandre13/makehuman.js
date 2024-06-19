@@ -33,6 +33,24 @@ export class BlendShapeEditor extends RenderHandler {
     initialized = false;
     update = false;
 
+    blendshapeModel = new BlendshapeModel()
+
+    /**
+     * the editor may want to show captured blendshapes or just specific
+     * one while they are being edited
+     */
+    getCurrentBlendshapeModel() {
+        switch(this.blendshape.value) {
+            case "_neutral":
+                return this.app.frontend.blendshapeModel
+            default:
+                this.blendshapeModel.setBlendshapeNames(blendshapeNames)
+                this.blendshapeModel.reset()
+                this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, 1)
+                return this.blendshapeModel
+        }
+    }
+
     blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
         label: "Blendshape",
     });
@@ -63,17 +81,6 @@ export class BlendShapeEditor extends RenderHandler {
             app.updateManager.invalidateView()
         })
         this.currentBone.modified.add(() => app.updateManager.invalidateView()) 
-        // this.neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
-        // JawDrop 1, JawDropStretched 0.3
-        // create classes which handle loading & caching the blendshapes
-        // this.neutral = new WavefrontObj("data/blendshapes/arkit/jawOpen.obj.z")
-        // this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
-        // this.neutral = new WavefrontObj("data/blendshapes/ict/cheekSquintLeft.obj")
-        // this.neutral = new WavefrontObj("data/blendshapes/ict/noseSneerLeft.obj")
-        // const scale = 0.088
-        // const scale = 0.1
-        // const dy = 7 // 6.67
-        // const dz = 0.43 // 0.43
     }
 
     override paint(app: Application, view: GLView): void {

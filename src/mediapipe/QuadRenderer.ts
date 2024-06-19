@@ -43,7 +43,7 @@ export class QuadRenderer extends RenderHandler {
         const programTex = view.programTex
         const neutral = this.blendshapeSet.neutral!
 
-        const vertex = this.blendshapeSet.getVertex(app.frontend.blendshapeModel)
+        const vertex = this.blendshapeSet.getVertex(this.editor.getCurrentBlendshapeModel())
         if (this.mesh) {
             this.mesh.update(vertex)
         } else {

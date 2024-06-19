@@ -46,4 +46,19 @@ export class BlendshapeModel {
         this.transform = transform
         this.modified.trigger()
     }
+
+    reset() {
+        if (this.blendshapesWeights === undefined) {
+            this.blendshapesWeights = new Float32Array(this.blendshapeNames!.length!)
+        }
+        this.blendshapesWeights.fill(0)
+    }
+
+    setBlendshapeWeight(name: string, weight: number) {
+        if (this.blendshapesWeights === undefined) {
+            return
+        }
+        const index = this.blendshapeName2Index.get(name)!
+        this.blendshapesWeights[index] = weight
+    }
 }
