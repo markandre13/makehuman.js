@@ -4,7 +4,7 @@ import { Tab } from "toad.js/view/Tab"
 import { Condition } from "toad.js/model/Condition"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
-import { SelectionModel, TableEditMode, TextField, css, ref } from "toad.js"
+import { NumberModel, SelectionModel, Slider, TableEditMode, TextField, css, ref } from "toad.js"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 
 import { Application } from "Application"
@@ -173,6 +173,18 @@ export const blendshapeDescriptions: BlendshapeDescription[] = [
     },
 ]
 
+export function FormSlider(props: { model: NumberModel }) {
+    return (
+        <>
+            <FormLabel model={props.model} />
+            <FormField>
+                <TextField model={props.model} style={{width: "50px"}}/>
+                <Slider model={props.model} />
+            </FormField>
+            <FormHelp model={props.model} />
+        </>
+    )
+}
 
 export function BlendShapeTab(props: { app: Application }) {
     const editor = BlendShapeEditor.getInstance(props.app)
@@ -218,6 +230,8 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormText model={editor.dy} />
                 <FormText model={editor.dz} /> */}
                 <FormSelect model={editor.blendshape} />
+                <FormSlider model={editor.primaryWeight} />
+                <FormSlider model={editor.secondayWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
             {/* <If isTrue={morphToMatchNeutral}>

@@ -30,11 +30,17 @@ export class BlendShapeEditor extends RenderHandler {
     initialized = false
     update = false
 
+    // this model drives the animation while editing single blendshapes
     blendshapeModel = new BlendshapeModel()
 
+    // this selects the blendshape to be edited
     blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
         label: "Blendshape",
     })
+    primaryWeight = new NumberModel(1, { min: 0, max: 1, step: 0.01, label: "primary weight" })
+    secondayWeight = new NumberModel(0, { min: 0, max: 1, step: 0.01, label: "secondary weight" })
+
+    // this selects the bone to be edited
     currentBone = new TextModel()
 
     // ictkit
@@ -56,21 +62,26 @@ export class BlendShapeEditor extends RenderHandler {
         this.app = app
         this.blendshapeSet = FaceARKitLoader.getInstance()
         this.neutral = this.blendshapeSet.getNeutral()
-
         this.blendshape.modified.add(() => {
             switch (this.blendshape.value) {
                 case "_neutral":
                     this.app.updateManager.blendshapeModel = this.app.frontend.blendshapeModel
                     break
                 default:
+                    this.primaryWeight.value = 1
+                    this.secondayWeight.value = 0
                     this.app.updateManager.blendshapeModel = this.blendshapeModel
                     this.blendshapeModel.setBlendshapeNames(blendshapeNames)
                     this.blendshapeModel.reset()
-                    this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, 1)
-                    break
+                    this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
             }
             this.update = true
-            app.updateManager.invalidateView()
+            this.app.updateManager.invalidateView()
+        })
+        this.primaryWeight.modified.add(() => {
+            this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
+            this.update = true
+            this.app.updateManager.invalidateView()
         })
         this.currentBone.modified.add(() => app.updateManager.invalidateView())
     }
