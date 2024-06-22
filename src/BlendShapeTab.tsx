@@ -195,8 +195,6 @@ export function BlendShapeTab(props: { app: Application }) {
 
     const renderer = new QuadRenderer(editor)
 
-    let defaultConverter: IBlendshapeConverter | undefined
-
     return (
         <Tab
             label="Face"
@@ -205,11 +203,10 @@ export function BlendShapeTab(props: { app: Application }) {
                 switch (state) {
                     case "visible":
                         props.app.setRenderer(renderer)
-                        defaultConverter = props.app.updateManager.blendshapeConverter
-                        props.app.updateManager.blendshapeConverter = undefined
                         break
                     case "hidden":
-                        props.app.updateManager.blendshapeConverter = defaultConverter
+                        // reset blendhape model
+                        props.app.updateManager.blendshapeModel = props.app.frontend.blendshapeModel
                         break
                 }
             }}

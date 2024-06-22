@@ -10,25 +10,15 @@ import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
 
 export class BlendshapeConverter implements IBlendshapeConverter {
-    private blendshapeModel: BlendshapeModel
-    private skeleton: Skeleton
     private blendshapes2quat2s?: MHFaceBlendshapes
 
-    constructor(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
-        this.blendshapeModel = blendshapeModel
-        this.skeleton = skeleton
-    }
-
-    hasWork() {
-        return true
-    }
-
-    convert() {
+    convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
         if (this.blendshapes2quat2s === undefined) {
-            this.blendshapes2quat2s = new MHFaceBlendshapes(new MHFacePoseUnits(this.skeleton))
+            this.blendshapes2quat2s = new MHFaceBlendshapes(new MHFacePoseUnits(skeleton))
         }
-        const ql = new Array<quat2 | undefined>(this.skeleton.boneslist!.length)
-        this.blendshapeModel.forEach((name, weight) => {
+        const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)
+        ql.fill(undefined)
+        blendshapeModel.forEach((name, weight) => {
             const boneQuatList = this.blendshapes2quat2s!.blendshape2bone.get(name)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
@@ -58,10 +48,10 @@ export class BlendshapeConverter implements IBlendshapeConverter {
         ql.forEach((q, i) => {
             if (q !== undefined) {
                 const poseMat = mat4.fromQuat2(mat4.create(), q)
-                const bone = this.skeleton.boneslist![i]
+                const bone = skeleton.boneslist![i]
                 bone.matPose = calcWebGL(poseMat, bone.matRestGlobal!)
             } else {
-                mat4.identity(this.skeleton.boneslist![i].matPose)
+                mat4.identity(skeleton.boneslist![i].matPose)
             }
         })
 

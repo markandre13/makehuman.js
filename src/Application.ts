@@ -92,7 +92,7 @@ export class Application {
 
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
         this.blendshapeModel = new BlendshapeModel()
-        this.blendshapeConverter = new BlendshapeConverter(this.blendshapeModel, this.skeleton)
+        this.blendshapeConverter = new BlendshapeConverter()
         this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty

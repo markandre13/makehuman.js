@@ -1,5 +1,6 @@
+import { Skeleton } from "skeleton/Skeleton"
+import { BlendshapeModel } from "./BlendshapeModel"
 
 export interface IBlendshapeConverter {
-    hasWork(): boolean
-    convert(): void
+    convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton): void
 }

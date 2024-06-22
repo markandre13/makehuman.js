@@ -7,13 +7,10 @@ import {
     createNormalMatrix,
     createProjectionMatrix,
     prepareCanvas,
-    prepareViewport
+    prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import {
-    NumberModel,
-    OptionModel, TextModel
-} from "toad.js"
+import { NumberModel, OptionModel, TextModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
@@ -30,40 +27,24 @@ export class BlendShapeEditor extends RenderHandler {
 
     app: Application
     xyz?: Float32Array
-    initialized = false;
-    update = false;
+    initialized = false
+    update = false
 
     blendshapeModel = new BlendshapeModel()
 
-    /**
-     * the editor may want to show captured blendshapes or just specific
-     * one while they are being edited
-     */
-    getCurrentBlendshapeModel() {
-        switch(this.blendshape.value) {
-            case "_neutral":
-                return this.app.frontend.blendshapeModel
-            default:
-                this.blendshapeModel.setBlendshapeNames(blendshapeNames)
-                this.blendshapeModel.reset()
-                this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, 1)
-                return this.blendshapeModel
-        }
-    }
-
     blendshape = new OptionModel(blendshapeNames[0], blendshapeNames, {
         label: "Blendshape",
-    });
-    currentBone = new TextModel();
+    })
+    currentBone = new TextModel()
 
     // ictkit
     // scale = new NumberModel(0.1, {min: 0.08, max: 0.12,  step: 0.001, label: "scale"})
     // dy = new NumberModel(7.03, {min: 6.6, max: 7.4,  step: 0.001, label: "dy"})
     // dz = new NumberModel(0.392, {min: 0.08, max: 0.82,  step: 0.001, label: "dz"})
     // arkit
-    scale = new NumberModel(9.5, { min: 9, max: 11, step: 0.1, label: "scale" });
-    dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" });
-    dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" });
+    scale = new NumberModel(9.5, { min: 9, max: 11, step: 0.1, label: "scale" })
+    dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" })
+    dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
 
     blendshapeSet: FaceARKitLoader
 
@@ -77,10 +58,21 @@ export class BlendShapeEditor extends RenderHandler {
         this.neutral = this.blendshapeSet.getNeutral()
 
         this.blendshape.modified.add(() => {
+            switch (this.blendshape.value) {
+                case "_neutral":
+                    this.app.updateManager.blendshapeModel = this.app.frontend.blendshapeModel
+                    break
+                default:
+                    this.app.updateManager.blendshapeModel = this.blendshapeModel
+                    this.blendshapeModel.setBlendshapeNames(blendshapeNames)
+                    this.blendshapeModel.reset()
+                    this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, 1)
+                    break
+            }
             this.update = true
             app.updateManager.invalidateView()
         })
-        this.currentBone.modified.add(() => app.updateManager.invalidateView()) 
+        this.currentBone.modified.add(() => app.updateManager.invalidateView())
     }
 
     override paint(app: Application, view: GLView): void {

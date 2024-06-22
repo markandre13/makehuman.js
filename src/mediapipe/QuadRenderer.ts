@@ -21,7 +21,7 @@ import { ArrowMesh } from "./ArrowMesh"
 export class QuadRenderer extends RenderHandler {
     editor: BlendShapeEditor
 
-    blendshapeSet?: FaceARKitLoader
+    arkit?: FaceARKitLoader
     mesh!: RenderMesh
     arrowMesh!: ArrowMesh
 
@@ -31,8 +31,8 @@ export class QuadRenderer extends RenderHandler {
     }
 
     override paint(app: Application, view: GLView): void {
-        if (this.blendshapeSet === undefined) {
-            this.blendshapeSet = FaceARKitLoader.getInstance().preload()
+        if (this.arkit === undefined) {
+            this.arkit = FaceARKitLoader.getInstance().preload()
         }
         if (this.arrowMesh === undefined) {
             this.arrowMesh = new ArrowMesh(view.gl)
@@ -41,13 +41,13 @@ export class QuadRenderer extends RenderHandler {
         const ctx = view.ctx
         const programRGBA = view.programRGBA
         const programTex = view.programTex
-        const neutral = this.blendshapeSet.neutral!
+        const neutral = this.arkit.neutral!
 
-        const vertex = this.blendshapeSet.getVertex(this.editor.getCurrentBlendshapeModel())
-        if (this.mesh) {
-            this.mesh.update(vertex)
-        } else {
+        const vertex = this.arkit.getVertex(app.updateManager.blendshapeModel!)
+        if (this.mesh === undefined) {
             this.mesh = new RenderMesh(gl, vertex, neutral.fxyz, undefined, undefined, false)
+        } else {
+            this.mesh.update(vertex)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
