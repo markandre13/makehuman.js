@@ -4,14 +4,28 @@ import { Tab } from "toad.js/view/Tab"
 import { Condition } from "toad.js/model/Condition"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
-import { NumberModel, SelectionModel, Slider, TableEditMode, TextField, css, ref } from "toad.js"
+import {
+    NumberModel,
+    SelectionModel,
+    Slider,
+    Table,
+    TableAdapter,
+    TableEditMode,
+    TableEvent,
+    TableEventType,
+    TableModel,
+    TablePos,
+    TextField,
+    css,
+    ref,
+} from "toad.js"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 
 import { Application } from "Application"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { BlendShapeEditor } from "BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
-import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
+import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -178,13 +192,97 @@ export function FormSlider(props: { model: NumberModel }) {
         <>
             <FormLabel model={props.model} />
             <FormField>
-                <TextField model={props.model} style={{width: "50px"}}/>
+                <TextField model={props.model} style={{ width: "50px" }} />
                 <Slider model={props.model} />
             </FormField>
             <FormHelp model={props.model} />
         </>
     )
 }
+
+class PoseUnitWeights extends TableModel {
+    private facePoseUnits
+
+    constructor(facePoseUnits: MHFacePoseUnits) {
+        super()
+        this.facePoseUnits = Array.from(facePoseUnits.blendshape2bone, ([name, weight]) => ({
+            name,
+            weight: new NumberModel(0, { 
+                min: 0, max: 1, step: 0.01,
+                label: name
+             }),
+        }))
+    }
+    get colCount(): number {
+        return 2
+    }
+    get rowCount(): number {
+        return this.facePoseUnits.length
+    }
+    getName(row: number): string {
+        return this.facePoseUnits[row].name
+    }
+    getWeight(row: number): NumberModel {
+        return this.facePoseUnits[row].weight
+    }
+    // setWeight(row: number, weight: number) {
+    //     return (this.facePoseUnits[row].weight = weight)
+    // }
+}
+
+class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
+    override getColumnHead(col: number) {
+        switch (col) {
+            case 0:
+                return <>Pose Unit</>
+            case 1:
+                return <>Weight</>
+        }
+    }
+    override showCell(pos: TablePos, cell: HTMLSpanElement) {
+        // cell.style.padding = "1px" // DON'T: this breaks Table's layout algorithm
+        switch (pos.col) {
+            case 0:
+                cell.innerText = this.model.getName(pos.row)
+                break
+            case 1:
+                // cell.innerText = this.model.getWeight(pos.row).toString()
+                const poseUnit = this.model.getWeight(pos.row)
+                cell.style.width = "50px"
+                cell.style.textAlign = "right"
+                cell.innerText = poseUnit.value.toString()
+                // const model = this.model.poseUnits[pos.row]
+                poseUnit.applyStyle(cell)
+                cell.onwheel = (event: WheelEvent) => {
+                    PoseUnitWeightsAdapter.wheel(poseUnit, event)
+                    this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
+                }
+                cell.ondblclick = () => poseUnit.resetToDefault()
+                // cell.onpointerenter = () => poseUnit.focus(true)
+                // cell.onpointerleave = () => poseUnit.focus(false)
+                break
+        }
+    }
+    protected static wheel(model: NumberModel, e: WheelEvent) {
+        // console.log(`wheel event for model ${model.label}`)
+        e.preventDefault()
+        if (e.deltaY > 0) {
+            model.decrement()
+        }
+        if (e.deltaY < 0) {
+            model.increment()
+        }
+    }
+    override saveCell(pos: TablePos, cell: HTMLSpanElement): void {
+        switch (pos.col) {
+            case 1:
+                this.model.getWeight(pos.row).value = parseFloat(cell.innerText)
+                break
+        }
+    }
+}
+
+TableAdapter.register(PoseUnitWeightsAdapter, PoseUnitWeights)
 
 export function BlendShapeTab(props: { app: Application }) {
     const editor = BlendShapeEditor.getInstance(props.app)
@@ -206,6 +304,8 @@ export function BlendShapeTab(props: { app: Application }) {
     })
 
     const renderer = new QuadRenderer(editor)
+
+    const facePoseUnits = new MHFacePoseUnits(props.app.skeleton)
 
     return (
         <Tab
@@ -234,6 +334,7 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSlider model={editor.secondayWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
+            <Table model={new PoseUnitWeights(facePoseUnits)} style={{ width: "calc(100% - 2px)", height: "200px" }} />
             {/* <If isTrue={morphToMatchNeutral}>
                 <p>morph face to match neutral blendshape</p>
                 <Table model={props.app.morphControls} style={{ width: "498px", height: "500px" }} />
