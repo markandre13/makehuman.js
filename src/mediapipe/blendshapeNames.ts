@@ -51,4 +51,5 @@ export const blendshapeNames = [
     "mouthUpperUpRight", // 49
     "noseSneerLeft", // 50
     "noseSneerRight", // 51
+    "tongueOut", // 52
 ]

@@ -26,6 +26,8 @@ import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { BlendShapeEditor } from "BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
+import { BoneQuat2 } from "blendshapes/BoneQuat2"
+import { quat2 } from "gl-matrix"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -207,10 +209,12 @@ class PoseUnitWeights extends TableModel {
         super()
         this.facePoseUnits = Array.from(facePoseUnits.blendshape2bone, ([name, weight]) => ({
             name,
-            weight: new NumberModel(0, { 
-                min: 0, max: 1, step: 0.01,
-                label: name
-             }),
+            weight: new NumberModel(0, {
+                min: 0,
+                max: 1,
+                step: 0.01,
+                label: name,
+            }),
         }))
     }
     get colCount(): number {
@@ -225,9 +229,7 @@ class PoseUnitWeights extends TableModel {
     getWeight(row: number): NumberModel {
         return this.facePoseUnits[row].weight
     }
-    // setWeight(row: number, weight: number) {
-    //     return (this.facePoseUnits[row].weight = weight)
-    // }
+    foo() {}
 }
 
 class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
@@ -248,6 +250,22 @@ class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
             case 1:
                 // cell.innerText = this.model.getWeight(pos.row).toString()
                 const poseUnit = this.model.getWeight(pos.row)
+                if (poseUnit.modified.count() == 0) {
+                    poseUnit.modified.add(() =>
+                        this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
+                        // ALSO
+                        // o accumulate MHFacePoseUnits and copy them to BlendshapeConverter
+
+                        // source
+                        //   this.model has the weights
+                        //   MHFacePoseUnits has the quads for each weight
+                        // destination
+                        //   MHFaceBlendshapes
+                        // algorithm
+                        //   BlendshapeConverter combines BlendshapeModel, MHFaceBlendshapes
+                        //   and copies it to the polygon
+                    )
+                }
                 cell.style.width = "50px"
                 cell.style.textAlign = "right"
                 cell.innerText = poseUnit.value.toString()
@@ -255,7 +273,6 @@ class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
                 poseUnit.applyStyle(cell)
                 cell.onwheel = (event: WheelEvent) => {
                     PoseUnitWeightsAdapter.wheel(poseUnit, event)
-                    this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
                 }
                 cell.ondblclick = () => poseUnit.resetToDefault()
                 // cell.onpointerenter = () => poseUnit.focus(true)
