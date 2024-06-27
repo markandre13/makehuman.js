@@ -2,17 +2,19 @@ import { calcWebGL } from "expression/calcWebGL"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
-import { BlendshapeToPose, makeDefaultBlendshapeToPoseConfig } from "blendshapes/BlendshapeToPose"
+import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshapeToPoseConfig"
+import { BlendshapeToPose } from "./BlendshapeToPose"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
+import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
 
 export class BlendshapeConverter implements IBlendshapeConverter {
     private blendshapes2quat2s?: BlendshapeToPose
     private faceposeunits?: MHFacePoseUnits
-    private cfgset = makeDefaultBlendshapeToPoseConfig()
+    private cfgset?: BlendshapeToPoseConfig
 
     convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
         if (this.blendshapes2quat2s === undefined) {
@@ -21,6 +23,10 @@ export class BlendshapeConverter implements IBlendshapeConverter {
         if (this.faceposeunits === undefined) {
             this.faceposeunits = new MHFacePoseUnits(skeleton)
         }
+        if (this.cfgset === undefined) {
+            this.cfgset = makeDefaultBlendshapeToPoseConfig(skeleton)
+        }
+
         this.cfgset.convert(this.faceposeunits, this.blendshapes2quat2s)
 
         const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)

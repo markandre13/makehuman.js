@@ -10,7 +10,7 @@ describe("blendshape", function () {
     it("BlendshapeToPose.toJSON()", function () {
          const pose = new BlendshapePose()
         pose.poseUnitWeight.set("pu", 0.4)
-        pose.boneTransform.set({name: "bt"} , quat2.create())
+        pose.boneTransform.set({name: "bt"} as any, quat2.create())
 
         const cfg = new BlendshapeToPoseConfig()
         cfg.set("bs", pose)
@@ -26,7 +26,7 @@ describe("blendshape", function () {
             getBone(name: string) {
                 return name == b.name ? b : undefined
             } 
-        }
+        } as any
 
         const obj = BlendshapeToPoseConfig.fromJSON(s, JSON.parse(str))
         const pose = obj.get("bs")

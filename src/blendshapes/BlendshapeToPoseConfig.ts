@@ -6,7 +6,6 @@ import { Bone } from "skeleton/Bone"
 import { REST_QUAT } from "UpdateManager"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlendshapeToPose } from "./BlendshapeToPose"
-import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { Skeleton } from "skeleton/Skeleton"
 
 export class BlendshapePose {
