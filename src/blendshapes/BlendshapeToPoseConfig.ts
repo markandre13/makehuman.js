@@ -6,15 +6,60 @@ import { Bone } from "skeleton/Bone"
 import { REST_QUAT } from "UpdateManager"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlendshapeToPose } from "./BlendshapeToPose"
+import { blendshapeNames } from "mediapipe/blendshapeNames"
+import { Skeleton } from "skeleton/Skeleton"
 
 export class BlendshapePose {
     // face poseunit name to weight
     poseUnitWeight = new Map<string, number>()
-    // 
+    //
     boneTransform = new Map<Bone, quat2>()
+
+    toJSON() {
+        const poseUnitWeight = {} as any
+        for (const [name, weight] of this.poseUnitWeight) {
+            poseUnitWeight[name] = weight
+        }
+        const boneTransform = {} as any
+        for (const [bone, q] of this.boneTransform) {
+            boneTransform[bone.name] = [q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]]
+        }
+        return { poseUnitWeight, boneTransform }
+    }
+
+    static fromJSON(skeleton: Skeleton, data: any) {
+        const obj = new BlendshapePose()
+        for(const name of Object.getOwnPropertyNames(data.poseUnitWeight)) {
+            obj.poseUnitWeight.set(name, data.poseUnitWeight[name])
+        }
+        for(const name of Object.getOwnPropertyNames(data.boneTransform)) {
+            const q = data.boneTransform[name] as number[]
+            obj.boneTransform.set(skeleton.getBone(name), quat2.fromValues(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]))
+        }
+        
+        return obj
+    }
 }
 
 export class BlendshapeToPoseConfig extends Map<string, BlendshapePose> {
+    toJSON() {
+        const out = {} as any
+        for (const [blendshapeName, pose] of this) {
+            if (blendshapeName === "_neutral") {
+                continue
+            }
+            out[blendshapeName] = pose.toJSON()
+        }
+        return out
+    }
+
+    static fromJSON(skeleton: Skeleton, data: any) {
+        const obj = new BlendshapeToPoseConfig()
+        for(const name of Object.getOwnPropertyNames(data)) {
+            obj.set(name, BlendshapePose.fromJSON(skeleton, data[name]))
+        }
+        return obj
+    }
 
     convert(poseunits: MHFacePoseUnits, out: BlendshapeToPose) {
         for (const [blendshapeName, cfg] of this) {

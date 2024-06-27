@@ -21,6 +21,7 @@ export function makeDefaultBlendshapeToPoseConfig() {
  * Maps each ARKit face blendshape to a face rig pose
  */
 export class BlendshapeToPose extends Map<string, BoneQuat2[]> {
+
 }
 
 // map some Google Mediapipe/Apple ARKit face blendshape names to Makehuman Face Poseunit names

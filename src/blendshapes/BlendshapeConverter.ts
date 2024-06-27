@@ -35,9 +35,9 @@ export class BlendshapeConverter implements IBlendshapeConverter {
             // if (name === "mouthFunnel") {
             //     weight *= 2.5
             // }
-            if (name === "jawOpen") {
-                weight *= 1.5
-            }
+            // if (name === "jawOpen") {
+            //     weight *= 1.5
+            // }
             if (isZero(weight)) {
                 return
             }
