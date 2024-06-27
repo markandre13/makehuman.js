@@ -9,41 +9,9 @@ import { quaternion_slerp } from "lib/quaternion_slerp"
 
 class BlendshapeSetConfig {
     blendshapes = new Map<string, BlendshapeConfig>()
-}
 
-class BlendshapeConfig {
-    // face poseunit name to weight
-    poseUnitWeight = new Map<string, number>()
-    // 
-    boneTransform = new Map<Bone, quat2>()
-}
-
-function makeDefaultBlendshapeSetConfig() {
-    const blendshapeSet = new BlendshapeSetConfig()
-    for (const blendshapeName of blendshapeNames) {
-        const cfg = new BlendshapeConfig()
-        const poseUnitName = blendshape2poseUnit.get(blendshapeName)
-        if (poseUnitName !== undefined) {
-            cfg.poseUnitWeight.set(poseUnitName, 1)
-        }
-        blendshapeSet.blendshapes.set(blendshapeName, cfg)
-    }
-    return blendshapeSet
-}
-
-/**
- * Take MakeHuman's face pose units and remap them to ARKit's blendshape names.
- *
- * This is not a perfect mapping but serves as a demo and starting point for further
- * refinements.
- */
-export class MHFaceBlendshapes {
-    blendshape2bone = new Map<string, BoneQuat2[]>()
-    // poseunits: MHFacePoseUnits
-
-    constructor(poseunits: MHFacePoseUnits) {
-        const cfgset = makeDefaultBlendshapeSetConfig()
-        for (const [blendshapeName, cfg] of cfgset.blendshapes) {
+    update(poseunits: MHFacePoseUnits, out: BlendshapeToPose) {
+        for (const [blendshapeName, cfg] of this.blendshapes) {
             const mapOut = new Map<Bone, quat2>()
 
             // add pose units to mapOut
@@ -78,8 +46,39 @@ export class MHFaceBlendshapes {
                 arrayOut.push({ bone, q })
             })
 
-            this.blendshape2bone.set(blendshapeName, arrayOut)
+            out.set(blendshapeName, arrayOut)
         }
+    }
+}
+
+class BlendshapeConfig {
+    // face poseunit name to weight
+    poseUnitWeight = new Map<string, number>()
+    // 
+    boneTransform = new Map<Bone, quat2>()
+}
+
+function makeDefaultBlendshapeSetConfig() {
+    const blendshapeSet = new BlendshapeSetConfig()
+    for (const blendshapeName of blendshapeNames) {
+        const cfg = new BlendshapeConfig()
+        const poseUnitName = blendshape2poseUnit.get(blendshapeName)
+        if (poseUnitName !== undefined) {
+            cfg.poseUnitWeight.set(poseUnitName, 1)
+        }
+        blendshapeSet.blendshapes.set(blendshapeName, cfg)
+    }
+    return blendshapeSet
+}
+
+/**
+ * Maps each ARKit face blendshape to a face rig pose
+ */
+export class BlendshapeToPose extends Map<string, BoneQuat2[]> {
+    constructor(poseunits: MHFacePoseUnits) {
+        super()
+        const cfgset = makeDefaultBlendshapeSetConfig()
+        cfgset.update(poseunits, this)
     }
 }
 

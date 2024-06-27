@@ -2,7 +2,7 @@ import { calcWebGL } from "expression/calcWebGL"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
-import { MHFaceBlendshapes } from "blendshapes/MHFaceBlendshapes"
+import { BlendshapeToPose } from "blendshapes/BlendshapeToPose"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
@@ -10,16 +10,16 @@ import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
 
 export class BlendshapeConverter implements IBlendshapeConverter {
-    private blendshapes2quat2s?: MHFaceBlendshapes
+    private blendshapes2quat2s?: BlendshapeToPose
 
     convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
         if (this.blendshapes2quat2s === undefined) {
-            this.blendshapes2quat2s = new MHFaceBlendshapes(new MHFacePoseUnits(skeleton))
+            this.blendshapes2quat2s = new BlendshapeToPose(new MHFacePoseUnits(skeleton))
         }
         const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)
         ql.fill(undefined)
         blendshapeModel.forEach((name, weight) => {
-            const boneQuatList = this.blendshapes2quat2s!.blendshape2bone.get(name)
+            const boneQuatList = this.blendshapes2quat2s!.get(name)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
                 return
