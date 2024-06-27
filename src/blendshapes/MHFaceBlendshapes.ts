@@ -12,13 +12,15 @@ class BlendshapeSetConfig {
 }
 
 class BlendshapeConfig {
+    // face poseunit name to weight
     poseUnitWeight = new Map<string, number>()
-    boneTransform = new Map<string, quat2>()
+    // 
+    boneTransform = new Map<Bone, quat2>()
 }
 
 function makeDefaultBlendshapeSetConfig() {
     const blendshapeSet = new BlendshapeSetConfig()
-    for(const blendshapeName of blendshapeNames) {
+    for (const blendshapeName of blendshapeNames) {
         const cfg = new BlendshapeConfig()
         const poseUnitName = blendshape2poseUnit.get(blendshapeName)
         if (poseUnitName !== undefined) {
@@ -31,7 +33,7 @@ function makeDefaultBlendshapeSetConfig() {
 
 /**
  * Take MakeHuman's face pose units and remap them to ARKit's blendshape names.
- * 
+ *
  * This is not a perfect mapping but serves as a demo and starting point for further
  * refinements.
  */
@@ -41,13 +43,14 @@ export class MHFaceBlendshapes {
 
     constructor(poseunits: MHFacePoseUnits) {
         const cfgset = makeDefaultBlendshapeSetConfig()
-        for(const [blendshapeName, cfg] of cfgset.blendshapes) {
-
+        for (const [blendshapeName, cfg] of cfgset.blendshapes) {
             const mapOut = new Map<Bone, quat2>()
-            for(const [poseUnitName, weight] of cfg.poseUnitWeight) {
+
+            // add pose units to mapOut
+            for (const [poseUnitName, weight] of cfg.poseUnitWeight) {
                 if (!isZero(weight)) {
                     const bone2quats = poseunits.blendshape2bone.get(poseUnitName)!
-                    for(const bq of bone2quats) {
+                    for (const bq of bone2quats) {
                         const q = quaternion_slerp(REST_QUAT, bq.q, weight)
                         const outQ = mapOut.get(bq.bone)
                         if (outQ === undefined) {
@@ -59,23 +62,24 @@ export class MHFaceBlendshapes {
                 }
             }
 
-            // TODO: also add boneTransform to mapOut
+            // add bone transform to mapOut
+            cfg.boneTransform.forEach((q, bone) => {
+                const outQ = mapOut.get(bone)
+                if (outQ === undefined) {
+                    mapOut.set(bone, q)
+                } else {
+                    quat2.multiply(outQ, q, outQ)
+                }
+            })
 
+            // convert mapOut to array
             const arrayOut: BoneQuat2[] = []
             mapOut.forEach((q, bone) => {
-                arrayOut.push({bone, q})
+                arrayOut.push({ bone, q })
             })
 
             this.blendshape2bone.set(blendshapeName, arrayOut)
         }
-        // this.poseunits = poseunits
-        // poseunits.blendshape2bone.forEach( (quat2s, name) => {
-        //     for (let pair of blendshape2poseUnit) {
-        //         if (pair[1] === name) {
-        //             this.blendshape2bone.set(pair[0], quat2s)
-        //         }
-        //     }
-        // })
     }
 }
 
