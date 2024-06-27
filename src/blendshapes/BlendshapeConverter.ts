@@ -2,7 +2,7 @@ import { calcWebGL } from "expression/calcWebGL"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
-import { BlendshapeToPose } from "blendshapes/BlendshapeToPose"
+import { BlendshapeToPose, makeDefaultBlendshapeToPoseConfig } from "blendshapes/BlendshapeToPose"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
@@ -11,11 +11,18 @@ import { IBlendshapeConverter } from "./IBlendshapeConverter"
 
 export class BlendshapeConverter implements IBlendshapeConverter {
     private blendshapes2quat2s?: BlendshapeToPose
+    private faceposeunits?: MHFacePoseUnits
+    private cfgset = makeDefaultBlendshapeToPoseConfig()
 
     convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
         if (this.blendshapes2quat2s === undefined) {
-            this.blendshapes2quat2s = new BlendshapeToPose(new MHFacePoseUnits(skeleton))
+            this.blendshapes2quat2s = new BlendshapeToPose()
         }
+        if (this.faceposeunits === undefined) {
+            this.faceposeunits = new MHFacePoseUnits(skeleton)
+        }
+        this.cfgset.convert(this.faceposeunits, this.blendshapes2quat2s)
+
         const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)
         ql.fill(undefined)
         blendshapeModel.forEach((name, weight) => {
