@@ -22,6 +22,10 @@ import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
 import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
+import { BlendshapeToPose } from "blendshapes/BlendshapeToPose"
+import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
+import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshapeToPoseConfig"
+import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
@@ -64,6 +68,8 @@ export class Application {
         overlay: HTMLElement
     }
 
+    blendshapeToPoseConfig: BlendshapeToPoseConfig
+
     constructor() {
         console.log("loading assets...")
         this.human = new MorphManager()
@@ -92,7 +98,13 @@ export class Application {
 
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
         this.blendshapeModel = new BlendshapeModel()
-        this.blendshapeConverter = new BlendshapeConverter()
+
+        // MOVE THESE OUTSIDE TO BE ABLE TO ACCESS THEM
+        const blendshapes2quat2s = new BlendshapeToPose()
+        const faceposeunits = new MHFacePoseUnits(this.skeleton)
+        this.blendshapeToPoseConfig = makeDefaultBlendshapeToPoseConfig(this.skeleton)
+
+        this.blendshapeConverter = new BlendshapeConverter(blendshapes2quat2s, faceposeunits, this.blendshapeToPoseConfig)
         this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty

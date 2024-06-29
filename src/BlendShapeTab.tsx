@@ -202,8 +202,13 @@ export function FormSlider(props: { model: NumberModel }) {
     )
 }
 
-class PoseUnitWeights extends TableModel {
-    private facePoseUnits
+interface PoseUnitWeight {
+    name: string
+    weight: NumberModel
+}
+
+export class PoseUnitWeights extends TableModel {
+    private facePoseUnits: PoseUnitWeight[]
 
     constructor(facePoseUnits: MHFacePoseUnits) {
         super()
@@ -226,13 +231,29 @@ class PoseUnitWeights extends TableModel {
     getName(row: number): string {
         return this.facePoseUnits[row].name
     }
-    getWeight(row: number): NumberModel {
+    getWeight(row: number | string): NumberModel {
+        if (typeof row === "string") {
+            for(let i=0; i<this.facePoseUnits.length; ++i) {
+                if (this.facePoseUnits[i].name === row) {
+                    row = i
+                    break
+                }
+            }
+        }
+        if (typeof row === "string") {
+            throw Error(`${this.constructor.name}: no weight name '${row}'`)
+        }
         return this.facePoseUnits[row].weight
     }
-    foo() {}
+    reset() {
+        this.facePoseUnits.forEach(m => m.weight.value = 0)
+    }
+    forEach(callbackfn: (value: PoseUnitWeight) => void) {
+        this.facePoseUnits.forEach(callbackfn)
+    }
 }
 
-class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
+export class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
     override getColumnHead(col: number) {
         switch (col) {
             case 0:
@@ -251,8 +272,8 @@ class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
                 // cell.innerText = this.model.getWeight(pos.row).toString()
                 const poseUnit = this.model.getWeight(pos.row)
                 if (poseUnit.modified.count() == 0) {
-                    poseUnit.modified.add(() =>
-                        this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
+                    poseUnit.modified.add(
+                        () => this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
                         // ALSO
                         // o accumulate MHFacePoseUnits and copy them to BlendshapeConverter
 
@@ -304,11 +325,10 @@ TableAdapter.register(PoseUnitWeightsAdapter, PoseUnitWeights)
 export function BlendShapeTab(props: { app: Application }) {
     const editor = BlendShapeEditor.getInstance(props.app)
 
-    const morphToMatchNeutral = new Condition(() => {
-        return editor.blendshape.value == blendshapeNames[0]
-    }, [editor.blendshape])
-
-    const sm = new SelectionModel(TableEditMode.EDIT_CELL)
+    // const morphToMatchNeutral = new Condition(() => {
+    //     return editor.blendshape.value == blendshapeNames[0]
+    // }, [editor.blendshape])
+    // const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
     const elements: { x?: TextField; y?: TextField; z?: TextField; dialog?: HTMLDialogElement } = {}
     editor.currentBone.modified.add(() => {
@@ -321,8 +341,6 @@ export function BlendShapeTab(props: { app: Application }) {
     })
 
     const renderer = new QuadRenderer(editor)
-
-    const facePoseUnits = new MHFacePoseUnits(props.app.skeleton)
 
     return (
         <Tab
@@ -351,7 +369,7 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSlider model={editor.secondayWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
-            <Table model={new PoseUnitWeights(facePoseUnits)} style={{ width: "calc(100% - 2px)", height: "200px" }} />
+            <Table model={editor.poseUnitWeightsModel} style={{ width: "calc(100% - 2px)", height: "200px" }} />
             {/* <If isTrue={morphToMatchNeutral}>
                 <p>morph face to match neutral blendshape</p>
                 <Table model={props.app.morphControls} style={{ width: "498px", height: "500px" }} />

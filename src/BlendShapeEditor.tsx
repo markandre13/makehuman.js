@@ -15,6 +15,8 @@ import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
+import { PoseUnitWeights } from "BlendShapeTab"
+import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -54,6 +56,8 @@ export class BlendShapeEditor extends RenderHandler {
 
     blendshapeSet: FaceARKitLoader
 
+    poseUnitWeightsModel: PoseUnitWeights
+
     neutral: WavefrontObj
     renderMeshBS?: RenderMesh
     renderMeshMH?: RenderMesh
@@ -62,6 +66,10 @@ export class BlendShapeEditor extends RenderHandler {
         this.app = app
         this.blendshapeSet = FaceARKitLoader.getInstance()
         this.neutral = this.blendshapeSet.getNeutral()
+
+        const facePoseUnits = new MHFacePoseUnits(app.skeleton)
+        this.poseUnitWeightsModel = new PoseUnitWeights(facePoseUnits)
+
         this.blendshape.modified.add(() => {
             switch (this.blendshape.value) {
                 case "_neutral":
@@ -74,6 +82,15 @@ export class BlendShapeEditor extends RenderHandler {
                     this.blendshapeModel.setBlendshapeNames(blendshapeNames)
                     this.blendshapeModel.reset()
                     this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
+                
+                    const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
+                    // copy pose unit weights from config to ui model
+                    this.poseUnitWeightsModel.reset()
+
+
+                    cfg?.poseUnitWeight.forEach( (weight, name) => {
+                        this.poseUnitWeightsModel.getWeight(name).value = weight
+                    })
             }
             this.update = true
             this.app.updateManager.invalidateView()
@@ -84,6 +101,8 @@ export class BlendShapeEditor extends RenderHandler {
             this.app.updateManager.invalidateView()
         })
         this.currentBone.modified.add(() => app.updateManager.invalidateView())
+
+
     }
 
     override paint(app: Application, view: GLView): void {

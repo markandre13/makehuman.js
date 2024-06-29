@@ -12,21 +12,21 @@ import { IBlendshapeConverter } from "./IBlendshapeConverter"
 import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
 
 export class BlendshapeConverter implements IBlendshapeConverter {
-    private blendshapes2quat2s?: BlendshapeToPose
-    private faceposeunits?: MHFacePoseUnits
-    private cfgset?: BlendshapeToPoseConfig
+    private blendshapes2quat2s: BlendshapeToPose
+    private faceposeunits: MHFacePoseUnits
+    private cfgset: BlendshapeToPoseConfig
+
+    constructor(
+        blendshapes2quat2s: BlendshapeToPose,
+        faceposeunits: MHFacePoseUnits,
+        cfgset: BlendshapeToPoseConfig
+    ) {
+        this.blendshapes2quat2s = blendshapes2quat2s
+        this.faceposeunits = faceposeunits
+        this.cfgset = cfgset
+    }
 
     convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
-        if (this.blendshapes2quat2s === undefined) {
-            this.blendshapes2quat2s = new BlendshapeToPose()
-        }
-        if (this.faceposeunits === undefined) {
-            this.faceposeunits = new MHFacePoseUnits(skeleton)
-        }
-        if (this.cfgset === undefined) {
-            this.cfgset = makeDefaultBlendshapeToPoseConfig(skeleton)
-        }
-
         this.cfgset.convert(this.faceposeunits, this.blendshapes2quat2s)
 
         const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)
