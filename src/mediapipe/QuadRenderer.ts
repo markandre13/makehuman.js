@@ -43,7 +43,7 @@ export class QuadRenderer extends RenderHandler {
         const programTex = view.programTex
         const neutral = this.arkit.neutral!
 
-        const vertex = this.arkit.getVertex(app.updateManager.blendshapeModel!)
+        const vertex = this.arkit.getVertex(app.updateManager.getBlendshapeModel()!)
         if (this.mesh === undefined) {
             this.mesh = new RenderMesh(gl, vertex, neutral.fxyz, undefined, undefined, false)
         } else {

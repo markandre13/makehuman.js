@@ -59,6 +59,11 @@ export class BlendshapeModel {
             return
         }
         const index = this.blendshapeName2Index.get(name)!
+        if (this.blendshapesWeights[index] == weight) {
+            return
+        }
         this.blendshapesWeights[index] = weight
+        // console.log(`BlendshapeModel.setBlendshapeWeight('${name}', ${weight}})`)
+        this.modified.trigger()
     }
 }

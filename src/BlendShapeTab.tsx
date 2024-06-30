@@ -353,7 +353,7 @@ export function BlendShapeTab(props: { app: Application }) {
                         break
                     case "hidden":
                         // reset blendhape model
-                        props.app.updateManager.blendshapeModel = props.app.frontend.blendshapeModel
+                        props.app.updateManager.setBlendshapeModel(props.app.frontend.blendshapeModel)
                         break
                 }
             }}

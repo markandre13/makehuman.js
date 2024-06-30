@@ -74,16 +74,15 @@ export class BlendShapeEditor extends RenderHandler {
         this.blendshape.modified.add(() => {
             switch (this.blendshape.value) {
                 case "_neutral":
-                    this.app.updateManager.blendshapeModel = this.app.frontend.blendshapeModel
+                    this.app.updateManager.setBlendshapeModel(this.app.frontend.blendshapeModel)
                     break
                 default:
                     this.primaryWeight.value = 1
                     this.secondayWeight.value = 0
-                    this.app.updateManager.blendshapeModel = this.blendshapeModel
+                    this.app.updateManager.setBlendshapeModel(this.blendshapeModel)
                     this.blendshapeModel.setBlendshapeNames(blendshapeNames)
                     this.blendshapeModel.reset()
                     this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
-                
                     const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
                     // copy pose unit weights from config to ui model
                     this.poseUnitWeightsModel.reset()
@@ -91,17 +90,19 @@ export class BlendShapeEditor extends RenderHandler {
                         this.poseUnitWeightsModel.getWeight(name).value = weight
                     })
             }
-            // copy pose unit weights from ui model to ui config
+            // FIXME: this erases part of the configuration
+            // // copy pose unit weights from ui model to config
             this.poseUnitWeightsModel.modified.add(() => {
-                // FIXME: move into blendshapeToPoseConfig
-                const pose = app.blendshapeToPoseConfig.get(this.blendshape.value)!
-                pose.poseUnitWeight.clear()
-                this.poseUnitWeightsModel.forEach((v) => {
-                    if (!isZero(v.weight.value)) {
-                        pose.poseUnitWeight.set(v.name, v.weight.value)
-                    }
-                })
-                app.blendshapeToPoseConfig.modified.trigger()
+                console.log(`copy pose unit weights from ui model to config`)
+            //     // FIXME: move into blendshapeToPoseConfig
+            //     const pose = app.blendshapeToPoseConfig.get(this.blendshape.value)!
+            //     pose.poseUnitWeight.clear()
+            //     this.poseUnitWeightsModel.forEach((v) => {
+            //         if (!isZero(v.weight.value)) {
+            //             pose.poseUnitWeight.set(v.name, v.weight.value)
+            //         }
+            //     })
+            //     app.blendshapeToPoseConfig.modified.trigger()
             })
             this.update = true
             this.app.updateManager.invalidateView()

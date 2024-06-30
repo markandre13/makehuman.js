@@ -26,11 +26,28 @@ export class UpdateManager {
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
-    blendshapeModel?: BlendshapeModel
+
+    private blendshapeModel?: BlendshapeModel
+
+    setBlendshapeModel(blendshapeModel?: BlendshapeModel) {
+        if (this.blendshapeModel) {
+            this.blendshapeModel.modified.remove(this)
+        }
+        this.blendshapeModel = blendshapeModel
+        if (this.blendshapeModel) {
+            this.blendshapeModel.modified.add(() => {
+                this.blendshapeModelChanged = true
+            }, this)
+        }
+    }
+    getBlendshapeModel() {
+        return this.blendshapeModel
+    }
+
     blendshapeConverter?: IBlendshapeConverter
 
     blendshapeToPoseConfigChanged = false
-    blendshapeChanged = false
+    blendshapeModelChanged = false
 
     render?: () => void
     private invalidated = false
@@ -122,9 +139,7 @@ export class UpdateManager {
         this.app.blendshapeToPoseConfig.modified.add(() => {
             this.blendshapeToPoseConfigChanged = true
         })
-        this.app.blendshapeModel.modified.add(() => {
-            this.blendshapeChanged = true
-        })
+        this.setBlendshapeModel(app.blendshapeModel)
     }
 
     renderList?: RenderList
@@ -169,12 +184,12 @@ export class UpdateManager {
         if (this.blendshapeToPoseConfigChanged) {
             this.app.blendshapeToPoseConfig.convert(this.app.faceposeunits, this.app.blendshape2pose)
             this.blendshapeToPoseConfigChanged = false
-            this.blendshapeChanged = true
+            this.blendshapeModelChanged = true
         }
 
-        if (this.blendshapeChanged) {
+        if (this.blendshapeModelChanged) {
             this.blendshapeConverter!.convert(this.blendshapeModel!, this.skeleton)
-            this.blendshapeChanged = false
+            this.blendshapeModelChanged = false
 
             // experimental head rotation
             // real neck and head positioning would actually require two transforms: neck AND head.
