@@ -15,8 +15,9 @@ import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
-import { PoseUnitWeights } from "BlendShapeTab"
+import { PoseUnitWeights as PoseUnitWeightsModel } from "BlendShapeTab"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
+import { isZero } from "mesh/HumanMesh"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -56,7 +57,7 @@ export class BlendShapeEditor extends RenderHandler {
 
     blendshapeSet: FaceARKitLoader
 
-    poseUnitWeightsModel: PoseUnitWeights
+    poseUnitWeightsModel: PoseUnitWeightsModel
 
     neutral: WavefrontObj
     renderMeshBS?: RenderMesh
@@ -68,7 +69,7 @@ export class BlendShapeEditor extends RenderHandler {
         this.neutral = this.blendshapeSet.getNeutral()
 
         const facePoseUnits = new MHFacePoseUnits(app.skeleton)
-        this.poseUnitWeightsModel = new PoseUnitWeights(facePoseUnits)
+        this.poseUnitWeightsModel = new PoseUnitWeightsModel(facePoseUnits)
 
         this.blendshape.modified.add(() => {
             switch (this.blendshape.value) {
@@ -86,12 +87,20 @@ export class BlendShapeEditor extends RenderHandler {
                     const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
                     // copy pose unit weights from config to ui model
                     this.poseUnitWeightsModel.reset()
-
-
                     cfg?.poseUnitWeight.forEach( (weight, name) => {
                         this.poseUnitWeightsModel.getWeight(name).value = weight
                     })
             }
+            // copy pose unit weights from ui model to ui config
+            this.poseUnitWeightsModel.modified.add(() => {
+                const pose = app.blendshapeToPoseConfig.get(this.blendshape.value)!
+                pose.poseUnitWeight.clear()
+                this.poseUnitWeightsModel.forEach((v) => {
+                    if (!isZero(v.weight.value)) {
+                        pose.poseUnitWeight.set(v.name, v.weight.value)
+                    }
+                })
+            })
             this.update = true
             this.app.updateManager.invalidateView()
         })

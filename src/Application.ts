@@ -20,7 +20,7 @@ import { ORB } from "corba.js"
 import { Backend } from "net/makehuman_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
-import { BlendshapeConverter } from "blendshapes/BlendshapeConverter"
+import { Blendshape2PoseConverter } from "blendshapes/Blendshape2PoseConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { BlendshapeToPose } from "blendshapes/BlendshapeToPose"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
@@ -42,7 +42,8 @@ export class Application {
     orb: ORB
     frontend: Frontend_impl
     blendshapeModel: BlendshapeModel
-    blendshapeConverter: BlendshapeConverter
+    blendshapeConverter: Blendshape2PoseConverter
+    blendshapeToPoseConfig: BlendshapeToPoseConfig
 
     // makehuman
     human: MorphManager // MorphManager / MorphController
@@ -67,8 +68,6 @@ export class Application {
         canvas: HTMLCanvasElement
         overlay: HTMLElement
     }
-
-    blendshapeToPoseConfig: BlendshapeToPoseConfig
 
     constructor() {
         console.log("loading assets...")
@@ -97,14 +96,21 @@ export class Application {
         this.chordataSettings = new ChordataSettings()
 
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
+
+        // blendshape weights from backend (e.g. mediapipe, live link)
         this.blendshapeModel = new BlendshapeModel()
 
-        // MOVE THESE OUTSIDE TO BE ABLE TO ACCESS THEM
-        const blendshapes2quat2s = new BlendshapeToPose()
+        // load makehumans original face pose units
         const faceposeunits = new MHFacePoseUnits(this.skeleton)
+
+        // load makehuman.js user editable blendshape to pose configuration
         this.blendshapeToPoseConfig = makeDefaultBlendshapeToPoseConfig(this.skeleton)
 
-        this.blendshapeConverter = new BlendshapeConverter(blendshapes2quat2s, faceposeunits, this.blendshapeToPoseConfig)
+        // convert user editable pose configuration to optimized blendshape to pose set
+        const blendshape2pose = new BlendshapeToPose()
+        this.blendshapeToPoseConfig.convert(faceposeunits, blendshape2pose)
+        this.blendshapeConverter = new Blendshape2PoseConverter(blendshape2pose)
+
         this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty

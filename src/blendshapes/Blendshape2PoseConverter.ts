@@ -2,37 +2,30 @@ import { calcWebGL } from "expression/calcWebGL"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
-import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshapeToPoseConfig"
 import { BlendshapeToPose } from "./BlendshapeToPose"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
-import { MHFacePoseUnits } from "./MHFacePoseUnits"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
-import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
 
-export class BlendshapeConverter implements IBlendshapeConverter {
-    private blendshapes2quat2s: BlendshapeToPose
-    private faceposeunits: MHFacePoseUnits
-    private cfgset: BlendshapeToPoseConfig
+export class Blendshape2PoseConverter implements IBlendshapeConverter {
+    private blendshape2pose: BlendshapeToPose
 
     constructor(
-        blendshapes2quat2s: BlendshapeToPose,
-        faceposeunits: MHFacePoseUnits,
-        cfgset: BlendshapeToPoseConfig
+        blendshape2pose: BlendshapeToPose,
     ) {
-        this.blendshapes2quat2s = blendshapes2quat2s
-        this.faceposeunits = faceposeunits
-        this.cfgset = cfgset
+        this.blendshape2pose = blendshape2pose
     }
 
+    /**
+     * Apply the weights in the BlendshapeModel to the Skeleton using the mapping
+     * in BlendshapeToPose
+     */
     convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
-        this.cfgset.convert(this.faceposeunits, this.blendshapes2quat2s)
-
         const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)
         ql.fill(undefined)
         blendshapeModel.forEach((name, weight) => {
-            const boneQuatList = this.blendshapes2quat2s!.get(name)
+            const boneQuatList = this.blendshape2pose!.get(name)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
                 return
