@@ -44,6 +44,8 @@ export class Application {
     blendshapeModel: BlendshapeModel
     blendshapeConverter: Blendshape2PoseConverter
     blendshapeToPoseConfig: BlendshapeToPoseConfig
+    faceposeunits: MHFacePoseUnits
+    blendshape2pose: BlendshapeToPose
 
     // makehuman
     human: MorphManager // MorphManager / MorphController
@@ -101,15 +103,15 @@ export class Application {
         this.blendshapeModel = new BlendshapeModel()
 
         // load makehumans original face pose units
-        const faceposeunits = new MHFacePoseUnits(this.skeleton)
+        this.faceposeunits = new MHFacePoseUnits(this.skeleton)
 
         // load makehuman.js user editable blendshape to pose configuration
         this.blendshapeToPoseConfig = makeDefaultBlendshapeToPoseConfig(this.skeleton)
 
         // convert user editable pose configuration to optimized blendshape to pose set
-        const blendshape2pose = new BlendshapeToPose()
-        this.blendshapeToPoseConfig.convert(faceposeunits, blendshape2pose)
-        this.blendshapeConverter = new Blendshape2PoseConverter(blendshape2pose)
+        this.blendshape2pose = new BlendshapeToPose()
+        this.blendshapeToPoseConfig.convert(this.faceposeunits, this.blendshape2pose)
+        this.blendshapeConverter = new Blendshape2PoseConverter(this.blendshape2pose)
 
         this.updateManager = new UpdateManager(this)
 

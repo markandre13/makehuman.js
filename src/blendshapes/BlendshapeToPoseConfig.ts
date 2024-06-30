@@ -7,6 +7,7 @@ import { REST_QUAT } from "UpdateManager"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlendshapeToPose } from "./BlendshapeToPose"
 import { Skeleton } from "skeleton/Skeleton"
+import { Signal } from "toad.js/Signal"
 
 export class BlendshapePose {
     // face poseunit name to weight
@@ -41,6 +42,7 @@ export class BlendshapePose {
 }
 
 export class BlendshapeToPoseConfig extends Map<string, BlendshapePose> {
+    modified = new Signal()
     toJSON() {
         const out = {} as any
         for (const [blendshapeName, pose] of this) {

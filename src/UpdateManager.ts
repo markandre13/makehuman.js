@@ -29,6 +29,9 @@ export class UpdateManager {
     blendshapeModel?: BlendshapeModel
     blendshapeConverter?: IBlendshapeConverter
 
+    blendshapeToPoseConfigChanged = false
+    blendshapeChanged = false
+
     render?: () => void
     private invalidated = false
     invalidateView() {
@@ -115,6 +118,13 @@ export class UpdateManager {
                 }
             })
         })
+
+        this.app.blendshapeToPoseConfig.modified.add(() => {
+            this.blendshapeToPoseConfigChanged = true
+        })
+        this.app.blendshapeModel.modified.add(() => {
+            this.blendshapeChanged = true
+        })
     }
 
     renderList?: RenderList
@@ -156,31 +166,38 @@ export class UpdateManager {
             skeletonChanged = true
         }
 
-        // if (this.blendshapeConverter !== undefined && this.blendshapeConverter.hasWork()) {
-        this.blendshapeConverter!.convert(this.blendshapeModel!, this.skeleton)
-        skeletonChanged = true
-        // }
-
-        // experimental head rotation
-        // real neck and head positioning would actually require two transforms: neck AND head.
-        // as an approximation, this just evenly distributes the head rotation over neck and head joints
-        if (this.app.frontend.blendshapeModel.transform) {
-            const neck1 = this.skeleton.getBone("neck01")
-            const neck2 = this.skeleton.getBone("neck02")
-            const neck3 = this.skeleton.getBone("neck03")
-            const head = this.skeleton.getBone("head")
-
-            const t = this.app.frontend.blendshapeModel.transform
-            let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
-            let q = quat2.create()
-            quat2.fromMat4(q, m)
-            q = quaternion_slerp(REST_QUAT, q, .25)
-            mat4.fromQuat2(head.matPose, q)
-            mat4.fromQuat2(neck1.matPose, q)
-            mat4.fromQuat2(neck2.matPose, q)
-            mat4.fromQuat2(neck3.matPose, q)
+        if (this.blendshapeToPoseConfigChanged) {
+            this.app.blendshapeToPoseConfig.convert(this.app.faceposeunits, this.app.blendshape2pose)
+            this.blendshapeToPoseConfigChanged = false
+            this.blendshapeChanged = true
         }
-        skeletonChanged = true
+
+        if (this.blendshapeChanged) {
+            this.blendshapeConverter!.convert(this.blendshapeModel!, this.skeleton)
+            this.blendshapeChanged = false
+
+            // experimental head rotation
+            // real neck and head positioning would actually require two transforms: neck AND head.
+            // as an approximation, this just evenly distributes the head rotation over neck and head joints
+            if (this.app.frontend.blendshapeModel.transform) {
+                const neck1 = this.skeleton.getBone("neck01")
+                const neck2 = this.skeleton.getBone("neck02")
+                const neck3 = this.skeleton.getBone("neck03")
+                const head = this.skeleton.getBone("head")
+
+                const t = this.app.frontend.blendshapeModel.transform
+                let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
+                let q = quat2.create()
+                quat2.fromMat4(q, m)
+                q = quaternion_slerp(REST_QUAT, q, 0.25)
+                mat4.fromQuat2(head.matPose, q)
+                mat4.fromQuat2(neck1.matPose, q)
+                mat4.fromQuat2(neck2.matPose, q)
+                mat4.fromQuat2(neck3.matPose, q)
+            }
+
+            skeletonChanged = true
+        }
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {
