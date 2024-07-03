@@ -242,7 +242,7 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormText model={editor.dz} /> */}
                 <FormSelect model={editor.blendshape} />
                 <FormSlider model={editor.primaryWeight} />
-                <FormSlider model={editor.secondayWeight} />
+                <FormSlider model={editor.secondaryWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
             <Button action={() => {

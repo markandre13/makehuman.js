@@ -42,7 +42,7 @@ export class BlendShapeEditor extends RenderHandler {
         label: "Blendshape",
     })
     primaryWeight = new NumberModel(1, { min: 0, max: 1, step: 0.01, label: "primary weight" })
-    secondayWeight = new NumberModel(0, { min: 0, max: 1, step: 0.01, label: "secondary weight" })
+    secondaryWeight = new NumberModel(0, { min: 0, max: 1, step: 0.01, label: "secondary weight" })
 
     // this selects the bone to be edited
     currentBone = new TextModel()
@@ -90,7 +90,7 @@ export class BlendShapeEditor extends RenderHandler {
                     break
                 default:
                     this.primaryWeight.value = 1
-                    this.secondayWeight.value = 0
+                    this.secondaryWeight.value = 0
                     this.app.updateManager.setBlendshapeModel(this.blendshapeModel)
                     this.blendshapeModel.setBlendshapeNames(blendshapeNames)
                     this.blendshapeModel.reset()
