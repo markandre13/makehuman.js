@@ -20,7 +20,7 @@ import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { isZero } from "mesh/HumanMesh"
 import { ModelReason } from "toad.js/model/Model"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { mat4, quat2 } from "gl-matrix"
+import { mat4, quat2, vec3 } from "gl-matrix"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -63,9 +63,12 @@ export class BlendShapeEditor extends RenderHandler {
     // this is the model which allows editing the pose unit weight of the current blendshape
     poseUnitWeightsModel: PoseUnitWeightsModel
 
-    boneX = new NumberModel(0, {min: -180, max: 180, step: 1, label: "X"})
-    boneY = new NumberModel(0, {min: -180, max: 180, step: 1, label: "Y"})
-    boneZ = new NumberModel(0, {min: -180, max: 180, step: 1, label: "Z"})
+    boneRX = new NumberModel(0, {min: -180, max: 180, step: 1, label: "RX"})
+    boneRY = new NumberModel(0, {min: -180, max: 180, step: 1, label: "RY"})
+    boneRZ = new NumberModel(0, {min: -180, max: 180, step: 1, label: "RZ"})
+    boneTX = new NumberModel(0, {min: -20, max: 20, step: 1, label: "TX"})
+    boneTY = new NumberModel(0, {min: -20, max: 20, step: 1, label: "TY"})
+    boneTZ = new NumberModel(0, {min: -20, max: 20, step: 1, label: "TZ"})
 
     neutral: WavefrontObj
     renderMeshBS?: RenderMesh
@@ -91,7 +94,7 @@ export class BlendShapeEditor extends RenderHandler {
         // [ ] make an interim copy which can not be destroyed
 
         this.blendshape.modified.add(() => {
-            console.log(`BlendShapeEditor.blendshape.value became ${this.blendshape.value}`)
+            // console.log(`BlendShapeEditor.blendshape.value became ${this.blendshape.value}`)
             switch (this.blendshape.value) {
                 case "_neutral":
                     this.app.updateManager.setBlendshapeModel(this.app.frontend.blendshapeModel)
@@ -113,7 +116,7 @@ export class BlendShapeEditor extends RenderHandler {
                     // copy pose units to
                     this.poseUnitWeightsModel.reset()
                     cfg?.poseUnitWeight.forEach((weight, name) => {
-                        console.log(`to ui  : ${this.blendshape.value}: ${name} = ${weight}`)
+                        // console.log(`to ui  : ${this.blendshape.value}: ${name} = ${weight}`)
                         this.poseUnitWeightsModel.getWeight(name).value = weight
                     })
 
@@ -126,8 +129,8 @@ export class BlendShapeEditor extends RenderHandler {
         })
         // copy pose unit weights from ui model to config
         this.poseUnitWeightsModel.modified.add((ev) => {
-            console.log(`!!!!! copy pose unit weights from ui model to config of ${this.blendshape.value}`)
-            console.log(ev)
+            // console.log(`!!!!! copy pose unit weights from ui model to config of ${this.blendshape.value}`)
+            // console.log(ev)
             if (dontCopyFlag) {
                 return
             }
@@ -136,7 +139,7 @@ export class BlendShapeEditor extends RenderHandler {
             pose.poseUnitWeight.clear()
             this.poseUnitWeightsModel.forEach((v) => {
                 if (!isZero(v.weight.value)) {
-                    console.log(`from ui: ${this.blendshape.value}: ${v.name} = ${v.weight.value}`)
+                    // console.log(`from ui: ${this.blendshape.value}: ${v.name} = ${v.weight.value}`)
                     pose.poseUnitWeight.set(v.name, v.weight.value)
                 }
             })
@@ -150,7 +153,7 @@ export class BlendShapeEditor extends RenderHandler {
 
         // when bone changes, copy config to bone values
         this.currentBone.modified.add(() => {
-            console.log(`current bone changed to ${this.currentBone.value}`)
+            // console.log(`current bone changed to ${this.currentBone.value}`)
             // copy config to bone
             const bone = app.skeleton.getBone(this.currentBone.value)
             const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
@@ -158,13 +161,20 @@ export class BlendShapeEditor extends RenderHandler {
             if (q2 !== undefined) {
                 const m = mat4.fromQuat2(mat4.create(), q2)
                 const e = euler_from_matrix(m)
-                this.boneX.value = e.x * 360 / (2 * Math.PI)
-                this.boneY.value = e.y * 360 / (2 * Math.PI)
-                this.boneZ.value = e.z * 360 / (2 * Math.PI)
+                this.boneRX.value = e.x * 360 / (2 * Math.PI)
+                this.boneRY.value = e.y * 360 / (2 * Math.PI)
+                this.boneRZ.value = e.z * 360 / (2 * Math.PI)
+                const v = mat4.getTranslation(vec3.create(), m)
+                this.boneTX.value = v[0]
+                this.boneTY.value = v[1]
+                this.boneTZ.value = v[2]
             } else {
-                this.boneX.value = 0
-                this.boneY.value = 0
-                this.boneZ.value = 0
+                this.boneRX.value = 0
+                this.boneRY.value = 0
+                this.boneRZ.value = 0
+                this.boneTX.value = 0
+                this.boneTY.value = 0
+                this.boneTZ.value = 0
             }
 
             app.updateManager.invalidateView()
@@ -173,10 +183,12 @@ export class BlendShapeEditor extends RenderHandler {
         // copy bone values to config
         const updateBoneCfg = () => {
             const m = euler_matrix(
-                this.boneX.value / 360 * 2 * Math.PI,
-                this.boneY.value / 360 * 2 * Math.PI,
-                this.boneZ.value / 360 * 2 * Math.PI
+                this.boneRX.value / 360 * 2 * Math.PI,
+                this.boneRY.value / 360 * 2 * Math.PI,
+                this.boneRZ.value / 360 * 2 * Math.PI
             )
+            // FIXME: this doesn't work at the moment (also have a look at calcWebGL())
+            mat4.translate(m, m, vec3.fromValues(this.boneTX.value, this.boneTY.value, this.boneTZ.value))
             const q = quat2.fromMat4(quat2.create(), m)
             const bone = app.skeleton.getBone(this.currentBone.value)
             const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
@@ -185,9 +197,9 @@ export class BlendShapeEditor extends RenderHandler {
             app.blendshapeToPoseConfig.modified.trigger()
             app.updateManager.invalidateView()
         }
-        this.boneX.modified.add(updateBoneCfg)
-        this.boneY.modified.add(updateBoneCfg)
-        this.boneZ.modified.add(updateBoneCfg)
+        this.boneRX.modified.add(updateBoneCfg)
+        this.boneRY.modified.add(updateBoneCfg)
+        this.boneRZ.modified.add(updateBoneCfg)
 
         // vary strength of current blendshape
         this.primaryWeight.modified.add(() => {

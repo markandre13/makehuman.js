@@ -256,9 +256,12 @@ export function BlendShapeTab(props: { app: Application }) {
                 style={{ float: "left" }}
             />
             <Form>
-                <FormText model={editor.boneX} />
-                <FormText model={editor.boneY} />
-                <FormText model={editor.boneZ} />
+                <FormText model={editor.boneRX} />
+                <FormText model={editor.boneRY} />
+                <FormText model={editor.boneRZ} />
+                <FormText model={editor.boneTX} />
+                <FormText model={editor.boneTY} />
+                <FormText model={editor.boneTZ} />
             </Form>
         </Tab>
     )
