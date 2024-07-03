@@ -19,6 +19,8 @@ import { PoseUnitWeights as PoseUnitWeightsModel } from "./PoseUnitWeights"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { isZero } from "mesh/HumanMesh"
 import { ModelReason } from "toad.js/model/Model"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { mat4, quat2 } from "gl-matrix"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -58,7 +60,12 @@ export class BlendShapeEditor extends RenderHandler {
 
     blendshapeSet: FaceARKitLoader
 
+    // this is the model which allows editing the pose unit weight of the current blendshape
     poseUnitWeightsModel: PoseUnitWeightsModel
+
+    boneX = new NumberModel(0, {min: -180, max: 180, step: 1, label: "X"})
+    boneY = new NumberModel(0, {min: -180, max: 180, step: 1, label: "Y"})
+    boneZ = new NumberModel(0, {min: -180, max: 180, step: 1, label: "Z"})
 
     neutral: WavefrontObj
     renderMeshBS?: RenderMesh
@@ -74,13 +81,14 @@ export class BlendShapeEditor extends RenderHandler {
 
         let dontCopyFlag = false // FIXME: this needs a solution in toad.js
         // possible solutions:
-        // [ ] delay the event caused by 
+        // [ ] delay the event caused by
         //       this.poseUnitWeightsModel.getWeight(name).value = weight
         //     but this will require another mechanism to forward exceptions
         //     to model errors
         // [ ] change the way event reasons are defined, because at the moment, they suck
         // [ ] don't do a this.poseUnitWeightsModel.reset() and the re-populate the whole
         //     data. how? dunno...
+        // [ ] make an interim copy which can not be destroyed
 
         this.blendshape.modified.add(() => {
             console.log(`BlendShapeEditor.blendshape.value became ${this.blendshape.value}`)
@@ -98,15 +106,20 @@ export class BlendShapeEditor extends RenderHandler {
                     const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
                     // copy pose unit weights from config to ui model
                     // this.poseUnitWeightsModel.modified.withLock(() => {
-                        dontCopyFlag = true
-                        this.poseUnitWeightsModel.reset()
-                        cfg?.poseUnitWeight.forEach((weight, name) => {
-                            console.log(`to ui  : ${this.blendshape.value}: ${name} = ${weight}`)
-                            this.poseUnitWeightsModel.getWeight(name).value = weight
-                        })
-                        dontCopyFlag = false
-                    // })
-                    // this.poseUnitWeightsModel.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 1, 22))
+                    dontCopyFlag = true
+
+                    // this.currentBone.value = ""
+
+                    // copy pose units to
+                    this.poseUnitWeightsModel.reset()
+                    cfg?.poseUnitWeight.forEach((weight, name) => {
+                        console.log(`to ui  : ${this.blendshape.value}: ${name} = ${weight}`)
+                        this.poseUnitWeightsModel.getWeight(name).value = weight
+                    })
+
+                    dontCopyFlag = false
+                // })
+                // this.poseUnitWeightsModel.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 1, 22))
             }
             this.update = true
             this.app.updateManager.invalidateView()
@@ -132,12 +145,56 @@ export class BlendShapeEditor extends RenderHandler {
             app.blendshapeToPoseConfig.modified.trigger()
             app.updateManager.invalidateView()
         })
+
+        // bone
+
+        // when bone changes, copy config to bone values
+        this.currentBone.modified.add(() => {
+            console.log(`current bone changed to ${this.currentBone.value}`)
+            // copy config to bone
+            const bone = app.skeleton.getBone(this.currentBone.value)
+            const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
+            const q2 = cfg?.boneTransform.get(bone)
+            if (q2 !== undefined) {
+                const m = mat4.fromQuat2(mat4.create(), q2)
+                const e = euler_from_matrix(m)
+                this.boneX.value = e.x * 360 / (2 * Math.PI)
+                this.boneY.value = e.y * 360 / (2 * Math.PI)
+                this.boneZ.value = e.z * 360 / (2 * Math.PI)
+            } else {
+                this.boneX.value = 0
+                this.boneY.value = 0
+                this.boneZ.value = 0
+            }
+
+            app.updateManager.invalidateView()
+        })
+
+        // copy bone values to config
+        const updateBoneCfg = () => {
+            const m = euler_matrix(
+                this.boneX.value / 360 * 2 * Math.PI,
+                this.boneY.value / 360 * 2 * Math.PI,
+                this.boneZ.value / 360 * 2 * Math.PI
+            )
+            const q = quat2.fromMat4(quat2.create(), m)
+            const bone = app.skeleton.getBone(this.currentBone.value)
+            const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
+            cfg?.boneTransform.set(bone, q)
+
+            app.blendshapeToPoseConfig.modified.trigger()
+            app.updateManager.invalidateView()
+        }
+        this.boneX.modified.add(updateBoneCfg)
+        this.boneY.modified.add(updateBoneCfg)
+        this.boneZ.modified.add(updateBoneCfg)
+
+        // vary strength of current blendshape
         this.primaryWeight.modified.add(() => {
             this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
             this.update = true
             this.app.updateManager.invalidateView()
         })
-        this.currentBone.modified.add(() => app.updateManager.invalidateView())
     }
 
     override paint(app: Application, view: GLView): void {

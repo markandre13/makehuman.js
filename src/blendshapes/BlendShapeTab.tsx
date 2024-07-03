@@ -20,6 +20,7 @@ import { BlendShapeEditor } from "./BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
 import { PoseUnitWeights } from "./PoseUnitWeights"
 import { PoseUnitWeightsAdapter } from "./PoseUnitWeightsAdapter"
+import { FormText } from "toad.js/view/FormText"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -207,15 +208,6 @@ export function BlendShapeTab(props: { app: Application }) {
     // const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
     const elements: { x?: TextField; y?: TextField; z?: TextField; dialog?: HTMLDialogElement } = {}
-    editor.currentBone.modified.add(() => {
-        const poseNode = props.app.skeleton.poseNodes.find(editor.currentBone.value)
-        if (poseNode !== undefined) {
-            elements.x!.setModel(poseNode.x)
-            elements.y!.setModel(poseNode.y)
-            elements.z!.setModel(poseNode.z)
-        }
-    })
-
     const renderer = new QuadRenderer(editor)
 
     return (
@@ -254,11 +246,6 @@ export function BlendShapeTab(props: { app: Application }) {
                 console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight)
             }}>check</Button>
             <Table model={editor.poseUnitWeightsModel} style={{ width: "calc(100% - 2px)", height: "200px" }} />
-            {/* <If isTrue={morphToMatchNeutral}>
-                <p>morph face to match neutral blendshape</p>
-                <Table model={props.app.morphControls} style={{ width: "498px", height: "500px" }} />
-            </If> */}
-            {/* <If isFalse={morphToMatchNeutral}> */}
             <p>pose face to match blendshape</p>
             <object
                 id="face"
@@ -269,35 +256,10 @@ export function BlendShapeTab(props: { app: Application }) {
                 style={{ float: "left" }}
             />
             <Form>
-                <FormLabel>X</FormLabel>
-                <FormField>
-                    <TextField set={ref(elements, "x")} />
-                </FormField>
-                <FormHelp />
-                <FormLabel>Y</FormLabel>
-                <FormField>
-                    <TextField set={ref(elements, "y")} />
-                </FormField>
-                <FormHelp />
-                <FormLabel>Z</FormLabel>
-                <FormField>
-                    <TextField set={ref(elements, "z")} />
-                </FormField>
-                <FormHelp />
-                <style>
-                    {css`
-                        dialog {
-                            height: auto;
-                            /* width: 400px; */
-                            background: var(--tx-gray-200);
-                            color: var(--tx-gray-800);
-                            border: none;
-                        }
-                    `}
-                </style>
+                <FormText model={editor.boneX} />
+                <FormText model={editor.boneY} />
+                <FormText model={editor.boneZ} />
             </Form>
-            {/* </If> */}
-            {/* <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} /> */}
         </Tab>
     )
 }
