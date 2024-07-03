@@ -12,7 +12,7 @@ import { Frontend_impl } from "../net/Frontend_impl"
 import { FaceARKitLoader } from "./FaceARKitLoader"
 import { drawHumanCore } from "render/RenderHuman"
 import { mat4 } from "gl-matrix"
-import { BlendShapeEditor } from "BlendShapeEditor"
+import { BlendShapeEditor } from "blendshapes/BlendShapeEditor"
 import { ArrowMesh } from "./ArrowMesh"
 
 /**

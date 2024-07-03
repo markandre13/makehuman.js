@@ -64,10 +64,14 @@ export class BlendshapeToPoseConfig extends Map<string, BlendshapePose> {
 
     convert(poseunits: MHFacePoseUnits, out: BlendshapeToPose) {
         for (const [blendshapeName, cfg] of this) {
+            // console.log(blendshapeName)
             const mapOut = new Map<Bone, quat2>()
 
             // add pose units to mapOut
             for (const [poseUnitName, weight] of cfg.poseUnitWeight) {
+                // if (blendshapeName === "cheekSquintLeft" || blendshapeName === "cheekSquintRight") {
+                //     console.log(`${blendshapeName}: ${poseUnitName} = ${weight}`)
+                // }
                 if (!isZero(weight)) {
                     const bone2quats = poseunits.blendshape2bone.get(poseUnitName)!
                     for (const bq of bone2quats) {

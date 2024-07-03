@@ -10,14 +10,15 @@ import {
     prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import { NumberModel, OptionModel, TextModel } from "toad.js"
+import { NumberModel, OptionModel, TableEvent, TableEventType, TextModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
-import { PoseUnitWeights as PoseUnitWeightsModel } from "BlendShapeTab"
+import { PoseUnitWeights as PoseUnitWeightsModel } from "./PoseUnitWeights"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { isZero } from "mesh/HumanMesh"
+import { ModelReason } from "toad.js/model/Model"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -71,7 +72,10 @@ export class BlendShapeEditor extends RenderHandler {
         const facePoseUnits = new MHFacePoseUnits(app.skeleton)
         this.poseUnitWeightsModel = new PoseUnitWeightsModel(facePoseUnits)
 
+        let dontCopyFlag = false // FIXME: this needs a solution in toad.js
+
         this.blendshape.modified.add(() => {
+            console.log(`BlendShapeEditor.blendshape.value became ${this.blendshape.value}`)
             switch (this.blendshape.value) {
                 case "_neutral":
                     this.app.updateManager.setBlendshapeModel(this.app.frontend.blendshapeModel)
@@ -85,27 +89,39 @@ export class BlendShapeEditor extends RenderHandler {
                     this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
                     const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
                     // copy pose unit weights from config to ui model
-                    this.poseUnitWeightsModel.reset()
-                    cfg?.poseUnitWeight.forEach( (weight, name) => {
-                        this.poseUnitWeightsModel.getWeight(name).value = weight
-                    })
+                    // this.poseUnitWeightsModel.modified.withLock(() => {
+                        dontCopyFlag = true
+                        this.poseUnitWeightsModel.reset()
+                        cfg?.poseUnitWeight.forEach((weight, name) => {
+                            console.log(`to ui  : ${this.blendshape.value}: ${name} = ${weight}`)
+                            this.poseUnitWeightsModel.getWeight(name).value = weight
+                        })
+                        dontCopyFlag = false
+                    // })
+                    // this.poseUnitWeightsModel.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, 1, 22))
             }
-            // FIXME: this erases part of the configuration
-            // // copy pose unit weights from ui model to config
-            this.poseUnitWeightsModel.modified.add(() => {
-                console.log(`copy pose unit weights from ui model to config`)
-            //     // FIXME: move into blendshapeToPoseConfig
-            //     const pose = app.blendshapeToPoseConfig.get(this.blendshape.value)!
-            //     pose.poseUnitWeight.clear()
-            //     this.poseUnitWeightsModel.forEach((v) => {
-            //         if (!isZero(v.weight.value)) {
-            //             pose.poseUnitWeight.set(v.name, v.weight.value)
-            //         }
-            //     })
-            //     app.blendshapeToPoseConfig.modified.trigger()
-            })
             this.update = true
             this.app.updateManager.invalidateView()
+        })
+        // copy pose unit weights from ui model to config
+        this.poseUnitWeightsModel.modified.add((ev) => {
+            console.log(`!!!!! copy pose unit weights from ui model to config of ${this.blendshape.value}`)
+            console.log(ev)
+            if (dontCopyFlag) {
+                return
+            }
+            // FIXME: move into blendshapeToPoseConfig
+            const pose = app.blendshapeToPoseConfig.get(this.blendshape.value)!
+            pose.poseUnitWeight.clear()
+            this.poseUnitWeightsModel.forEach((v) => {
+                if (!isZero(v.weight.value)) {
+                    console.log(`from ui: ${this.blendshape.value}: ${v.name} = ${v.weight.value}`)
+                    pose.poseUnitWeight.set(v.name, v.weight.value)
+                }
+            })
+            // FIXME: this next call erases part of the configuration
+            // but it is not the cause. blendshapeToPoseConfig is messed up when it fails
+            app.blendshapeToPoseConfig.modified.trigger()
         })
         this.primaryWeight.modified.add(() => {
             this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
@@ -113,8 +129,6 @@ export class BlendShapeEditor extends RenderHandler {
             this.app.updateManager.invalidateView()
         })
         this.currentBone.modified.add(() => app.updateManager.invalidateView())
-
-
     }
 
     override paint(app: Application, view: GLView): void {

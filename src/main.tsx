@@ -52,7 +52,7 @@ import { MediapipeTab } from "mediapipe/mediapipe"
 import { Application, setRenderer } from "Application"
 import { GLView } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
-import { BlendShapeTab } from "BlendShapeTab"
+import { BlendShapeTab } from "blendshapes/BlendShapeTab"
 import { ConnectButton } from "net/ConnectButton"
 import { Connector } from "net/Connector"
 

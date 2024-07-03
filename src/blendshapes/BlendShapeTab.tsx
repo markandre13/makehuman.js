@@ -1,20 +1,14 @@
 import { TAB } from "HistoryManager"
 
 import { Tab } from "toad.js/view/Tab"
-import { Condition } from "toad.js/model/Condition"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import {
+    Button,
     NumberModel,
-    SelectionModel,
     Slider,
     Table,
     TableAdapter,
-    TableEditMode,
-    TableEvent,
-    TableEventType,
-    TableModel,
-    TablePos,
     TextField,
     css,
     ref,
@@ -22,12 +16,10 @@ import {
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 
 import { Application } from "Application"
-import { blendshapeNames } from "mediapipe/blendshapeNames"
-import { BlendShapeEditor } from "BlendShapeEditor"
+import { BlendShapeEditor } from "./BlendShapeEditor"
 import { QuadRenderer } from "mediapipe/QuadRenderer"
-import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
-import { BoneQuat2 } from "blendshapes/BoneQuat2"
-import { quat2 } from "gl-matrix"
+import { PoseUnitWeights } from "./PoseUnitWeights"
+import { PoseUnitWeightsAdapter } from "./PoseUnitWeightsAdapter"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -202,123 +194,7 @@ export function FormSlider(props: { model: NumberModel }) {
     )
 }
 
-interface PoseUnitWeight {
-    name: string
-    weight: NumberModel
-}
 
-export class PoseUnitWeights extends TableModel {
-    private facePoseUnits: PoseUnitWeight[]
-
-    constructor(facePoseUnits: MHFacePoseUnits) {
-        super()
-        this.facePoseUnits = Array.from(facePoseUnits.blendshape2bone, ([name, weight]) => ({
-            name,
-            weight: new NumberModel(0, {
-                min: 0,
-                max: 1,
-                step: 0.01,
-                label: name,
-            }),
-        }))
-    }
-    get colCount(): number {
-        return 2
-    }
-    get rowCount(): number {
-        return this.facePoseUnits.length
-    }
-    getName(row: number): string {
-        return this.facePoseUnits[row].name
-    }
-    getWeight(row: number | string): NumberModel {
-        if (typeof row === "string") {
-            for(let i=0; i<this.facePoseUnits.length; ++i) {
-                if (this.facePoseUnits[i].name === row) {
-                    row = i
-                    break
-                }
-            }
-        }
-        if (typeof row === "string") {
-            throw Error(`${this.constructor.name}: no weight name '${row}'`)
-        }
-        return this.facePoseUnits[row].weight
-    }
-    reset() {
-        this.facePoseUnits.forEach(m => m.weight.value = 0)
-    }
-    forEach(callbackfn: (value: PoseUnitWeight) => void) {
-        this.facePoseUnits.forEach(callbackfn)
-    }
-}
-
-export class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
-    override getColumnHead(col: number) {
-        switch (col) {
-            case 0:
-                return <>Pose Unit</>
-            case 1:
-                return <>Weight</>
-        }
-    }
-    override showCell(pos: TablePos, cell: HTMLSpanElement) {
-        // cell.style.padding = "1px" // DON'T: this breaks Table's layout algorithm
-        switch (pos.col) {
-            case 0:
-                cell.innerText = this.model.getName(pos.row)
-                break
-            case 1:
-                // cell.innerText = this.model.getWeight(pos.row).toString()
-                const poseUnit = this.model.getWeight(pos.row)
-                if (poseUnit.modified.count() == 0) {
-                    poseUnit.modified.add(
-                        () => this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
-                        // ALSO
-                        // o accumulate MHFacePoseUnits and copy them to BlendshapeConverter
-
-                        // source
-                        //   this.model has the weights
-                        //   MHFacePoseUnits has the quads for each weight
-                        // destination
-                        //   MHFaceBlendshapes
-                        // algorithm
-                        //   BlendshapeConverter combines BlendshapeModel, MHFaceBlendshapes
-                        //   and copies it to the polygon
-                    )
-                }
-                cell.style.width = "50px"
-                cell.style.textAlign = "right"
-                cell.innerText = poseUnit.value.toString()
-                // const model = this.model.poseUnits[pos.row]
-                poseUnit.applyStyle(cell)
-                cell.onwheel = (event: WheelEvent) => {
-                    PoseUnitWeightsAdapter.wheel(poseUnit, event)
-                }
-                cell.ondblclick = () => poseUnit.resetToDefault()
-                // cell.onpointerenter = () => poseUnit.focus(true)
-                // cell.onpointerleave = () => poseUnit.focus(false)
-                break
-        }
-    }
-    protected static wheel(model: NumberModel, e: WheelEvent) {
-        // console.log(`wheel event for model ${model.label}`)
-        e.preventDefault()
-        if (e.deltaY > 0) {
-            model.decrement()
-        }
-        if (e.deltaY < 0) {
-            model.increment()
-        }
-    }
-    override saveCell(pos: TablePos, cell: HTMLSpanElement): void {
-        switch (pos.col) {
-            case 1:
-                this.model.getWeight(pos.row).value = parseFloat(cell.innerText)
-                break
-        }
-    }
-}
 
 TableAdapter.register(PoseUnitWeightsAdapter, PoseUnitWeights)
 
@@ -369,6 +245,14 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSlider model={editor.secondayWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
+            <Button action={() => {
+                console.log("cheekSquintLeft")
+                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight.get("LeftCheekUp"))
+                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight)
+                console.log("cheekSquintRight")
+                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight.get("RightCheekUp"))
+                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight)
+            }}>check</Button>
             <Table model={editor.poseUnitWeightsModel} style={{ width: "calc(100% - 2px)", height: "200px" }} />
             {/* <If isTrue={morphToMatchNeutral}>
                 <p>morph face to match neutral blendshape</p>

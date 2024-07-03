@@ -2,7 +2,7 @@ import { expect, use } from "@esm-bundle/chai"
 import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost())
 
-import { blendshapeDescriptions } from "../../src/BlendShapeTab"
+import { blendshapeDescriptions } from "../../src/blendshapes/BlendShapeTab"
 import { blendshapeNames } from "../../src/mediapipe/blendshapeNames"
 
 describe("blendshape", function () {
