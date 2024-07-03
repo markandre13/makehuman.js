@@ -73,6 +73,14 @@ export class BlendShapeEditor extends RenderHandler {
         this.poseUnitWeightsModel = new PoseUnitWeightsModel(facePoseUnits)
 
         let dontCopyFlag = false // FIXME: this needs a solution in toad.js
+        // possible solutions:
+        // [ ] delay the event caused by 
+        //       this.poseUnitWeightsModel.getWeight(name).value = weight
+        //     but this will require another mechanism to forward exceptions
+        //     to model errors
+        // [ ] change the way event reasons are defined, because at the moment, they suck
+        // [ ] don't do a this.poseUnitWeightsModel.reset() and the re-populate the whole
+        //     data. how? dunno...
 
         this.blendshape.modified.add(() => {
             console.log(`BlendShapeEditor.blendshape.value became ${this.blendshape.value}`)
@@ -122,6 +130,7 @@ export class BlendShapeEditor extends RenderHandler {
             // FIXME: this next call erases part of the configuration
             // but it is not the cause. blendshapeToPoseConfig is messed up when it fails
             app.blendshapeToPoseConfig.modified.trigger()
+            app.updateManager.invalidateView()
         })
         this.primaryWeight.modified.add(() => {
             this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
