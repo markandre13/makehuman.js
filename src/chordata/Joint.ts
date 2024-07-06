@@ -1,8 +1,4 @@
-import { mat4, vec3, vec4 } from "gl-matrix"
-import { Skeleton } from "skeleton/Skeleton"
-import { getMatrix } from "skeleton/loadSkeleton"
-import { ChordataSettings } from "./ChordataSettings"
-import { euler_matrix } from "lib/euler_matrix"
+import { mat4 } from "gl-matrix"
 
 export const D = 180 / Math.PI
 

@@ -33,46 +33,7 @@ export interface FileInformation {
     license: string
 }
 
-function a2vec3(a: number[] | undefined) {
-    if (a === undefined) {
-        throw Error()
-    }
-    return vec3.fromValues(a[0], a[1], a[2])
-}
 
-/**
- * Create a matrix which moves to head, and then rotates towards tail
- */
-export function getMatrix(head: vec3, tail: vec3, normal: vec3): mat4 {
-    let bone_direction = vec3.subtract(vec3.create(), tail, head)
-    vec3.normalize(bone_direction, bone_direction)
-    const norm = vec3.normalize(vec3.create(), normal)
-    const z_axis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), norm, bone_direction))
-    const x_axis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), bone_direction, z_axis))
-    return mat4.fromValues(
-        x_axis[0], x_axis[1], x_axis[2], 0,                         // bone local X axis
-        bone_direction[0], bone_direction[1], bone_direction[2], 0, // bone local Y axis
-        z_axis[0], z_axis[1], z_axis[2], 0,                         // bone local Z axis
-        head[0], head[1], head[2], 1                                // head position as translation
-    )
-}
-
-// Return the normal of a triangle plane defined between three joint positions,
-// using counter-clockwise winding order (right-handed).
-export function get_normal(skel: Skeleton, plane_name: string, plane_defs: Map<string, Array<string>>) {
-    if (!plane_defs.has(plane_name)) {
-        console.warn(`No plane with name ${plane_name} defined for skeleton.`)
-        vec3.fromValues(0, 1, 0)
-    }
-    const joint_names = plane_defs.get(plane_name)!
-    const [j1, j2, j3] = joint_names
-    const p1 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j1)), skel.scale)
-    const p2 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j2)), skel.scale)
-    const p3 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j3)), skel.scale)
-    const pvec = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), p2, p1))
-    const yvec = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), p3, p2))
-    return vec3.normalize(vec3.create(), vec3.cross(vec3.create(), yvec, pvec))
-}
 
 // // line 1368
 // // Get the position of a joint from the human mesh.

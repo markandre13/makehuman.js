@@ -26,7 +26,6 @@ TODO: IT'S TIME TO CLEAR UP THIS MESS
 import { SliderNode } from "./modifier/loadSliders"
 
 import { PoseNode } from "expression/PoseNode"
-import { PoseUnitsModel } from "expression/PoseUnitsModel"
 
 import { ProxyType } from "proxy/Proxy"
 
@@ -34,7 +33,6 @@ import FileTab from "FileTab"
 import ChordataTab from "chordata/chordata"
 import { PoseTreeAdapter } from "ui/poseView"
 import { SliderTreeAdapter } from "ui/morphView"
-import { PoseUnitsAdapter } from "ui/PoseUnitsAdapter"
 import { TAB } from "HistoryManager"
 
 import { FileSystemAdapter } from "./filesystem/FileSystemAdapter"
@@ -90,7 +88,6 @@ function run() {
     TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
-    TableAdapter.register(PoseUnitsAdapter, PoseUnitsModel as any) // FIXME: cast to 'any'??? WTF???
 
     const oiah = "calc((12/16) * 1rem + 8px"
     const connector = new Connector(app.frontend)
@@ -106,7 +103,7 @@ function run() {
                     <FileTab app={app} />
                     <MorphTab app={app} />
                     <ProxyTab app={app} />
-                    <PoseTab app={app} />
+                    {/* <PoseTab app={app} /> */}
                     <BlendShapeTab app={app} />
                     {/* <ExpressionTab app={app} /> */}
                     <MediapipeTab app={app} />

@@ -1,7 +1,6 @@
 import { NumberRelModel } from "expression/NumberRelModel"
 import { PoseNode } from "expression/PoseNode"
 import { SliderNode } from "modifier/loadSliders"
-import { PoseModel } from "pose/PoseModel"
 import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
@@ -21,7 +20,6 @@ export const REST_QUAT = quat2.create()
 export class UpdateManager {
     app: Application
     skeleton: Skeleton
-    poseModel: PoseModel
     modifiedMorphNodes = new Set<SliderNode>()
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
@@ -67,11 +65,9 @@ export class UpdateManager {
     constructor(app: Application) {
         this.app = app
         this.skeleton = app.skeleton
-        this.poseModel = app.poseModel
         this.blendshapeModel = app.blendshapeModel
         this.blendshapeConverter = app.blendshapeConverter
         const sliderNodes = app.sliderNodes
-        const poseModel = app.poseModel
 
         // observe morph slider
         function forEachMorphSliderNode(node: SliderNode | undefined, cb: (node: SliderNode) => void) {
@@ -91,17 +87,6 @@ export class UpdateManager {
                 }
             })
         )
-
-        // observe pose units
-        poseModel.poseUnits.forEach((poseUnit) => {
-            poseUnit.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: body pose unit '${poseUnit.label}' has changed to ${poseUnit.value}`)
-                    this.invalidateView()
-                    this.modifiedPosePoseUnits.add(poseUnit)
-                }
-            })
-        })
 
         // observe bone pose nodes
         function forEachBonePoseNode(node: PoseNode | undefined, cb: (node: PoseNode) => void) {

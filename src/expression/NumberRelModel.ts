@@ -1,5 +1,4 @@
 import { NumberModel } from "toad.js"
-import { ModelReason } from "toad.js/model/Model"
 import { NumberModelOptions } from "toad.js/model/NumberModel"
 
 export class NumberRelModel extends NumberModel {

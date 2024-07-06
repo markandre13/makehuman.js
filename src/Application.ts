@@ -5,7 +5,7 @@ import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { HumanMesh } from "./mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
-import { PoseModel } from "pose/PoseModel"
+// import { PoseModel } from "pose/PoseModel"
 import { ProxyManager } from "./ProxyManager"
 import { TAB, initHistoryManager } from "HistoryManager"
 import { UpdateManager } from "UpdateManager"
@@ -62,7 +62,7 @@ export class Application {
     morphControls: TreeNodeModel<SliderNode>
     poseControls: TreeNodeModel<PoseNode>
     // expressionManager: ExpressionManager
-    poseModel: PoseModel
+    // poseModel: PoseModel
     updateManager: UpdateManager
     chordataSettings: ChordataSettings
     tabModel: EnumModel<TAB>
@@ -94,7 +94,6 @@ export class Application {
         this.poseControls = new TreeNodeModel(PoseNode, this.skeleton.poseNodes)
         // this.expressionManager = new ExpressionManager(this.skeleton)
 
-        this.poseModel = new PoseModel(this.humanMesh.skeleton)
         this.chordataSettings = new ChordataSettings()
 
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)

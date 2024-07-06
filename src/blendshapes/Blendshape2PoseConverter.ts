@@ -1,4 +1,3 @@
-import { calcWebGL } from "expression/calcWebGL"
 import { mat4, quat2 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
@@ -55,11 +54,32 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
             if (q !== undefined) {
                 const poseMat = mat4.fromQuat2(mat4.create(), q)
                 const bone = skeleton.boneslist![i]
-                bone.matPose = calcWebGL(poseMat, bone.matRestGlobal!)
+                bone.matPose = poseUnit2matPose(poseMat, bone.matRestGlobal!)
             } else {
                 mat4.identity(skeleton.boneslist![i].matPose)
             }
         })
 
     }
+}
+
+/**
+ * pose units are in global coordinates. remove translation and set relative to rest pose
+ */
+export function poseUnit2matPose(poseMat: mat4, matRestGlobal: mat4): mat4 {
+    // prettier-ignore
+    let matPose = mat4.clone(poseMat)
+    // let matPose = mat4.fromValues(
+    //     poseMat[0], poseMat[1], poseMat[2],  0,
+    //     poseMat[4], poseMat[5], poseMat[6],  0,
+    //     poseMat[8], poseMat[9], poseMat[10], 0,
+    //     0,          0,          0,           1  )
+    const invRest = mat4.invert(mat4.create(), matRestGlobal)
+    const m0 = mat4.multiply(mat4.create(), invRest, matPose)
+    mat4.multiply(matPose, m0, matRestGlobal)
+    matPose[12] = matPose[13] = matPose[14] = 0
+    // matPose[12] = poseMat[12]
+    // matPose[13] = poseMat[13]
+    // matPose[14] = poseMat[14]
+    return matPose
 }
