@@ -1,9 +1,6 @@
 import { TableAdapter, TablePos, TableEvent, TableEventType, NumberModel } from "toad.js"
 import { PoseUnitWeights } from "./PoseUnitWeights"
 
-
-
-
 export class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
     override getColumnHead(col: number) {
         switch (col) {

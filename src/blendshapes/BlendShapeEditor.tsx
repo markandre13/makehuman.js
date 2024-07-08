@@ -63,12 +63,12 @@ export class BlendShapeEditor extends RenderHandler {
     // this is the model which allows editing the pose unit weight of the current blendshape
     poseUnitWeightsModel: PoseUnitWeightsModel
 
-    boneRX = new NumberModel(0, {min: -180, max: 180, step: 1, label: "RX"})
-    boneRY = new NumberModel(0, {min: -180, max: 180, step: 1, label: "RY"})
-    boneRZ = new NumberModel(0, {min: -180, max: 180, step: 1, label: "RZ"})
-    boneTX = new NumberModel(0, {min: -20, max: 20, step: 1, label: "TX"})
-    boneTY = new NumberModel(0, {min: -20, max: 20, step: 1, label: "TY"})
-    boneTZ = new NumberModel(0, {min: -20, max: 20, step: 1, label: "TZ"})
+    boneRX = new NumberModel(0, { min: -180, max: 180, step: 1, label: "RX" })
+    boneRY = new NumberModel(0, { min: -180, max: 180, step: 1, label: "RY" })
+    boneRZ = new NumberModel(0, { min: -180, max: 180, step: 1, label: "RZ" })
+    boneTX = new NumberModel(0, { min: -1, max: 1, step: 0.01, label: "TX" })
+    boneTY = new NumberModel(0, { min: -1, max: 1, step: 0.01, label: "TY" })
+    boneTZ = new NumberModel(0, { min: -1, max: 1, step: 0.01, label: "TZ" })
 
     neutral: WavefrontObj
     renderMeshBS?: RenderMesh
@@ -161,9 +161,9 @@ export class BlendShapeEditor extends RenderHandler {
             if (q2 !== undefined) {
                 const m = mat4.fromQuat2(mat4.create(), q2)
                 const e = euler_from_matrix(m)
-                this.boneRX.value = e.x * 360 / (2 * Math.PI)
-                this.boneRY.value = e.y * 360 / (2 * Math.PI)
-                this.boneRZ.value = e.z * 360 / (2 * Math.PI)
+                this.boneRX.value = (e.x * 360) / (2 * Math.PI)
+                this.boneRY.value = (e.y * 360) / (2 * Math.PI)
+                this.boneRZ.value = (e.z * 360) / (2 * Math.PI)
                 const v = mat4.getTranslation(vec3.create(), m)
                 this.boneTX.value = v[0]
                 this.boneTY.value = v[1]
@@ -183,9 +183,9 @@ export class BlendShapeEditor extends RenderHandler {
         // copy bone values to config
         const updateBoneCfg = () => {
             const m = euler_matrix(
-                this.boneRX.value / 360 * 2 * Math.PI,
-                this.boneRY.value / 360 * 2 * Math.PI,
-                this.boneRZ.value / 360 * 2 * Math.PI
+                (this.boneRX.value / 360) * 2 * Math.PI,
+                (this.boneRY.value / 360) * 2 * Math.PI,
+                (this.boneRZ.value / 360) * 2 * Math.PI
             )
             // FIXME: this doesn't work at the moment (also have a look at calcWebGL())
             mat4.translate(m, m, vec3.fromValues(this.boneTX.value, this.boneTY.value, this.boneTZ.value))
@@ -197,9 +197,9 @@ export class BlendShapeEditor extends RenderHandler {
             app.blendshapeToPoseConfig.modified.trigger()
             app.updateManager.invalidateView()
         }
-        this.boneRX.modified.add(updateBoneCfg)
-        this.boneRY.modified.add(updateBoneCfg)
-        this.boneRZ.modified.add(updateBoneCfg)
+        for (const boneModel of [this.boneRX, this.boneRY, this.boneRZ, this.boneTX, this.boneTY, this.boneTZ]) {
+            boneModel.modified.add(updateBoneCfg)
+        }
 
         // vary strength of current blendshape
         this.primaryWeight.modified.add(() => {

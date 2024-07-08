@@ -6,13 +6,12 @@ import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
+import { poseUnit2mapPose, PoseUnit2MatPose } from "./MHFacePoseUnits"
 
 export class Blendshape2PoseConverter implements IBlendshapeConverter {
     private blendshape2pose: BlendshapeToPose
 
-    constructor(
-        blendshape2pose: BlendshapeToPose,
-    ) {
+    constructor(blendshape2pose: BlendshapeToPose) {
         this.blendshape2pose = blendshape2pose
     }
 
@@ -50,18 +49,32 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
             }
         })
         // copy to skeleton
+        // * at weight 0, the pose the one we got from the morph
+        // * at weight 1, the pose is not adjusted to the morph
+        //   but taken as is from the pose unit file
         ql.forEach((q, i) => {
             if (q !== undefined) {
-                const poseMat = mat4.fromQuat2(mat4.create(), q)
                 const bone = skeleton.boneslist![i]
-                bone.matPose = poseUnit2matPose(poseMat, bone.matRestGlobal!)
+                switch (poseUnit2mapPose) {
+                    case PoseUnit2MatPose.ONBLEND:
+                        const poseMat = mat4.fromQuat2(mat4.create(), q)
+                        bone.matPose = poseUnit2matPose(poseMat, bone.matRestGlobal!)
+                        break
+                    case PoseUnit2MatPose.ONLOAD:
+                        bone.matPose = mat4.fromQuat2(mat4.create(), q)
+                        break
+                }
             } else {
                 mat4.identity(skeleton.boneslist![i].matPose)
             }
         })
-
     }
 }
+
+// what we want to do now, is move the call to poseUnit2matPose()
+// BlendshapePose.convert() or earlier, so that BlendshapePose.boneTransform
+// get's the ability to translate bones (which we might need for the mouth)
+// START THIS CHANGE WITH TESTS!!!
 
 /**
  * pose units are in global coordinates. remove translation and set relative to rest pose

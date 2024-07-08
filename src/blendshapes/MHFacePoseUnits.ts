@@ -3,6 +3,24 @@ import { BoneQuat2 } from "blendshapes/BoneQuat2"
 import { Skeleton } from "skeleton/Skeleton"
 import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
+import { poseUnit2matPose } from "./Blendshape2PoseConverter"
+
+export enum PoseUnit2MatPose {
+    /**
+     * convert pose unit to matPose when pose units are loaded, substracting
+     * influence from the initial morph (TODO: might as well be the matRestGlobal
+     * from the BVH file?)
+     */
+    ONLOAD,
+    /**
+     * classic MakeHuman: convert pose unit to matPose after blending all pose units
+     * together, substracting influence from the current morph
+     * (TODO: this one currently looks slightly better?)
+     */
+    ONBLEND,
+}
+
+export let poseUnit2mapPose: PoseUnit2MatPose = PoseUnit2MatPose.ONLOAD
 
 /**
  * MakeHuman's face pose units (blendshapes)
@@ -32,7 +50,12 @@ export class MHFacePoseUnits {
             for (let [name, frame] of poseUnitName2Frame) {
                 const list: BoneQuat2[] = []
                 for (let b_idx = 0; b_idx < nBones; ++b_idx) {
-                    const m = animationTrack[frame * nBones + b_idx]
+                    let m = animationTrack[frame * nBones + b_idx]
+
+                    if (poseUnit2mapPose == PoseUnit2MatPose.ONLOAD) {
+                        m = poseUnit2matPose(m, skeleton.boneslist![b_idx].matRestGlobal!)
+                    }
+
                     if (!mat4.equals(identity, m)) {
                         list.push({
                             bone: skeleton.boneslist![b_idx],
