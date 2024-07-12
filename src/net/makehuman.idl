@@ -36,4 +36,8 @@ interface Backend {
 
     // selects the kind of data the frontend wants to receive
     void setEngine(in MotionCaptureType type, in MotionCaptureEngine engine);
+
+    // quick hack to load and store files
+    void save(in string filename, in string data);
+    string load(in string filename);
 };
