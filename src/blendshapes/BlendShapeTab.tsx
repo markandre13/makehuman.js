@@ -3,16 +3,7 @@ import { TAB } from "HistoryManager"
 import { Tab } from "toad.js/view/Tab"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
-import {
-    Button,
-    NumberModel,
-    Slider,
-    Table,
-    TableAdapter,
-    TextField,
-    css,
-    ref,
-} from "toad.js"
+import { Button, NumberModel, Slider, Table, TableAdapter, TextField } from "toad.js"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 
 import { Application } from "Application"
@@ -195,8 +186,6 @@ export function FormSlider(props: { model: NumberModel }) {
     )
 }
 
-
-
 TableAdapter.register(PoseUnitWeightsAdapter, PoseUnitWeights)
 
 export function BlendShapeTab(props: { app: Application }) {
@@ -237,14 +226,22 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSlider model={editor.secondaryWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
-            <Button action={() => {
-                console.log("cheekSquintLeft")
-                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight.get("LeftCheekUp"))
-                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight)
-                console.log("cheekSquintRight")
-                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight.get("RightCheekUp"))
-                console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight)
-            }}>check</Button>
+            <Button
+                action={() => {
+                    console.log("cheekSquintLeft")
+                    console.log(
+                        props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight.get("LeftCheekUp")
+                    )
+                    console.log(props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight)
+                    console.log("cheekSquintRight")
+                    console.log(
+                        props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight.get("RightCheekUp")
+                    )
+                    console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight)
+                }}
+            >
+                check
+            </Button>
             <Table model={editor.poseUnitWeightsModel} style={{ width: "calc(100% - 2px)", height: "200px" }} />
             <p>pose face to match blendshape</p>
             <object

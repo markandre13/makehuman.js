@@ -10,7 +10,7 @@ import {
     prepareViewport,
 } from "render/util"
 import { BaseMeshGroup } from "mesh/BaseMeshGroup"
-import { NumberModel, OptionModel, TableEvent, TableEventType, TextModel } from "toad.js"
+import { NumberModel, OptionModel, TextModel } from "toad.js"
 import { Bone } from "skeleton/Bone"
 import { blendshapeNames } from "mediapipe/blendshapeNames"
 import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
@@ -18,7 +18,6 @@ import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { PoseUnitWeights as PoseUnitWeightsModel } from "./PoseUnitWeights"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { isZero } from "mesh/HumanMesh"
-import { ModelReason } from "toad.js/model/Model"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, quat2, vec3 } from "gl-matrix"
 

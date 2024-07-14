@@ -1,7 +1,7 @@
 import { mat4, quat2 } from "gl-matrix"
 import { BoneQuat2 } from "blendshapes/BoneQuat2"
 import { Skeleton } from "skeleton/Skeleton"
-import { BiovisionHierarchy } from "lib/BiovisionHierarchy"
+import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { poseUnit2matPose } from "./Blendshape2PoseConverter"
 
@@ -27,6 +27,8 @@ export let poseUnit2mapPose: PoseUnit2MatPose = PoseUnit2MatPose.ONLOAD
  */
 export class MHFacePoseUnits {
     private static _blendshape2bone: Map<string, BoneQuat2[]>
+    private static _animationTrack: mat4[]
+    private static _poseUnitName2Frame: Map<string, number>
 
     blendshape2bone: Map<string, BoneQuat2[]>
 
@@ -37,35 +39,43 @@ export class MHFacePoseUnits {
             this.blendshape2bone = MHFacePoseUnits._blendshape2bone = new Map()
 
             const facePoseUnits = new BiovisionHierarchy().fromFile("data/poseunits/face-poseunits.bvh", "auto", "none")
-            const animationTrack = facePoseUnits.createAnimationTrack(skeleton, "Expression-Face-PoseUnits").data
+            MHFacePoseUnits._animationTrack = facePoseUnits.createAnimationTrack(
+                skeleton,
+                "Expression-Face-PoseUnits"
+            ).data
 
             const facePoseUnitsNames = JSON.parse(FileSystemAdapter.readFile("data/poseunits/face-poseunits.json"))
                 .framemapping as string[]
-            const poseUnitName2Frame = new Map<string, number>()
-            facePoseUnitsNames.forEach((name, index) => poseUnitName2Frame.set(name, index))
 
-            const identity = mat4.create()
-            const nBones = skeleton.boneslist!.length
+            MHFacePoseUnits._poseUnitName2Frame = new Map<string, number>()
+            facePoseUnitsNames.forEach((name, index) => MHFacePoseUnits._poseUnitName2Frame.set(name, index))
 
-            for (let [name, frame] of poseUnitName2Frame) {
-                const list: BoneQuat2[] = []
-                for (let b_idx = 0; b_idx < nBones; ++b_idx) {
-                    let m = animationTrack[frame * nBones + b_idx]
+            this.setBlendshape2Bone(skeleton)
+        }
+    }
 
-                    if (poseUnit2mapPose == PoseUnit2MatPose.ONLOAD) {
-                        m = poseUnit2matPose(m, skeleton.boneslist![b_idx].matRestGlobal!)
-                    }
+    setBlendshape2Bone(skeleton: Skeleton) {
+        const identity = mat4.create()
+        const nBones = skeleton.boneslist!.length
 
-                    if (!mat4.equals(identity, m)) {
-                        list.push({
-                            bone: skeleton.boneslist![b_idx],
-                            q: quat2.fromMat4(quat2.create(), m),
-                        })
-                    }
+        for (let [name, frame] of MHFacePoseUnits._poseUnitName2Frame) {
+            const list: BoneQuat2[] = []
+            for (let b_idx = 0; b_idx < nBones; ++b_idx) {
+                let m = MHFacePoseUnits._animationTrack[frame * nBones + b_idx]
+
+                if (poseUnit2mapPose == PoseUnit2MatPose.ONLOAD) {
+                    m = poseUnit2matPose(m, skeleton.boneslist![b_idx].matRestGlobal!)
                 }
-                if (list.length !== 0) {
-                    this.blendshape2bone.set(name, list)
+
+                if (!mat4.equals(identity, m)) {
+                    list.push({
+                        bone: skeleton.boneslist![b_idx],
+                        q: quat2.fromMat4(quat2.create(), m),
+                    })
                 }
+            }
+            if (list.length !== 0) {
+                this.blendshape2bone.set(name, list)
             }
         }
     }
