@@ -110,7 +110,7 @@ export class Application {
         // convert user editable pose configuration to optimized blendshape to pose set
         this.blendshape2pose = new BlendshapeToPose()
         this.blendshapeToPoseConfig.convert(this.faceposeunits, this.blendshape2pose)
-        this.blendshapeConverter = new Blendshape2PoseConverter(this.blendshape2pose)
+        this.blendshapeConverter = new Blendshape2PoseConverter(this.blendshape2pose, this.blendshapeToPoseConfig)
 
         this.updateManager = new UpdateManager(this)
 

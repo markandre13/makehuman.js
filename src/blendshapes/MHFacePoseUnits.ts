@@ -20,7 +20,7 @@ export enum PoseUnit2MatPose {
     ONBLEND,
 }
 
-export let poseUnit2mapPose: PoseUnit2MatPose = PoseUnit2MatPose.ONLOAD
+export let poseUnit2mapPose: PoseUnit2MatPose = PoseUnit2MatPose.ONBLEND
 
 /**
  * MakeHuman's face pose units (blendshapes)
@@ -51,6 +51,11 @@ export class MHFacePoseUnits {
             facePoseUnitsNames.forEach((name, index) => MHFacePoseUnits._poseUnitName2Frame.set(name, index))
 
             this.setBlendshape2Bone(skeleton)
+
+            if (poseUnit2mapPose == PoseUnit2MatPose.ONLOAD) {
+                // how do i see if the skeleton is modified???
+                // skeleton.
+            }
         }
     }
 
