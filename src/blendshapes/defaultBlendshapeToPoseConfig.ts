@@ -1,3 +1,4 @@
+import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
 import { Skeleton } from "skeleton/Skeleton"
 
@@ -56,5 +57,6 @@ export function makeDefaultBlendshapeToPoseConfig(skeleton: Skeleton) {
         noseSneerRight: { poseUnitWeight: { NasolabialDeepener: 1 }, boneTransform: {} },
         tongueOut: { poseUnitWeight: { TongueOut: 1 }, boneTransform: {} },
     }
-    return BlendshapeToPoseConfig.fromJSON(skeleton, JSON.stringify(cfg))
+    // return BlendshapeToPoseConfig.fromJSON(skeleton, JSON.stringify(cfg))
+    return BlendshapeToPoseConfig.fromJSON(skeleton, FileSystemAdapter.readFile("data/poseunits/face-blendshape-poses.json"))
 }

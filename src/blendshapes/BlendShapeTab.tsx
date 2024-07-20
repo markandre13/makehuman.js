@@ -234,10 +234,6 @@ export function BlendShapeTab(props: { app: Application }) {
                             const jsonString = await props.app.frontend.backend?.load("face-blendshape-poses.cfg")
                             if (jsonString !== undefined) {
                                 const cfg = BlendshapeToPoseConfig.fromJSON(props.app.skeleton, jsonString)
-                                console.log(`LOADED`)
-                                console.log(cfg)
-                                console.log(`WORKING`)
-                                console.log(makeDefaultBlendshapeToPoseConfig(props.app.skeleton))
 
                                 // FIXME: nasty hack
                                 props.app.blendshapeToPoseConfig.modified.remove(props.app.updateManager)
@@ -247,6 +243,8 @@ export function BlendShapeTab(props: { app: Application }) {
                                 props.app.blendshapeToPoseConfig.modified.add(() => {
                                     props.app.updateManager.blendshapeToPoseConfigChanged = true
                                 }, props.app.updateManager)
+
+                                cfg.modified.trigger()
                             }
                         }}
                     >

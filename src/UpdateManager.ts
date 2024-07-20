@@ -5,10 +5,11 @@ import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
-import { quat2 } from "gl-matrix"
+import { mat4, quat2 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
+import { quaternion_slerp } from "lib/quaternion_slerp"
 
 export const REST_QUAT = quat2.create()
 
@@ -177,7 +178,7 @@ export class UpdateManager {
         if (this.blendshapeModelChanged) {
             this.blendshapeConverter!.applyToSkeleton(this.blendshapeModel!, this.skeleton)
             this.blendshapeModelChanged = false
-/*
+
             // experimental head rotation
             // real neck and head positioning would actually require two transforms: neck AND head.
             // as an approximation, this just evenly distributes the head rotation over neck and head joints
@@ -197,7 +198,7 @@ export class UpdateManager {
                 mat4.fromQuat2(neck2.matPose, q)
                 mat4.fromQuat2(neck3.matPose, q)
             }
-*/
+
             skeletonChanged = true
         }
 
