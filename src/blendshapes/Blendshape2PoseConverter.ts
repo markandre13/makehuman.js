@@ -1,43 +1,33 @@
 import { mat4, quat2, vec3 } from "gl-matrix"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
-import { BlendshapeToPose } from "./BlendshapeToPose"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
 import { poseUnit2mapPose, PoseUnit2MatPose } from "./MHFacePoseUnits"
-import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
+import { Application } from "Application"
 
 export class Blendshape2PoseConverter implements IBlendshapeConverter {
-    private blendshape2pose: BlendshapeToPose
-    private bs2pcfg: BlendshapeToPoseConfig // this is a hack to get the translation
+    app: Application
 
-    constructor(blendshape2pose: BlendshapeToPose, bs2pcfg: BlendshapeToPoseConfig) {
-        this.blendshape2pose = blendshape2pose
-        this.bs2pcfg = bs2pcfg
+    constructor(app: Application) {
+        this.app = app
     }
 
     /**
      * Apply the weights in the BlendshapeModel to the Skeleton using the mapping
      * in BlendshapeToPose
      */
-    convert(blendshapeModel: BlendshapeModel, skeleton: Skeleton) {
-        const ql = new Array<quat2 | undefined>(skeleton.boneslist!.length)
+    applyToSkeleton(blendshapeModel: BlendshapeModel) {
+        const ql = new Array<quat2 | undefined>(this.app.skeleton.boneslist!.length)
         ql.fill(undefined)
         blendshapeModel.forEach((blendshapeName, weight) => {
-            const boneQuatList = this.blendshape2pose!.get(blendshapeName)
+            const boneQuatList = this.app.blendshape2pose!.get(blendshapeName)
             if (boneQuatList === undefined) {
                 // console.log(`could not find ${name}`)
                 return
             }
-            // tweaks for mediapipe
-            // if (name === "mouthFunnel") {
-            //     weight *= 2.5
-            // }
-            // if (name === "jawOpen") {
-            //     weight *= 1.5
-            // }
             if (isZero(weight)) {
                 return
             }
@@ -56,10 +46,8 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
         // * at weight 1, the pose is not adjusted to the morph
         //   but taken as is from the pose unit file
 
-
-
         ql.forEach((q, i) => {
-            const bone = skeleton.boneslist![i]
+            const bone = this.app.skeleton.boneslist![i]
             if (q !== undefined) {
                 switch (poseUnit2mapPose) {
                     case PoseUnit2MatPose.ONBLEND:
@@ -79,7 +67,7 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
         //       but i guess that we want the additional bone rotation to be part of it
         //       that means, the additional bone transformation needs to be added later
         blendshapeModel.forEach((blendshapeName, weight) => {
-            const boneTransform = this.bs2pcfg!.get(blendshapeName)?.boneTransform
+            const boneTransform = this.app.blendshapeToPoseConfig!.get(blendshapeName)?.boneTransform
             if (boneTransform === undefined) {
                 return
             }

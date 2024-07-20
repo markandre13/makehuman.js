@@ -29,14 +29,21 @@ export class BlendshapePose {
 
     static fromJSON(skeleton: Skeleton, data: any) {
         const obj = new BlendshapePose()
-        for(const name of Object.getOwnPropertyNames(data.poseUnitWeight)) {
-            obj.poseUnitWeight.set(name, data.poseUnitWeight[name])
+        if (data.poseUnitWeight !== undefined) {
+            for (const name of Object.getOwnPropertyNames(data.poseUnitWeight)) {
+                obj.poseUnitWeight.set(name, data.poseUnitWeight[name])
+            }
         }
-        for(const name of Object.getOwnPropertyNames(data.boneTransform)) {
-            const q = data.boneTransform[name] as number[]
-            obj.boneTransform.set(skeleton.getBone(name), quat2.fromValues(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]))
+        if (data.boneTransform !== undefined) {
+            for (const name of Object.getOwnPropertyNames(data.boneTransform)) {
+                const q = data.boneTransform[name] as number[]
+                obj.boneTransform.set(
+                    skeleton.getBone(name),
+                    quat2.fromValues(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7])
+                )
+            }
         }
-        
+
         return obj
     }
 }
@@ -54,12 +61,13 @@ export class BlendshapeToPoseConfig extends Map<string, BlendshapePose> {
         return out
     }
 
-    static fromJSON(skeleton: Skeleton, data: any) {
-        const obj = new BlendshapeToPoseConfig()
-        for(const name of Object.getOwnPropertyNames(data)) {
-            obj.set(name, BlendshapePose.fromJSON(skeleton, data[name]))
+    static fromJSON(skeleton: Skeleton, jsonString: string) {
+        const data = JSON.parse(jsonString)
+        const cfg = new BlendshapeToPoseConfig()
+        for (const name of Object.getOwnPropertyNames(data)) {
+            cfg.set(name, BlendshapePose.fromJSON(skeleton, data[name]))
         }
-        return obj
+        return cfg
     }
 
     convert(poseunits: MHFacePoseUnits, out: BlendshapeToPose) {

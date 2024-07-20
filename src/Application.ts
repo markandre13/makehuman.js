@@ -44,7 +44,7 @@ export class Application {
     blendshapeModel: BlendshapeModel
     blendshapeConverter: Blendshape2PoseConverter
     blendshapeToPoseConfig: BlendshapeToPoseConfig
-    faceposeunits: MHFacePoseUnits
+    makehumanFacePoseUnits: MHFacePoseUnits
     blendshape2pose: BlendshapeToPose
 
     // makehuman
@@ -95,23 +95,28 @@ export class Application {
         // this.expressionManager = new ExpressionManager(this.skeleton)
 
         this.chordataSettings = new ChordataSettings()
-
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
+
+        //
+        // blendshapes
+        //
+
+        // load makehumans original face pose units
+        this.makehumanFacePoseUnits = new MHFacePoseUnits(this.skeleton)
+
+        // our own face poses on top of on makehuman's face pose units
+        this.blendshapeToPoseConfig = makeDefaultBlendshapeToPoseConfig(this.skeleton)
+
+        // blendshapeToPoseConfig + makehumanFacePoseUnits => blendshape2pose
+        this.blendshape2pose = new BlendshapeToPose()
+        this.blendshapeToPoseConfig.convert(this.makehumanFacePoseUnits, this.blendshape2pose)
 
         // blendshape weights from backend (e.g. mediapipe, live link)
         this.blendshapeModel = new BlendshapeModel()
 
-        // load makehumans original face pose units
-        this.faceposeunits = new MHFacePoseUnits(this.skeleton)
+        this.blendshapeConverter = new Blendshape2PoseConverter(this)
 
-        // load makehuman.js user editable blendshape to pose configuration
-        this.blendshapeToPoseConfig = makeDefaultBlendshapeToPoseConfig(this.skeleton)
-
-        // convert user editable pose configuration to optimized blendshape to pose set
-        this.blendshape2pose = new BlendshapeToPose()
-        this.blendshapeToPoseConfig.convert(this.faceposeunits, this.blendshape2pose)
-        this.blendshapeConverter = new Blendshape2PoseConverter(this.blendshape2pose, this.blendshapeToPoseConfig)
-
+        // needs skeleton, blendshapeModel, blendshapeConverter, 
         this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty

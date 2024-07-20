@@ -12,6 +12,8 @@ import { QuadRenderer } from "mediapipe/QuadRenderer"
 import { PoseUnitWeights } from "./PoseUnitWeights"
 import { PoseUnitWeightsAdapter } from "./PoseUnitWeightsAdapter"
 import { FormText } from "toad.js/view/FormText"
+import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
+import { makeDefaultBlendshapeToPoseConfig } from "./defaultBlendshapeToPoseConfig"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
@@ -196,7 +198,6 @@ export function BlendShapeTab(props: { app: Application }) {
     // }, [editor.blendshape])
     // const sm = new SelectionModel(TableEditMode.EDIT_CELL)
 
-    const elements: { x?: TextField; y?: TextField; z?: TextField; dialog?: HTMLDialogElement } = {}
     const renderer = new QuadRenderer(editor)
 
     return (
@@ -225,23 +226,44 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSlider model={editor.primaryWeight} />
                 <FormSlider model={editor.secondaryWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
+
+                <FormLabel>Store</FormLabel>
+                <FormField>
+                    <Button
+                        action={async () => {
+                            const jsonString = await props.app.frontend.backend?.load("face-blendshape-poses.cfg")
+                            if (jsonString !== undefined) {
+                                const cfg = BlendshapeToPoseConfig.fromJSON(props.app.skeleton, jsonString)
+                                console.log(`LOADED`)
+                                console.log(cfg)
+                                console.log(`WORKING`)
+                                console.log(makeDefaultBlendshapeToPoseConfig(props.app.skeleton))
+
+                                // FIXME: nasty hack
+                                props.app.blendshapeToPoseConfig.modified.remove(props.app.updateManager)
+
+                                props.app.blendshapeToPoseConfig = cfg
+
+                                props.app.blendshapeToPoseConfig.modified.add(() => {
+                                    props.app.updateManager.blendshapeToPoseConfigChanged = true
+                                }, props.app.updateManager)
+                            }
+                        }}
+                    >
+                        Load
+                    </Button>
+                    <Button
+                        action={async () => {
+                            await props.app.frontend.backend?.save(
+                                "face-blendshape-poses.cfg",
+                                JSON.stringify(props.app.blendshapeToPoseConfig)
+                            )
+                        }}
+                    >
+                        Save
+                    </Button>
+                </FormField>
             </Form>
-            <Button
-                action={() => {
-                    console.log("cheekSquintLeft")
-                    console.log(
-                        props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight.get("LeftCheekUp")
-                    )
-                    console.log(props.app.blendshapeToPoseConfig.get("cheekSquintLeft")?.poseUnitWeight)
-                    console.log("cheekSquintRight")
-                    console.log(
-                        props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight.get("RightCheekUp")
-                    )
-                    console.log(props.app.blendshapeToPoseConfig.get("cheekSquintRight")?.poseUnitWeight)
-                }}
-            >
-                check
-            </Button>
             <Table model={editor.poseUnitWeightsModel} style={{ width: "calc(100% - 2px)", height: "200px" }} />
             <p>pose face to match blendshape</p>
             <object

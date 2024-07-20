@@ -5,8 +5,7 @@ import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
-import { mat4, quat2 } from "gl-matrix"
-import { quaternion_slerp } from "lib/quaternion_slerp"
+import { quat2 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
@@ -123,9 +122,11 @@ export class UpdateManager {
 
         this.app.blendshapeToPoseConfig.modified.add(() => {
             this.blendshapeToPoseConfigChanged = true
-        })
+        }, this)
         this.setBlendshapeModel(app.blendshapeModel)
     }
+
+    
 
     renderList?: RenderList
 
@@ -167,15 +168,16 @@ export class UpdateManager {
         }
 
         if (this.blendshapeToPoseConfigChanged) {
-            this.app.blendshapeToPoseConfig.convert(this.app.faceposeunits, this.app.blendshape2pose)
+            this.app.blendshapeToPoseConfig.convert(this.app.makehumanFacePoseUnits, this.app.blendshape2pose)
             this.blendshapeToPoseConfigChanged = false
             this.blendshapeModelChanged = true
         }
 
+        
         if (this.blendshapeModelChanged) {
-            this.blendshapeConverter!.convert(this.blendshapeModel!, this.skeleton)
+            this.blendshapeConverter!.applyToSkeleton(this.blendshapeModel!, this.skeleton)
             this.blendshapeModelChanged = false
-
+/*
             // experimental head rotation
             // real neck and head positioning would actually require two transforms: neck AND head.
             // as an approximation, this just evenly distributes the head rotation over neck and head joints
@@ -195,9 +197,10 @@ export class UpdateManager {
                 mat4.fromQuat2(neck2.matPose, q)
                 mat4.fromQuat2(neck3.matPose, q)
             }
-
+*/
             skeletonChanged = true
         }
+
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {

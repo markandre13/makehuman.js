@@ -24,9 +24,7 @@ TODO: IT'S TIME TO CLEAR UP THIS MESS
 */
 
 import { SliderNode } from "./modifier/loadSliders"
-
 import { PoseNode } from "expression/PoseNode"
-
 import { ProxyType } from "proxy/Proxy"
 
 import FileTab from "FileTab"
@@ -54,10 +52,10 @@ import { BlendShapeTab } from "blendshapes/BlendShapeTab"
 import { ConnectButton } from "net/ConnectButton"
 import { Connector } from "net/Connector"
 
-export function main() {
+export async function main() {
     try {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
-        run()
+        await run()
     } catch (e) {
         console.log(e)
         if (e instanceof Error) {
@@ -68,7 +66,7 @@ export function main() {
     }
 }
 
-function run() {
+async function run() {
     const app = new Application()
 
     // const mhm = localStorage.getItem("MakeHumanMorph")

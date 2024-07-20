@@ -56,5 +56,5 @@ export function makeDefaultBlendshapeToPoseConfig(skeleton: Skeleton) {
         noseSneerRight: { poseUnitWeight: { NasolabialDeepener: 1 }, boneTransform: {} },
         tongueOut: { poseUnitWeight: { TongueOut: 1 }, boneTransform: {} },
     }
-    return BlendshapeToPoseConfig.fromJSON(skeleton, cfg)
+    return BlendshapeToPoseConfig.fromJSON(skeleton, JSON.stringify(cfg))
 }

@@ -186,7 +186,6 @@ export class BlendShapeEditor extends RenderHandler {
                 (this.boneRY.value / 360) * 2 * Math.PI,
                 (this.boneRZ.value / 360) * 2 * Math.PI
             )
-            // FIXME: this doesn't work at the moment (also have a look at calcWebGL())
             mat4.translate(m, m, vec3.fromValues(this.boneTX.value, this.boneTY.value, this.boneTZ.value))
             const q = quat2.fromMat4(quat2.create(), m)
             const bone = app.skeleton.getBone(this.currentBone.value)
