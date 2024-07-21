@@ -47,4 +47,8 @@ export class Frontend_impl extends Frontend_skel {
         this.updateManager.invalidateView()
         this.blendshapeModel.setBlendshapeWeights(blendshapes, transform)
     }
+
+    override poseLandmarks(landmarks: Float32Array, timestamp_ms: bigint): void {
+        // console.log(`got ${landmarks.length/3} pose landmarks`)
+    }
 }
