@@ -27,6 +27,10 @@ interface Frontend {
         in sequence<float> blendshapes,
         in sequence<float> transform,
         in unsigned long long timestamp_ms);
+
+    oneway void poseLandmarks(
+        in sequence<float> landmarks,
+        in unsigned long long timestamp_ms);
 };
 
 // backend is called by the frontend
