@@ -51,6 +51,7 @@ import { RenderHuman } from "render/RenderHuman"
 import { BlendShapeTab } from "blendshapes/BlendShapeTab"
 import { ConnectButton } from "net/ConnectButton"
 import { Connector } from "net/Connector"
+import { PoseTab } from "mediapipe/pose/PoseTab"
 
 export async function main() {
     try {
@@ -103,8 +104,9 @@ async function run() {
                     <ProxyTab app={app} />
                     {/* <PoseTab app={app} /> */}
                     <BlendShapeTab app={app} />
+                    <PoseTab app={app} />
                     {/* <ExpressionTab app={app} /> */}
-                    <MediapipeTab app={app} />
+                    {/* <MediapipeTab app={app} /> */}
                     <ChordataTab app={app} />
                 </Tabs>
                 <GLView
@@ -163,14 +165,6 @@ function ProxyTab(props: { app: Application }) {
                     </>
                 ))}
             </Form>
-        </Tab>
-    )
-}
-
-function PoseTab(props: { app: Application }) {
-    return (
-        <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(props.app, new RenderHuman())}>
-            <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} />
         </Tab>
     )
 }

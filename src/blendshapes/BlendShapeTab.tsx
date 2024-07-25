@@ -13,7 +13,6 @@ import { PoseUnitWeights } from "./PoseUnitWeights"
 import { PoseUnitWeightsAdapter } from "./PoseUnitWeightsAdapter"
 import { FormText } from "toad.js/view/FormText"
 import { BlendshapeToPoseConfig } from "./BlendshapeToPoseConfig"
-import { makeDefaultBlendshapeToPoseConfig } from "./defaultBlendshapeToPoseConfig"
 
 export interface BlendshapeDescription {
     group: "eyebrow" | "eye" | "eyelid" | "check" | "jaw" | "lips" | "mouth" | "mouthExpression" | "tongue"
