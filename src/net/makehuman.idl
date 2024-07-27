@@ -44,4 +44,8 @@ interface Backend {
     // quick hack to load and store files
     void save(in string filename, in string data);
     string load(in string filename);
+
+    // quick hack to save video
+    void record(in string filename);
+    void stop();
 };
