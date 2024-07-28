@@ -50,7 +50,7 @@ export class Frontend_impl extends Frontend_skel {
     }
 
     override poseLandmarks(landmarks: Float32Array, timestamp_ms: bigint): void {
-        console.log(`got ${landmarks.length/3} pose landmarks`)
+        // console.log(`got ${landmarks.length/3} pose landmarks`)
         this._poseLandmarks = landmarks
         for(let i = 1; i < landmarks.length ; ++i) {
             landmarks[i] = -landmarks[i]

@@ -135,14 +135,6 @@ async function run() {
     )
 }
 
-function sleep(milliseconds: number = 0) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve("success")
-        }, milliseconds)
-    })
-}
-
 function MorphTab(props: { app: Application }) {
     return (
         <Tab label="Morph" value={TAB.MORPH} visibilityChange={setRenderer(props.app, new RenderHuman())}>
