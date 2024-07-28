@@ -16,7 +16,7 @@ export function PoseTab(props: { app: Application} ) {
         <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(props.app, new MPPoseRenderer())}>
             Mediapipe Pose
             <Button action={() => props.app.frontend.backend?.record("video.avi")}>●</Button>
-            <Button>▶︎</Button>
+            <Button action={() => props.app.frontend.backend?.play("video.avi")}>▶︎</Button>
             <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
         </Tab>
     )

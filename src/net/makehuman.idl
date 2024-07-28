@@ -47,5 +47,6 @@ interface Backend {
 
     // quick hack to save video
     void record(in string filename);
+    void play(in string filename);
     void stop();
 };
