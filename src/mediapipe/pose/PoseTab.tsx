@@ -4,6 +4,7 @@ import { MPPoseRenderer } from "./MPPoseRenderer"
 import { Tab } from "toad.js/view/Tab"
 import { Button, OptionModel, Select, Switch } from "toad.js"
 import { sleep } from "lib/sleep"
+import { RenderHuman } from "render/RenderHuman"
 
 // function PoseTab(props: { app: Application }) {
 //     return (
@@ -21,10 +22,13 @@ const delay = new OptionModel(0, [
 
 export function PoseTab(props: { app: Application }) {
     return (
-        <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(props.app, new MPPoseRenderer())}>
+        <Tab label="Pose" value={TAB.POSE} visibilityChange={
+                // setRenderer(props.app, new MPPoseRenderer())
+                setRenderer(props.app, new RenderHuman())
+            }>
             Mediapipe Pose
             <Select model={delay} />
-            <Button
+            {/* <Button
                 action={async () => {
                     if (delay.value !== 0) {
                         console.log(`sleep ${delay.value}s`)
@@ -34,7 +38,7 @@ export function PoseTab(props: { app: Application }) {
                 }}
             >
                 ●
-            </Button>
+            </Button> */}
             <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button>
             <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
         </Tab>

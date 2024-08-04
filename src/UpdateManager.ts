@@ -5,7 +5,7 @@ import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
-import { mat4, quat2 } from "gl-matrix"
+import { mat4, quat2, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
@@ -44,10 +44,28 @@ export class UpdateManager {
 
     blendshapeConverter?: IBlendshapeConverter
 
+    //
+    // flags for change detection
+    //
+
+    // approach 1: these are updated via a registered TSignal
+    // there is a lot of overhead involved in this and in case of the blendshape
+    // editor, we even have a changing model, meaning that we have to register/unregister
+    // a call back on the signal
     blendshapeToPoseConfigChanged = false
     blendshapeModelChanged = false
+    // approach 2:
+    // this appraoch is more lightweight than approach 1. since we already just tell
+    // the update manager that something has changed via invalidateView(), when it is
+    // actually time to update, we could just compare the timestamp.
+    // there will be no need to register/unregister on a signal.
+    // does this mean the signal is a bad approach? i'm not sure. the animated
+    // human, using different input sources (morph, blendshapes, pose) might be
+    // a different situation
+    _poseLandmarksTS: bigint = 0n
 
     render?: () => void
+
     private invalidated = false
     invalidateView() {
         if (this.invalidated) {
@@ -127,8 +145,6 @@ export class UpdateManager {
         this.setBlendshapeModel(app.blendshapeModel)
     }
 
-    
-
     renderList?: RenderList
 
     setRenderList(renderList?: RenderList) {
@@ -174,7 +190,6 @@ export class UpdateManager {
             this.blendshapeModelChanged = true
         }
 
-        
         if (this.blendshapeModelChanged) {
             this.blendshapeConverter!.applyToSkeleton(this.blendshapeModel!, this.skeleton)
             this.blendshapeModelChanged = false
@@ -202,6 +217,43 @@ export class UpdateManager {
             skeletonChanged = true
         }
 
+        if (
+            this.app.frontend._poseLandmarks !== undefined &&
+            this._poseLandmarksTS != this.app.frontend._poseLandmarksTS
+        ) {
+            this._poseLandmarksTS = this.app.frontend._poseLandmarksTS
+            skeletonChanged = true
+
+            // OpenGL coordinate system is a right hand coordinate system with Z
+            // pointing towards the observer
+            // Y
+            // ^
+            // |
+            // Z-->X
+            const getVec = (index: number) => {
+                const i = index * 3
+                const p = this.app.frontend._poseLandmarks!!
+                return vec3.fromValues(p[i], p[i + 1], p[i + 2])
+            }
+
+            const hipA = getVec(23)
+            const hipB = getVec(24)
+            const hipDirection = vec3.sub(vec3.create(), hipB, hipA)
+            vec3.normalize(hipDirection, hipDirection)
+            const r = Math.atan2(-hipDirection[0], -hipDirection[2]) - Math.PI / 2
+
+            const rootPose = mat4.create()
+            mat4.rotateY(rootPose, rootPose, -r)
+
+            const rootBone = this.skeleton.getBone("root")
+
+            // convert from global to bone's relative coordinates
+            const imrg = mat4.invert(mat4.create(), rootBone.matRestGlobal!!)
+            mat4.mul(rootPose, imrg, rootPose)
+            mat4.mul(rootPose, rootPose, rootBone.matRestGlobal!)
+
+            rootBone.matPose = rootPose
+        }
 
         // UPDATE_SKINNING_MATRIX
         if (this._chordataChanged !== undefined) {

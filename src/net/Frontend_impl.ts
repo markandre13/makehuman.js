@@ -31,6 +31,7 @@ export class Frontend_impl extends Frontend_skel {
 
     // // data received from mediapipe
     landmarks?: Float32Array
+    _poseLandmarksTS: bigint = 0n
     _poseLandmarks?: Float32Array
 
     // list of blendshape names that will be send to faceLandmarks()
@@ -51,10 +52,13 @@ export class Frontend_impl extends Frontend_skel {
 
     override poseLandmarks(landmarks: Float32Array, timestamp_ms: bigint): void {
         // console.log(`got ${landmarks.length/3} pose landmarks`)
+        this._poseLandmarksTS = timestamp_ms
         this._poseLandmarks = landmarks
-        for(let i = 1; i < landmarks.length ; ++i) {
+        // flip y-axis
+        for(let i = 1; i < landmarks.length ; i += 3) {
             landmarks[i] = -landmarks[i]
         }
+        // console.log(`nose: ${landmarks[0]}, ${landmarks[1]}, ${landmarks[2]}`)
         this.updateManager.invalidateView()
     }
 }
