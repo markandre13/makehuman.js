@@ -5,7 +5,7 @@ import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
-import { mat4, quat2, vec3 } from "gl-matrix"
+import { mat3, mat4, quat2, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
@@ -230,10 +230,18 @@ export class UpdateManager {
             // ^
             // |
             // Z-->X
+
+            // rotate 90d right
+            const preRotation = mat4.create()
+            // const preRotation = mat4.fromYRotation(mat4.create(), Math.PI/2)
+
             const getVec = (index: number) => {
                 const i = index * 3
                 const p = this.app.frontend._poseLandmarks!!
-                return vec3.fromValues(p[i], p[i + 1], p[i + 2])
+                // revert the minus i added for direct opengl rendering
+                const v = vec3.fromValues(p[i], -p[i + 1], p[i + 2])
+                vec3.transformMat4(v, v, preRotation)
+                return v
             }
 
             const setPose = (boneName: string, m: mat4) => {
@@ -248,15 +256,19 @@ export class UpdateManager {
             }
 
             // root
-            const hipA = getVec(23)
-            const hipB = getVec(24)
-            const hipDirection = vec3.sub(vec3.create(), hipB, hipA)
+            const hipLeft = getVec(24)
+            const hipRight = getVec(23)
+            const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft)
+            // const hipDirection = vec3.fromValues(-1,0, 0) // neutral, front
+            // const hipDirection = vec3.fromValues(0,0, 1) // 90 right
+            // const hipDirection = vec3.fromValues(0,0,-1) // 90 left
             vec3.normalize(hipDirection, hipDirection)
-            const hipRY = Math.atan2(hipDirection[0], hipDirection[2]) + Math.PI / 2
-            const rootPoseGlobal = mat4.fromYRotation(mat4.create(), -hipRY)
+            const hipRY = Math.atan2(hipDirection[2], hipDirection[0])
+            const rootPoseGlobal = mat4.fromYRotation(mat4.create(), hipRY)
             setPose("root", rootPoseGlobal)
 
-            const mi = mat4.invert(mat4.create(), rootPoseGlobal)
+            // const invRootPoseGlobal = mat4.invert(mat4.create(), rootPoseGlobal)
+            const invRootPoseGlobal = mat4.invert(mat4.create(), preRotation)
 
             // right leg
             const rlegA = getVec(24)
@@ -265,10 +277,10 @@ export class UpdateManager {
             vec3.normalize(rlegDirection, rlegDirection)
 
             // (try to) remove root rotation from the leg
-            // vec3.transformMat4(rlegDirection, rlegDirection, mi)
+            vec3.transformMat4(rlegDirection, rlegDirection, invRootPoseGlobal)
 
-            const rlegRZ = Math.atan2(rlegDirection[0], rlegDirection[1]) + Math.PI
-            const rlegPoseGlobal = mat4.fromZRotation(mat4.create(), -rlegRZ)
+            const rlegRZ = Math.atan2(rlegDirection[0], rlegDirection[1])
+            const rlegPoseGlobal = mat4.fromZRotation(mat4.create(), rlegRZ)
 
             setPose("upperleg01.R", rlegPoseGlobal)
 
@@ -279,10 +291,10 @@ export class UpdateManager {
             vec3.normalize(llegDirection, llegDirection)
 
             // (try to) remove root rotation from the leg
-            // vec3.transformMat4(llegDirection, llegDirection, mi)
+            vec3.transformMat4(llegDirection, llegDirection, invRootPoseGlobal)
 
-            const llegRZ = Math.atan2(llegDirection[0], llegDirection[1]) + Math.PI
-            const legPoseGlobal = mat4.fromZRotation(mat4.create(), -llegRZ)
+            const llegRZ = Math.atan2(llegDirection[0], llegDirection[1])
+            const legPoseGlobal = mat4.fromZRotation(mat4.create(), llegRZ)
 
             setPose("upperleg01.L", legPoseGlobal)
         }
