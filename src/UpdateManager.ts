@@ -248,9 +248,15 @@ export class UpdateManager {
                 // get bone
                 const bone = this.skeleton.getBone(boneName)
                 // convert from global to bone's relative coordinates
-                const inv = mat4.invert(mat4.create(), bone.matRestGlobal!!)
+
+                const restRotation = mat4.clone(bone.matRestGlobal!!)
+                restRotation[12] = 0
+                restRotation[13] = 0
+                restRotation[14] = 0
+
+                const inv = mat4.invert(mat4.create(), restRotation)
                 const local = mat4.mul(mat4.create(), inv, m)
-                mat4.mul(local, local, bone.matRestGlobal!)
+                mat4.mul(local, local, restRotation)
                 // set pose
                 bone.matPose = local
             }
@@ -267,8 +273,10 @@ export class UpdateManager {
             const rootPoseGlobal = mat4.fromYRotation(mat4.create(), hipRY)
             setPose("root", rootPoseGlobal)
 
-            // const invRootPoseGlobal = mat4.invert(mat4.create(), rootPoseGlobal)
-            const invRootPoseGlobal = mat4.invert(mat4.create(), preRotation)
+            // const invRootPoseGlobal = mat4.invert(mat4.create(), rootPoseGlobal) // nope
+            // const invRootPoseGlobal = mat4.invert(mat4.create(), preRotation) // ok
+            // const invRootPoseGlobal = mat4.fromYRotation(mat4.create(), -Math.PI/2) // ok
+            const invRootPoseGlobal = rootPoseGlobal // ok
 
             // right leg
             const rlegA = getVec(24)
@@ -276,7 +284,6 @@ export class UpdateManager {
             const rlegDirection = vec3.sub(vec3.create(), rlegB, rlegA)
             vec3.normalize(rlegDirection, rlegDirection)
 
-            // (try to) remove root rotation from the leg
             vec3.transformMat4(rlegDirection, rlegDirection, invRootPoseGlobal)
 
             const rlegRZ = Math.atan2(rlegDirection[0], rlegDirection[1])
@@ -290,13 +297,38 @@ export class UpdateManager {
             const llegDirection = vec3.sub(vec3.create(), llegB, llegA)
             vec3.normalize(llegDirection, llegDirection)
 
-            // (try to) remove root rotation from the leg
             vec3.transformMat4(llegDirection, llegDirection, invRootPoseGlobal)
 
             const llegRZ = Math.atan2(llegDirection[0], llegDirection[1])
             const legPoseGlobal = mat4.fromZRotation(mat4.create(), llegRZ)
 
             setPose("upperleg01.L", legPoseGlobal)
+
+            // right arm
+            const rarmA = getVec(12)
+            const rarmB = getVec(14)
+            const rarmDirection = vec3.sub(vec3.create(), rarmB, rarmA)
+            vec3.normalize(rarmDirection, rarmDirection)
+
+            vec3.transformMat4(rarmDirection, rarmDirection, invRootPoseGlobal)
+
+            const rarmRZ = Math.atan2(rarmDirection[0], rarmDirection[1]) + 0.7
+            const rarmPoseGlobal = mat4.fromZRotation(mat4.create(), rarmRZ)
+
+            setPose("shoulder01.R", rarmPoseGlobal)
+
+            // left arm
+            const larmA = getVec(11)
+            const larmB = getVec(13)
+            const larmDirection = vec3.sub(vec3.create(), larmB, larmA)
+            vec3.normalize(larmDirection, larmDirection)
+
+            vec3.transformMat4(larmDirection, larmDirection, invRootPoseGlobal)
+
+            const larmRZ = Math.atan2(larmDirection[0], larmDirection[1]) - 0.7
+            const larmPoseGlobal = mat4.fromZRotation(mat4.create(), larmRZ)
+
+            setPose("shoulder01.L", larmPoseGlobal)
         }
 
         // UPDATE_SKINNING_MATRIX
