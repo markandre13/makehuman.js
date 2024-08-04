@@ -236,6 +236,17 @@ export class UpdateManager {
                 return vec3.fromValues(p[i], p[i + 1], p[i + 2])
             }
 
+            const setPose = (boneName: string, m: mat4) => {
+                // get bone
+                const bone = this.skeleton.getBone(boneName)
+                // convert from global to bone's relative coordinates
+                const inv = mat4.invert(mat4.create(), bone.matRestGlobal!!)
+                const local = mat4.mul(mat4.create(), inv, m)
+                mat4.mul(local, local, bone.matRestGlobal!)
+                // set pose
+                bone.matPose = local
+            }
+
             // root
             const hipA = getVec(23)
             const hipB = getVec(24)
@@ -243,15 +254,7 @@ export class UpdateManager {
             vec3.normalize(hipDirection, hipDirection)
             const hipRY = Math.atan2(hipDirection[0], hipDirection[2]) + Math.PI / 2
             const rootPoseGlobal = mat4.fromYRotation(mat4.create(), -hipRY)
-
-            const rootBone = this.skeleton.getBone("root")
-
-            // convert from global to bone's relative coordinates
-            const rootInv = mat4.invert(mat4.create(), rootBone.matRestGlobal!!)
-            const rootPoseLocal = mat4.mul(mat4.create(), rootInv, rootPoseGlobal)
-            mat4.mul(rootPoseLocal, rootPoseLocal, rootBone.matRestGlobal!)
-
-            rootBone.matPose = rootPoseLocal
+            setPose("root", rootPoseGlobal)
 
             const mi = mat4.invert(mat4.create(), rootPoseGlobal)
 
@@ -267,14 +270,7 @@ export class UpdateManager {
             const rlegRZ = Math.atan2(rlegDirection[0], rlegDirection[1]) + Math.PI
             const rlegPoseGlobal = mat4.fromZRotation(mat4.create(), -rlegRZ)
 
-            const rlegBone = this.skeleton.getBone("upperleg01.R")
-            // const rlegBone = this.skeleton.getBone("pelvis.R")
-
-            const rlegInv = mat4.invert(mat4.create(), rlegBone.matRestGlobal!!)
-            const rlegPoseLocal = mat4.mul(mat4.create(), rlegInv, rlegPoseGlobal)
-            mat4.mul(rlegPoseLocal, rlegPoseLocal, rlegBone.matRestGlobal!)
-
-            rlegBone.matPose = rlegPoseLocal
+            setPose("upperleg01.R", rlegPoseGlobal)
 
             // left leg
             const llegA = getVec(23)
@@ -288,14 +284,7 @@ export class UpdateManager {
             const llegRZ = Math.atan2(llegDirection[0], llegDirection[1]) + Math.PI
             const legPoseGlobal = mat4.fromZRotation(mat4.create(), -llegRZ)
 
-            const llegBone = this.skeleton.getBone("upperleg01.L")
-            // const llegBone = this.skeleton.getBone("pelvis.L")
-
-            const llegInv = mat4.invert(mat4.create(), llegBone.matRestGlobal!!)
-            const llegPoseLocal = mat4.mul(mat4.create(), llegInv, legPoseGlobal)
-            mat4.mul(llegPoseLocal, llegPoseLocal, llegBone.matRestGlobal!)
-
-            llegBone.matPose = llegPoseLocal
+            setPose("upperleg01.L", legPoseGlobal)
         }
 
         // UPDATE_SKINNING_MATRIX
