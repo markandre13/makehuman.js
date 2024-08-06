@@ -14,6 +14,8 @@ import { RenderHuman } from "render/RenderHuman"
 //     )
 // }
 
+// we have speech!!!
+// https://github.com/mdn/dom-examples/blob/main/web-speech-api/speak-easy-synthesis/script.js
 const delay = new OptionModel(0, [
     [0, "None"],
     [5, "5s"],

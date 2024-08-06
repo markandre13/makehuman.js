@@ -5,11 +5,12 @@ import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
-import { mat3, mat4, quat2, vec3 } from "gl-matrix"
+import { mat3, mat4, quat2, vec3, vec4 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { quaternion_slerp } from "lib/quaternion_slerp"
+import { BlazePoseConverter, BlazePoseLandmarks } from "mediapipe/pose/BlazePoseConverter"
 
 export const REST_QUAT = quat2.create()
 
@@ -63,6 +64,9 @@ export class UpdateManager {
     // human, using different input sources (morph, blendshapes, pose) might be
     // a different situation
     _poseLandmarksTS: bigint = 0n
+
+    bpl = new BlazePoseLandmarks()
+    bpc = new BlazePoseConverter()
 
     render?: () => void
 
@@ -261,16 +265,18 @@ export class UpdateManager {
                 bone.matPose = local
             }
 
+            const setPoseRaw = (boneName: string, m: mat4) => {
+                // get bone
+                const bone = this.skeleton.getBone(boneName)
+                // convert from global to bone's relative coordinates
+
+                // set pose
+                bone.matPose = m
+            }
+
+            this.bpl.data = this.app.frontend._poseLandmarks!!
             // root
-            const hipLeft = getVec(24)
-            const hipRight = getVec(23)
-            const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft)
-            // const hipDirection = vec3.fromValues(-1,0, 0) // neutral, front
-            // const hipDirection = vec3.fromValues(0,0, 1) // 90 right
-            // const hipDirection = vec3.fromValues(0,0,-1) // 90 left
-            vec3.normalize(hipDirection, hipDirection)
-            const hipRY = Math.atan2(hipDirection[2], hipDirection[0])
-            const rootPoseGlobal = mat4.fromYRotation(mat4.create(), hipRY)
+            const rootPoseGlobal = mat4.fromYRotation(mat4.create(), this.bpc.getRootY(this.bpl))
             setPose("root", rootPoseGlobal)
 
             // const invRootPoseGlobal = mat4.invert(mat4.create(), rootPoseGlobal) // nope
@@ -282,12 +288,13 @@ export class UpdateManager {
             const rlegA = getVec(24)
             const rlegB = getVec(26)
             const rlegDirection = vec3.sub(vec3.create(), rlegB, rlegA)
-            vec3.normalize(rlegDirection, rlegDirection)
 
             vec3.transformMat4(rlegDirection, rlegDirection, invRootPoseGlobal)
 
             const rlegRZ = Math.atan2(rlegDirection[0], rlegDirection[1])
+            const rlegRX = Math.atan2(rlegDirection[2], rlegDirection[1])
             const rlegPoseGlobal = mat4.fromZRotation(mat4.create(), rlegRZ)
+            mat4.rotateX(rlegPoseGlobal, rlegPoseGlobal, rlegRX)
 
             setPose("upperleg01.R", rlegPoseGlobal)
 
@@ -300,9 +307,11 @@ export class UpdateManager {
             vec3.transformMat4(llegDirection, llegDirection, invRootPoseGlobal)
 
             const llegRZ = Math.atan2(llegDirection[0], llegDirection[1])
-            const legPoseGlobal = mat4.fromZRotation(mat4.create(), llegRZ)
+            const llegRX = Math.atan2(llegDirection[2], llegDirection[1])
+            const llegPoseGlobal = mat4.fromZRotation(mat4.create(), llegRZ)
+            mat4.rotateX(llegPoseGlobal, llegPoseGlobal, llegRX)
 
-            setPose("upperleg01.L", legPoseGlobal)
+            setPose("upperleg01.L", llegPoseGlobal)
 
             // right arm
             const rarmA = getVec(12)
@@ -329,6 +338,21 @@ export class UpdateManager {
             const larmPoseGlobal = mat4.fromZRotation(mat4.create(), larmRZ)
 
             setPose("shoulder01.L", larmPoseGlobal)
+
+            // left arm elbow
+            const lae = mat4.fromXRotation(mat4.create(), Math.PI - this.bpc.getLeftArmAngle(this.bpl) - 0.7)
+            setPoseRaw("lowerarm01.L", lae)
+
+            // left arm elbow
+            const rae = mat4.fromXRotation(mat4.create(), Math.PI - this.bpc.getRightArmAngle(this.bpl) - 0.7)
+            setPoseRaw("lowerarm01.R", rae)
+
+            const lll = mat4.fromXRotation(mat4.create(), Math.PI - this.bpc.getLeftLegAngle(this.bpl) - 0.4)
+            setPoseRaw("lowerleg01.L", lll)
+
+            const rll = mat4.fromXRotation(mat4.create(), Math.PI - this.bpc.getRightLegAngle(this.bpl) - 0.4)
+            setPoseRaw("lowerleg01.R", rll)
+
         }
 
         // UPDATE_SKINNING_MATRIX
@@ -354,4 +378,50 @@ export class UpdateManager {
             }
         }
     }
+}
+
+// https://stackoverflow.com/questions/18558910/direction-vector-to-rotation-matrix
+const up = vec3.fromValues(0, 1, 0)
+function matFromDirection(direction: vec3) {
+    const zaxis = vec3.normalize(vec3.create(), direction)
+    const xaxis = vec3.cross(vec3.create(), up, zaxis)
+    vec3.normalize(xaxis, xaxis)
+    const yaxis = vec3.cross(vec3.create(), zaxis, xaxis)
+    vec3.normalize(yaxis, yaxis)
+    return mat4.fromValues(
+        xaxis[0],
+        xaxis[1],
+        xaxis[2],
+        0,
+        yaxis[0],
+        yaxis[1],
+        yaxis[2],
+        0,
+        zaxis[0],
+        zaxis[1],
+        zaxis[2],
+        0,
+        0,
+        0,
+        0,
+        1
+    )
+}
+
+// https://de.mathworks.com/matlabcentral/answers/2092961-how-to-calculate-the-angle-between-two-3d-vectors
+// % most robust, most accurate, recovers tiny angles very well, slowest
+// atan2(norm(cross(u,v)), dot(u,v))
+// % robust, does not recover tiny angles, faster
+// max(min(dot(u,v)/(norm(u)*norm(v)),1),-1)
+// % not robust (may get domain error), does not recover tiny angles, fasterer
+// acos(dot(u,v)/(norm(u)*norm(v)))
+// % not robust (may get domain error), does not recover tiny angles, fasterer
+// acos(dot(u/norm(u),v/norm(v)))
+// % not robust (may get domain error), does not recover tiny angles, fastest
+// acos(dot(u,v)/sqrt(dot(u,u)*dot(v,v)))
+function angle(u: vec3, v: vec3) {
+    const cross = vec3.cross(vec3.create(), u, v)
+    const norm = vec3.length(cross)
+    const dot = vec3.dot(u, v)
+    return Math.atan2(norm, dot)
 }

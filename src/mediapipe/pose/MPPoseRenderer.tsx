@@ -3,7 +3,7 @@ import { mat4 } from "gl-matrix"
 import { RenderHandler, GLView } from "render/GLView"
 import { RenderMesh } from "render/RenderMesh"
 import { RGBAShader } from "render/shader/RGBAShader"
-import { prepareCanvas, prepareViewport, createProjectionMatrix, createNormalMatrix } from "render/util"
+import { prepareCanvas, prepareViewport, createProjectionMatrix, createNormalMatrix, createModelViewMatrix } from "render/util"
 
 
 export class MPPoseRenderer extends RenderHandler {
@@ -23,8 +23,10 @@ export class MPPoseRenderer extends RenderHandler {
         const programRGBA = new RGBAShader(gl)
 
         const projectionMatrix = createProjectionMatrix(canvas)
-        const modelViewMatrix = mat4.create()
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -2.5]) // obj file face centered
+        // const modelViewMatrix = mat4.create()
+        const modelViewMatrix = createModelViewMatrix(view.ctx.rotateX, view.ctx.rotateY)
+
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, 10]) // obj file face centered
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
