@@ -60,11 +60,22 @@ export class BlazePoseLandmarks {
         const i = index * 3
         return vec3.fromValues(this.data[i], this.data[i + 1], this.data[i + 2])
     }
-    setVec(index: Blaze, x: number, y: number, z: number) {
+
+    setVec(index: Blaze, x: number, y: number, z: number): void
+    setVec(index: Blaze, v: vec3): void
+    setVec(index: Blaze, x: number|vec3, y?: number, z?: number): void
+    {
         const i = index * 3
-        this.data[i] = x
-        this.data[i + 1] = y
-        this.data[i + 2] = z
+        if (typeof x === "number") {
+            this.data[i] = x
+            this.data[i + 1] = y!
+            this.data[i + 2] = z!
+        } else {
+            const v = x as vec3
+            this.data[i] = v[0]
+            this.data[i + 1] = v[1]
+            this.data[i + 2] = v[2]
+        }
     }
 }
 

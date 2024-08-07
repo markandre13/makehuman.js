@@ -36,7 +36,7 @@ export class MPPoseRenderer extends RenderHandler {
         if (this.arrowMesh === undefined) {
             this.arrowMesh = new ArrowMesh(view.gl, 0.1)
         }
-    
+
         a = a + 0.1
         if (app.frontend._poseLandmarks === undefined) {
             return
@@ -74,12 +74,15 @@ export class MPPoseRenderer extends RenderHandler {
         //
         // to skeleton
         //
+
+        const debug = document.getElementById("debug")
+
         this.bpl.data = app.frontend._poseLandmarks!!
 
-        gl.enable(gl.CULL_FACE)
-        gl.cullFace(gl.BACK)
-        gl.depthMask(true)
-        gl.disable(gl.BLEND)
+        // gl.enable(gl.CULL_FACE)
+        // gl.cullFace(gl.BACK)
+        // gl.depthMask(true)
+        // gl.disable(gl.BLEND)
 
         const colorShader = view.programColor
         colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
@@ -95,11 +98,42 @@ export class MPPoseRenderer extends RenderHandler {
         const inv = mat4.fromYRotation(mat4.create(), rootY)
         vec3.transformMat4(hipDirection, hipDirection, inv)
         const rootZ = Math.atan2(hipDirection[0], -hipDirection[1])
-        mat4.rotateY(rootPoseGlobal, rootPoseGlobal,  rootY)
-        mat4.rotateZ(rootPoseGlobal, rootPoseGlobal,  rootZ)
+
+        // TODO: x-axis
+        // variant 1: just use the HIP to SHOULDER
+        // this doesn't seem to work when lying on the back
+        const shoulderLeft = this.bpl.getVec(Blaze.LEFT_SHOULDER)
+        const torsoDirection = vec3.sub(vec3.create(), shoulderLeft, hipLeft)
+        vec3.normalize(torsoDirection, torsoDirection)
+        
+        vec3.transformMat4(torsoDirection, torsoDirection, inv)
+        const rootX = Math.atan2(torsoDirection[1], torsoDirection[2]) - Math.PI / 2
+
+        debug!!.innerText = `"torsoDirection ${vec3.str(torsoDirection)}`
+
+        mat4.rotateY(rootPoseGlobal, rootPoseGlobal, rootY)
+        mat4.rotateX(rootPoseGlobal, rootPoseGlobal, rootX)
+        mat4.rotateZ(rootPoseGlobal, rootPoseGlobal, rootZ)
 
         colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, rootPoseGlobal))
         this.arrowMesh.draw(view.programColor)
-        
+
+        // draw side view
+        /*
+        const inv2 = mat4.fromYRotation(mat4.create(), rootY + Math.PI / 2)
+        const vertices = new Float32Array(app.frontend._poseLandmarks!!)
+        this.bpl.data = vertices
+        for (let i = 0; i < 33; ++i) {
+            const v = this.bpl.getVec(i)
+            vec3.transformMat4(v, v, inv2)
+            this.bpl.setVec(i, v)
+        }
+
+        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.setColor([1.0, 0.0, 0.0, 1])
+        this.mesh0.bind(programRGBA)
+        this.mesh0.update(vertices)
+        gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
+        */
     }
 }

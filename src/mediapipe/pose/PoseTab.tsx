@@ -43,6 +43,7 @@ export function PoseTab(props: { app: Application }) {
             </Button> */}
             <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button>
             <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
+            <div id="debug"/>
         </Tab>
     )
 }
