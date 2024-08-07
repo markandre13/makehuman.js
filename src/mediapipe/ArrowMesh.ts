@@ -10,7 +10,7 @@ export class ArrowMesh {
     private glIndices: WebGLBuffer
     private indexLength: number
 
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGL2RenderingContext, s: number = 0.4) {
         this.gl = gl
         const vertex: number[] = []
         const fvertex: number[] = []
@@ -18,7 +18,7 @@ export class ArrowMesh {
         const index: number[] = []
 
         const m = mat4.create()
-        const s = 0.4
+        // const s = 0.4
         mat4.scale(m, m, vec3.fromValues(s, s, s))
 
         mat4.rotateY(m, m, (2 * Math.PI) / 4)

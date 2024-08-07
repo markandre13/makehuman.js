@@ -10,7 +10,7 @@ import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { quaternion_slerp } from "lib/quaternion_slerp"
-import { BlazePoseConverter, BlazePoseLandmarks } from "mediapipe/pose/BlazePoseConverter"
+import { Blaze, BlazePoseConverter, BlazePoseLandmarks } from "mediapipe/pose/BlazePoseConverter"
 
 export const REST_QUAT = quat2.create()
 
@@ -285,8 +285,8 @@ export class UpdateManager {
             const invRootPoseGlobal = rootPoseGlobal // ok
 
             // right leg
-            const rlegA = getVec(24)
-            const rlegB = getVec(26)
+            const rlegA = getVec(Blaze.RIGHT_HIP)
+            const rlegB = getVec(Blaze.RIGHT_KNEE)
             const rlegDirection = vec3.sub(vec3.create(), rlegB, rlegA)
 
             vec3.transformMat4(rlegDirection, rlegDirection, invRootPoseGlobal)
@@ -299,8 +299,8 @@ export class UpdateManager {
             setPose("upperleg01.R", rlegPoseGlobal)
 
             // left leg
-            const llegA = getVec(23)
-            const llegB = getVec(25)
+            const llegA = getVec(Blaze.LEFT_HIP)
+            const llegB = getVec(Blaze.LEFT_KNEE)
             const llegDirection = vec3.sub(vec3.create(), llegB, llegA)
             vec3.normalize(llegDirection, llegDirection)
 
@@ -314,6 +314,9 @@ export class UpdateManager {
             setPose("upperleg01.L", llegPoseGlobal)
 
             // right arm
+            // const rsa = mat4.fromZRotation(mat4.create(), Math.PI - this.bpc.getRightShoulderAngle(this.bpl))
+            // setPoseRaw("shoulder01.R", rsa)
+
             const rarmA = getVec(12)
             const rarmB = getVec(14)
             const rarmDirection = vec3.sub(vec3.create(), rarmB, rarmA)
@@ -322,11 +325,16 @@ export class UpdateManager {
             vec3.transformMat4(rarmDirection, rarmDirection, invRootPoseGlobal)
 
             const rarmRZ = Math.atan2(rarmDirection[0], rarmDirection[1]) + 0.7
+            // const rarmRY = Math.atan2(rarmDirection[0], rarmDirection[2])
             const rarmPoseGlobal = mat4.fromZRotation(mat4.create(), rarmRZ)
+            // mat4.rotateY(rarmPoseGlobal, rarmPoseGlobal, rarmRY)
 
             setPose("shoulder01.R", rarmPoseGlobal)
 
             // left arm
+            // const lsa = mat4.fromZRotation(mat4.create(), Math.PI - this.bpc.getLeftShoulderAngle(this.bpl))
+            // setPoseRaw("shoulder01.L", lsa)
+
             const larmA = getVec(11)
             const larmB = getVec(13)
             const larmDirection = vec3.sub(vec3.create(), larmB, larmA)

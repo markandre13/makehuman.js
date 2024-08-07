@@ -25,8 +25,8 @@ const delay = new OptionModel(0, [
 export function PoseTab(props: { app: Application }) {
     return (
         <Tab label="Pose" value={TAB.POSE} visibilityChange={
-                // setRenderer(props.app, new MPPoseRenderer())
-                setRenderer(props.app, new RenderHuman())
+                setRenderer(props.app, new MPPoseRenderer())
+                // setRenderer(props.app, new RenderHuman())
             }>
             Mediapipe Pose
             <Select model={delay} />

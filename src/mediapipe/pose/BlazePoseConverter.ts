@@ -76,6 +76,22 @@ export class BlazePoseConverter {
         vec3.normalize(hipDirection, hipDirection)
         return Math.atan2(hipDirection[0], -hipDirection[2]) + Math.PI / 2
     }
+    getLeftShoulderAngle(pose: BlazePoseLandmarks) {
+        const shoulder = pose.getVec(Blaze.RIGHT_SHOULDER)
+        const elbow = pose.getVec(Blaze.LEFT_SHOULDER)
+        const wrist = pose.getVec(Blaze.LEFT_ELBOW)
+        const elbow2shoulder = vec3.sub(vec3.create(), shoulder, elbow)
+        const elbow2wrist = vec3.sub(vec3.create(), wrist, elbow)
+        return -vec3.angle(elbow2shoulder, elbow2wrist)
+    }
+    getRightShoulderAngle(pose: BlazePoseLandmarks) {
+        const shoulder = pose.getVec(Blaze.LEFT_SHOULDER)
+        const elbow = pose.getVec(Blaze.RIGHT_SHOULDER)
+        const wrist = pose.getVec(Blaze.RIGHT_ELBOW)
+        const elbow2shoulder = vec3.sub(vec3.create(), shoulder, elbow)
+        const elbow2wrist = vec3.sub(vec3.create(), wrist, elbow)
+        return vec3.angle(elbow2shoulder, elbow2wrist)
+    }
     getLeftArmAngle(pose: BlazePoseLandmarks) {
         const shoulder = pose.getVec(Blaze.LEFT_SHOULDER)
         const elbow = pose.getVec(Blaze.LEFT_ELBOW)
