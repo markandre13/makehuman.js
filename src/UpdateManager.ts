@@ -277,7 +277,11 @@ export class UpdateManager {
             this.bpl.data = this.app.frontend._poseLandmarks!!
             // root
             const rootPoseGlobal = mat4.fromYRotation(mat4.create(), this.bpc.getRootY(this.bpl))
-            setPose("root", rootPoseGlobal)
+
+            const rootPose = this.bpc.getRoot(this.bpl)
+            setPose("root", rootPose)
+
+            // setPose("root", rootPoseGlobal)
 
             // const invRootPoseGlobal = mat4.invert(mat4.create(), rootPoseGlobal) // nope
             // const invRootPoseGlobal = mat4.invert(mat4.create(), preRotation) // ok

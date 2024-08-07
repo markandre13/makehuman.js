@@ -87,33 +87,9 @@ export class MPPoseRenderer extends RenderHandler {
         const colorShader = view.programColor
         colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        // const rootPoseGlobal = mat4.fromYRotation(mat4.create(), this.bpc.getRootY(this.bpl))
-        const hipLeft = this.bpl.getVec(Blaze.LEFT_HIP)
-        const hipRight = this.bpl.getVec(Blaze.RIGHT_HIP)
-        const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
-        vec3.normalize(hipDirection, hipDirection)
-        const rootY = Math.atan2(hipDirection[0], -hipDirection[2]) + Math.PI / 2
-
-        const rootPoseGlobal = mat4.create()
-        const inv = mat4.fromYRotation(mat4.create(), rootY)
-        vec3.transformMat4(hipDirection, hipDirection, inv)
-        const rootZ = Math.atan2(hipDirection[0], -hipDirection[1])
-
-        // TODO: x-axis
-        // variant 1: just use the HIP to SHOULDER
-        // this doesn't seem to work when lying on the back
-        const shoulderLeft = this.bpl.getVec(Blaze.LEFT_SHOULDER)
-        const torsoDirection = vec3.sub(vec3.create(), shoulderLeft, hipLeft)
-        vec3.normalize(torsoDirection, torsoDirection)
-        
-        vec3.transformMat4(torsoDirection, torsoDirection, inv)
-        const rootX = Math.atan2(torsoDirection[1], torsoDirection[2]) - Math.PI / 2
-
-        debug!!.innerText = `"torsoDirection ${vec3.str(torsoDirection)}`
-
-        mat4.rotateY(rootPoseGlobal, rootPoseGlobal, rootY)
-        mat4.rotateX(rootPoseGlobal, rootPoseGlobal, rootX)
-        mat4.rotateZ(rootPoseGlobal, rootPoseGlobal, rootZ)
+        // [X] variant 1: just use the HIP to SHOULDER
+        // [ ] variant 2: combine with the legs
+        const rootPoseGlobal = this.bpc.getRoot(this.bpl)
 
         colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, rootPoseGlobal))
         this.arrowMesh.draw(view.programColor)
