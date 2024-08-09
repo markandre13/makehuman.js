@@ -1,5 +1,6 @@
 import { mat4, vec3 } from "gl-matrix"
 import { euler_matrix } from "lib/euler_matrix"
+import { isZero } from "mesh/HumanMesh"
 
 /**
  * Indices for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
@@ -41,13 +42,16 @@ export enum Blaze {
 }
 
 /**
- * Convert Mediapipe's Pose Landmark Model (BlazePose GHUM 3D) to Makehuman Pose
+ * Wrapper for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
  */
 export class BlazePoseLandmarks {
     data: Float32Array
     constructor(data: Float32Array = new Float32Array(3 * 33).fill(0)) {
         this.data = data
     }
+    /**
+     * rotate all landmarks (used for testing)
+     */
     rotate(x: number, y: number, z: number) {
         const m = euler_matrix(x, y, z)
         for (let i = 0; i < 33; ++i) {
@@ -63,8 +67,7 @@ export class BlazePoseLandmarks {
 
     setVec(index: Blaze, x: number, y: number, z: number): void
     setVec(index: Blaze, v: vec3): void
-    setVec(index: Blaze, x: number|vec3, y?: number, z?: number): void
-    {
+    setVec(index: Blaze, x: number | vec3, y?: number, z?: number): void {
         const i = index * 3
         if (typeof x === "number") {
             this.data[i] = x
@@ -79,6 +82,16 @@ export class BlazePoseLandmarks {
     }
 }
 
+let prev = 0,
+    dy = 0,
+    dz = 0
+
+// * the technical term is 'retarget' instead of 'convert'
+// * https://github.com/freemocap/freemocap_blendarmocap does a similar thing
+
+/**
+ * Convert Mediapipe's Pose Landmark Model (BlazePose GHUM 3D) to Makehuman Pose
+ */
 export class BlazePoseConverter {
     getRoot(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
@@ -96,11 +109,30 @@ export class BlazePoseConverter {
         // variant 1: just use the HIP to SHOULDER
         // this doesn't seem to work when lying on the back
         const shoulderLeft = pose.getVec(Blaze.LEFT_SHOULDER)
-        const torsoDirection = vec3.sub(vec3.create(), shoulderLeft, hipLeft)
-        vec3.normalize(torsoDirection, torsoDirection)
-        
-        vec3.transformMat4(torsoDirection, torsoDirection, inv)
-        const rootX = Math.atan2(torsoDirection[1], torsoDirection[2]) - Math.PI / 2
+        const shoulderRight = pose.getVec(Blaze.RIGHT_SHOULDER)
+        const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
+        const kneeRight = pose.getVec(Blaze.RIGHT_KNEE)
+
+        // rootX := median of torso and legs
+        const t0 = vec3.sub(vec3.create(), shoulderLeft, hipLeft)
+        const t1 = vec3.sub(vec3.create(), kneeLeft, hipLeft)
+        const t2 = vec3.sub(vec3.create(), shoulderRight, hipRight)
+        const t3 = vec3.sub(vec3.create(), kneeRight, hipRight)
+        vec3.normalize(t0, t0)
+        vec3.normalize(t1, t1)
+        vec3.normalize(t2, t2)
+        vec3.normalize(t3, t3)
+        vec3.transformMat4(t0, t0, inv)
+        vec3.transformMat4(t1, t1, inv)
+        vec3.transformMat4(t2, t2, inv)
+        vec3.transformMat4(t3, t3, inv)
+
+        let rootX = Math.atan2(t0[1], t0[2]) + Math.PI / 2
+        rootX += Math.atan2(t0[1], t0[2]) + Math.PI / 2
+        rootX += Math.atan2(t0[1], t0[2]) + Math.PI / 2
+        rootX += Math.atan2(t0[1], t0[2]) + Math.PI / 2
+        rootX /= 4
+        rootX += Math.PI
 
         mat4.rotateY(rootPoseGlobal, rootPoseGlobal, rootY)
         mat4.rotateX(rootPoseGlobal, rootPoseGlobal, rootX)

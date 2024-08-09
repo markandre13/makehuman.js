@@ -87,8 +87,18 @@ export class MPPoseRenderer extends RenderHandler {
         const colorShader = view.programColor
         colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        // [X] variant 1: just use the HIP to SHOULDER
-        // [ ] variant 2: combine with the legs
+        // the following tasks are ordered from easy to difficult to learn along the way:
+        // [X] root variant 1: just use the HIP to SHOULDER
+        // [ ] the legs
+        // [ ] the arms
+        // [ ] head
+        // [ ] foot
+        // [ ] hands
+        // [ ] root variant 2: combine root with the legs
+        //   [ ] find smallest angle between torso and legs
+        //   [ ] use related torso & legs to define a median
+        // [ ] bend spine at one bone
+        // [ ] bend spine at all spine bones
         const rootPoseGlobal = this.bpc.getRoot(this.bpl)
 
         colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, rootPoseGlobal))
