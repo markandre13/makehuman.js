@@ -392,34 +392,6 @@ export class UpdateManager {
     }
 }
 
-// https://stackoverflow.com/questions/18558910/direction-vector-to-rotation-matrix
-const up = vec3.fromValues(0, 1, 0)
-function matFromDirection(direction: vec3) {
-    const zaxis = vec3.normalize(vec3.create(), direction)
-    const xaxis = vec3.cross(vec3.create(), up, zaxis)
-    vec3.normalize(xaxis, xaxis)
-    const yaxis = vec3.cross(vec3.create(), zaxis, xaxis)
-    vec3.normalize(yaxis, yaxis)
-    return mat4.fromValues(
-        xaxis[0],
-        xaxis[1],
-        xaxis[2],
-        0,
-        yaxis[0],
-        yaxis[1],
-        yaxis[2],
-        0,
-        zaxis[0],
-        zaxis[1],
-        zaxis[2],
-        0,
-        0,
-        0,
-        0,
-        1
-    )
-}
-
 // https://de.mathworks.com/matlabcentral/answers/2092961-how-to-calculate-the-angle-between-two-3d-vectors
 // % most robust, most accurate, recovers tiny angles very well, slowest
 // atan2(norm(cross(u,v)), dot(u,v))

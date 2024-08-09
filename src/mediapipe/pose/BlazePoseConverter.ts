@@ -98,6 +98,20 @@ export class BlazePoseConverter {
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
         const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
         vec3.normalize(hipDirection, hipDirection)
+
+
+        const shoulderLeft = pose.getVec(Blaze.LEFT_SHOULDER)
+        const t0 = vec3.sub(vec3.create(), shoulderLeft, hipLeft)
+        vec3.normalize(t0, t0)
+
+        return matFromDirection(hipDirection, t0)
+    }
+
+    getRoot1(pose: BlazePoseLandmarks): mat4 {
+        const hipLeft = pose.getVec(Blaze.LEFT_HIP)
+        const hipRight = pose.getVec(Blaze.RIGHT_HIP)
+        const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
+        vec3.normalize(hipDirection, hipDirection)
         const rootY = Math.atan2(hipDirection[0], -hipDirection[2]) + Math.PI / 2
 
         const rootPoseGlobal = mat4.create()
@@ -134,6 +148,11 @@ export class BlazePoseConverter {
         rootX /= 4
         rootX += Math.PI
 
+        // FIXME: the x-axis isn't always correct, especially when lying on the back
+        // try to at pause, step forward and backward and an editable frame/time counter
+        // then find the position, write unit test, and solve it
+        // or
+        // use matFromDirection()
         mat4.rotateY(rootPoseGlobal, rootPoseGlobal, rootY)
         mat4.rotateX(rootPoseGlobal, rootPoseGlobal, rootX)
         mat4.rotateZ(rootPoseGlobal, rootPoseGlobal, rootZ)
@@ -195,4 +214,32 @@ export class BlazePoseConverter {
         const knee2ankle = vec3.sub(vec3.create(), ankle, knee)
         return vec3.angle(knee2hip, knee2ankle)
     }
+}
+
+// https://stackoverflow.com/questions/18558910/direction-vector-to-rotation-matrix
+const _up = vec3.fromValues(0, 1, 0)
+function matFromDirection(direction: vec3, up: vec3 = _up) {
+    const zaxis = vec3.normalize(vec3.create(), direction)
+    const xaxis = vec3.cross(vec3.create(), up, zaxis)
+    vec3.normalize(xaxis, xaxis)
+    const yaxis = vec3.cross(vec3.create(), zaxis, xaxis)
+    vec3.normalize(yaxis, yaxis)
+    return mat4.fromValues(
+        xaxis[0],
+        xaxis[1],
+        xaxis[2],
+        0,
+        yaxis[0],
+        yaxis[1],
+        yaxis[2],
+        0,
+        zaxis[0],
+        zaxis[1],
+        zaxis[2],
+        0,
+        0,
+        0,
+        0,
+        1
+    )
 }
