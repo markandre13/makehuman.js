@@ -49,11 +49,16 @@ export class BlazePoseLandmarks {
     constructor(data: Float32Array = new Float32Array(3 * 33).fill(0)) {
         this.data = data
     }
+    clone() {
+        return new BlazePoseLandmarks(this.data.slice())
+    }
     /**
      * rotate all landmarks (used for testing)
      */
     rotate(x: number, y: number, z: number) {
-        const m = euler_matrix(x, y, z)
+        this.mul(euler_matrix(x, y, z))
+    }
+    mul(m: mat4) {
         for (let i = 0; i < 33; ++i) {
             const v = this.getVec(i)
             vec3.transformMat4(v, v, m)
@@ -99,11 +104,48 @@ export class BlazePoseConverter {
         const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
         vec3.normalize(hipDirection, hipDirection)
 
-
+        // todo...
         const shoulderLeft = pose.getVec(Blaze.LEFT_SHOULDER)
-        const t0 = vec3.sub(vec3.create(), shoulderLeft, hipLeft)
+        const shoulderRight = pose.getVec(Blaze.RIGHT_SHOULDER)
+        const left = vec3.sub(vec3.create(), shoulderLeft, hipLeft) // hip -> shoulder
+        const right = vec3.sub(vec3.create(), shoulderRight, hipRight)
+        const t0 = vec3.add(vec3.create(), left, right)
         vec3.normalize(t0, t0)
 
+        // const t0 = vec3.fromValues(0, 1, 0)
+
+        // const yaxis = this.getRootY(pose)
+        // const pose2 = pose.clone()
+        // pose2.rotate(0, yaxis, 0)
+        /*
+        const leftShoulder = pose.getVec(Blaze.LEFT_SHOULDER)
+        const rightShoulder = pose.getVec(Blaze.RIGHT_SHOULDER)
+        const leftHip = pose.getVec(Blaze.LEFT_HIP)
+        const rightHip = pose.getVec(Blaze.RIGHT_HIP)
+        const leftKnee = pose.getVec(Blaze.LEFT_KNEE)
+        const rightKnee = pose.getVec(Blaze.RIGHT_KNEE)
+
+        const dirRightShoulder = vec3.sub(vec3.create(), rightShoulder, rightHip) // hip --> shoulder
+        vec3.normalize(dirRightShoulder, dirRightShoulder)
+
+        const dirLeftShoulder = vec3.sub(vec3.create(), leftShoulder, leftHip) // hip --> shoulder
+        vec3.normalize(dirLeftShoulder, dirLeftShoulder)
+
+        const dirRightKnee = vec3.sub(vec3.create(), rightHip, rightKnee) // knee -> hip
+        vec3.normalize(dirRightKnee, dirRightKnee)
+
+        const dirLeftKnee = vec3.sub(vec3.create(), leftHip, leftKnee) // knee => hip
+        vec3.normalize(dirLeftKnee, dirLeftKnee)
+
+        const dir = vec3.create()
+        vec3.add(dir, dir, dirRightShoulder)
+        vec3.add(dir, dir, dirLeftShoulder)
+        vec3.add(dir, dir, dirRightKnee)
+        vec3.add(dir, dir, dirLeftKnee)
+        vec3.normalize(dir, dir)
+
+        return matFromDirection(hipDirection, dir)
+        */
         return matFromDirection(hipDirection, t0)
     }
 
@@ -159,6 +201,9 @@ export class BlazePoseConverter {
         return rootPoseGlobal
     }
 
+    /**
+     * get rotation around y-axis based on hips in radians
+     */
     getRootY(pose: BlazePoseLandmarks) {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
@@ -224,22 +269,11 @@ function matFromDirection(direction: vec3, up: vec3 = _up) {
     vec3.normalize(xaxis, xaxis)
     const yaxis = vec3.cross(vec3.create(), zaxis, xaxis)
     vec3.normalize(yaxis, yaxis)
+    // prettier-ignore
     return mat4.fromValues(
-        xaxis[0],
-        xaxis[1],
-        xaxis[2],
-        0,
-        yaxis[0],
-        yaxis[1],
-        yaxis[2],
-        0,
-        zaxis[0],
-        zaxis[1],
-        zaxis[2],
-        0,
-        0,
-        0,
-        0,
-        1
+        xaxis[0], xaxis[1], xaxis[2], 0,
+        yaxis[0], yaxis[1], yaxis[2], 0,
+        zaxis[0], zaxis[1], zaxis[2], 0,
+        0,        0,        0,        1
     )
 }

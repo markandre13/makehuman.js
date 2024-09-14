@@ -12,11 +12,17 @@ import {
 } from "render/util"
 import { Blaze, BlazePoseConverter, BlazePoseLandmarks } from "./BlazePoseConverter"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
+import { simulatedModel } from "./PoseTab"
+import { deg2rad, rad2deg } from "lib/calculateNormals"
+import { html } from "toad.js"
 
 let a = 0
 
+let flag = true
+
 export class MPPoseRenderer extends RenderHandler {
     mesh0?: RenderMesh
+    mesh1?: RenderMesh
 
     arrowMesh?: ArrowMesh
     bpl = new BlazePoseLandmarks()
@@ -61,15 +67,49 @@ export class MPPoseRenderer extends RenderHandler {
 
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
+        const landmarks = simulatedModel.simulatedOnOff.value ? simulatedModel.pose.data : app.frontend._poseLandmarks
+
         if (this.mesh0 === undefined) {
-            this.mesh0 = new RenderMesh(gl, app.frontend._poseLandmarks, this.line0, undefined, undefined, false)
+            this.mesh0 = new RenderMesh(gl, landmarks, this.line0, undefined, undefined, false)
         } else {
-            this.mesh0.update(app.frontend._poseLandmarks)
+            this.mesh0.update(landmarks)
         }
 
-        programRGBA.setColor([1.0, 1.0, 1.0, 1])
+        // draw blaze skeleton
+        programRGBA.setColor([1, 1, 1, 1])
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
+
+        const rootPoseGlobal = this.bpc.getRoot(this.bpl)
+
+        // get the normalized pose
+        const pose2 = new BlazePoseLandmarks(landmarks.slice())
+        const inv = mat4.create()
+        mat4.invert(inv, rootPoseGlobal)
+        pose2.mul(inv)
+        if (this.mesh1 === undefined) {
+            this.mesh1 = new RenderMesh(gl, pose2.data, this.line0, undefined, undefined, false)
+        } else {
+            this.mesh1.update(pose2.data)
+        }
+        programRGBA.setColor([1, 0, 0, 1])
+        this.mesh1.bind(programRGBA)
+        gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
+
+        const id = document.getElementById("debug")
+        if (id) {
+            const kneeLeft = pose2.getVec(Blaze.LEFT_KNEE)
+            const kneeRight = pose2.getVec(Blaze.RIGHT_KNEE)
+            const left = rad2deg(Math.atan2(kneeLeft[1], kneeLeft[0]) + Math.PI / 2)
+            const right = rad2deg(Math.atan2(kneeRight[1], kneeRight[0]) + Math.PI / 2)
+            ++a
+            id.innerHTML = html`
+            ${a}<br/>
+            ${kneeLeft[0].toFixed(4)}, ${kneeLeft[1].toFixed(4)}, ${kneeLeft[2].toFixed(4)}: ${left.toFixed(1)}<br />
+            ${kneeRight[0].toFixed(4)}, ${kneeRight[1].toFixed(4)}, ${kneeRight[2].toFixed(4)}: ${right.toFixed(1)}`
+        }
+
+        // now use the normalized pose to...
 
         //
         // to skeleton
@@ -77,32 +117,28 @@ export class MPPoseRenderer extends RenderHandler {
 
         const debug = document.getElementById("debug")
 
-        this.bpl.data = app.frontend._poseLandmarks!!
-
-        // gl.enable(gl.CULL_FACE)
-        // gl.cullFace(gl.BACK)
-        // gl.depthMask(true)
-        // gl.disable(gl.BLEND)
+        this.bpl.data = landmarks!!
 
         const colorShader = view.programColor
         colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        // the following tasks are ordered from easy to difficult to learn along the way:
-        // [X] root variant 1: just use the HIP to SHOULDER
-        // [ ] the legs
-        // [ ] the arms
-        // [ ] head
-        // [ ] foot
-        // [ ] hands
-        // [ ] root variant 2: combine root with the legs
-        //   [ ] find smallest angle between torso and legs
-        //   [ ] use related torso & legs to define a median
-        // [ ] bend spine at one bone
-        // [ ] bend spine at all spine bones
-        const rootPoseGlobal = this.bpc.getRoot(this.bpl)
-
         colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, rootPoseGlobal))
         this.arrowMesh.draw(view.programColor)
+
+        if (flag) {
+            flag = false
+            console.log(`DEBUG LEFT  HIP      ${this.bpl.getVec(Blaze.LEFT_HIP)}`)
+            console.log(`DEBUG RIGHT HIP      ${this.bpl.getVec(Blaze.RIGHT_HIP)}`)
+            console.log(`DEBUG LEFT  SHOULDER ${this.bpl.getVec(Blaze.LEFT_SHOULDER)}`)
+            console.log(`DEBUG RIGHT SHOULDER ${this.bpl.getVec(Blaze.RIGHT_SHOULDER)}`)
+            console.log(`DEBUG LEFT  KNEE     ${this.bpl.getVec(Blaze.LEFT_KNEE)}`)
+            console.log(`DEBUG RIGHT KNEE     ${this.bpl.getVec(Blaze.RIGHT_KNEE)}`)
+        }
+
+        // TODO
+        // [ ] getRoot() is not complete yet
+        //     write test, then TDD the result
+        // [ ] neck, arm or leg
 
         // draw side view
         /*
