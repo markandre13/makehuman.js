@@ -35,31 +35,31 @@ describe("pose", function () {
         pose.setVec(Blaze.LEFT_KNEE, 0.1755087971687317,-0.4113808572292328,-0.006952519994229078)
         pose.setVec(Blaze.RIGHT_KNEE, -0.09461788088083267,-0.3937787711620331,0.05729012191295624)
 
-        // get rotation around y-axis
-        const d0 = pl2s.getRootY(pose)
-        expect(rad2deg(d0)).to.almost.equal(-4.0514031908497845)
+        // // get rotation around y-axis
+        // const d0 = pl2s.getRootY(pose)
+        // expect(rad2deg(d0)).to.almost.equal(-4.0514031908497845)
 
-        // pose with removed rotation
-        const pose2 = pose.clone()
-        pose2.rotate(0, d0, 0)
+        // // pose with removed rotation
+        // const pose2 = pose.clone()
+        // pose2.rotate(0, d0, 0)
 
-        const d1 = pl2s.getRootY(pose2)
-        expect(rad2deg(d1)).to.almost.equal(0)
+        // const d1 = pl2s.getRootY(pose2)
+        // expect(rad2deg(d1)).to.almost.equal(0)
 
-        const leftShoulder = pose2.getVec(Blaze.LEFT_SHOULDER)
-        const rightShoulder = pose2.getVec(Blaze.RIGHT_SHOULDER)
-        const leftHip = pose2.getVec(Blaze.LEFT_HIP)
-        const rightHip = pose2.getVec(Blaze.RIGHT_HIP)
-        const leftKnee = pose2.getVec(Blaze.LEFT_KNEE)
-        const rightKnee = pose2.getVec(Blaze.RIGHT_KNEE)
+        // const leftShoulder = pose2.getVec(Blaze.LEFT_SHOULDER)
+        // const rightShoulder = pose2.getVec(Blaze.RIGHT_SHOULDER)
+        // const leftHip = pose2.getVec(Blaze.LEFT_HIP)
+        // const rightHip = pose2.getVec(Blaze.RIGHT_HIP)
+        // const leftKnee = pose2.getVec(Blaze.LEFT_KNEE)
+        // const rightKnee = pose2.getVec(Blaze.RIGHT_KNEE)
 
-        const dir = vec3.create()
-        vec3.sub(dir, rightShoulder, rightHip) // hip --> shoulder
-        vec3.normalize(dir, dir)
-        // const dir = vec3.fromValues(0,1,0)
-        const xaxis = Math.atan2(dir[1], -dir[2]) - Math.PI / 2
+        // const dir = vec3.create()
+        // vec3.sub(dir, rightShoulder, rightHip) // hip --> shoulder
+        // vec3.normalize(dir, dir)
+        // // const dir = vec3.fromValues(0,1,0)
+        // const xaxis = Math.atan2(dir[1], -dir[2]) - Math.PI / 2
 
-        console.log(rad2deg(xaxis))
+        // console.log(rad2deg(xaxis))
     })
 
     /*

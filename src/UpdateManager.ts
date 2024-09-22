@@ -276,10 +276,11 @@ export class UpdateManager {
 
             this.bpl.data = this.app.frontend._poseLandmarks!!
             // root
+            // setPose("root", this.bpc.getRoot(this.bpl))
+            setPose("root", this.bpc.getHipWithAdjustment(this.bpl))
+/*
             const rootPoseGlobal = mat4.fromYRotation(mat4.create(), this.bpc.getRootY(this.bpl))
-
             const rootPose = this.bpc.getRoot(this.bpl)
-            setPose("root", rootPose)
 
             // setPose("root", rootPoseGlobal)
 
@@ -364,7 +365,7 @@ export class UpdateManager {
 
             const rll = mat4.fromXRotation(mat4.create(), Math.PI - this.bpc.getRightLegAngle(this.bpl) - 0.4)
             setPoseRaw("lowerleg01.R", rll)
-
+*/
         }
 
         // UPDATE_SKINNING_MATRIX
