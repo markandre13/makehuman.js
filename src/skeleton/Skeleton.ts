@@ -470,8 +470,14 @@ export class Skeleton {
     getBone(name: string): Bone {
         const bone = this.bones.get(name)
         if (bone === undefined) {
-            console.trace(`Skeleton.getBone(${name}): no such bone`)
-            throw Error(`Skeleton.getBone(${name}): no such bone`)
+
+            let txt = ``
+            this.bones.forEach((v,k) => {
+                txt = `${txt} ${k}`
+            })
+
+            console.trace(`Skeleton.getBone(${name}): no such bone (have ${txt})`)
+            throw Error(`Skeleton.getBone(${name}): no such bone (have ${txt})`)
         }
         return bone
     }

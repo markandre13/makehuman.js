@@ -92,7 +92,7 @@ class DrawStack {
  */
 class SimulatedModel {
     pose = new BlazePoseLandmarks()
-    simulatedOnOff = new BooleanModel(true, { label: "Simulated Model" })
+    simulatedOnOff = new BooleanModel(false, { label: "Simulated Model" })
     root = new XYZModel({ label: "root" })
     shoulder = new XYZModel({ label: "shoulder" })
     leftLeg = new XYZModel({ label: "leftLeg" })

@@ -275,9 +275,22 @@ export class UpdateManager {
             }
 
             this.bpl.data = this.app.frontend._poseLandmarks!!
-            // root
+
             // setPose("root", this.bpc.getRoot(this.bpl))
-            setPose("root", this.bpc.getHipWithAdjustment(this.bpl))
+            const hipMatrix = this.bpc.getHipWithAdjustment(this.bpl)
+            setPose("root", hipMatrix)
+
+            const shoulderMatrix = this.bpc.getShoulder(this.bpl)
+            const hipInvers = mat4.invert(mat4.create(), hipMatrix)
+            mat4.mul(shoulderMatrix, shoulderMatrix, hipInvers)
+            const shoulderQuat = quat2.fromMat4(quat2.create(), shoulderMatrix)
+            const shoulderDelta = quaternion_slerp(REST_QUAT, shoulderQuat, 0.25)
+            mat4.fromQuat2(shoulderMatrix, shoulderDelta)
+            setPoseRaw("spine01", shoulderMatrix)
+            setPoseRaw("spine03", shoulderMatrix)
+            setPoseRaw("spine04", shoulderMatrix)
+            setPoseRaw("spine05", shoulderMatrix)
+
 /*
             const rootPoseGlobal = mat4.fromYRotation(mat4.create(), this.bpc.getRootY(this.bpl))
             const rootPose = this.bpc.getRoot(this.bpl)

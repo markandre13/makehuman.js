@@ -80,6 +80,7 @@ export class MPPoseRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
+        /*
         let rootPoseGlobal = this.bpc.getRoot(this.bpl)
 
         // get the normalized pose
@@ -137,8 +138,7 @@ export class MPPoseRenderer extends RenderHandler {
 
             mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
         }
-
-        rootPoseGlobal = this.bpc.getHipWithAdjustment(this.bpl)
+*/
 
         // now use the normalized pose to...
 
@@ -151,18 +151,26 @@ export class MPPoseRenderer extends RenderHandler {
         const colorShader = view.programColor
         colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, rootPoseGlobal))
+        const hipMatrix = this.bpc.getHipWithAdjustment(this.bpl)
+        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
         this.arrowMesh.draw(view.programColor)
 
-        if (flag) {
-            flag = false
-            console.log(`DEBUG LEFT  HIP      ${this.bpl.getVec(Blaze.LEFT_HIP)}`)
-            console.log(`DEBUG RIGHT HIP      ${this.bpl.getVec(Blaze.RIGHT_HIP)}`)
-            console.log(`DEBUG LEFT  SHOULDER ${this.bpl.getVec(Blaze.LEFT_SHOULDER)}`)
-            console.log(`DEBUG RIGHT SHOULDER ${this.bpl.getVec(Blaze.RIGHT_SHOULDER)}`)
-            console.log(`DEBUG LEFT  KNEE     ${this.bpl.getVec(Blaze.LEFT_KNEE)}`)
-            console.log(`DEBUG RIGHT KNEE     ${this.bpl.getVec(Blaze.RIGHT_KNEE)}`)
-        }
+        this.bpc.getRoot(this.bpl)
+
+        const hipLeft = this.bpl.getVec0(Blaze.LEFT_HIP)
+        const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
+        const shoulderLeft = this.bpl.getVec0(Blaze.LEFT_SHOULDER)
+        const shoulderRight = this.bpl.getVec0(Blaze.RIGHT_SHOULDER)
+
+        const middleOfShoulder = vec3.add(vec3.create(), shoulderLeft, shoulderRight)
+        vec3.scale(middleOfShoulder, middleOfShoulder, 0.5)
+        const t = mat4.fromTranslation(mat4.create(), middleOfShoulder)
+
+        const shoulderMatrix = this.bpc.getShoulder(this.bpl)
+        mat4.mul(shoulderMatrix, t, shoulderMatrix)
+        // mat4.translate(shoulderMatrix, shoulderMatrix, s)
+        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
+        this.arrowMesh.draw(view.programColor)
 
         // TODO
         // [ ] getRoot() is not complete yet
