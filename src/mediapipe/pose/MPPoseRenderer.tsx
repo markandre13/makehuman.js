@@ -80,7 +80,7 @@ export class MPPoseRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
-        const rootPoseGlobal = this.bpc.getRoot(this.bpl)
+        let rootPoseGlobal = this.bpc.getRoot(this.bpl)
 
         // get the normalized pose
         const pose2 = new BlazePoseLandmarks(landmarks.slice())
@@ -98,24 +98,53 @@ export class MPPoseRenderer extends RenderHandler {
 
         const id = document.getElementById("debug")
         if (id) {
+            const hipLeft = pose2.getVec(Blaze.LEFT_HIP)
+            const hipRight = pose2.getVec(Blaze.RIGHT_HIP)
             const kneeLeft = pose2.getVec(Blaze.LEFT_KNEE)
             const kneeRight = pose2.getVec(Blaze.RIGHT_KNEE)
-            const left = rad2deg(Math.atan2(kneeLeft[1], kneeLeft[0]) + Math.PI / 2)
-            const right = rad2deg(Math.atan2(kneeRight[1], kneeRight[0]) + Math.PI / 2)
-            ++a
-            id.innerHTML = html`
-            ${a}<br/>
-            ${kneeLeft[0].toFixed(4)}, ${kneeLeft[1].toFixed(4)}, ${kneeLeft[2].toFixed(4)}: ${left.toFixed(1)}<br />
-            ${kneeRight[0].toFixed(4)}, ${kneeRight[1].toFixed(4)}, ${kneeRight[2].toFixed(4)}: ${right.toFixed(1)}`
+            let left = rad2deg(Math.atan2(kneeLeft[1] - hipLeft[1], kneeLeft[0] - hipLeft[0]) + Math.PI / 2)
+            let ol = left
+    
+            if (left >= 170) {
+                left -= 360
+            }
+            let right = rad2deg(Math.atan2(kneeRight[1] - hipRight[1], kneeRight[0] - hipRight[0]) + Math.PI / 2)
+            let or = right
+            if (right >= 170) {
+                right -= 360
+            }
+            const adjustment = (left + right) / 8
+
+            id.innerHTML = html` ${hipLeft[0].toFixed(4)}, ${hipLeft[1].toFixed(4)}, ${hipLeft[2].toFixed(4)}<br />
+                ${hipRight[0].toFixed(4)}, ${hipRight[1].toFixed(4)}, ${hipRight[2].toFixed(4)}<br />
+                ${kneeLeft[0].toFixed(4)}, ${kneeLeft[1].toFixed(4)}, ${kneeLeft[2].toFixed(4)}: ${left.toFixed(1)}
+                ${ol.toFixed(1)}<br />
+                ${kneeRight[0].toFixed(4)}, ${kneeRight[1].toFixed(4)}, ${kneeRight[2].toFixed(4)}: ${right.toFixed(1)}
+                ${or.toFixed(1)}`
+
+            // const m = mat4.create()
+            // mat4.fromXRotation(m, deg2rad(adjustment))
+
+            // // TODO: something like this.bpc.getRoot(this.bpl) with 'adjustment' on the x-axis
+            // rootPoseGlobal = this.bpc.getRootWithXAdjustment(this.bpl, adjustment)
+
+            mat4.rotateY(rootPoseGlobal, rootPoseGlobal, deg2rad(-90))
+
+            // mat4.mul(rootPoseGlobal, simulatedModel.pre.toMatrix(), rootPoseGlobal)
+            // mat4.mul(rootPoseGlobal, rootPoseGlobal, simulatedModel.post.toMatrix())
+
+            // POST Z
+
+            mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
         }
+
+        rootPoseGlobal = this.bpc.getHipWithAdjustment(this.bpl)
 
         // now use the normalized pose to...
 
         //
         // to skeleton
         //
-
-        const debug = document.getElementById("debug")
 
         this.bpl.data = landmarks!!
 

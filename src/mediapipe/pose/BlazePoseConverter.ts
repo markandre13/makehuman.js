@@ -1,4 +1,5 @@
 import { mat4, vec3 } from "gl-matrix"
+import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { euler_matrix } from "lib/euler_matrix"
 import { isZero } from "mesh/HumanMesh"
 
@@ -147,6 +148,41 @@ export class BlazePoseConverter {
         return matFromDirection(hipDirection, dir)
         */
         return matFromDirection(hipDirection, t0)
+    }
+
+    /**
+     * Get hip rotation with adjustment from legs to get a spine bending from Blaze along the x-axis.
+     * 
+     * @param pose 
+     * @returns 
+     */
+    getHipWithAdjustment(pose: BlazePoseLandmarks): mat4 {
+        let rootPoseGlobal = this.getRoot(pose)
+
+        const pose2 = pose.clone()
+        const inv = mat4.create()
+        mat4.invert(inv, rootPoseGlobal)
+        pose2.mul(inv)
+
+        const hipLeft = pose2.getVec(Blaze.LEFT_HIP)
+        const hipRight = pose2.getVec(Blaze.RIGHT_HIP)
+        const kneeLeft = pose2.getVec(Blaze.LEFT_KNEE)
+        const kneeRight = pose2.getVec(Blaze.RIGHT_KNEE)
+
+        let left = rad2deg(Math.atan2(kneeLeft[1] - hipLeft[1], kneeLeft[0] - hipLeft[0]) + Math.PI / 2)
+        if (left >= 170) {
+            left -= 360
+        }
+        let right = rad2deg(Math.atan2(kneeRight[1] - hipRight[1], kneeRight[0] - hipRight[0]) + Math.PI / 2)
+        if (right >= 170) {
+            right -= 360
+        }
+
+        const adjustment = (left + right) / 8
+        mat4.rotateY(rootPoseGlobal, rootPoseGlobal, deg2rad(-90))
+        mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
+
+        return rootPoseGlobal
     }
 
     getRoot1(pose: BlazePoseLandmarks): mat4 {

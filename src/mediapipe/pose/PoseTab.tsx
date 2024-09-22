@@ -62,6 +62,9 @@ export function XYZView(props: { model: XYZModel }) {
     )
 }
 
+/**
+ * Helper to create BlazePoseLandmarks for testing
+ */
 class DrawStack {
     private stack: mat4[] = [mat4.create()]
     private top() {
@@ -87,6 +90,9 @@ class DrawStack {
     }
 }
 
+/**
+ * Create BlazePoseLandmarks for testing
+ */
 class SimulatedModel {
     pose = new BlazePoseLandmarks()
     simulatedOnOff = new BooleanModel(true, { label: "Simulated Model" })
@@ -94,6 +100,9 @@ class SimulatedModel {
     shoulder = new XYZModel({ label: "shoulder" })
     leftLeg = new XYZModel({ label: "leftLeg" })
     rightLeg = new XYZModel({ label: "rightLeg" })
+
+    pre = new XYZModel({ label: "pre" })
+    post = new XYZModel({ label: "post" })
 
     constructor() {
         this.update = this.update.bind(this)
@@ -173,6 +182,8 @@ export function PoseTab(props: { app: Application }) {
                 <XYZView model={simulatedModel.shoulder} />
                 <XYZView model={simulatedModel.leftLeg} />
                 <XYZView model={simulatedModel.rightLeg} />
+                <XYZView model={simulatedModel.pre} />
+                <XYZView model={simulatedModel.post} />
             </Form>
             <div></div>
             <div id="debug" />
