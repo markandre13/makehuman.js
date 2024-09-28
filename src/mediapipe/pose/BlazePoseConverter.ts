@@ -103,6 +103,26 @@ let prev = 0,
  * Convert Mediapipe's Pose Landmark Model (BlazePose GHUM 3D) to Makehuman Pose
  */
 export class BlazePoseConverter {
+    getShoulder(pose: BlazePoseLandmarks): mat4 {
+        const hipLeft = pose.getVec(Blaze.LEFT_HIP)
+        const hipRight = pose.getVec(Blaze.RIGHT_HIP)
+        const shoulderLeft = pose.getVec(Blaze.LEFT_SHOULDER)
+        const shoulderRight = pose.getVec(Blaze.RIGHT_SHOULDER)
+
+        const shoulderDirection = vec3.sub(vec3.create(), shoulderRight, shoulderLeft) // left --> right
+        vec3.normalize(shoulderDirection, shoulderDirection)
+
+        // todo...
+        const left = vec3.sub(vec3.create(), shoulderLeft, hipLeft) // hip -> shoulder
+        const right = vec3.sub(vec3.create(), shoulderRight, hipRight)
+        const t0 = vec3.add(vec3.create(), left, right)
+        vec3.normalize(t0, t0)
+        
+        const m =  matFromDirection(shoulderDirection, t0)
+        mat4.rotateY(m, m, deg2rad(90))
+        return m
+    }
+
     getRoot(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
@@ -123,7 +143,7 @@ export class BlazePoseConverter {
     }
 
     /**
-     * Get hip rotation with adjustment from legs to get a spine bending from Blaze along the x-axis.
+     * Get hip rotation plus interpolated x-rotation not contained in the blaze model by using the legs.
      * 
      * @param pose 
      * @returns 
@@ -150,31 +170,29 @@ export class BlazePoseConverter {
             right -= 360
         }
 
-        const adjustment = (left + right) / 4
+        const adjustment = (left + right) / 4 // approximation, not based on real body
+
         mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
 
         return rootPoseGlobal
     }
 
-    getShoulder(pose: BlazePoseLandmarks): mat4 {
+    getLeftUpperLeg(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
-        const shoulderLeft = pose.getVec(Blaze.LEFT_SHOULDER)
-        const shoulderRight = pose.getVec(Blaze.RIGHT_SHOULDER)
 
-        // const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
-        const shoulderDirection = vec3.sub(vec3.create(), shoulderRight, shoulderLeft) // left --> right
-        vec3.normalize(shoulderDirection, shoulderDirection)
+        const t = vec3.sub(vec3.create(), hipLeft, hipRight)
 
-        // todo...
-        const left = vec3.sub(vec3.create(), shoulderLeft, hipLeft) // hip -> shoulder
-        const right = vec3.sub(vec3.create(), shoulderRight, hipRight)
-        const t0 = vec3.add(vec3.create(), left, right)
-        vec3.normalize(t0, t0)
-        
-        const m =  matFromDirection(shoulderDirection, t0)
+        const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
+        const d = vec3.sub(vec3.create(), hipLeft, kneeLeft)
+        const m = matFromDirection(d, t)
         mat4.rotateY(m, m, deg2rad(90))
+        mat4.rotateZ(m, m, deg2rad(90))
+
         return m
+
+        // return euler_matrix(.1,.2,.3)
+        // return mat4.create()
     }
 }
 

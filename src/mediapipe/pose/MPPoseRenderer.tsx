@@ -75,112 +75,55 @@ export class MPPoseRenderer extends RenderHandler {
             this.mesh0.update(landmarks)
         }
 
+        //
         // draw blaze skeleton
+        //
         programRGBA.setColor([1, 1, 1, 1])
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
-
-        /*
-        let rootPoseGlobal = this.bpc.getRoot(this.bpl)
-
-        // get the normalized pose
-        const pose2 = new BlazePoseLandmarks(landmarks.slice())
-        const inv = mat4.create()
-        mat4.invert(inv, rootPoseGlobal)
-        pose2.mul(inv)
-        if (this.mesh1 === undefined) {
-            this.mesh1 = new RenderMesh(gl, pose2.data, this.line0, undefined, undefined, false)
-        } else {
-            this.mesh1.update(pose2.data)
-        }
-        programRGBA.setColor([1, 0, 0, 1])
-        this.mesh1.bind(programRGBA)
-        gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
-
-        const id = document.getElementById("debug")
-        if (id) {
-            const hipLeft = pose2.getVec(Blaze.LEFT_HIP)
-            const hipRight = pose2.getVec(Blaze.RIGHT_HIP)
-            const kneeLeft = pose2.getVec(Blaze.LEFT_KNEE)
-            const kneeRight = pose2.getVec(Blaze.RIGHT_KNEE)
-            let left = rad2deg(Math.atan2(kneeLeft[1] - hipLeft[1], kneeLeft[0] - hipLeft[0]) + Math.PI / 2)
-            let ol = left
     
-            if (left >= 170) {
-                left -= 360
-            }
-            let right = rad2deg(Math.atan2(kneeRight[1] - hipRight[1], kneeRight[0] - hipRight[0]) + Math.PI / 2)
-            let or = right
-            if (right >= 170) {
-                right -= 360
-            }
-            const adjustment = (left + right) / 8
-
-            id.innerHTML = html` ${hipLeft[0].toFixed(4)}, ${hipLeft[1].toFixed(4)}, ${hipLeft[2].toFixed(4)}<br />
-                ${hipRight[0].toFixed(4)}, ${hipRight[1].toFixed(4)}, ${hipRight[2].toFixed(4)}<br />
-                ${kneeLeft[0].toFixed(4)}, ${kneeLeft[1].toFixed(4)}, ${kneeLeft[2].toFixed(4)}: ${left.toFixed(1)}
-                ${ol.toFixed(1)}<br />
-                ${kneeRight[0].toFixed(4)}, ${kneeRight[1].toFixed(4)}, ${kneeRight[2].toFixed(4)}: ${right.toFixed(1)}
-                ${or.toFixed(1)}`
-
-            // const m = mat4.create()
-            // mat4.fromXRotation(m, deg2rad(adjustment))
-
-            // // TODO: something like this.bpc.getRoot(this.bpl) with 'adjustment' on the x-axis
-            // rootPoseGlobal = this.bpc.getRootWithXAdjustment(this.bpl, adjustment)
-
-            mat4.rotateY(rootPoseGlobal, rootPoseGlobal, deg2rad(-90))
-
-            // mat4.mul(rootPoseGlobal, simulatedModel.pre.toMatrix(), rootPoseGlobal)
-            // mat4.mul(rootPoseGlobal, rootPoseGlobal, simulatedModel.post.toMatrix())
-
-            // POST Z
-
-            mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
-        }
-*/
-
-        // now use the normalized pose to...
-
         //
         // to skeleton
         //
 
         this.bpl.data = landmarks!!
+        const shoulderLeft = this.bpl.getVec0(Blaze.LEFT_SHOULDER)
+        const shoulderRight = this.bpl.getVec0(Blaze.RIGHT_SHOULDER)
+        const hipLeft = this.bpl.getVec0(Blaze.LEFT_HIP)
+        const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
 
         const colorShader = view.programColor
         colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
+        // HIP
         const hipMatrix = this.bpc.getHipWithAdjustment(this.bpl)
         colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
         this.arrowMesh.draw(view.programColor)
 
-        this.bpc.getRoot(this.bpl)
-
-        const hipLeft = this.bpl.getVec0(Blaze.LEFT_HIP)
-        const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
-        const shoulderLeft = this.bpl.getVec0(Blaze.LEFT_SHOULDER)
-        const shoulderRight = this.bpl.getVec0(Blaze.RIGHT_SHOULDER)
-
+        // CENTER OF SHOULDER
         const middleOfShoulder = vec3.add(vec3.create(), shoulderLeft, shoulderRight)
         vec3.scale(middleOfShoulder, middleOfShoulder, 0.5)
-        const t = mat4.fromTranslation(mat4.create(), middleOfShoulder)
+        const middleOfShoulderMat = mat4.fromTranslation(mat4.create(), middleOfShoulder)
 
+        // SHOULDER
         const shoulderMatrix = this.bpc.getShoulder(this.bpl)
-        mat4.mul(shoulderMatrix, t, shoulderMatrix)
-        // mat4.translate(shoulderMatrix, shoulderMatrix, s)
+        mat4.mul(shoulderMatrix, middleOfShoulderMat, shoulderMatrix)
         colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
         this.arrowMesh.draw(view.programColor)
 
-        // TODO
-        // [ ] getRoot() is not complete yet
-        //     write test, then TDD the result
-        // [ ] neck, arm or leg
+        // UPPER LEG
+        const hipLeftMat = this.bpc.getLeftUpperLeg(this.bpl)
+        mat4.mul(hipLeftMat, mat4.fromTranslation(mat4.create(), hipLeft), hipLeftMat)
 
-        // draw side view
-        /*
-        const inv2 = mat4.fromYRotation(mat4.create(), rootY + Math.PI / 2)
-        const vertices = new Float32Array(app.frontend._poseLandmarks!!)
+        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipLeftMat))
+        this.arrowMesh.draw(view.programColor)
+
+        // DRAW SIDE VIEW
+        
+        const inv2 = mat4.invert(mat4.create(), hipMatrix)
+        mat4.rotateY(inv2, inv2, deg2rad(-90))
+
+        const vertices = new Float32Array(landmarks)
         this.bpl.data = vertices
         for (let i = 0; i < 33; ++i) {
             const v = this.bpl.getVec(i)
@@ -193,6 +136,6 @@ export class MPPoseRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         this.mesh0.update(vertices)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
-        */
+        
     }
 }
