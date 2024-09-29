@@ -15,6 +15,7 @@ import { ArrowMesh } from "mediapipe/ArrowMesh"
 import { simulatedModel } from "./PoseTab"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { html } from "toad.js"
+import { ColorShader } from "render/shader/ColorShader"
 
 let a = 0
 
@@ -56,7 +57,8 @@ export class MPPoseRenderer extends RenderHandler {
         gl.disable(gl.CULL_FACE)
         gl.depthMask(true)
 
-        const programRGBA = new RGBAShader(gl)
+        const programRGBA = view.programRGBA
+        const programColor = view.programColor
 
         const projectionMatrix = createProjectionMatrix(canvas)
         const modelViewMatrix = mat4.create()
@@ -75,6 +77,13 @@ export class MPPoseRenderer extends RenderHandler {
             this.mesh0.update(landmarks)
         }
 
+        // programColor.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        // this.arrowMesh.draw(view.programColor)
+        // return
+
+        // const programColor = new ColorShader(gl)
+        // programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+
         //
         // draw blaze skeleton
         //
@@ -92,12 +101,11 @@ export class MPPoseRenderer extends RenderHandler {
         const hipLeft = this.bpl.getVec0(Blaze.LEFT_HIP)
         const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
 
-        const colorShader = view.programColor
-        colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programColor.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
         // HIP
         const hipMatrix = this.bpc.getHipWithAdjustment(this.bpl)
-        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
+        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
         this.arrowMesh.draw(view.programColor)
 
         // CENTER OF SHOULDER
@@ -108,20 +116,25 @@ export class MPPoseRenderer extends RenderHandler {
         // SHOULDER
         const shoulderMatrix = this.bpc.getShoulder(this.bpl)
         mat4.mul(shoulderMatrix, middleOfShoulderMat, shoulderMatrix)
-        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
+        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
         this.arrowMesh.draw(view.programColor)
 
         // UPPER LEG
-        const hipLeftMat = this.bpc.getLeftUpperLeg(this.bpl)
-        mat4.mul(hipLeftMat, mat4.fromTranslation(mat4.create(), hipLeft), hipLeftMat)
+        const leftUpperLegGlobal = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
+        const leftUpperLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), hipLeft), leftUpperLegGlobal)
 
-        colorShader.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipLeftMat))
+        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, leftUpperLeg))
         this.arrowMesh.draw(view.programColor)
 
         // DRAW SIDE VIEW
         
-        const inv2 = mat4.invert(mat4.create(), hipMatrix)
-        mat4.rotateY(inv2, inv2, deg2rad(-90))
+        // const inv2 = mat4.invert(mat4.create(), hipMatrix)
+        // const rot = mat4.fromYRotation(mat4.create(), deg2rad(90))
+        // mat4.mul(inv2, rot, inv2)
+
+        const inv2 = mat4.invert(mat4.create(), leftUpperLegGlobal)
+        // const rotX = mat4.fromXRotation(mat4.create(), deg2rad(90))
+        // mat4.mul(inv2, rotX, inv2)
 
         const vertices = new Float32Array(landmarks)
         this.bpl.data = vertices
@@ -136,6 +149,5 @@ export class MPPoseRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         this.mesh0.update(vertices)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
-        
     }
 }

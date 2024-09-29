@@ -2,6 +2,36 @@ import { mat4, vec3 } from "gl-matrix"
 import { drawArrow } from "chordata/renderChordata"
 import { ColorShader } from "render/shader/ColorShader"
 
+export class BoneMesh {
+    private gl: WebGL2RenderingContext
+    private glVertex: WebGLBuffer
+    private glNormal: WebGLBuffer
+    private glColor: WebGLBuffer
+    private glIndices: WebGLBuffer
+    private indexLength: number = 0
+
+    private vertex: number[] = []
+    private fvertex: number[] = []
+    private color: number[] = []
+    private index: number[] = []
+
+
+    constructor(gl: WebGL2RenderingContext) {
+        this.gl = gl
+
+
+        const m = mat4.create()
+        this.glVertex = gl.createBuffer()!
+        this.glNormal = gl.createBuffer()!
+        this.glColor = gl.createBuffer()!
+        this.glIndices = gl.createBuffer()!
+    }
+
+    drawBone(m: mat4, length: number) {
+        
+    }
+}
+
 export class ArrowMesh {
     private gl: WebGL2RenderingContext
     private glVertex: WebGLBuffer
@@ -18,7 +48,6 @@ export class ArrowMesh {
         const index: number[] = []
 
         const m = mat4.create()
-        // const s = 0.4
         mat4.scale(m, m, vec3.fromValues(s, s, s))
 
         mat4.rotateY(m, m, (2 * Math.PI) / 4)

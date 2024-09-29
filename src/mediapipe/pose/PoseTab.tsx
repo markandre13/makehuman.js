@@ -68,11 +68,16 @@ class DrawStack {
         return this.stack[this.stack.length - 1]
     }
 
-    push() {
+    private push() {
         this.stack.push(mat4.clone(this.top()))
     }
-    pop() {
+    private pop() {
         --this.stack.length
+    }
+    down(block: () => void) {
+        this.push()
+        block()
+        this.pop()
     }
     mul(m: mat4) {
         mat4.mul(this.top(), this.top(), m)
@@ -92,18 +97,32 @@ class DrawStack {
  */
 class SimulatedModel {
     pose = new BlazePoseLandmarks()
-    simulatedOnOff = new BooleanModel(false, { label: "Simulated Model" })
+    simulatedOnOff = new BooleanModel(true, { label: "Simulated Model" })
     root = new XYZModel({ label: "root" })
     shoulder = new XYZModel({ label: "shoulder" })
     leftLeg = new XYZModel({ label: "leftLeg" })
     rightLeg = new XYZModel({ label: "rightLeg" })
+    leftKnee = new XYZModel({ label: "leftKnee" })
+    rightKnee = new XYZModel({ label: "rightKnee" })
+    leftFoot = new XYZModel({ label: "leftFoot" })
+    rightFoot = new XYZModel({ label: "rightFoot" })
+    all = [
+        this.root,
+        this.shoulder,
+        this.leftLeg,
+        this.leftKnee,
+        this.leftFoot,
+        this.rightLeg,
+        this.rightKnee,
+        this.rightFoot,
+    ]
 
     pre = new XYZModel({ label: "pre" })
     post = new XYZModel({ label: "post" })
 
     constructor() {
         this.update = this.update.bind(this)
-        for (const model of [this.root, this.shoulder, this.leftLeg, this.rightLeg]) {
+        for (const model of this.all) {
             model.modified.add(this.update)
         }
         this.update()
@@ -113,33 +132,62 @@ class SimulatedModel {
         const stack = new DrawStack()
         stack.mul(this.root.toMatrix())
 
-        stack.push()
-        stack.translate(0.0, 0.5, 0)
-        // stack.set(this.pose, Blaze.LEFT_HIP)
-        stack.mul(this.shoulder.toMatrix())
-        stack.push()
-        stack.translate(0.1, 0.0, 0)
-        stack.set(this.pose, Blaze.LEFT_SHOULDER)
-        stack.pop()
-        stack.translate(-0.1, 0.0, 0)
-        stack.set(this.pose, Blaze.RIGHT_SHOULDER)
-        stack.pop()
+        stack.down(() => {
+            stack.translate(0.0, 0.5, 0)
+            // stack.set(this.pose, Blaze.LEFT_HIP)
+            stack.mul(this.shoulder.toMatrix())
+            stack.down(() => {
+                stack.translate(0.1, 0.0, 0)
+                stack.set(this.pose, Blaze.LEFT_SHOULDER)
+            })
+            stack.translate(-0.1, 0.0, 0)
+            stack.set(this.pose, Blaze.RIGHT_SHOULDER)
+        })
 
-        stack.push()
-        stack.translate(0.1, 0, 0)
-        stack.set(this.pose, Blaze.LEFT_HIP)
-        stack.mul(this.leftLeg.toMatrix())
-        stack.translate(0, -0.4, 0)
-        stack.set(this.pose, Blaze.LEFT_KNEE)
-        stack.pop()
+        stack.down(() => {
+            // from hip
+            stack.translate(0.1, 0, 0)
+            stack.set(this.pose, Blaze.LEFT_HIP)
+            // to knee
+            // stack.mul(this.leftLeg.toMatrix())
+            const ll = this.leftLeg
+            stack.mul(euler_matrix(0, 0, deg2rad(ll.z.value)))
+            stack.mul(euler_matrix(deg2rad(ll.x.value), 0, 0))
+            stack.mul(euler_matrix(0, deg2rad(ll.y.value), 0))
 
-        stack.push()
-        stack.translate(-0.1, 0, 0)
-        stack.set(this.pose, Blaze.RIGHT_HIP)
-        stack.mul(this.rightLeg.toMatrix())
-        stack.translate(0, -0.4, 0)
-        stack.set(this.pose, Blaze.RIGHT_KNEE)
-        stack.pop()
+            stack.translate(0, -0.4, 0)
+            stack.set(this.pose, Blaze.LEFT_KNEE)
+            // to ankle
+            stack.mul(this.leftKnee.toMatrix())
+            stack.translate(0, -0.4, 0)
+            stack.set(this.pose, Blaze.LEFT_ANKLE)
+            // to foot
+            stack.mul(this.leftFoot.toMatrix())
+            stack.translate(0, -0.05, -0.025)
+            stack.set(this.pose, Blaze.LEFT_HEEL)
+            stack.translate(0, 0, 0.15)
+            stack.set(this.pose, Blaze.LEFT_FOOT_INDEX)
+        })
+
+        stack.down(() => {
+            // from hip
+            stack.translate(-0.1, 0, 0)
+            stack.set(this.pose, Blaze.RIGHT_HIP)
+            // to knee
+            stack.mul(this.rightLeg.toMatrix())
+            stack.translate(0, -0.4, 0)
+            stack.set(this.pose, Blaze.RIGHT_KNEE)
+            // to ankle
+            stack.mul(this.rightKnee.toMatrix())
+            stack.translate(0, -0.4, 0)
+            stack.set(this.pose, Blaze.RIGHT_ANKLE)
+            // to foot
+            stack.mul(this.rightFoot.toMatrix())
+            stack.translate(0, -0.05, -0.025)
+            stack.set(this.pose, Blaze.RIGHT_HEEL)
+            stack.translate(0, 0, 0.15)
+            stack.set(this.pose, Blaze.RIGHT_FOOT_INDEX)
+        })
     }
 }
 
@@ -178,12 +226,41 @@ export function PoseTab(props: { app: Application }) {
                 <XYZView model={simulatedModel.root} />
                 <XYZView model={simulatedModel.shoulder} />
                 <XYZView model={simulatedModel.leftLeg} />
+                <XYZView model={simulatedModel.leftKnee} />
+                <XYZView model={simulatedModel.leftFoot} />
+
                 <XYZView model={simulatedModel.rightLeg} />
+                <XYZView model={simulatedModel.rightKnee} />
+                <XYZView model={simulatedModel.rightFoot} />
+
                 <XYZView model={simulatedModel.pre} />
                 <XYZView model={simulatedModel.post} />
             </Form>
-            <div></div>
-            <div id="debug" />
+            <Button
+                action={() => {
+                    const msg = ["get ready", "10", "9", "8", "6", "5", "4", "3", "2", "1", "click"]
+                    const synth = window.speechSynthesis
+                    const voice = synth.getVoices().filter((it) => it.name === "Samantha")[0]
+                    let counter = 0
+                    const schedule = () => {
+                        const utter = new SpeechSynthesisUtterance(msg[counter])
+                        utter.voice = voice
+                        synth.speak(utter)
+                        ++counter
+                        if (counter < msg.length) {
+                            window.setTimeout(() => {
+                                schedule()
+                            }, 1000)
+                        } else {
+                            console.log(props.app.frontend._poseLandmarks?.toString())                           
+                        }
+                    }
+                    schedule()
+                }}
+            >
+                SNAPSHOT
+            </Button>
+            <div id="debug">DEBUG</div>
         </Tab>
     )
 }

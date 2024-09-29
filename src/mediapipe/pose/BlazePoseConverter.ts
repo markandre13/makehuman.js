@@ -117,8 +117,8 @@ export class BlazePoseConverter {
         const right = vec3.sub(vec3.create(), shoulderRight, hipRight)
         const t0 = vec3.add(vec3.create(), left, right)
         vec3.normalize(t0, t0)
-        
-        const m =  matFromDirection(shoulderDirection, t0)
+
+        const m = matFromDirection(shoulderDirection, t0)
         mat4.rotateY(m, m, deg2rad(90))
         return m
     }
@@ -136,17 +136,14 @@ export class BlazePoseConverter {
         const right = vec3.sub(vec3.create(), shoulderRight, hipRight)
         const t0 = vec3.add(vec3.create(), left, right)
         vec3.normalize(t0, t0)
-        
-        const m =  matFromDirection(hipDirection, t0)
+
+        const m = matFromDirection(hipDirection, t0)
         mat4.rotateY(m, m, deg2rad(90))
         return m
     }
 
     /**
-     * Get hip rotation plus interpolated x-rotation not contained in the blaze model by using the legs.
-     * 
-     * @param pose 
-     * @returns 
+     * Interpolates the missing y-rotation of the blaze model of the upper leg by using the upper legs.
      */
     getHipWithAdjustment(pose: BlazePoseLandmarks): mat4 {
         let rootPoseGlobal = this.getRoot(pose)
@@ -170,7 +167,7 @@ export class BlazePoseConverter {
             right -= 360
         }
 
-        const adjustment = (left + right) / 4 // approximation, not based on real body
+        const adjustment = (left + right) / 4 // add 1/4, improve by looking at real body
 
         mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
 
@@ -190,9 +187,61 @@ export class BlazePoseConverter {
         mat4.rotateZ(m, m, deg2rad(90))
 
         return m
+    }
 
-        // return euler_matrix(.1,.2,.3)
-        // return mat4.create()
+    /**
+     * Interpolates the missing y-rotation of the blaze model of the upper leg by using lower leg and foot.
+     *
+     * When the knee is bend, we can calculate the exact y-rotation.
+     *
+     * Otherwise, we can interpolate from the foot, past and future knee bends.
+     */
+    // FIXME: this works with the simulated blaze model, but not with real data...
+    getLeftUpperLegWithAdjustment(pose: BlazePoseLandmarks) {
+        let leftUpperLeg = this.getLeftUpperLeg(pose)
+
+        const pose2 = pose.clone()
+        const inv = mat4.create()
+        mat4.invert(inv, leftUpperLeg)
+        pose2.mul(inv)
+
+        // X & Z of lower leg
+        const kneeLeft = pose2.getVec(Blaze.LEFT_KNEE)
+        const ankleLeft = pose2.getVec(Blaze.LEFT_ANKLE)
+
+        const x = ankleLeft[0] - kneeLeft[0]
+        const y = ankleLeft[1] - kneeLeft[1]
+        const z = ankleLeft[2] - kneeLeft[2]
+
+        let a = 0, adjustment0 = 0, adjustment1 = 0
+        if (!isZero(z)) {
+            if (z < 0) {
+                a = adjustment0 = rad2deg(Math.atan2(x, z) - Math.PI)
+            } else {
+                a = adjustment0 = rad2deg(Math.atan2(-x, -z) - Math.PI)
+            }
+            // if (a > -225 && a > -270) {
+            //     a += 180
+            // }
+        } else {
+            const leftHeel = pose2.getVec(Blaze.LEFT_HEEL)
+            const leftFootIndex = pose2.getVec(Blaze.LEFT_FOOT_INDEX)
+            const x = leftFootIndex[0] - leftHeel[0]
+            const y = leftFootIndex[1] - leftHeel[1]
+            const z = leftFootIndex[2] - leftHeel[2]
+            a = adjustment1 = rad2deg(Math.atan2(x, z))
+        }
+
+        const debug = document.getElementById("debug")
+        if (debug != null) {
+            debug.innerHTML = `x: ${x.toFixed(4)}, y: ${y.toFixed(4)}, z: ${z.toFixed(4)}, a0: ${adjustment0}, a1: ${adjustment1}`
+        }
+
+        // const rot = mat4.fromYRotation(mat4.create(), deg2rad(a))
+        // mat4.mul(leftUpperLeg, leftUpperLeg, rot)
+        mat4.rotateY(leftUpperLeg, leftUpperLeg, deg2rad(a))
+
+        return leftUpperLeg
     }
 }
 

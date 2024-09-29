@@ -291,7 +291,7 @@ export class UpdateManager {
             setPose("spine04", shoulderMatrix)
             setPose("spine05", shoulderMatrix)
 
-            const leftUpperLeft = this.bpc.getLeftUpperLeg(this.bpl)
+            const leftUpperLeft = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
             mat4.mul(leftUpperLeft, hipInvers, leftUpperLeft)
             setPose("upperleg01.L", leftUpperLeft)
 
