@@ -281,8 +281,10 @@ export class UpdateManager {
             setPose("root", hipMatrix)
 
             const shoulderMatrix = this.bpc.getShoulder(this.bpl)
+            
             const hipInvers = mat4.invert(mat4.create(), hipMatrix)
             mat4.mul(shoulderMatrix, hipInvers, shoulderMatrix)
+            
             const shoulderQuat = quat2.fromMat4(quat2.create(), shoulderMatrix)
             const shoulderDelta = quaternion_slerp(REST_QUAT, shoulderQuat, 0.25)
             mat4.fromQuat2(shoulderMatrix, shoulderDelta)
@@ -291,9 +293,17 @@ export class UpdateManager {
             setPose("spine04", shoulderMatrix)
             setPose("spine05", shoulderMatrix)
 
-            const leftUpperLeft = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
-            mat4.mul(leftUpperLeft, hipInvers, leftUpperLeft)
-            setPose("upperleg01.L", leftUpperLeft)
+            //
+            const leftUpperLeg = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
+            const cpy = mat4.clone(leftUpperLeg)
+            mat4.mul(leftUpperLeg, hipInvers, leftUpperLeg)
+            setPose("upperleg01.L", leftUpperLeg)
+
+            const leftLowerLeg = this.bpc.getLeftLowerLeg(this.bpl)
+            const inv = mat4.invert(mat4.create(), cpy)
+            mat4.mul(leftLowerLeg, inv, leftLowerLeg)
+            setPose("lowerleg01.L", leftLowerLeg)
+
 
 /*
             const rootPoseGlobal = mat4.fromYRotation(mat4.create(), this.bpc.getRootY(this.bpl))

@@ -68,7 +68,7 @@ export class BlazePoseLandmarks {
     }
     getVec(index: Blaze) {
         const i = index * 3
-        return vec3.fromValues(this.data[i], this.data[i + 1], -this.data[i + 2])
+        return vec3.fromValues(this.data[i], this.data[i + 1], this.data[i + 2])
     }
     getVec0(index: Blaze) {
         const i = index * 3
@@ -123,7 +123,7 @@ export class BlazePoseConverter {
         return m
     }
 
-    getRoot(pose: BlazePoseLandmarks): mat4 {
+    getHip(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
         const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
@@ -146,7 +146,7 @@ export class BlazePoseConverter {
      * Interpolates the missing y-rotation of the blaze model of the upper leg by using the upper legs.
      */
     getHipWithAdjustment(pose: BlazePoseLandmarks): mat4 {
-        let rootPoseGlobal = this.getRoot(pose)
+        let rootPoseGlobal = this.getHip(pose)
 
         const pose2 = pose.clone()
         const inv = mat4.create()
@@ -232,16 +232,54 @@ export class BlazePoseConverter {
             a = adjustment1 = rad2deg(Math.atan2(x, z))
         }
 
-        const debug = document.getElementById("debug")
-        if (debug != null) {
-            debug.innerHTML = `x: ${x.toFixed(4)}, y: ${y.toFixed(4)}, z: ${z.toFixed(4)}, a0: ${adjustment0}, a1: ${adjustment1}`
-        }
+        // const debug = document.getElementById("debug")
+        // if (debug != null) {
+        //     debug.innerHTML = `x: ${x.toFixed(4)}, y: ${y.toFixed(4)}, z: ${z.toFixed(4)}, a0: ${adjustment0}, a1: ${adjustment1}`
+        // }
 
         // const rot = mat4.fromYRotation(mat4.create(), deg2rad(a))
         // mat4.mul(leftUpperLeg, leftUpperLeg, rot)
         mat4.rotateY(leftUpperLeg, leftUpperLeg, deg2rad(a))
 
         return leftUpperLeg
+    }
+
+    getLeftLowerLeg(pose: BlazePoseLandmarks) {
+
+        // const hipLeft = pose.getVec(Blaze.LEFT_HIP)
+        // const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
+        // const ankleLeft = pose.getVec(Blaze.LEFT_ANKLE)
+     
+        // const d0 = vec3.sub(vec3.create(), hipLeft, kneeLeft)
+        // const d1 = vec3.sub(vec3.create(), ankleLeft, kneeLeft)
+
+        // const m = matFromDirection(d1, d0)
+        // mat4.rotateX(m, m, deg2rad(90))
+        // mat4.rotateZ(m, m, deg2rad(180))
+
+        // return m
+
+        let leftUpperLeg = this.getLeftUpperLegWithAdjustment(pose)
+
+        const pose2 = pose.clone()
+        const inv = mat4.create()
+        mat4.invert(inv, leftUpperLeg)
+        pose2.mul(inv)
+
+        // const hipLeft = pose.getVec(Blaze.LEFT_HIP)
+        const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
+        const ankleLeft = pose.getVec(Blaze.LEFT_ANKLE)
+     
+        // const d0 = vec3.sub(vec3.create(), hipLeft, kneeLeft)
+        const d1 = vec3.sub(vec3.create(), ankleLeft, kneeLeft)
+
+        const m = matFromDirection(d1)
+        mat4.rotateX(m, m, deg2rad(90))
+        // mat4.rotateZ(m, m, deg2rad(180))
+
+        return m
+
+
     }
 }
 

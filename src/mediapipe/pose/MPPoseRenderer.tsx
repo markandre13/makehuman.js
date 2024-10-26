@@ -64,12 +64,18 @@ export class MPPoseRenderer extends RenderHandler {
         const modelViewMatrix = mat4.create()
         // const modelViewMatrix = createModelViewMatrix(view.ctx.rotateX, view.ctx.rotateY)
 
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -3]) // obj file face centered
+        const landmarks = simulatedModel.simulatedOnOff.value ? simulatedModel.pose.data : app.frontend._poseLandmarks
+        this.bpl.data = landmarks!!
+
+        const v = this.bpl.getVec(Blaze.LEFT_HIP)
+        // vec3.scale(v, v, -1)
+        vec3.add(v, v, [0, 5, -10])
+        // const v = vec3.fromValues(0, 0, -15)
+
+        mat4.translate(modelViewMatrix, modelViewMatrix, v) // obj file face centered
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-
-        const landmarks = simulatedModel.simulatedOnOff.value ? simulatedModel.pose.data : app.frontend._poseLandmarks
 
         if (this.mesh0 === undefined) {
             this.mesh0 = new RenderMesh(gl, landmarks, this.line0, undefined, undefined, false)
@@ -90,7 +96,7 @@ export class MPPoseRenderer extends RenderHandler {
         programRGBA.setColor([1, 1, 1, 1])
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
-    
+
         //
         // to skeleton
         //
@@ -100,6 +106,8 @@ export class MPPoseRenderer extends RenderHandler {
         const shoulderRight = this.bpl.getVec0(Blaze.RIGHT_SHOULDER)
         const hipLeft = this.bpl.getVec0(Blaze.LEFT_HIP)
         const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
+        const kneeLeft = this.bpl.getVec0(Blaze.LEFT_KNEE)
+        const kneeRight = this.bpl.getVec0(Blaze.RIGHT_KNEE)
 
         programColor.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
@@ -119,15 +127,22 @@ export class MPPoseRenderer extends RenderHandler {
         programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
         this.arrowMesh.draw(view.programColor)
 
-        // UPPER LEG
+        // LEFT UPPER LEG
         const leftUpperLegGlobal = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
         const leftUpperLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), hipLeft), leftUpperLegGlobal)
 
         programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, leftUpperLeg))
         this.arrowMesh.draw(view.programColor)
 
+        // LEFT LOWER LEG
+        const leftLowerLegGlobal = this.bpc.getLeftLowerLeg(this.bpl)
+        const leftLowerLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), kneeLeft), leftLowerLegGlobal)
+
+        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, leftLowerLeg))
+        this.arrowMesh.draw(view.programColor)
+
         // DRAW SIDE VIEW
-        
+
         // const inv2 = mat4.invert(mat4.create(), hipMatrix)
         // const rot = mat4.fromYRotation(mat4.create(), deg2rad(90))
         // mat4.mul(inv2, rot, inv2)

@@ -10,6 +10,7 @@ import { euler_matrix } from "lib/euler_matrix"
 import { Blaze, BlazePoseLandmarks } from "./BlazePoseConverter"
 import { deg2rad } from "lib/calculateNormals"
 import { ModelOptions } from "toad.js/model/Model"
+import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 
 // function PoseTab(props: { app: Application }) {
 //     return (
@@ -97,7 +98,7 @@ class DrawStack {
  */
 class SimulatedModel {
     pose = new BlazePoseLandmarks()
-    simulatedOnOff = new BooleanModel(true, { label: "Simulated Model" })
+    simulatedOnOff = new BooleanModel(false, { label: "Simulated Model" })
     root = new XYZModel({ label: "root" })
     shoulder = new XYZModel({ label: "shoulder" })
     leftLeg = new XYZModel({ label: "leftLeg" })
@@ -163,9 +164,9 @@ class SimulatedModel {
             stack.set(this.pose, Blaze.LEFT_ANKLE)
             // to foot
             stack.mul(this.leftFoot.toMatrix())
-            stack.translate(0, -0.05, -0.025)
+            stack.translate(0, -0.05, 0.025)
             stack.set(this.pose, Blaze.LEFT_HEEL)
-            stack.translate(0, 0, 0.15)
+            stack.translate(0, 0, -0.15)
             stack.set(this.pose, Blaze.LEFT_FOOT_INDEX)
         })
 
@@ -183,9 +184,9 @@ class SimulatedModel {
             stack.set(this.pose, Blaze.RIGHT_ANKLE)
             // to foot
             stack.mul(this.rightFoot.toMatrix())
-            stack.translate(0, -0.05, -0.025)
+            stack.translate(0, -0.05, 0.025)
             stack.set(this.pose, Blaze.RIGHT_HEEL)
-            stack.translate(0, 0, 0.15)
+            stack.translate(0, 0, -0.15)
             stack.set(this.pose, Blaze.RIGHT_FOOT_INDEX)
         })
     }
@@ -199,7 +200,8 @@ export function PoseTab(props: { app: Application }) {
             label="Pose"
             value={TAB.POSE}
             visibilityChange={
-                setRenderer(props.app, new MPPoseRenderer())
+                setRenderer(props.app, new FreeMoCapRenderer())
+                // setRenderer(props.app, new MPPoseRenderer())
                 // setRenderer(props.app, new RenderHuman())
             }
         >
