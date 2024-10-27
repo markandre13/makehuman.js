@@ -42,6 +42,10 @@ export enum Blaze {
     RIGHT_FOOT_INDEX, // 32
 }
 
+function vecFromTo(from: vec3, to: vec3) {
+    return vec3.sub(vec3.create(), to, from)
+}
+
 /**
  * Wrapper for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
  */
@@ -174,15 +178,20 @@ export class BlazePoseConverter {
         return rootPoseGlobal
     }
 
+    /**
+     * Get matrix for left upper leg without adjustment for y-rotation.
+     * 
+     * y-rotation will need to be interpolated from lower leg or foot
+     */
     getLeftUpperLeg(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
 
-        const t = vec3.sub(vec3.create(), hipLeft, hipRight)
+        const hipDirection = vecFromTo(hipRight, hipLeft)
 
         const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
-        const d = vec3.sub(vec3.create(), hipLeft, kneeLeft)
-        const m = matFromDirection(d, t)
+        const upperLegDirection = vecFromTo(kneeLeft, hipLeft)
+        const m = matFromDirection(upperLegDirection, hipDirection)
         mat4.rotateY(m, m, deg2rad(90))
         mat4.rotateZ(m, m, deg2rad(90))
 
@@ -196,7 +205,10 @@ export class BlazePoseConverter {
      *
      * Otherwise, we can interpolate from the foot, past and future knee bends.
      */
-    // FIXME: this works with the simulated blaze model, but not with real data...
+
+    // FIXME: IT'S UNSTABLE
+    // FOR DEBUGGING I NEED TO BE ABLE NAVIGATE THE TIMELINE
+
     getLeftUpperLegWithAdjustment(pose: BlazePoseLandmarks) {
         let leftUpperLeg = this.getLeftUpperLeg(pose)
 
@@ -245,41 +257,29 @@ export class BlazePoseConverter {
     }
 
     getLeftLowerLeg(pose: BlazePoseLandmarks) {
-
-        // const hipLeft = pose.getVec(Blaze.LEFT_HIP)
-        // const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
-        // const ankleLeft = pose.getVec(Blaze.LEFT_ANKLE)
-     
-        // const d0 = vec3.sub(vec3.create(), hipLeft, kneeLeft)
-        // const d1 = vec3.sub(vec3.create(), ankleLeft, kneeLeft)
-
-        // const m = matFromDirection(d1, d0)
-        // mat4.rotateX(m, m, deg2rad(90))
-        // mat4.rotateZ(m, m, deg2rad(180))
-
-        // return m
-
-        let leftUpperLeg = this.getLeftUpperLegWithAdjustment(pose)
+        // calculating the lower leg from upper and lower leg is unstable
+        // hence we take the upper leg and add knee rotation around then x-axis
+        // let leftUpperLeg = this.getLeftUpperLegWithAdjustment(pose)
+        let leftUpperLeg = this.getLeftUpperLeg(pose)
 
         const pose2 = pose.clone()
         const inv = mat4.create()
         mat4.invert(inv, leftUpperLeg)
         pose2.mul(inv)
 
-        // const hipLeft = pose.getVec(Blaze.LEFT_HIP)
-        const kneeLeft = pose.getVec(Blaze.LEFT_KNEE)
-        const ankleLeft = pose.getVec(Blaze.LEFT_ANKLE)
-     
-        // const d0 = vec3.sub(vec3.create(), hipLeft, kneeLeft)
-        const d1 = vec3.sub(vec3.create(), ankleLeft, kneeLeft)
+        const knee = pose2.getVec(Blaze.LEFT_KNEE)
+        const ankle = pose2.getVec(Blaze.LEFT_ANKLE)
+        const a = vec3.sub(vec3.create(), ankle, knee)
 
-        const m = matFromDirection(d1)
-        mat4.rotateX(m, m, deg2rad(90))
-        // mat4.rotateZ(m, m, deg2rad(180))
+        const debug = document.getElementById("debug")
+        if (debug != null) {
+            const v = a
+            debug.innerHTML = `A ${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)}`
+        }
 
+        const m = leftUpperLeg
+        // mat4.rotateX(m, m, deg2rad(45))
         return m
-
-
     }
 }
 

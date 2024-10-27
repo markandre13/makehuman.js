@@ -59,7 +59,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         const normalMatrix = createNormalMatrix(modelViewMatrix)
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        this.debug()
+        // this.debug()
 
         // adjust freemocap data to opengl screen space
         const s = 0.01
@@ -85,6 +85,33 @@ export class FreeMoCapRenderer extends RenderHandler {
         // draw blaze
         programRGBA.setColor([1, 1, 1, 1])
         this.mesh0.bind(programRGBA)
+        gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
+
+        programRGBA.setColor([1, 0.5, 0, 1])
+        const pose2 = this.bpl.clone()
+        // center pose2 at left knee
+        const d = this.bpl.getVec0(Blaze.LEFT_KNEE)
+        vec3.scale(d, d, -1)
+        const t = mat4.create()
+        mat4.translate(t, t, d)
+
+        let leftUpperLeg = this.bpc.getLeftUpperLeg(this.bpl)
+        const inv = mat4.create()
+        mat4.invert(inv, leftUpperLeg)
+        mat4.mul(t, inv, t)
+
+        pose2.mul(t)
+
+        
+        // const pose2 = this.bpl.clone()
+        // const m0 = mat4.clone(modelViewMatrix)
+        // // mat4.translate(m0, m0, kneeLeft)
+        // // pose2.mul(m0)
+
+        // pose2.mul(inv)
+
+        this.mesh0.bind(programRGBA)
+        this.mesh0.update(pose2.data)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
         // draw rotations
@@ -117,6 +144,40 @@ export class FreeMoCapRenderer extends RenderHandler {
         mat4.mul(m, m, this.bpc.getShoulder(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
+
+        // LEFT UPPER LEG
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, hipLeft)
+        mat4.mul(m, m, this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
+
+        // LEFT LOWER LEG
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, kneeLeft)
+        mat4.mul(m, m, this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
+
+        // EXPERIMENTAL ZONE
+
+        // this.mesh0.update(data)
+
+        // draw blaze
+
+        // let leftUpperLeg = this.bpc.getLeftUpperLeg(this.bpl)
+        // const pose2 = this.bpl.clone()
+        // const m0 = mat4.clone(modelViewMatrix)
+        // // mat4.translate(m0, m0, kneeLeft)
+        // // pose2.mul(m0)
+        // // const inv = mat4.create()
+        // // mat4.invert(inv, leftUpperLeg)
+        // // pose2.mul(inv)
+
+        // programRGBA.setColor([1, 0.5, 0, 1])
+        // this.mesh0.update(pose2.data)
+        // this.mesh0.bind(programRGBA)
+        // gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
     }
 
     debug() {

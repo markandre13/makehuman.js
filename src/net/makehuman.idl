@@ -33,6 +33,11 @@ interface Frontend {
         in unsigned long long timestamp_ms);
 };
 
+struct Range {
+    unsigned long long start_ms;
+    unsigned long long end_ms;
+};
+
 // backend is called by the frontend
 interface Backend {
     // called by the frontend to register itself to receive data
@@ -45,8 +50,11 @@ interface Backend {
     void save(in string filename, in string data);
     string load(in string filename);
 
-    // quick hack to save video
+    // quick hack to save/play video
     void record(in string filename);
-    void play(in string filename);
+    Range play(in string filename);
     void stop();
+
+    void pause();
+    void seek(in unsigned long long timestamp_ms);
 };
