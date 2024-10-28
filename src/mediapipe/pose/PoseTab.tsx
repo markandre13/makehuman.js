@@ -207,8 +207,9 @@ export function PoseTab(props: { app: Application }) {
         >
             <h3>Mediapipe Pose</h3>
             <div>
-                <Select model={delay} />
-                {/* <Button
+                {/* <Select model={delay} />
+
+                <Button
                 action={async () => {
                     if (delay.value !== 0) {
                         console.log(`sleep ${delay.value}s`)
@@ -219,8 +220,22 @@ export function PoseTab(props: { app: Application }) {
             >
                 ●
             </Button> */}
-                <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button>
                 <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
+                {/* <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button> */}
+                <Button action={() => props.app.frontend.backend?.play("mediapipe_body_3d_xyz.csv")}>▶︎</Button>
+                <Button action={() => props.app.frontend.backend?.pause()}>❙ ❙</Button>
+                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS - 30n)}>
+                    ◀︎◀︎
+                </Button>
+                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS - 1n)}>
+                    ❙◀︎
+                </Button>
+                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS + 1n)}>
+                    ▶︎❙
+                </Button>
+                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS + 30n)}>
+                    ▶︎▶︎
+                </Button>
             </div>
             <h3>Simulated Pose</h3>
             <Form>
@@ -254,7 +269,7 @@ export function PoseTab(props: { app: Application }) {
                                 schedule()
                             }, 1000)
                         } else {
-                            console.log(props.app.frontend._poseLandmarks?.toString())                           
+                            console.log(props.app.frontend._poseLandmarks?.toString())
                         }
                     }
                     schedule()
