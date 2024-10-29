@@ -65,10 +65,16 @@ export class FreeMoCapRenderer extends RenderHandler {
         const s = 0.01
         const landmarks = app.frontend._poseLandmarks
         const data = new Float32Array(landmarks)
+
+        // move blaze skeleton to origin to ease debugging
+        this.bpl.data = landmarks
+        const root = vec3.add(vec3.create(), this.bpl.getVec(Blaze.LEFT_HIP), this.bpl.getVec(Blaze.RIGHT_HIP))
+        vec3.scale(root, root, 0.5)
+
         for (let i = 0; i < data.length; i += 3) {
-            const x = data[i]
-            const y = data[i + 1]
-            const z = data[i + 2]
+            const x = data[i] - root[0]
+            const y = data[i + 1] - root[1]
+            const z = data[i + 2] - root[2]
 
             data[i] = x * s
             data[i + 1] = z * s
