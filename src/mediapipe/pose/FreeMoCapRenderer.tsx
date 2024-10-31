@@ -11,6 +11,9 @@ import {
     prepareCanvas,
     prepareViewport,
 } from "render/util"
+import { deg2rad, rad2deg } from "lib/calculateNormals"
+
+let a = 0
 
 export class FreeMoCapRenderer extends RenderHandler {
     mesh0?: RenderMesh
@@ -93,28 +96,19 @@ export class FreeMoCapRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
+        // draw blaze model from which we calculate additional rotations
+        // THERE'S JUMP FROM 160 to 161... looks like when upper & lower leg are almost in a straight line
         programRGBA.setColor([1, 0.5, 0, 1])
         const pose2 = this.bpl.clone()
-        // center pose2 at left knee
-        const d = this.bpl.getVec0(Blaze.LEFT_KNEE)
-        vec3.scale(d, d, -1)
-        const t = mat4.create()
-        mat4.translate(t, t, d)
 
         let leftUpperLeg = this.bpc.getLeftUpperLeg(this.bpl)
         const inv = mat4.create()
         mat4.invert(inv, leftUpperLeg)
-        mat4.mul(t, inv, t)
 
+        const t = mat4.create()
+        // mat4.rotateX(t, t, deg2rad(-90))
+        mat4.mul(t, t, inv)
         pose2.mul(t)
-
-        
-        // const pose2 = this.bpl.clone()
-        // const m0 = mat4.clone(modelViewMatrix)
-        // // mat4.translate(m0, m0, kneeLeft)
-        // // pose2.mul(m0)
-
-        // pose2.mul(inv)
 
         this.mesh0.bind(programRGBA)
         this.mesh0.update(pose2.data)
@@ -161,7 +155,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         // LEFT LOWER LEG
         mat4.identity(m)
         mat4.translate(m, modelViewMatrix, kneeLeft)
-        mat4.mul(m, m, this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
+        mat4.mul(m, m, this.bpc.getLeftLowerLeg(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
 

@@ -11,6 +11,8 @@ import { Blaze, BlazePoseLandmarks } from "./BlazePoseConverter"
 import { deg2rad } from "lib/calculateNormals"
 import { ModelOptions } from "toad.js/model/Model"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
+import { Backend } from "net/makehuman"
+import { sleep } from "lib/sleep"
 
 // function PoseTab(props: { app: Application }) {
 //     return (
@@ -194,6 +196,43 @@ class SimulatedModel {
 
 export const simulatedModel = new SimulatedModel()
 
+export function TransportBar(props: { app: Application }) {
+    return (
+        <>
+            {/* <Select model={delay} />
+            <Button
+                action={async () => {
+                    if (delay.value !== 0) {
+                        console.log(`sleep ${delay.value}s`)
+                        await sleep(delay.value * 1000)
+                    }
+                    props.app.frontend.backend?.record("video.mp4")
+                }}
+            >
+                ●
+            </Button> */}
+            <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
+            {/* <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button> */}
+            <Button action={() => props.app.frontend.backend?.play("mediapipe_body_3d_xyz.csv")}>▶︎</Button>
+            <Button action={() => props.app.frontend.backend?.pause()}>❙ ❙</Button>
+            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value - 30n)}>
+                ◀︎◀︎
+            </Button>
+            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value - 1n)}>
+                ❙◀︎
+            </Button>
+            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value + 1n)}>
+                ▶︎❙
+            </Button>
+            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value + 30n)}>
+                ▶︎▶︎
+            </Button>
+            <TextField model={props.app.frontend._poseLandmarksTS as any}/>
+        </>
+    )
+    // 
+}
+
 export function PoseTab(props: { app: Application }) {
     return (
         <Tab
@@ -207,35 +246,7 @@ export function PoseTab(props: { app: Application }) {
         >
             <h3>Mediapipe Pose</h3>
             <div>
-                {/* <Select model={delay} />
-
-                <Button
-                action={async () => {
-                    if (delay.value !== 0) {
-                        console.log(`sleep ${delay.value}s`)
-                        await sleep(delay.value * 1000)
-                    }
-                    props.app.frontend.backend?.record("video.mp4")
-                }}
-            >
-                ●
-            </Button> */}
-                <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
-                {/* <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button> */}
-                <Button action={() => props.app.frontend.backend?.play("mediapipe_body_3d_xyz.csv")}>▶︎</Button>
-                <Button action={() => props.app.frontend.backend?.pause()}>❙ ❙</Button>
-                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS - 30n)}>
-                    ◀︎◀︎
-                </Button>
-                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS - 1n)}>
-                    ❙◀︎
-                </Button>
-                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS + 1n)}>
-                    ▶︎❙
-                </Button>
-                <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS + 30n)}>
-                    ▶︎▶︎
-                </Button>
+                <TransportBar app={props.app} />
             </div>
             <h3>Simulated Pose</h3>
             <Form>

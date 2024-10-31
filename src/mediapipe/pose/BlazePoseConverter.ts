@@ -107,6 +107,8 @@ let prev = 0,
  * Convert Mediapipe's Pose Landmark Model (BlazePose GHUM 3D) to Makehuman Pose
  */
 export class BlazePoseConverter {
+    leftLowerLeg?: mat4 
+
     getShoulder(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)
@@ -213,73 +215,105 @@ export class BlazePoseConverter {
         let leftUpperLeg = this.getLeftUpperLeg(pose)
 
         const pose2 = pose.clone()
-        const inv = mat4.create()
-        mat4.invert(inv, leftUpperLeg)
-        pose2.mul(inv)
+        pose2.mul(mat4.invert(mat4.create(), leftUpperLeg))
 
         // X & Z of lower leg
+        const hipLeft = pose2.getVec(Blaze.LEFT_HIP)
         const kneeLeft = pose2.getVec(Blaze.LEFT_KNEE)
         const ankleLeft = pose2.getVec(Blaze.LEFT_ANKLE)
 
-        const x = ankleLeft[0] - kneeLeft[0]
-        const y = ankleLeft[1] - kneeLeft[1]
-        const z = ankleLeft[2] - kneeLeft[2]
+        const d0 = vec3.sub(vec3.create(), kneeLeft, hipLeft)
+        const d1 = vec3.sub(vec3.create(), ankleLeft, kneeLeft)
+
+        const x = d1[0], y = d1[1], z = d1[2]
+
+        function vec2str(v: vec3) {
+            return `(${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)})`
+        }
+
+        // left leg movement: frame 949 to 
+        // frame 2273 doesn't work
 
         let a = 0, adjustment0 = 0, adjustment1 = 0
-        if (!isZero(z)) {
-            if (z < 0) {
-                a = adjustment0 = rad2deg(Math.atan2(x, z) - Math.PI)
-            } else {
-                a = adjustment0 = rad2deg(Math.atan2(-x, -z) - Math.PI)
-            }
-            // if (a > -225 && a > -270) {
-            //     a += 180
-            // }
+        // TODO: instead of looking on z, we should look at the radius to be independent of lengths
+        // TODO: jumping from one approach to another causes jumps, try to transition
+        //       or interpolate from beginning to end when leg is too straight to calculate y-rotation
+        // NOTE: FRAME 1490 IS A MESS when "if (Math.abs(z) > 0.1) {" INSTEAD OF "if (Math.abs(z) > 0.2) {""
+        if (Math.abs(z) > 0.2) {
+                a = rad2deg(Math.atan2(x, z) - Math.PI)
+                // make 'a' easier to reason about
+                if (a<360) {
+                    a += 360
+                }
+                // around frame 537, a's where y-axis is flipped: yes: 157 167 170 178 183 184 
+                //
+                //           0
+                //
+                //
+                // 270               90
+                //
+                //    225         134
+                //          180
+                if (90 < a && a < 270) {
+                    a -= 180
+                }
+                adjustment0 = a
         } else {
-            const leftHeel = pose2.getVec(Blaze.LEFT_HEEL)
+            const leftHeel = pose2.getVec(Blaze.LEFT_KNEE)
             const leftFootIndex = pose2.getVec(Blaze.LEFT_FOOT_INDEX)
             const x = leftFootIndex[0] - leftHeel[0]
             const y = leftFootIndex[1] - leftHeel[1]
             const z = leftFootIndex[2] - leftHeel[2]
-            a = adjustment1 = rad2deg(Math.atan2(x, z))
+            a = adjustment1 = rad2deg(Math.atan2(x, z)  )
         }
 
-        // const debug = document.getElementById("debug")
-        // if (debug != null) {
-        //     debug.innerHTML = `x: ${x.toFixed(4)}, y: ${y.toFixed(4)}, z: ${z.toFixed(4)}, a0: ${adjustment0}, a1: ${adjustment1}`
-        // }
+
+        const debug = document.getElementById("debug")
+        if (debug != null) {
+            debug.innerHTML = `d0: ${vec2str(d0)}<br/>d1: ${vec2str(d1)}<br/>a0: ${adjustment0}<br/>a1: ${adjustment1}`
+        }
 
         // const rot = mat4.fromYRotation(mat4.create(), deg2rad(a))
         // mat4.mul(leftUpperLeg, leftUpperLeg, rot)
         mat4.rotateY(leftUpperLeg, leftUpperLeg, deg2rad(a))
 
+        // BTW: we have leftUpperLeg and pose2 ready be used to calculate the knee bend
+
+        this.leftLowerLeg = mat4.clone(leftUpperLeg)
+
+        a = rad2deg(Math.atan2(z, y) - Math.PI)
+        // mat4.rotateX(this.leftLowerLeg, this.leftLowerLeg, deg2rad(a))
+        mat4.rotateX(this.leftLowerLeg, this.leftLowerLeg, deg2rad(a))
+
+
         return leftUpperLeg
     }
 
-    getLeftLowerLeg(pose: BlazePoseLandmarks) {
-        // calculating the lower leg from upper and lower leg is unstable
-        // hence we take the upper leg and add knee rotation around then x-axis
-        // let leftUpperLeg = this.getLeftUpperLegWithAdjustment(pose)
-        let leftUpperLeg = this.getLeftUpperLeg(pose)
+    getLeftLowerLeg(pose: BlazePoseLandmarks): mat4 {
+        return this.leftLowerLeg!
+        // // calculating the lower leg from upper and lower leg is unstable
+        // // hence we take the upper leg and add knee rotation around then x-axis
+        // // let leftUpperLeg = this.getLeftUpperLegWithAdjustment(pose)
+        // let leftUpperLeg = this.getLeftUpperLeg(pose)
 
-        const pose2 = pose.clone()
-        const inv = mat4.create()
-        mat4.invert(inv, leftUpperLeg)
-        pose2.mul(inv)
+        // const pose2 = pose.clone()
+        // const inv = mat4.create()
+        // mat4.invert(inv, leftUpperLeg)
+        // pose2.mul(inv)
 
-        const knee = pose2.getVec(Blaze.LEFT_KNEE)
-        const ankle = pose2.getVec(Blaze.LEFT_ANKLE)
-        const a = vec3.sub(vec3.create(), ankle, knee)
+        // const knee = pose2.getVec(Blaze.LEFT_KNEE)
+        // const ankle = pose2.getVec(Blaze.LEFT_ANKLE)
+        // const a = vec3.sub(vec3.create(), ankle, knee)
 
-        const debug = document.getElementById("debug")
-        if (debug != null) {
-            const v = a
-            debug.innerHTML = `A ${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)}`
-        }
+        // const debug = document.getElementById("debug")
+        // if (debug != null) {
+        //     const v = a
+        //     debug.innerHTML = `A ${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)}`
+        // }
 
-        const m = leftUpperLeg
-        // mat4.rotateX(m, m, deg2rad(45))
-        return m
+        // const m = leftUpperLeg
+        // // mat4.rotateX(m, m, deg2rad(45))
+        // return m
     }
 }
 

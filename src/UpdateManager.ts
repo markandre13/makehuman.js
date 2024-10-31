@@ -223,9 +223,9 @@ export class UpdateManager {
 
         if (
             this.app.frontend._poseLandmarks !== undefined &&
-            this._poseLandmarksTS != this.app.frontend._poseLandmarksTS
+            this._poseLandmarksTS != this.app.frontend._poseLandmarksTS.value
         ) {
-            this._poseLandmarksTS = this.app.frontend._poseLandmarksTS
+            this._poseLandmarksTS = this.app.frontend._poseLandmarksTS.value
             skeletonChanged = true
 
             // OpenGL coordinate system is a right hand coordinate system with Z
