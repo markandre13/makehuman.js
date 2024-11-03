@@ -98,7 +98,7 @@ class DrawStack {
 /**
  * Create BlazePoseLandmarks for testing
  */
-class SimulatedModel {
+export class SimulatedModel {
     pose = new BlazePoseLandmarks()
     simulatedOnOff = new BooleanModel(false, { label: "Simulated Model" })
     root = new XYZModel({ label: "root" })
