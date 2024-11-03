@@ -1,7 +1,10 @@
 import { mat4, vec3 } from "gl-matrix"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { euler_matrix } from "lib/euler_matrix"
+import { easeMedianAngle, medianAngle } from "lib/medianAngle"
 import { isZero } from "mesh/HumanMesh"
+
+let dynamic = 0
 
 /**
  * Indices for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
@@ -107,7 +110,7 @@ let prev = 0,
  * Convert Mediapipe's Pose Landmark Model (BlazePose GHUM 3D) to Makehuman Pose
  */
 export class BlazePoseConverter {
-    leftLowerLeg?: mat4 
+    leftLowerLeg?: mat4
 
     getShoulder(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
@@ -182,7 +185,7 @@ export class BlazePoseConverter {
 
     /**
      * Get matrix for left upper leg without adjustment for y-rotation.
-     * 
+     *
      * y-rotation will need to be interpolated from lower leg or foot
      */
     getLeftUpperLeg(pose: BlazePoseLandmarks): mat4 {
@@ -225,95 +228,103 @@ export class BlazePoseConverter {
         const d0 = vec3.sub(vec3.create(), kneeLeft, hipLeft)
         const d1 = vec3.sub(vec3.create(), ankleLeft, kneeLeft)
 
-        const x = d1[0], y = d1[1], z = d1[2]
+        const x = d1[0],
+            y = d1[1],
+            z = d1[2]
 
         function vec2str(v: vec3) {
             return `(${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)})`
         }
 
-        // left leg movement: frame 949 to 
+        // left leg movement: frame 949 to
         // frame 2273 doesn't work
 
-        let a = 0, adjustment0 = 0, adjustment1 = 0
-        // TODO: instead of looking on z, we should look at the radius to be independent of lengths
-        // TODO: jumping from one approach to another causes jumps, try to transition
-        //       or interpolate from beginning to end when leg is too straight to calculate y-rotation
+        let adjustmentByLowerLeg = 0,
+            adjustmentByFoot = 0
+        // TODO
+        // [ ] instead of looking on z, we should look at the radius to be independent of lengths
+        // [ ] jumping from one approach to another causes jumps, try to transition
+        //     or interpolate from beginning to end when leg is too straight to calculate y-rotation
+        //     it might be still wrong but will look better. and at the moment that's all i'm after.
+        // [ ] once the above works, try to map on makehuman skeleton
+        // [ ] then the foot (should be easy as it has 3 points)
+        // [ ] only then the other leg
+        // [ ] refactor to share code between left and right leg
+        // [ ] do the arm
+        // [ ] try to share arm and leg code
+        // [ ] MH.JS' internal stack should map chordata & freemocap to the same rest position and
+        //     from there apply to the MH skeleton. this way the code becomes cleaner and we could
+        //     even try to interpolate between the two
         // NOTE: FRAME 1490 IS A MESS when "if (Math.abs(z) > 0.1) {" INSTEAD OF "if (Math.abs(z) > 0.2) {""
-        if (Math.abs(z) > 0.2) {
-                a = rad2deg(Math.atan2(x, z) - Math.PI)
-                // make 'a' easier to reason about
-                if (a<360) {
-                    a += 360
-                }
-                // around frame 537, a's where y-axis is flipped: yes: 157 167 170 178 183 184 
-                //
-                //           0
-                //
-                //
-                // 270               90
-                //
-                //    225         134
-                //          180
-                if (90 < a && a < 270) {
-                    a -= 180
-                }
-                adjustment0 = a
-        } else {
-            const leftHeel = pose2.getVec(Blaze.LEFT_KNEE)
+        // NOTE: 1492 to 1493 has a jump
+        // 1492
+        // d0: (0.0000, -4.2358, 0.0000)
+        // d1: (-0.4994, -3.5933, -0.0252)
+        // a0: 87.11481047318046
+        // a1: 6.757578019024761
+        // 1493
+        // d0: (0.0000, -4.2342, 0.0000)
+        // d1: (-0.5267, -3.5832, 0.0071) // z flips
+        // a0: -89.2234629711096
+        // a1: 6.428447043278795
+
+        const kneeAngle = rad2deg(vec3.angle(d0, d1))
+        {
+            // if (z < 0) {
+            //     adjustment0 = rad2deg(Math.atan2(x, z) - Math.PI)
+            // } else {
+            //     adjustment0 = rad2deg(Math.atan2(x, -z) - Math.PI)
+            // }
+
+            adjustmentByLowerLeg = rad2deg(Math.atan2(x, z) - Math.PI)
+            // make 'a' easier to reason about
+            if (adjustmentByLowerLeg < 0) {
+                adjustmentByLowerLeg += 360
+            }
+            // around frame 537, a's where y-axis is flipped: yes: 157 167 170 178 183 184
+            //
+            //           0
+            //
+            //
+            // 270               90
+            //
+            //    225         134
+            //          180
+            //
+            // i'm not sure why this flips at all. atan2 should be 360 degree. is it because of the inverted pose2?
+            if (90 < adjustmentByLowerLeg && adjustmentByLowerLeg < 270) {
+                adjustmentByLowerLeg -= 180
+            }
+        }
+        {
+            // KNEE TO FOOT INDEX IS A BIT HACKY (INSTEAD OF HEEL TO INDEX) BUT AT THE MOMENT BETTER
+            const leftHeel = pose2.getVec(Blaze.LEFT_ANKLE)
             const leftFootIndex = pose2.getVec(Blaze.LEFT_FOOT_INDEX)
             const x = leftFootIndex[0] - leftHeel[0]
             const y = leftFootIndex[1] - leftHeel[1]
             const z = leftFootIndex[2] - leftHeel[2]
-            a = adjustment1 = rad2deg(Math.atan2(x, z)  )
+            adjustmentByFoot = rad2deg(Math.atan2(x, z))
         }
 
+        const adjustment = easeMedianAngle(kneeAngle, 10, 25, adjustmentByFoot, adjustmentByLowerLeg)
 
         const debug = document.getElementById("debug")
         if (debug != null) {
-            debug.innerHTML = `d0: ${vec2str(d0)}<br/>d1: ${vec2str(d1)}<br/>a0: ${adjustment0}<br/>a1: ${adjustment1}`
+            debug.innerHTML = `d0: ${vec2str(d0)}<br/>d1: ${vec2str(
+                d1
+            )}<br/>a: ${adjustment}<br/>a0: ${adjustmentByLowerLeg}<br/>a1: ${adjustmentByFoot}<br/>kneeAngle: ${kneeAngle}`
         }
 
-        // const rot = mat4.fromYRotation(mat4.create(), deg2rad(a))
-        // mat4.mul(leftUpperLeg, leftUpperLeg, rot)
-        mat4.rotateY(leftUpperLeg, leftUpperLeg, deg2rad(a))
-
-        // BTW: we have leftUpperLeg and pose2 ready be used to calculate the knee bend
+        mat4.rotateY(leftUpperLeg, leftUpperLeg, deg2rad(adjustment))
 
         this.leftLowerLeg = mat4.clone(leftUpperLeg)
-
-        a = rad2deg(Math.atan2(z, y) - Math.PI)
-        // mat4.rotateX(this.leftLowerLeg, this.leftLowerLeg, deg2rad(a))
-        mat4.rotateX(this.leftLowerLeg, this.leftLowerLeg, deg2rad(a))
-
+        mat4.rotateX(this.leftLowerLeg, this.leftLowerLeg, deg2rad(kneeAngle))
 
         return leftUpperLeg
     }
 
     getLeftLowerLeg(pose: BlazePoseLandmarks): mat4 {
         return this.leftLowerLeg!
-        // // calculating the lower leg from upper and lower leg is unstable
-        // // hence we take the upper leg and add knee rotation around then x-axis
-        // // let leftUpperLeg = this.getLeftUpperLegWithAdjustment(pose)
-        // let leftUpperLeg = this.getLeftUpperLeg(pose)
-
-        // const pose2 = pose.clone()
-        // const inv = mat4.create()
-        // mat4.invert(inv, leftUpperLeg)
-        // pose2.mul(inv)
-
-        // const knee = pose2.getVec(Blaze.LEFT_KNEE)
-        // const ankle = pose2.getVec(Blaze.LEFT_ANKLE)
-        // const a = vec3.sub(vec3.create(), ankle, knee)
-
-        // const debug = document.getElementById("debug")
-        // if (debug != null) {
-        //     const v = a
-        //     debug.innerHTML = `A ${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)}`
-        // }
-
-        // const m = leftUpperLeg
-        // // mat4.rotateX(m, m, deg2rad(45))
-        // return m
     }
 }
 

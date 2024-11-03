@@ -71,8 +71,9 @@ export class FreeMoCapRenderer extends RenderHandler {
 
         // move blaze skeleton to origin to ease debugging
         this.bpl.data = landmarks
-        const root = vec3.add(vec3.create(), this.bpl.getVec(Blaze.LEFT_HIP), this.bpl.getVec(Blaze.RIGHT_HIP))
-        vec3.scale(root, root, 0.5)
+        // const root = vec3.add(vec3.create(), this.bpl.getVec(Blaze.LEFT_HIP), this.bpl.getVec(Blaze.RIGHT_HIP))
+        // vec3.scale(root, root, 0.5)
+        const root = vec3.create()
 
         for (let i = 0; i < data.length; i += 3) {
             const x = data[i] - root[0]
@@ -96,6 +97,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
+/*
         // draw blaze model from which we calculate additional rotations
         // THERE'S JUMP FROM 160 to 161... looks like when upper & lower leg are almost in a straight line
         programRGBA.setColor([1, 0.5, 0, 1])
@@ -113,7 +115,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         this.mesh0.update(pose2.data)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
-
+*/
         // draw rotations
         this.bpl.data = data
         const shoulderLeft = this.bpl.getVec0(Blaze.LEFT_SHOULDER)
@@ -122,6 +124,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
         const kneeLeft = this.bpl.getVec0(Blaze.LEFT_KNEE)
         const kneeRight = this.bpl.getVec0(Blaze.RIGHT_KNEE)
+        const ankleLeft = this.bpl.getVec0(Blaze.LEFT_ANKLE)
 
         const hipCenter = vec3.add(vec3.create(), hipLeft, hipRight)
         vec3.scale(hipCenter, hipCenter, 0.5)
@@ -146,18 +149,34 @@ export class FreeMoCapRenderer extends RenderHandler {
         this.arrowMesh.draw(view.programColor)
 
         // LEFT UPPER LEG
+        const leftUpperLegCenter = vec3.create()
+        vec3.sub(leftUpperLegCenter, kneeLeft, hipLeft)
+        vec3.scale(leftUpperLegCenter, leftUpperLegCenter, 0.5)
+        vec3.add(leftUpperLegCenter, leftUpperLegCenter, hipLeft)
+
         mat4.identity(m)
-        mat4.translate(m, modelViewMatrix, hipLeft)
+        mat4.translate(m, modelViewMatrix, leftUpperLegCenter)
         mat4.mul(m, m, this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
 
         // LEFT LOWER LEG
         mat4.identity(m)
-        mat4.translate(m, modelViewMatrix, kneeLeft)
+
+        const leftLowerLegCenter = vec3.create()
+        vec3.sub(leftLowerLegCenter, ankleLeft, kneeLeft)
+        vec3.scale(leftLowerLegCenter, leftLowerLegCenter, 0.5)
+        vec3.add(leftLowerLegCenter, leftLowerLegCenter, kneeLeft)
+
+        mat4.translate(m, modelViewMatrix, leftLowerLegCenter)
         mat4.mul(m, m, this.bpc.getLeftLowerLeg(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
+
+        // * tracking with inert motion sensors starts with rotations.
+        // * with video, we start with positions and the angle might not be accurate.
+        //   i might be that using inverse kinematics along the process might be a
+        //   better approach...
 
         // EXPERIMENTAL ZONE
 

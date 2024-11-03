@@ -21,6 +21,8 @@ Chordata Motion
   - [Pose Calibration Implementation](#pose-calibration-implementation)
 - [REST API](#rest-api)
 
+in case chordata motion doesn't continue: https://youtu.be/FGNmMZX0g_M?si=HW0SbEh7ugru-zGR
+
 ## Introduction
 
 [Chordata Motion](https://chordata.cc) is an open-source motion capture system of which I got the set with 15 sensors.
