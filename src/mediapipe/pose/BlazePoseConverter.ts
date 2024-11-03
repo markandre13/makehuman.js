@@ -326,6 +326,17 @@ export class BlazePoseConverter {
     getLeftLowerLeg(pose: BlazePoseLandmarks): mat4 {
         return this.leftLowerLeg!
     }
+
+    getLeftFoot(pose: BlazePoseLandmarks): mat4 {
+        const leftAnkle = pose.getVec(Blaze.LEFT_ANKLE)
+        const leftHeel = pose.getVec(Blaze.LEFT_HEEL)
+        const leftIndex = pose.getVec(Blaze.LEFT_FOOT_INDEX)
+
+        const forward = vec3.sub(vec3.create(), leftIndex, leftHeel)
+        const up = vec3.sub(vec3.create(), leftAnkle, leftHeel)
+        return matFromDirection(forward, up)
+        // return this.leftLowerLeg!
+    }
 }
 
 // https://stackoverflow.com/questions/18558910/direction-vector-to-rotation-matrix

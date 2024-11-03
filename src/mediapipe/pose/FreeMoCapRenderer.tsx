@@ -161,42 +161,30 @@ export class FreeMoCapRenderer extends RenderHandler {
         this.arrowMesh.draw(view.programColor)
 
         // LEFT LOWER LEG
-        mat4.identity(m)
-
         const leftLowerLegCenter = vec3.create()
         vec3.sub(leftLowerLegCenter, ankleLeft, kneeLeft)
         vec3.scale(leftLowerLegCenter, leftLowerLegCenter, 0.5)
         vec3.add(leftLowerLegCenter, leftLowerLegCenter, kneeLeft)
 
+        mat4.identity(m)
         mat4.translate(m, modelViewMatrix, leftLowerLegCenter)
         mat4.mul(m, m, this.bpc.getLeftLowerLeg(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
 
-        // * tracking with inert motion sensors starts with rotations.
-        // * with video, we start with positions and the angle might not be accurate.
-        //   i might be that using inverse kinematics along the process might be a
-        //   better approach...
+        // LEFT FOOT
+        const leftHeel = this.bpl.getVec0(Blaze.LEFT_HEEL)
+        const leftFootIndex = this.bpl.getVec0(Blaze.LEFT_FOOT_INDEX)
+        const leftFootCenter = vec3.create()
+        vec3.sub(leftFootCenter, leftFootIndex, leftHeel)
+        vec3.scale(leftFootCenter, leftFootCenter, 0.1)
+        vec3.add(leftFootCenter, leftFootCenter, leftHeel)
 
-        // EXPERIMENTAL ZONE
-
-        // this.mesh0.update(data)
-
-        // draw blaze
-
-        // let leftUpperLeg = this.bpc.getLeftUpperLeg(this.bpl)
-        // const pose2 = this.bpl.clone()
-        // const m0 = mat4.clone(modelViewMatrix)
-        // // mat4.translate(m0, m0, kneeLeft)
-        // // pose2.mul(m0)
-        // // const inv = mat4.create()
-        // // mat4.invert(inv, leftUpperLeg)
-        // // pose2.mul(inv)
-
-        // programRGBA.setColor([1, 0.5, 0, 1])
-        // this.mesh0.update(pose2.data)
-        // this.mesh0.bind(programRGBA)
-        // gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, leftFootCenter)
+        mat4.mul(m, m, this.bpc.getLeftFoot(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
     }
 
     debug() {
