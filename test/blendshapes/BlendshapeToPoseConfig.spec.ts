@@ -1,18 +1,10 @@
-import { expect, use } from '@esm-bundle/chai'
+import { expect, use } from 'chai'
 import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost())
 
-import { loadSkeleton } from '../../src/skeleton/loadSkeleton'
-import { Skeleton } from '../../src/skeleton/Skeleton'
 import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
-import { MorphManager } from '../../src/modifier/MorphManager'
 
-import { HumanMesh } from '../../src/mesh/HumanMesh'
-import { WavefrontObj } from '../../src/mesh/WavefrontObj'
-
-import { makeDefaultBlendshapeToPoseConfig } from "../../src/blendshapes/defaultBlendshapeToPoseConfig"
-import { MHFacePoseUnits } from '../../src/blendshapes/MHFacePoseUnits'
 import { BlendShapeEditor } from '../../src/blendshapes/BlendShapeEditor'
 import { Application } from "../../src/Application"
 import { html } from 'toad.js'

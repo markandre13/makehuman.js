@@ -1,4 +1,4 @@
-import { expect } from '@esm-bundle/chai'
+import { expect } from 'chai'
 import { OrderedMap } from '../../src/lib/OrderedMap'
 
 const epsilon = Number.EPSILON

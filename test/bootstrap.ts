@@ -1,7 +1,7 @@
 import { FileSystemAdapter } from "../src/filesystem/FileSystemAdapter"
 import { NodeJSFSAdapter } from "../src/filesystem/NodeJSFSAdapter"
 
-import { use } from '@esm-bundle/chai'
+import { use } from 'chai'
 import { chaiString } from './chai/chaiString'
 import { chaiAlmost } from "./chai/chaiAlmost"
 

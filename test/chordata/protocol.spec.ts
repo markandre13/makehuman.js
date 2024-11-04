@@ -21,7 +21,7 @@
 //   * string '#bundle', time tag, bundle element*
 //   *
 
-import { expect, use } from "@esm-bundle/chai"
+import { expect, use } from "chai"
 import { chaiAlmost } from "../chai/chaiAlmost"
 import { COOPDecoder } from "../../src/chordata/COOPDecoder"
 use(chaiAlmost())

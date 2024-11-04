@@ -1,4 +1,4 @@
-import { expect, use } from '@esm-bundle/chai'
+import { expect, use } from 'chai'
 import { chaiString } from "../chai/chaiString"
 use(chaiString)
 

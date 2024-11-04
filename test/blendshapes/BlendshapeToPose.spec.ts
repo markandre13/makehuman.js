@@ -1,16 +1,10 @@
-import { expect, use } from "@esm-bundle/chai"
+import { expect, use } from "chai"
 import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost())
 
 import { BlendshapePose, BlendshapeToPoseConfig } from "../../src/blendshapes/BlendshapeToPoseConfig"
 import { Bone } from "../../src/skeleton/Bone"
 import { quat2 } from "gl-matrix"
-import { FileSystemAdapter } from "../../src/filesystem/FileSystemAdapter"
-import { HTTPFSAdapter } from "../../src/filesystem/HTTPFSAdapter"
-import { WavefrontObj } from "../../src/mesh/WavefrontObj"
-import { HumanMesh } from "../../src/mesh/HumanMesh"
-import { MorphManager } from "../../src/modifier/MorphManager"
-import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
 
 describe("blendshape", function () {
     it("BlendshapeToPoseConfig.toJSON()", function () {
