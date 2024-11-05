@@ -288,7 +288,7 @@ export function PoseTab(props: { app: Application }) {
             >
                 SNAPSHOT
             </Button>
-            <div id="debug">DEBUG</div>
+            <div id="debug1">DEBUG</div>
         </Tab>
     )
 }

@@ -1,6 +1,6 @@
 import { mat4, vec3 } from "gl-matrix"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
-import { euler_matrix } from "lib/euler_matrix"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { easeMedianAngle, medianAngle } from "lib/medianAngle"
 import { isZero } from "mesh/HumanMesh"
 
@@ -138,7 +138,6 @@ export class BlazePoseConverter {
         const hipDirection = vec3.sub(vec3.create(), hipRight, hipLeft) // left --> right
         vec3.normalize(hipDirection, hipDirection)
 
-        // todo...
         const shoulderLeft = pose.getVec(Blaze.LEFT_SHOULDER)
         const shoulderRight = pose.getVec(Blaze.RIGHT_SHOULDER)
         const left = vec3.sub(vec3.create(), shoulderLeft, hipLeft) // hip -> shoulder
@@ -148,6 +147,7 @@ export class BlazePoseConverter {
 
         const m = matFromDirection(hipDirection, t0)
         mat4.rotateY(m, m, deg2rad(90))
+
         return m
     }
 
@@ -308,12 +308,12 @@ export class BlazePoseConverter {
 
         const adjustment = easeMedianAngle(kneeAngle, 10, 25, adjustmentByFoot, adjustmentByLowerLeg)
 
-        const debug = document.getElementById("debug")
-        if (debug != null) {
-            debug.innerHTML = `d0: ${vec2str(d0)}<br/>d1: ${vec2str(
-                d1
-            )}<br/>a: ${adjustment}<br/>a0: ${adjustmentByLowerLeg}<br/>a1: ${adjustmentByFoot}<br/>kneeAngle: ${kneeAngle}`
-        }
+        // const debug = document.getElementById("debug")
+        // if (debug != null) {
+        //     debug.innerHTML = `d0: ${vec2str(d0)}<br/>d1: ${vec2str(
+        //         d1
+        //     )}<br/>a: ${adjustment}<br/>a0: ${adjustmentByLowerLeg}<br/>a1: ${adjustmentByFoot}<br/>kneeAngle: ${kneeAngle}`
+        // }
 
         mat4.rotateY(leftUpperLeg, leftUpperLeg, deg2rad(adjustment))
 

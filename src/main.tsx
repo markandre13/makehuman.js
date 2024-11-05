@@ -157,6 +157,7 @@ function ProxyTab(props: { app: Application }) {
                     </>
                 ))}
             </Form>
+            <div id="debug">DEBUG</div>
         </Tab>
     )
 }

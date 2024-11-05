@@ -12,6 +12,7 @@ import {
     prepareViewport,
 } from "render/util"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
+import { euler_from_matrix } from "lib/euler_matrix"
 
 let a = 0
 
@@ -62,27 +63,20 @@ export class FreeMoCapRenderer extends RenderHandler {
         const normalMatrix = createNormalMatrix(modelViewMatrix)
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        // this.debug()
-
         // adjust freemocap data to opengl screen space
-        const s = 0.01
         const landmarks = app.frontend._poseLandmarks
         const data = new Float32Array(landmarks)
 
         // move blaze skeleton to origin to ease debugging
-        this.bpl.data = landmarks
-        // const root = vec3.add(vec3.create(), this.bpl.getVec(Blaze.LEFT_HIP), this.bpl.getVec(Blaze.RIGHT_HIP))
-        // vec3.scale(root, root, 0.5)
-        const root = vec3.create()
-
-        for (let i = 0; i < data.length; i += 3) {
-            const x = data[i] - root[0]
-            const y = data[i + 1] - root[1]
-            const z = data[i + 2] - root[2]
-
-            data[i] = x * s
-            data[i + 1] = z * s
-            data[i + 2] = y * s
+        if (true) {
+            this.bpl.data = landmarks
+            const root = vec3.add(vec3.create(), this.bpl.getVec(Blaze.LEFT_HIP), this.bpl.getVec(Blaze.RIGHT_HIP))
+            vec3.scale(root, root, 0.5)
+            for (let i = 0; i < data.length; i += 3) {
+                data[i] -= root[0]
+                data[i + 1] -= root[1]
+                data[i + 2] -= root[2]
+            }
         }
         this.bpl.data = data
 
@@ -97,7 +91,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
-/*
+        /*
         // draw blaze model from which we calculate additional rotations
         // THERE'S JUMP FROM 160 to 161... looks like when upper & lower leg are almost in a straight line
         programRGBA.setColor([1, 0.5, 0, 1])
@@ -137,7 +131,20 @@ export class FreeMoCapRenderer extends RenderHandler {
         // HIP
         const m = mat4.create()
         mat4.translate(m, modelViewMatrix, hipCenter)
-        mat4.mul(m, m, this.bpc.getHip(this.bpl))
+        const hip = this.bpc.getHip(this.bpl)
+
+        const debug = document.getElementById("debug1")
+        if (debug != null) {
+            const leftHip = this.bpl.getVec(Blaze.LEFT_HIP)
+            const rightHip = this.bpl.getVec(Blaze.RIGHT_HIP)
+            const d = vec3.sub(vec3.create(), rightHip, leftHip)
+            const e = euler_from_matrix(hip)
+            debug.innerHTML = `
+                vec  : ${d[0].toFixed(4)}, ${d[1].toFixed(4)}, ${d[2].toFixed(4)}<br/>
+                euler: ${rad2deg(e.x).toFixed(4)}, ${rad2deg(e.y).toFixed(4)}, ${rad2deg(e.z).toFixed(4)}`
+        }
+
+        mat4.mul(m, m, hip)
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
 
@@ -185,13 +192,5 @@ export class FreeMoCapRenderer extends RenderHandler {
         mat4.mul(m, m, this.bpc.getLeftFoot(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
-    }
-
-    debug() {
-        const debug = document.getElementById("debug")
-        if (debug != null) {
-            const v = this.bpl.getVec(Blaze.LEFT_HIP)
-            debug.innerHTML = `V (${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)}`
-        }
     }
 }
