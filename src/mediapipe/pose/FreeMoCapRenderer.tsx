@@ -119,6 +119,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         const kneeLeft = this.bpl.getVec0(Blaze.LEFT_KNEE)
         const kneeRight = this.bpl.getVec0(Blaze.RIGHT_KNEE)
         const ankleLeft = this.bpl.getVec0(Blaze.LEFT_ANKLE)
+        const ankleRight = this.bpl.getVec0(Blaze.RIGHT_ANKLE)
 
         const hipCenter = vec3.add(vec3.create(), hipLeft, hipRight)
         vec3.scale(hipCenter, hipCenter, 0.5)
@@ -190,6 +191,45 @@ export class FreeMoCapRenderer extends RenderHandler {
         mat4.identity(m)
         mat4.translate(m, modelViewMatrix, leftFootCenter)
         mat4.mul(m, m, this.bpc.getLeftFoot(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
+
+        // RIGHT UPPER LEG
+        const rightUpperLegCenter = vec3.create()
+        vec3.sub(rightUpperLegCenter, kneeRight, hipRight)
+        vec3.scale(rightUpperLegCenter, rightUpperLegCenter, 0.5)
+        vec3.add(rightUpperLegCenter, rightUpperLegCenter, hipRight)
+
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, rightUpperLegCenter)
+        mat4.mul(m, m, this.bpc.getRightUpperLegWithAdjustment(this.bpl))
+        // mat4.mul(m, m, this.bpc.getRightUpperLegWithAdjustment(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
+
+        // RIGHT LOWER LEG
+        const rightLowerLegCenter = vec3.create()
+        vec3.sub(rightLowerLegCenter, ankleRight, kneeRight)
+        vec3.scale(rightLowerLegCenter, rightLowerLegCenter, 0.5)
+        vec3.add(rightLowerLegCenter, rightLowerLegCenter, kneeRight)
+
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, rightLowerLegCenter)
+        mat4.mul(m, m, this.bpc.getRightLowerLeg(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
+
+        // LEFT FOOT
+        const rightHeel = this.bpl.getVec0(Blaze.RIGHT_HEEL)
+        const rightFootIndex = this.bpl.getVec0(Blaze.RIGHT_FOOT_INDEX)
+        const rightFootCenter = vec3.create()
+        vec3.sub(rightFootCenter, rightFootIndex, rightHeel)
+        vec3.scale(rightFootCenter, rightFootCenter, 0.1)
+        vec3.add(rightFootCenter, rightFootCenter, rightHeel)
+
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, rightFootCenter)
+        mat4.mul(m, m, this.bpc.getRightFoot(this.bpl))
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
     }

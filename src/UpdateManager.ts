@@ -253,19 +253,30 @@ export class UpdateManager {
 
             this.bpl.data = this.app.frontend._poseLandmarks
             const hip = this.bpc.getHip(this.bpl)
+            const invHip = mat4.invert(mat4.create(), hip)
             setPose("root", hip)
 
-            const invHip = mat4.invert(mat4.create(), hip)
             const leftUpperLeg = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
+            const invLeftUpperLeg = mat4.invert(mat4.create(), leftUpperLeg)
             setPose("upperleg01.L", mat4.mul(mat4.create(), invHip, leftUpperLeg))
 
-            const invLeftUpperLeg = mat4.invert(mat4.create(), leftUpperLeg)
             const leftLowerLeg = this.bpc.getLeftLowerLeg(this.bpl)
+            const invLeftLowerLeg = mat4.invert(mat4.create(), leftLowerLeg)
             setPose("lowerleg01.L", mat4.mul(mat4.create(), invLeftUpperLeg, leftLowerLeg))
 
-            const invLeftLowerLeg = mat4.invert(mat4.create(), leftLowerLeg)
             const leftFoot = this.bpc.getLeftFoot(this.bpl)
             setPose("foot.L", mat4.mul(mat4.create(), invLeftLowerLeg, leftFoot))
+
+            const rightUpperLeg = this.bpc.getRightUpperLegWithAdjustment(this.bpl)
+            const invRightUpperLeg = mat4.invert(mat4.create(), rightUpperLeg)
+            setPose("upperleg01.R", mat4.mul(mat4.create(), invHip, rightUpperLeg))
+
+            const rightLowerLeg = this.bpc.getRightLowerLeg(this.bpl)
+            const invRightLowerLeg = mat4.invert(mat4.create(), rightLowerLeg)
+            setPose("lowerleg01.R", mat4.mul(mat4.create(), invRightUpperLeg, rightLowerLeg))
+
+            const rightFoot = this.bpc.getRightFoot(this.bpl)
+            setPose("foot.R", mat4.mul(mat4.create(), invRightLowerLeg, rightFoot))
 
             const shoulder = this.bpc.getShoulder(this.bpl)
             const relativeShoulder =  mat4.mul(mat4.create(), invHip, shoulder)
