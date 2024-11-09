@@ -102,12 +102,12 @@ export class MPPoseRenderer extends RenderHandler {
         //
 
         this.bpl.data = landmarks!!
-        const shoulderLeft = this.bpl.getVec0(Blaze.LEFT_SHOULDER)
-        const shoulderRight = this.bpl.getVec0(Blaze.RIGHT_SHOULDER)
-        const hipLeft = this.bpl.getVec0(Blaze.LEFT_HIP)
-        const hipRight = this.bpl.getVec0(Blaze.RIGHT_HIP)
-        const kneeLeft = this.bpl.getVec0(Blaze.LEFT_KNEE)
-        const kneeRight = this.bpl.getVec0(Blaze.RIGHT_KNEE)
+        const shoulderLeft = this.bpl.getVec(Blaze.LEFT_SHOULDER)
+        const shoulderRight = this.bpl.getVec(Blaze.RIGHT_SHOULDER)
+        const hipLeft = this.bpl.getVec(Blaze.LEFT_HIP)
+        const hipRight = this.bpl.getVec(Blaze.RIGHT_HIP)
+        const kneeLeft = this.bpl.getVec(Blaze.LEFT_KNEE)
+        const kneeRight = this.bpl.getVec(Blaze.RIGHT_KNEE)
 
         programColor.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
