@@ -129,6 +129,21 @@ export class BlazePoseConverter {
         return m
     }
 
+    getHead(pose: BlazePoseLandmarks): mat4 {
+        const nose = pose.getVec(Blaze.NOSE)
+        const leftEar = pose.getVec(Blaze.LEFT_EAR)
+        const rightEar = pose.getVec(Blaze.RIGHT_EAR)
+        const headCenter = vec3.add(vec3.create(), leftEar, rightEar)
+        vec3.scale(headCenter, headCenter, 0.5)
+
+        const up = vec3.sub(vec3.create(), leftEar, rightEar)
+        const forward = vec3.sub(vec3.create(), nose, headCenter)
+
+        const m = matFromDirection(forward, up)
+        mat4.rotateZ(m, m, deg2rad(90))
+        return m
+    }
+
     getHip(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
         const hipRight = pose.getVec(Blaze.RIGHT_HIP)

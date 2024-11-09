@@ -279,14 +279,26 @@ export class UpdateManager {
             setPose("foot.R", mat4.mul(mat4.create(), invRightLowerLeg, rightFoot))
 
             const shoulder = this.bpc.getShoulder(this.bpl)
-            const relativeShoulder =  mat4.mul(mat4.create(), invHip, shoulder)
-            const shoulderQuat = quat2.fromMat4(quat2.create(), relativeShoulder)
+            const invShoulder = mat4.invert(mat4.create(), shoulder)
+            const relShoulder =  mat4.mul(mat4.create(), invHip, shoulder)
+            const shoulderQuat = quat2.fromMat4(quat2.create(), relShoulder)
             const shoulderDelta = quaternion_slerp(REST_QUAT, shoulderQuat, 0.25)
-            mat4.fromQuat2(relativeShoulder, shoulderDelta)
-            setPose("spine01", relativeShoulder)
-            setPose("spine03", relativeShoulder)
-            setPose("spine04", relativeShoulder)
-            setPose("spine05", relativeShoulder)
+            mat4.fromQuat2(relShoulder, shoulderDelta)
+            // only spine04 & spine05???
+            setPose("spine01", relShoulder)
+            setPose("spine02", relShoulder)
+            setPose("spine04", relShoulder)
+            setPose("spine05", relShoulder)
+
+            const head = this.bpc.getHead(this.bpl)
+            const relHead =  mat4.mul(mat4.create(), invShoulder, head)
+            const headQuat = quat2.fromMat4(quat2.create(), relHead)
+            const headDelta = quaternion_slerp(REST_QUAT, headQuat, 0.25)
+            mat4.fromQuat2(relHead, headDelta)
+            setPose("neck01", relHead)
+            setPose("neck02", relHead)
+            setPose("neck03", relHead)
+            setPose("head", relHead)
         }
 
         // UPDATE_SKINNING_MATRIX

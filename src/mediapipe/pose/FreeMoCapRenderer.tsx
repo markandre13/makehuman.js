@@ -153,6 +153,18 @@ export class FreeMoCapRenderer extends RenderHandler {
         programColor.setModelViewMatrix(m)
         this.arrowMesh.draw(view.programColor)
 
+        // HEAD
+        const leftEar = this.bpl.getVec(Blaze.LEFT_EAR)
+        const rightEar = this.bpl.getVec(Blaze.RIGHT_EAR)
+        const headCenter = vec3.add(vec3.create(), leftEar, rightEar)
+        vec3.scale(headCenter, headCenter, 0.5)
+
+        mat4.identity(m)
+        mat4.translate(m, modelViewMatrix, headCenter)
+        mat4.mul(m, m, this.bpc.getHead(this.bpl))
+        programColor.setModelViewMatrix(m)
+        this.arrowMesh.draw(view.programColor)
+
         // LEFT UPPER LEG
         const leftUpperLegCenter = vec3.create()
         vec3.sub(leftUpperLegCenter, leftKnee, leftHip)
