@@ -29,14 +29,6 @@ export function renderAxes(
     programColor.setModelViewMatrix(m)
     arrowMesh.draw(programColor)
 
-    // const debug = document.getElementById("debug1")
-    // if (debug != null) {
-    //     const d = vec3.sub(vec3.create(), rightHip, leftHip)
-    //     const e = euler_from_matrix(hip)
-    //     debug.innerHTML = `
-    //         vec  : ${d[0].toFixed(4)}, ${d[1].toFixed(4)}, ${d[2].toFixed(4)}<br/>
-    //         euler: ${rad2deg(e.x).toFixed(4)}, ${rad2deg(e.y).toFixed(4)}, ${rad2deg(e.z).toFixed(4)}`
-    // }
     // SHOULDER
     const shoulderCenter = vec3.add(vec3.create(), leftShoulder, rightShoulder)
     vec3.scale(shoulderCenter, shoulderCenter, 0.5)
@@ -98,6 +90,47 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftHandCenter) // thumb
     mat4.mul(m, m, bpc.getLeftHand(bpl))
+    programColor.setModelViewMatrix(m)
+    arrowMesh.draw(programColor)
+
+    // RIGHT UPPER ARM
+    const rightElbow = bpl.getVec(Blaze.RIGHT_ELBOW)
+    const rightWrist = bpl.getVec(Blaze.RIGHT_WRIST)
+
+    const rightUpperArmCenter = vec3.create()
+    vec3.sub(rightUpperArmCenter, rightElbow, rightShoulder)
+    vec3.scale(rightUpperArmCenter, rightUpperArmCenter, 0.5)
+    vec3.add(rightUpperArmCenter, rightUpperArmCenter, rightShoulder)
+
+    mat4.identity(m)
+    mat4.translate(m, modelViewMatrix, rightUpperArmCenter)
+    mat4.mul(m, m, bpc.getRightUpperArmWithAdjustment(bpl))
+    programColor.setModelViewMatrix(m)
+    arrowMesh.draw(programColor)
+
+    // RIGHT LOWER ARM
+    const rightLowerArmCenter = vec3.create()
+    vec3.sub(rightLowerArmCenter, rightWrist, rightElbow)
+    vec3.scale(rightLowerArmCenter, rightLowerArmCenter, 0.5)
+    vec3.add(rightLowerArmCenter, rightLowerArmCenter, rightElbow)
+
+    mat4.identity(m)
+    mat4.translate(m, modelViewMatrix, rightLowerArmCenter)
+    mat4.mul(m, m, bpc.getRightLowerArm(bpl))
+    programColor.setModelViewMatrix(m)
+    arrowMesh.draw(programColor)
+
+    // RIGHT HAND
+    const rightPinky = bpl.getVec(Blaze.RIGHT_PINKY)
+    const rightIndex = bpl.getVec(Blaze.RIGHT_INDEX)
+    const rightHandCenter = vec3.create()
+    vec3.sub(leftHandCenter, rightPinky, rightIndex)
+    vec3.scale(rightHandCenter, rightHandCenter, 0.5)
+    vec3.add(rightHandCenter, rightHandCenter, rightIndex)
+
+    mat4.identity(m)
+    mat4.translate(m, modelViewMatrix, rightHandCenter) // thumb
+    mat4.mul(m, m, bpc.getRightHand(bpl))
     programColor.setModelViewMatrix(m)
     arrowMesh.draw(programColor)
 

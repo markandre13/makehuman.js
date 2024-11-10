@@ -166,6 +166,8 @@ export class FreeMoCapRenderer extends RenderHandler {
         vec3.transformMat4(rightAnkle2, rightAnkle2, rotRightAnkle)
         vec3.add(rightAnkle2, rightAnkle2, rightKnee2)
 
+
+
         const leftElbow = bpl.getVec(Blaze.LEFT_ELBOW)
         const lengthUpperLeftArm = length(leftShoulder, leftElbow)
         const rotLeftElbow = bpc.getLeftUpperArmWithAdjustment(bpl)
@@ -180,6 +182,20 @@ export class FreeMoCapRenderer extends RenderHandler {
         vec3.transformMat4(leftWrist2, leftWrist2, rotLeftWrist)
         vec3.add(leftWrist2, leftWrist2, leftElbow2)
 
+        const rightElbow = bpl.getVec(Blaze.RIGHT_ELBOW)
+        const lengthUpperRightArm = length(rightShoulder, rightElbow)
+        const rotRightElbow = bpc.getRightUpperArmWithAdjustment(bpl)
+        const rightElbow2 = vec3.fromValues(0, -lengthUpperRightArm, 0)
+        vec3.transformMat4(rightElbow2, rightElbow2, rotRightElbow)
+        vec3.add(rightElbow2, rightElbow2, rightShoulder2)
+
+        const rightWrist = bpl.getVec(Blaze.RIGHT_WRIST)
+        const lengthLowerRightArm = length(rightElbow, rightWrist)
+        const rotRightWrist = bpc.getRightLowerArm(bpl)
+        const rightWrist2 = vec3.fromValues(0, -lengthLowerRightArm, 0)
+        vec3.transformMat4(rightWrist2, rightWrist2, rotRightWrist)
+        vec3.add(rightWrist2, rightWrist2, rightElbow2)
+
         // prettier-ignore
         const data1 = new Float32Array([
             ...rightHip, ...leftHip2,
@@ -192,7 +208,9 @@ export class FreeMoCapRenderer extends RenderHandler {
             ...rightHip, ...rightKnee2,
             ...rightKnee2, ...rightAnkle2,
             ...leftShoulder2, ...leftElbow2,
-            ...leftElbow2, ...leftWrist2
+            ...leftElbow2, ...leftWrist2,
+            ...rightShoulder2, ...rightElbow2,
+            ...rightElbow2, ...rightWrist2,
         ])
 
         if (this.mesh1 === undefined) {
