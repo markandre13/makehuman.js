@@ -10,7 +10,9 @@ import {
     createNormalMatrix,
     createModelViewMatrix,
 } from "render/util"
-import { Blaze, BlazePoseConverter, BlazePoseLandmarks } from "./BlazePoseConverter"
+import { BlazePoseConverter } from "./BlazePoseConverter"
+import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
+import { Blaze } from "./Blaze"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
 import { simulatedModel } from "./PoseTab"
 import { deg2rad, rad2deg } from "lib/calculateNormals"

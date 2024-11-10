@@ -10,13 +10,12 @@ import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { quaternion_slerp } from "lib/quaternion_slerp"
-import { Blaze, BlazePoseConverter, BlazePoseLandmarks } from "mediapipe/pose/BlazePoseConverter"
+import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
+import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export const REST_QUAT = quat2.create()
-
-let counter = 0
 
 /**
  * All presentation models report changes to the update manager

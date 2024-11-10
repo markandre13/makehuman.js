@@ -1,7 +1,9 @@
 import { mat4, vec3 } from "gl-matrix"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
 import { ColorShader } from "render/shader/ColorShader"
-import { BlazePoseLandmarks, BlazePoseConverter, Blaze } from "./BlazePoseConverter"
+import { BlazePoseConverter } from "./BlazePoseConverter"
+import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
+import { Blaze } from "./Blaze"
 
 export function renderAxes(
     programColor: ColorShader,
@@ -36,6 +38,16 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, shoulderCenter)
     mat4.mul(m, m, bpc.getShoulder(bpl))
+    programColor.setModelViewMatrix(m)
+    arrowMesh.draw(programColor)
+
+    // SPINE
+    const spineCenter = vec3.add(vec3.create(), hipCenter, shoulderCenter)
+    vec3.scale(spineCenter, spineCenter, 0.5)
+
+    mat4.identity(m)
+    mat4.translate(m, modelViewMatrix, spineCenter)
+    mat4.mul(m, m, bpc.getSpine(bpl))
     programColor.setModelViewMatrix(m)
     arrowMesh.draw(programColor)
 

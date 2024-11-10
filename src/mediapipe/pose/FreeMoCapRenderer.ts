@@ -3,7 +3,9 @@ import { vec3 } from "gl-matrix"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
 import { RenderHandler, GLView } from "render/GLView"
 import { RenderMesh } from "render/RenderMesh"
-import { Blaze, BlazePoseConverter, BlazePoseLandmarks } from "./BlazePoseConverter"
+import { BlazePoseConverter } from "./BlazePoseConverter"
+import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
+import { Blaze } from "./Blaze"
 import {
     createModelViewMatrix,
     createNormalMatrix,

@@ -1,8 +1,7 @@
-import { vec3, quat2, mat4 } from "gl-matrix"
-import { quaternion_slerp } from "lib/quaternion_slerp"
+import { vec3 } from "gl-matrix"
 import { GLView } from "render/GLView"
 import { RenderMesh } from "render/RenderMesh"
-import { Blaze } from "./BlazePoseConverter"
+import { Blaze } from "./Blaze"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 
 export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
@@ -14,12 +13,12 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
 
     const leftHip = bpl.getVec(Blaze.LEFT_HIP)
     const rightHip = bpl.getVec(Blaze.RIGHT_HIP)
-    const lenghtHip = vec3.length(vec3.sub(vec3.create(), rightHip, leftHip))
+    const lengthHip = vec3.length(vec3.sub(vec3.create(), rightHip, leftHip))
 
     const hip = bpc.getHip(bpl)
     const shoulder = bpc.getShoulder(bpl)
 
-    const leftHip2 = vec3.fromValues(lenghtHip, 0, 0)
+    const leftHip2 = vec3.fromValues(lengthHip, 0, 0)
     vec3.transformMat4(leftHip2, leftHip2, hip)
     vec3.add(leftHip2, leftHip2, rightHip)
 
@@ -35,12 +34,7 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     const lengthTorso = length(vec3.create(), shoulderCenter)
     const lengthShoulder = length(rightShoulder, leftShoulder)
 
-    // TODO: the following needs to be somehow incooperated into BlazePoseConverter's results
-    //       AND to be calculated differently: use the vector from hip to shoulder center
-    const q0Torso = quat2.fromMat4(quat2.create(), hip)
-    const q1Torso = quat2.fromMat4(quat2.create(), shoulder)
-    const torso = mat4.fromQuat2(mat4.create(), quaternion_slerp(q0Torso, q1Torso, 0.5))
-
+    const torso = bpc.getSpine(bpl)
     const shoulderCenter2 = vec3.fromValues(0, lengthTorso, 0)
     vec3.transformMat4(shoulderCenter2, shoulderCenter2, torso)
 
