@@ -255,7 +255,9 @@ export class UpdateManager {
             this.bpl.data = this.app.frontend._poseLandmarks
             const hip = this.bpc.getHip(this.bpl)
             const invHip = mat4.invert(mat4.create(), hip)
-            setPose("root", hip)
+            const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
+            mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
+            setPose("root", hipWithTranslation)
 
             const leftUpperLeg = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
             const invLeftUpperLeg = mat4.invert(mat4.create(), leftUpperLeg)

@@ -4,39 +4,47 @@ import { RenderMesh } from "render/RenderMesh"
 import { Blaze } from "./Blaze"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 
+/**
+ * re-create blaze pose skeleton from blaze pose converter
+ * 
+ * @param t 
+ * @param view 
+ */
 export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
-    // re-create blaze pose skeleton from blaze pose converter
     const programRGBA = view.programRGBA
     const gl = view.gl
     const bpc = t.bpc
     const bpl = t.bpl
 
-    const leftHip = bpl.getVec(Blaze.LEFT_HIP)
-    const rightHip = bpl.getVec(Blaze.RIGHT_HIP)
-    const lengthHip = vec3.length(vec3.sub(vec3.create(), rightHip, leftHip))
+    const centerHip = bpc.getHipCenter(bpl)
+
+    const leftHipX = bpl.getVec(Blaze.LEFT_HIP)
+    const rightHipX = bpl.getVec(Blaze.RIGHT_HIP)
+    const lengthHip = vec3.length(vec3.sub(vec3.create(), rightHipX, leftHipX))
 
     const hip = bpc.getHip(bpl)
     const shoulder = bpc.getShoulder(bpl)
 
-    const leftHip2 = vec3.fromValues(lengthHip, 0, 0)
+    const leftHip2 = vec3.fromValues(lengthHip/2, 0, 0)
     vec3.transformMat4(leftHip2, leftHip2, hip)
-    vec3.add(leftHip2, leftHip2, rightHip)
+    vec3.add(leftHip2, leftHip2, centerHip)
 
-    const leftShoulder = bpl.getVec(Blaze.LEFT_SHOULDER)
-    const rightShoulder = bpl.getVec(Blaze.RIGHT_SHOULDER)
-    const shoulderCenter = vec3.add(vec3.create(), leftShoulder, rightShoulder)
-    vec3.scale(shoulderCenter, shoulderCenter, 0.5)
+    const rightHip2 = vec3.fromValues(-lengthHip/2, 0, 0)
+    vec3.transformMat4(rightHip2, rightHip2, hip)
+    vec3.add(rightHip2, rightHip2, centerHip)
 
-    function length(p0: vec3, p1: vec3) {
-        return vec3.length(vec3.sub(vec3.create(), p0, p1))
-    }
+    const leftShoulderX = bpl.getVec(Blaze.LEFT_SHOULDER)
+    const rightShoulderX = bpl.getVec(Blaze.RIGHT_SHOULDER)
+    const centerShoulderX = vec3.add(vec3.create(), leftShoulderX, rightShoulderX)
+    vec3.scale(centerShoulderX, centerShoulderX, 0.5)
 
-    const lengthTorso = length(vec3.create(), shoulderCenter)
-    const lengthShoulder = length(rightShoulder, leftShoulder)
+    const lengthTorso = length(centerHip, centerShoulderX)
+    const lengthShoulder = length(rightShoulderX, leftShoulderX)
 
     const torso = bpc.getSpine(bpl)
     const shoulderCenter2 = vec3.fromValues(0, lengthTorso, 0)
     vec3.transformMat4(shoulderCenter2, shoulderCenter2, torso)
+    vec3.add(shoulderCenter2, shoulderCenter2, centerHip)
 
     const leftShoulder2 = vec3.fromValues(lengthShoulder / 2, 0, 0)
     vec3.transformMat4(leftShoulder2, leftShoulder2, shoulder)
@@ -47,7 +55,7 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     vec3.add(rightShoulder2, rightShoulder2, shoulderCenter2)
 
     const leftKnee = bpl.getVec(Blaze.LEFT_KNEE)
-    const lengthLeftUpperLeg = length(leftHip, leftKnee)
+    const lengthLeftUpperLeg = length(leftHipX, leftKnee)
     const rotLeftKnee = bpc.getLeftUpperLegWithAdjustment(bpl)
     const leftKnee2 = vec3.fromValues(0, -lengthLeftUpperLeg, 0)
     vec3.transformMat4(leftKnee2, leftKnee2, rotLeftKnee)
@@ -61,11 +69,11 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     vec3.add(leftAnkle2, leftAnkle2, leftKnee2)
 
     const rightKnee = bpl.getVec(Blaze.RIGHT_KNEE)
-    const lengthRightUpperLeg = length(rightHip, rightKnee)
+    const lengthRightUpperLeg = length(rightHipX, rightKnee)
     const rotRightKnee = bpc.getRightUpperLegWithAdjustment(bpl)
     const rightKnee2 = vec3.fromValues(0, -lengthRightUpperLeg, 0)
     vec3.transformMat4(rightKnee2, rightKnee2, rotRightKnee)
-    vec3.add(rightKnee2, rightKnee2, rightHip)
+    vec3.add(rightKnee2, rightKnee2, rightHip2)
 
     const rightAnkle = bpl.getVec(Blaze.RIGHT_ANKLE)
     const lengthLowerRightLeg = length(rightKnee, rightAnkle)
@@ -75,7 +83,7 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     vec3.add(rightAnkle2, rightAnkle2, rightKnee2)
 
     const leftElbow = bpl.getVec(Blaze.LEFT_ELBOW)
-    const lengthUpperLeftArm = length(leftShoulder, leftElbow)
+    const lengthUpperLeftArm = length(leftShoulderX, leftElbow)
     const rotLeftElbow = bpc.getLeftUpperArmWithAdjustment(bpl)
     const leftElbow2 = vec3.fromValues(0, -lengthUpperLeftArm, 0)
     vec3.transformMat4(leftElbow2, leftElbow2, rotLeftElbow)
@@ -89,7 +97,7 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     vec3.add(leftWrist2, leftWrist2, leftElbow2)
 
     const rightElbow = bpl.getVec(Blaze.RIGHT_ELBOW)
-    const lengthUpperRightArm = length(rightShoulder, rightElbow)
+    const lengthUpperRightArm = length(rightShoulderX, rightElbow)
     const rotRightElbow = bpc.getRightUpperArmWithAdjustment(bpl)
     const rightElbow2 = vec3.fromValues(0, -lengthUpperRightArm, 0)
     vec3.transformMat4(rightElbow2, rightElbow2, rotRightElbow)
@@ -104,14 +112,14 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
 
     // prettier-ignore
     const data1 = new Float32Array([
-        ...rightHip, ...leftHip2,
-        0, 0, 0, ...shoulderCenter2,
-        ...rightHip, ...rightShoulder2,
+        ...rightHip2, ...leftHip2,
+        ...centerHip, ...shoulderCenter2,
+        ...rightHip2, ...rightShoulder2,
         ...leftHip2, ...leftShoulder2,
         ...rightShoulder2, ...leftShoulder2,
         ...leftHip2, ...leftKnee2,
         ...leftKnee2, ...leftAnkle2,
-        ...rightHip, ...rightKnee2,
+        ...rightHip2, ...rightKnee2,
         ...rightKnee2, ...rightAnkle2,
         ...leftShoulder2, ...leftElbow2,
         ...leftElbow2, ...leftWrist2,
@@ -129,4 +137,8 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     programRGBA.setColor([1, 0.5, 0, 1])
     t.mesh1.bind(programRGBA)
     t.mesh1.draw(programRGBA, gl.LINES)
+}
+
+function length(p0: vec3, p1: vec3) {
+    return vec3.length(vec3.sub(vec3.create(), p0, p1))
 }
