@@ -5,15 +5,14 @@ import { RenderList } from "render/RenderList"
 import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
-import { mat3, mat4, quat2, vec3, vec4 } from "gl-matrix"
+import { mat4, quat2, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
 import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
-import { deg2rad, rad2deg } from "lib/calculateNormals"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { deg2rad } from "lib/calculateNormals"
 
 export const REST_QUAT = quat2.create()
 
@@ -233,10 +232,8 @@ export class UpdateManager {
                 const bone = this.skeleton.getBone(boneName)
 
                 // convert from global to bone's relative coordinates
-                const restRotation = mat4.clone(bone.matRestGlobal!!)
-                restRotation[12] = 0
-                restRotation[13] = 0
-                restRotation[14] = 0
+                const restRotation = mat4.clone(bone.matRestGlobal!)
+                restRotation[12] = restRotation[13] = restRotation[14] = 0
 
                 const inv = mat4.invert(mat4.create(), restRotation)
                 const local = mat4.mul(mat4.create(), inv, m)
@@ -245,19 +242,51 @@ export class UpdateManager {
                 bone.matPose = local
             }
 
+            const setPoseX = (boneName: string, m: mat4) => {
+                const bone = this.skeleton.getBone(boneName)
+                const rest = mat4.clone(bone.matRestGlobal!)
+                rest[12] = rest[13] = rest[14] = 0
+                const invRest = mat4.invert(mat4.create(), rest)
+
+                switch (boneName) {
+                    case "upperarm01.L":
+                    case "upperarm01.R":
+                        mat4.rotateZ(m, m, deg2rad(-180)) // upperarm points down
+                        mat4.mul(m, m, invRest) // compensate for rest position
+                        // move m from global coordinates into bones coordinate system
+                        mat4.mul(m, invRest, m)
+                        mat4.mul(m, m, rest)
+                        bone.matPose = m
+                        break
+                    case "lowerarm01.L":
+                        mat4.rotateZ(m, m, deg2rad(-130)) // upperarm points down (the +50 is upper to lower?)
+                        mat4.mul(m, m, invRest) // compensate for rest position
+                        // move m from global coordinates into bones coordinate system
+                        mat4.mul(m, invRest, m)
+                        mat4.mul(m, m, rest)
+                        bone.matPose = m
+                        break
+                    case "lowerarm01.R":
+                        mat4.rotateZ(m, m, deg2rad(-230)) // upperarm points down (the +50 is upper to lower?)
+                        mat4.mul(m, m, invRest) // compensate for rest position
+                        // move m from global coordinates into bones coordinate system
+                        mat4.mul(m, invRest, m)
+                        mat4.mul(m, m, rest)
+                        bone.matPose = m
+                        break
+                }
+            }
+
             this._poseLandmarksTS = this.app.frontend._poseLandmarksTS.value
             skeletonChanged = true
 
-            // neck01, neck02, neck03, head
-            // shoulder01.R, shoulder01.L
-            // lowerarm01.L
-
-            this.bpl.data = this.app.frontend._poseLandmarks
+            this.bpl.data = this.app.frontend._poseLandmarks!
             const hip = this.bpc.getHip(this.bpl)
             const invHip = mat4.invert(mat4.create(), hip)
             const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
             mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
             setPose("root", hipWithTranslation)
+            // setPose("root", hip)
 
             const leftUpperLeg = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
             const invLeftUpperLeg = mat4.invert(mat4.create(), leftUpperLeg)
@@ -283,7 +312,7 @@ export class UpdateManager {
 
             const shoulder = this.bpc.getShoulder(this.bpl)
             const invShoulder = mat4.invert(mat4.create(), shoulder)
-            const relShoulder =  mat4.mul(mat4.create(), invHip, shoulder)
+            const relShoulder = mat4.mul(mat4.create(), invHip, shoulder)
             const shoulderQuat = quat2.fromMat4(quat2.create(), relShoulder)
             const shoulderDelta = quaternion_slerp(REST_QUAT, shoulderQuat, 0.25)
             mat4.fromQuat2(relShoulder, shoulderDelta)
@@ -294,7 +323,7 @@ export class UpdateManager {
             setPose("spine05", relShoulder)
 
             const head = this.bpc.getHead(this.bpl)
-            const relHead =  mat4.mul(mat4.create(), invShoulder, head)
+            const relHead = mat4.mul(mat4.create(), invShoulder, head)
             const headQuat = quat2.fromMat4(quat2.create(), relHead)
             const headDelta = quaternion_slerp(REST_QUAT, headQuat, 0.25)
             mat4.fromQuat2(relHead, headDelta)
@@ -304,25 +333,26 @@ export class UpdateManager {
             setPose("head", relHead)
 
             const leftUpperArm = this.bpc.getLeftUpperArmWithAdjustment(this.bpl)
-            mat4.mul(leftUpperArm, euler_matrix(0,deg2rad(30),deg2rad(-30)), leftUpperArm)
             const invLeftUpperArm = mat4.invert(mat4.create(), leftUpperArm)
-
-            const relLeftUpperArm =  mat4.mul(mat4.create(), invShoulder, leftUpperArm)
-            const leftUpperArmQuat = quat2.fromMat4(quat2.create(), relLeftUpperArm)
-            let leftUpperArmDelta = quaternion_slerp(REST_QUAT, leftUpperArmQuat, 0.25)
-            mat4.fromQuat2(relLeftUpperArm, leftUpperArmDelta)
-            setPose("clavicle.L", relLeftUpperArm)
-            leftUpperArmDelta = quaternion_slerp(REST_QUAT, leftUpperArmQuat, 0.75)
-            mat4.fromQuat2(relLeftUpperArm, leftUpperArmDelta)
-            setPose("shoulder01.L", relLeftUpperArm)
+            setPoseX("upperarm01.L", mat4.mul(mat4.create(), invShoulder, leftUpperArm))
 
             const leftLowerArm = this.bpc.getLeftLowerArm(this.bpl)
-            mat4.mul(leftLowerArm, leftLowerArm, euler_matrix(deg2rad(40), 0, 0))
             const invLeftLowerArm = mat4.invert(mat4.create(), leftLowerArm)
-            setPose("lowerarm01.L", mat4.mul(mat4.create(), invLeftUpperArm, leftLowerArm))
+            setPoseX("lowerarm01.L", mat4.mul(mat4.create(), invLeftUpperArm, leftLowerArm))
 
-            const leftHand = this.bpc.getLeftHand(this.bpl)
-            setPose("wrist.L", mat4.mul(mat4.create(), invLeftLowerArm, leftHand))
+            // const leftHand = this.bpc.getLeftHand(this.bpl)
+            // setPose("wrist.L", mat4.mul(mat4.create(), invLeftLowerArm, leftHand))
+
+            const rightUpperArm = this.bpc.getRightUpperArmWithAdjustment(this.bpl)
+            const invRightUpperArm = mat4.invert(mat4.create(), rightUpperArm)
+            setPoseX("upperarm01.R", mat4.mul(mat4.create(), invShoulder, rightUpperArm))
+
+            const rightLowerArm = this.bpc.getRightLowerArm(this.bpl)
+            const invRightLowerArm = mat4.invert(mat4.create(), rightLowerArm)
+            setPoseX("lowerarm01.R", mat4.mul(mat4.create(), invRightUpperArm, rightLowerArm))
+
+            // const leftHand = this.bpc.getLeftHand(this.bpl)
+            // setPose("wrist.L", mat4.mul(mat4.create(), invLeftLowerArm, leftHand))
         }
 
         // UPDATE_SKINNING_MATRIX
