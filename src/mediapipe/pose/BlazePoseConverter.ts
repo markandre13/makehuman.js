@@ -95,9 +95,7 @@ export class BlazePoseLandmarks {
     }
 }
 
-let prev = 0,
-    dy = 0,
-    dz = 0
+let counter = 0
 
 // * the technical term is 'retarget' instead of 'convert'
 // * https://github.com/freemocap/freemocap_blendarmocap does a similar thing
@@ -108,6 +106,7 @@ let prev = 0,
 export class BlazePoseConverter {
     leftLowerLeg?: mat4
     rightLowerLeg?: mat4
+    leftLowerArm?: mat4
 
     getShoulder(pose: BlazePoseLandmarks): mat4 {
         const hipLeft = pose.getVec(Blaze.LEFT_HIP)
@@ -126,6 +125,118 @@ export class BlazePoseConverter {
 
         const m = matFromDirection(shoulderDirection, t0)
         mat4.rotateY(m, m, deg2rad(90))
+        return m
+    }
+
+    getLeftUpperArm(pose: BlazePoseLandmarks): mat4 {
+        const leftShoulder = pose.getVec(Blaze.LEFT_SHOULDER)
+        const rightShoulder = pose.getVec(Blaze.RIGHT_SHOULDER)
+
+        const shoulderDirection = vec3.sub(vec3.create(), rightShoulder, leftShoulder)
+
+        const leftElbow = pose.getVec(Blaze.LEFT_ELBOW)
+        const upperArmDirection = vecFromTo(leftElbow, leftShoulder)
+        const m = matFromDirection(upperArmDirection, shoulderDirection)
+        mat4.rotateX(m, m, deg2rad(90))
+        mat4.rotateY(m, m, deg2rad(-90))
+
+        return m
+    }
+
+    // FOR DEBUGGING, LOOK AROUND FRAME 801ff
+    getLeftUpperArmWithAdjustment(pose: BlazePoseLandmarks) {
+        let upper = this.getLeftUpperArm(pose)
+
+        const pose2 = pose.clone()
+        pose2.mul(mat4.invert(mat4.create(), upper))
+
+        // X & Z of lower leg
+        const top = pose2.getVec(Blaze.LEFT_SHOULDER)
+        const middle = pose2.getVec(Blaze.LEFT_ELBOW)
+        const bottom = pose2.getVec(Blaze.LEFT_WRIST)
+
+        const d0 = vec3.sub(vec3.create(), middle, top)
+        const d1 = vec3.sub(vec3.create(), bottom, middle)
+
+        const x = d1[0],
+            z = d1[2]
+
+        let adjustmentByLower = 0,
+            adjustmentByEffector = 0
+
+        const angle = rad2deg(vec3.angle(d0, d1))
+        {
+            adjustmentByLower = rad2deg(Math.atan2(x, z) - Math.PI)
+            adjustmentByLower -= 180 // ellenbogen knick richtung vorne, im gegensatz zu knie
+            
+            // make 'a' easier to reason about
+            while (adjustmentByLower < 0) {
+                adjustmentByLower += 360
+            }
+        }
+        {
+            // KNEE TO FOOT INDEX IS A BIT HACKY (INSTEAD OF HEEL TO INDEX) BUT AT THE MOMENT BETTER
+            const leftHeel = pose2.getVec(Blaze.LEFT_WRIST)
+
+            // the result of the hand y-rotation can be improved by rotating it along x & z into a straight line
+            // or calculate the hand position relative to the lower arm and then extract the y rotation
+            const l0 = pose2.getVec(Blaze.LEFT_PINKY)
+            const l1 = pose2.getVec(Blaze.LEFT_INDEX)
+            const handCenter = vec3.add(vec3.create(), l0, l1)
+            vec3.scale(handCenter, handCenter, 0.5)
+
+            // const leftFootIndex = pose2.getVec(Blaze.LEFT_INDEX)
+            const x = handCenter[0] - leftHeel[0]
+            const z = handCenter[2] - leftHeel[2]
+            adjustmentByEffector = rad2deg(Math.atan2(x, z))
+            while (adjustmentByEffector < 0) {
+                adjustmentByEffector += 360
+            }
+            // adjustmentByEffector = 0
+        }
+
+        const debug = document.getElementById("debug1")
+        if (debug != null) {
+            debug.innerHTML = `adjustmentBy a: ${angle.toFixed(4)}, e: ${adjustmentByEffector.toFixed(4)}, l: ${adjustmentByLower.toFixed(4)}`
+        }
+
+        // blauer pfeil muss in die ellenbogen beuge zeigen!!!
+        // hand bewegt sich mehr als fuss, darum schauen wir erst [5,10] statt [15,25] auf sie
+
+        let adjustment = easeMedianAngle(angle, 5, 10, adjustmentByEffector, adjustmentByLower)
+        // adjustment = adjustmentByLower
+        // adjustment = adjustmentByEffector
+
+        // const adjustment = ++counter
+
+        mat4.rotateY(upper, upper, deg2rad(adjustment))
+
+        this.leftLowerArm = mat4.clone(upper)
+        mat4.rotateX(this.leftLowerArm, this.leftLowerArm, deg2rad(-angle))
+
+        return upper
+    }
+
+    getLeftLowerArm(pose: BlazePoseLandmarks): mat4 {
+        return this.leftLowerArm!
+    }
+
+    getLeftHand(pose: BlazePoseLandmarks): mat4 {
+        const leftWrist = pose.getVec(Blaze.LEFT_WRIST)
+        const leftPinky = pose.getVec(Blaze.LEFT_PINKY)
+        const leftIndex = pose.getVec(Blaze.LEFT_INDEX)
+
+        const handCenter = vec3.create()
+        vec3.sub(handCenter, leftPinky, leftIndex)
+        vec3.scale(handCenter, handCenter, 0.5)
+        vec3.add(handCenter, handCenter, leftIndex)
+
+        const forward = vec3.sub(vec3.create(), leftIndex, leftPinky)
+        const up = vec3.sub(vec3.create(), leftWrist, handCenter)
+        const m = matFromDirection(up, forward)
+        mat4.rotateX(m, m, deg2rad(90))
+        mat4.rotateY(m, m, deg2rad(180))
+
         return m
     }
 

@@ -16,6 +16,8 @@ import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export const REST_QUAT = quat2.create()
 
+let counter = 0
+
 /**
  * All presentation models report changes to the update manager
  * which will the update the domain model.
@@ -299,6 +301,27 @@ export class UpdateManager {
             setPose("neck02", relHead)
             setPose("neck03", relHead)
             setPose("head", relHead)
+
+            const leftUpperArm = this.bpc.getLeftUpperArmWithAdjustment(this.bpl)
+            mat4.mul(leftUpperArm, euler_matrix(0,deg2rad(30),deg2rad(-30)), leftUpperArm)
+            const invLeftUpperArm = mat4.invert(mat4.create(), leftUpperArm)
+
+            const relLeftUpperArm =  mat4.mul(mat4.create(), invShoulder, leftUpperArm)
+            const leftUpperArmQuat = quat2.fromMat4(quat2.create(), relLeftUpperArm)
+            let leftUpperArmDelta = quaternion_slerp(REST_QUAT, leftUpperArmQuat, 0.25)
+            mat4.fromQuat2(relLeftUpperArm, leftUpperArmDelta)
+            setPose("clavicle.L", relLeftUpperArm)
+            leftUpperArmDelta = quaternion_slerp(REST_QUAT, leftUpperArmQuat, 0.75)
+            mat4.fromQuat2(relLeftUpperArm, leftUpperArmDelta)
+            setPose("shoulder01.L", relLeftUpperArm)
+
+            const leftLowerArm = this.bpc.getLeftLowerArm(this.bpl)
+            mat4.mul(leftLowerArm, leftLowerArm, euler_matrix(deg2rad(40), 0, 0))
+            const invLeftLowerArm = mat4.invert(mat4.create(), leftLowerArm)
+            setPose("lowerarm01.L", mat4.mul(mat4.create(), invLeftUpperArm, leftLowerArm))
+
+            const leftHand = this.bpc.getLeftHand(this.bpl)
+            setPose("wrist.L", mat4.mul(mat4.create(), invLeftLowerArm, leftHand))
         }
 
         // UPDATE_SKINNING_MATRIX
