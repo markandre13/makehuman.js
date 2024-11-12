@@ -34,6 +34,13 @@ describe("Skeleton", function () {
         console.log("loaded skeleton...")
     })
 
+    this.beforeEach(function() {
+        skeleton.boneslist!.forEach(bone => {
+            bone.matUserPoseRelative = mat4.create()
+            bone.matUserPoseGlobal = undefined
+        })
+    })
+
     function str(m: mat4): string {
         const a = euler_from_matrix(m)
         return `${rad2deg(a.x).toFixed(2)}, ${rad2deg(a.y).toFixed(2)}, ${rad2deg(a.z).toFixed(2)}`
@@ -44,7 +51,7 @@ describe("Skeleton", function () {
         return [rad2deg(a.x), rad2deg(a.y), rad2deg(a.z)]
     }
 
-    it("rotate root bone", function () {
+    it("set matUserPoseRelative and update", function () {
 
         const b0 = skeleton.getBone("root")
         const b1 = skeleton.getBone("spine05")
@@ -57,8 +64,7 @@ describe("Skeleton", function () {
         expect(xyz(b2.matPoseGlobal!)).to.deep.almost.equal([19.80, 0, 0])
 
         // WHEN the skeleton is rotated 10 deg at 'root' around the x-axis
-        b0.matPose = euler_matrix(deg2rad(10), 0, 0)
-
+        b0.matUserPoseRelative = euler_matrix(deg2rad(10), 0, 0)
         skeleton.update()
 
         // console.log(`${b0.name}: global ${str(b0.matRestGlobal!)}. relative: ${str(b0.matRestRelative!)}, rest Global: ${str(b0.matPoseGlobal!)}`)
@@ -71,35 +77,7 @@ describe("Skeleton", function () {
         expect(xyz(b2.matPoseGlobal!)).to.deep.almost.equal([29.80, 0, 0])
     })
 
-    // to get lower & upper arm into a straight line, lower arm needs to be rotated -40deg around x
-
-    // next steps
-    // [ ] rotate upper arm to point down
-    // [ ] then rotate lower arm to point down
-
-    const setPose = (boneName: string, m: mat4) => {
-
-        // get bone
-        const bone = skeleton.getBone(boneName)
-
-        // convert from global to bone's relative coordinates
-        const restRotation = mat4.clone(bone.matRestGlobal!)
-        restRotation[12] = restRotation[13] = restRotation[14] = 0
-
-        const inv = mat4.invert(mat4.create(), restRotation)
-
-        if (boneName === "upperarm01.L") {
-            // mat4.rotateZ(m, m, deg2rad(-180)) // upperarm points down
-            mat4.mul(m, m, inv) // compensate for rest position
-        }
-        
-        const local = mat4.mul(mat4.create(), inv, m)
-        mat4.mul(local, local, restRotation)
-
-        bone.matPose = local
-    }
-
-    it.only("rotate left arm", function() {
+    it("set matUserPoseGlobal and update", function() {
 
         const b0 = skeleton.getBone("clavicle.L")
         const b1 = skeleton.getBone("shoulder01.L")
@@ -115,17 +93,8 @@ describe("Skeleton", function () {
         expect(xyz(b3.matPoseGlobal!)).to.deep.almost.equal([0.26, -8.24, -139.95])
         expect(xyz(b4.matPoseGlobal!)).to.deep.almost.equal([46.49, -8.24, -139.95])
 
-        // TODO: optimize this as the following depends on skeleton.update() to calculate b2.matPoseGlobal
-        //       * just calculate everything between root and this bone
-        //       * don't go back to root but stop at the previously set bone and have some cached data there
-        // setPose("upperarm01.L", euler_matrix(deg2rad(10), deg2rad(20), deg2rad(30)))
-        const rot2 = euler_matrix(deg2rad(10), deg2rad(20), deg2rad(30))
-        const pose2 = mat4.create()
-        mat4.mul(pose2, pose2, mat4.invert(mat4.create(), b2.matPoseGlobal!))
-        mat4.mul(pose2, pose2, rot2)
-        b2.matPose = pose2
-  
-        skeleton.update() // also unroll the update
+        b2.matUserPoseGlobal = euler_matrix(deg2rad(10), deg2rad(20), deg2rad(30)) 
+        skeleton.update()
 
         expect(xyz(b0.matPoseGlobal!)).to.deep.almost.equal([-10.89, 5.57, -71.23])
         expect(xyz(b1.matPoseGlobal!)).to.deep.almost.equal([-32.63, 3.51, -121.51])
@@ -133,20 +102,14 @@ describe("Skeleton", function () {
         expect(xyz(b3.matPoseGlobal!)).to.deep.almost.equal([10 + 2.94, 20 - 0.23, 30 + 1.35]) // there's some drift in here...
         expect(xyz(b4.matPoseGlobal!)).to.deep.almost.equal([10 + 49.17, 20 - 0.23, 30 + 1.35])
 
-        const rot4 = euler_matrix(deg2rad(35), deg2rad(25), deg2rad(15))
-        const pose4 = mat4.create()
-        mat4.mul(pose4, pose4, mat4.invert(mat4.create(), b4.matPoseGlobal!))
-        mat4.mul(pose4, pose4, rot4)
-
-        b4.matPose = pose4
-
+        b4.matUserPoseGlobal = euler_matrix(deg2rad(35), deg2rad(25), deg2rad(15))
         skeleton.update()
 
-        console.log(`${b0.name}: global: ${str(b0.matRestGlobal!)}. relative: ${str(b0.matRestRelative!)}, pose global: ${str(b0.matPoseGlobal!)}`)
-        console.log(`${b1.name}: global: ${str(b1.matRestGlobal!)}. relative: ${str(b1.matRestRelative!)}, pose global: ${str(b1.matPoseGlobal!)}`)
-        console.log(`${b2.name}: global: ${str(b2.matRestGlobal!)}. relative: ${str(b2.matRestRelative!)}, pose global: ${str(b2.matPoseGlobal!)}`)
-        console.log(`${b3.name}: global: ${str(b3.matRestGlobal!)}. relative: ${str(b2.matRestRelative!)}, pose global: ${str(b3.matPoseGlobal!)}`)
-        console.log(`${b4.name}: global: ${str(b4.matRestGlobal!)}. relative: ${str(b4.matRestRelative!)}, pose global: ${str(b4.matPoseGlobal!)}`)
+        // console.log(`${b0.name}: global: ${str(b0.matRestGlobal!)}. relative: ${str(b0.matRestRelative!)}, pose global: ${str(b0.matPoseGlobal!)}`)
+        // console.log(`${b1.name}: global: ${str(b1.matRestGlobal!)}. relative: ${str(b1.matRestRelative!)}, pose global: ${str(b1.matPoseGlobal!)}`)
+        // console.log(`${b2.name}: global: ${str(b2.matRestGlobal!)}. relative: ${str(b2.matRestRelative!)}, pose global: ${str(b2.matPoseGlobal!)}`)
+        // console.log(`${b3.name}: global: ${str(b3.matRestGlobal!)}. relative: ${str(b2.matRestRelative!)}, pose global: ${str(b3.matPoseGlobal!)}`)
+        // console.log(`${b4.name}: global: ${str(b4.matRestGlobal!)}. relative: ${str(b4.matRestRelative!)}, pose global: ${str(b4.matPoseGlobal!)}`)
 
         expect(xyz(b0.matPoseGlobal!)).to.deep.almost.equal([-10.89, 5.57, -71.23])
         expect(xyz(b1.matPoseGlobal!)).to.deep.almost.equal([-32.63, 3.51, -121.51])

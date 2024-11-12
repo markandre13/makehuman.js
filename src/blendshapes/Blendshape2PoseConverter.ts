@@ -52,14 +52,14 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
                 switch (poseUnit2mapPose) {
                     case PoseUnit2MatPose.ONBLEND:
                         const poseMat = mat4.fromQuat2(mat4.create(), q)
-                        bone.matPose = poseUnit2matPose(poseMat, bone.matRestGlobal!)
+                        bone.matUserPoseRelative = poseUnit2matPose(poseMat, bone.matRestGlobal!)
                         break
                     case PoseUnit2MatPose.ONLOAD:
-                        bone.matPose = mat4.fromQuat2(mat4.create(), q)
+                        bone.matUserPoseRelative = mat4.fromQuat2(mat4.create(), q)
                         break
                 }
             } else {
-                mat4.identity(bone.matPose)
+                mat4.identity(bone.matUserPoseRelative!)
             }
         })
 
@@ -77,7 +77,7 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
                 // multiply by weight
                 vec3.scale(t, t, weight)
                 // add to bone
-                mat4.translate(bone.matPose, bone.matPose, t)
+                mat4.translate(bone.matUserPoseRelative!, bone.matUserPoseRelative!, t)
             })
         })
     }

@@ -41,7 +41,7 @@ export class PoseNode implements TreeNode {
     }
 
     copyEulerToBoneMatPose() {
-        this.bone.matPose = euler_matrix(
+        this.bone.matUserPoseRelative = euler_matrix(
             (this.x.value / 360) * 2 * Math.PI,
             (this.y.value / 360) * 2 * Math.PI,
             (this.z.value / 360) * 2 * Math.PI

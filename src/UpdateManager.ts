@@ -239,7 +239,7 @@ export class UpdateManager {
                 const local = mat4.mul(mat4.create(), inv, m)
                 mat4.mul(local, local, restRotation)
 
-                bone.matPose = local
+                bone.matUserPoseRelative = local
             }
 
             const setPoseX = (boneName: string, m: mat4) => {
@@ -256,7 +256,7 @@ export class UpdateManager {
                         // move m from global coordinates into bones coordinate system
                         mat4.mul(m, invRest, m)
                         mat4.mul(m, m, rest)
-                        bone.matPose = m
+                        bone.matUserPoseRelative = m
                         break
                     case "lowerarm01.L":
                         mat4.rotateZ(m, m, deg2rad(-130)) // upperarm points down (the +50 is upper to lower?)
@@ -264,7 +264,7 @@ export class UpdateManager {
                         // move m from global coordinates into bones coordinate system
                         mat4.mul(m, invRest, m)
                         mat4.mul(m, m, rest)
-                        bone.matPose = m
+                        bone.matUserPoseRelative = m
                         break
                     case "lowerarm01.R":
                         mat4.rotateZ(m, m, deg2rad(-230)) // upperarm points down (the +50 is upper to lower?)
@@ -272,7 +272,7 @@ export class UpdateManager {
                         // move m from global coordinates into bones coordinate system
                         mat4.mul(m, invRest, m)
                         mat4.mul(m, m, rest)
-                        bone.matPose = m
+                        bone.matUserPoseRelative = m
                         break
                 }
             }

@@ -3,6 +3,8 @@ import { Skeleton } from "./Skeleton"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 
 /**
+ * Bone
+ * 
  * (head|tail)Joint: string         // (head|tail)JointName
  * ⬇ ︎updateJointPositions()
  * (head|tail)Pose: vec3            // rest(Head|Tail)Pose
@@ -13,32 +15,45 @@ import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
  */
 export class Bone {
     skeleton: Skeleton
+
     name: string
-    index: number = -1 // index within Skeleton.boneslist
     headJoint: string
     tailJoint: string
     headPos = [0, 0, 0] // FIXME: vec3
     tailPos = [0, 0, 0] // FIXME: vec3
     roll: string | Array<string>
-    length = 0
+
+    /** index of this bone in Skeleton.boneslist */
+    index: number = -1
 
     parent?: Bone
     children: Bone[] = []
 
+    /** distance from root bone */
     level: number
     reference_bones = []
 
-    // user defined relative pose
-    matPose: mat4
+    // rest position derived from morphed mesh
+    /** bone relative to world (move, rotate) */
+    matRestGlobal?: mat4
+    /** bone relative to parent */
+    matRestRelative?: mat4
 
-    // calculated rest position
-    matRestGlobal?: mat4 // bone relative to world (move, rotate)
-    matRestRelative?: mat4 // bone relative to parent
-    yvector4?: vec4 // direction vector of this bone
+    /** length of bone */
+    length = 0
+    /** direction and length along y-axis of bone */
+    yvector4?: vec4
+
+    /** user defined relative pose */
+    matUserPoseRelative: mat4
+    /** user defined global pose (when set, update() calculates matUserPoseRelative from it) */
+    matUserPoseGlobal?: mat4
 
     // calculated pose positions
-    matPoseGlobal?: mat4 // relative to world, use to render the skeleton (TODO: change that and get rid of this variable)
-    matPoseVerts?: mat4 // relative to world and own rest pose, used for skinning
+    /** relative to world, use to render the skeleton */
+    matPoseGlobal?: mat4
+    /** relative to world and own rest pose, used for skinning */
+    matPoseVerts?: mat4
 
     // shared/skeleton.py: 709
     constructor(
@@ -81,7 +96,7 @@ export class Bone {
         //         weight_reference_bones = [ weight_reference_bones ]
         //     self._weight_reference_bones = list( set(weight_reference_bones) )
 
-        this.matPose = mat4.identity(mat4.create()) // not posed yet
+        this.matUserPoseRelative = mat4.create() // not posed yet
     }
 
     toString() {
@@ -126,9 +141,11 @@ export class Bone {
     }
 
     // line 768
-    // Update the joint positions of this bone based on the current state
-    // of the human mesh.
-    // Remember to call build() after calling this method.
+    /**
+     * Update the joint positions of this bone based on the current state
+     * of the human mesh.
+     * Remember to call build() after calling this method.
+     */
     updateJointPositions(in_rest: boolean = true) {
         // if not human:
         //   from core import G
@@ -140,15 +157,18 @@ export class Bone {
     }
 
     // line 826
-    // called from Skeleton.build(ref_skel), which is called from Skeleton.constructor()
-    // Calculate this bone's rest matrices and determine its local axis (roll
-    // or bone normal).
-    // Sets matPoseVerts, matPoseGlobal and matRestRelative.
-    // This method needs to be called everytime the skeleton structure is
-    // changed, the rest pose is changed or joint positions are updated.
-    // Pass a ref_skel to copy the bone normals from a reference skeleton
-    // instead of recalculating them (Recalculating bone normals generally
-    // only works if the skeleton is in rest pose).
+    /**
+     *  called from Skeleton.build(ref_skel), which is called from Skeleton.constructor()
+     *
+     * Calculate this bone's rest matrices and determine its local axis (roll
+     * or bone normal).
+     * Sets matPoseVerts, matPoseGlobal and matRestRelative.
+     * This method needs to be called everytime the skeleton structure is
+     * changed, the rest pose is changed or joint positions are updated.
+     * Pass a ref_skel to copy the bone normals from a reference skeleton
+     * instead of recalculating them (Recalculating bone normals generally
+     * only works if the skeleton is in rest pose).
+     */
     build(ref_skel?: any) {
         const head3 = this.getRestHeadPos()
         const tail3 = this.getRestTailPos()
@@ -173,18 +193,40 @@ export class Bone {
         }
     }
 
-    // calculate matPoseGlobal & matPoseVerts
+    /** 
+     * calculate matPoseGlobal & matPoseVerts
+     */
     update() {
-        // console.log(`Bone.update() ${this.name}`)
+        // console.log(`Bone(name="${this.name}").update()`)
+        if (this.matUserPoseGlobal !== undefined) {
+            mat4.identity(this.matUserPoseRelative)
+        }
+
         if (this.parent !== undefined) {
             this.matPoseGlobal = mat4.multiply(
                 mat4.create(),
                 this.parent.matPoseGlobal!,
-                mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!)
+                mat4.multiply(mat4.create(), this.matRestRelative!, this.matUserPoseRelative!)
             )
         } else {
-            this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matPose!)
+            this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matUserPoseRelative!)
         }
+
+        if (this.matUserPoseGlobal !== undefined) {
+            this.matUserPoseRelative = mat4.invert(mat4.create(), this.matPoseGlobal)
+            mat4.mul(this.matUserPoseRelative, this.matUserPoseRelative, this.matUserPoseGlobal)
+
+            if (this.parent !== undefined) {
+                this.matPoseGlobal = mat4.multiply(
+                    mat4.create(),
+                    this.parent.matPoseGlobal!,
+                    mat4.multiply(mat4.create(), this.matRestRelative!, this.matUserPoseRelative!)
+                )
+            } else {
+                this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matUserPoseRelative!)
+            }    
+        }
+
         this.matPoseVerts = mat4.multiply(
             mat4.create(),
             this.matPoseGlobal,
