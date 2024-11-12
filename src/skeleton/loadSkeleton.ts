@@ -1,5 +1,4 @@
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
-import { vec3, mat4 } from 'gl-matrix'
 import { Skeleton } from './Skeleton'
 import { HumanMesh } from '../mesh/HumanMesh'
 

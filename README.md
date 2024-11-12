@@ -218,20 +218,20 @@ class Proxy {
 
 ## Development
 
+```sh
     # install packages
     npm install
 
     # populate data directory
-
-    (I run this outside the Visual Studio Code terminal, to get access to my
-    local Makehuman installation to avoid downloading all assets from the net.)
-
     npm run dev:prepare
 
     # run (in separate terminals)
     npm run dev:build
     npm run dev:serve
+```
 
 ## Run single test
 
-    npm run dev:test --file=build/test/skeleton.spec.js
+```sh
+    npm run dev:test --file=build/test/skeleton/Skeleton.spec.js
+```

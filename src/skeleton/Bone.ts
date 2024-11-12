@@ -84,6 +84,10 @@ export class Bone {
         this.matPose = mat4.identity(mat4.create()) // not posed yet
     }
 
+    toString() {
+        return `Bone { ${this.name} }`
+    }
+
     // FIXME: WTF???
     get planes(): Map<string, Array<string>> {
         return this.skeleton.planes

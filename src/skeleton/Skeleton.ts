@@ -7,7 +7,7 @@ import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
 import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { euler_from_matrix } from "lib/euler_matrix"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 
 export class Skeleton {
