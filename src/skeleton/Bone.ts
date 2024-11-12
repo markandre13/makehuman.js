@@ -214,6 +214,9 @@ export class Bone {
 
         if (this.matUserPoseGlobal !== undefined) {
             this.matUserPoseRelative = mat4.invert(mat4.create(), this.matPoseGlobal)
+            const m = this.matUserPoseRelative
+            // FIXME: the following line is not covered in test as Skeleton.spec.ts just checks rotations
+            m[12] = m[13] = m[14] = 0
             mat4.mul(this.matUserPoseRelative, this.matUserPoseRelative, this.matUserPoseGlobal)
 
             if (this.parent !== undefined) {

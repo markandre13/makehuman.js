@@ -13,6 +13,7 @@ import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
 import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
 import { deg2rad } from "lib/calculateNormals"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export const REST_QUAT = quat2.create()
 
@@ -244,35 +245,14 @@ export class UpdateManager {
 
             const setPoseX = (boneName: string, m: mat4) => {
                 const bone = this.skeleton.getBone(boneName)
-                const rest = mat4.clone(bone.matRestGlobal!)
-                rest[12] = rest[13] = rest[14] = 0
-                const invRest = mat4.invert(mat4.create(), rest)
-
                 switch (boneName) {
                     case "upperarm01.L":
                     case "upperarm01.R":
-                        mat4.rotateZ(m, m, deg2rad(-180)) // upperarm points down
-                        mat4.mul(m, m, invRest) // compensate for rest position
-                        // move m from global coordinates into bones coordinate system
-                        mat4.mul(m, invRest, m)
-                        mat4.mul(m, m, rest)
-                        bone.matUserPoseRelative = m
-                        break
                     case "lowerarm01.L":
-                        mat4.rotateZ(m, m, deg2rad(-130)) // upperarm points down (the +50 is upper to lower?)
-                        mat4.mul(m, m, invRest) // compensate for rest position
-                        // move m from global coordinates into bones coordinate system
-                        mat4.mul(m, invRest, m)
-                        mat4.mul(m, m, rest)
-                        bone.matUserPoseRelative = m
-                        break
                     case "lowerarm01.R":
-                        mat4.rotateZ(m, m, deg2rad(-230)) // upperarm points down (the +50 is upper to lower?)
-                        mat4.mul(m, m, invRest) // compensate for rest position
-                        // move m from global coordinates into bones coordinate system
-                        mat4.mul(m, invRest, m)
-                        mat4.mul(m, m, rest)
-                        bone.matUserPoseRelative = m
+                        // FIXME: this doesn't work (see frame 955 in test data)
+                        mat4.rotateZ(m, m, deg2rad(-180)) // upperarm points down
+                        bone.matUserPoseGlobal = m
                         break
                 }
             }
@@ -283,10 +263,10 @@ export class UpdateManager {
             this.bpl.data = this.app.frontend._poseLandmarks!
             const hip = this.bpc.getHip(this.bpl)
             const invHip = mat4.invert(mat4.create(), hip)
-            const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
-            mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
-            setPose("root", hipWithTranslation)
-            // setPose("root", hip)
+            // const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
+            // mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
+            // setPose("root", hipWithTranslation)
+            setPose("root", hip)
 
             const leftUpperLeg = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
             const invLeftUpperLeg = mat4.invert(mat4.create(), leftUpperLeg)
