@@ -52,7 +52,7 @@ export class Bone {
     // calculated pose positions
     /** relative to world, use to render the skeleton */
     matPoseGlobal?: mat4
-    /** relative to world and own rest pose, used for skinning */
+    /** relative to world and own rest pose, used to transform mesh during skinning */
     matPoseVerts?: mat4
 
     // shared/skeleton.py: 709

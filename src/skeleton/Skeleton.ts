@@ -163,29 +163,29 @@ export class Skeleton {
 
     /**
      * return the pose as an *.mhp file
-     * 
+     *
      * *.mhp files are a makehuman.js extension.
-     * 
+     *
      * MakeHuman stores poses in BVH files, which is nice if one wants to exchange a
      * pose/animation with other programs but
-     * 
+     *
      * * it needs some computation (convert matPose from relative to global coordinate space
      *   and euler rotations).
      * * BVH files are rather large as they also include the whole skeleton.
      * * I had some trouble getting it to work correctly (and sometimes it still doesn't)
      * * I intend to use Collada to export animations so I don't want to spend more time on BVH
      *   other than needed to import the face-poseunits.bvh file.
-     * 
+     *
      * Hence I added *.mhp and made it similar to the already existing *.mhm format.
-     * 
+     *
      * NOTE: not sure yet if storing relative matPoses will work across different morphs.
      *       well, global matPoses also won't yield perfect results
      */
-    // should i use the pose nodes instead? 
+    // should i use the pose nodes instead?
     toMHP(): string {
         let out = `version v1.2.0\n`
         out += `name makehuman.js\n`
-        this.poseNodes.forEach(node => {
+        this.poseNodes.forEach((node) => {
             out += `bone ${node.bone.name} ${node.x.value} ${node.y.value} ${node.z.value}\n`
         })
         return out
@@ -346,7 +346,7 @@ export class Skeleton {
                 const meshCoords = this.humanMesh.getRestposeCoordinates()
                 verts = v_idx.map((i) => {
                     i = i * 3
-                    return [meshCoords[i], meshCoords[i + 1], meshCoords[i + 2]]
+                    return vec3.fromValues(meshCoords[i], meshCoords[i + 1], meshCoords[i + 2])
                 })
                 // console.log(verts.length)
                 // console.log(verts)
@@ -355,18 +355,10 @@ export class Skeleton {
                 // verts = human.meshData.getCoords(v_idx)
             }
             // return verts.mean(axis=0)
-            let x = 0,
-                y = 0,
-                z = 0
-            verts.forEach((v) => {
-                x += v[0]
-                y += v[1]
-                z += v[2]
-            })
-            x /= verts.length
-            y /= verts.length
-            z /= verts.length
-            return [x, y, z]
+            const a = vec3.create()
+            verts.forEach((v) => vec3.add(a, a, v))
+            vec3.scale(a, a, 1 / verts.length)
+            return [a[0], a[1], a[2]]
         }
         throw Error(`not implemented`)
         // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from base mesh`)
@@ -470,9 +462,8 @@ export class Skeleton {
     getBone(name: string): Bone {
         const bone = this.bones.get(name)
         if (bone === undefined) {
-
             let txt = ``
-            this.bones.forEach((v,k) => {
+            this.bones.forEach((v, k) => {
                 txt = `${txt} ${k}`
             })
 
@@ -484,20 +475,22 @@ export class Skeleton {
 
     skinMesh(meshCoords: Float32Array, vertBoneMapping: VertexBoneMapping): Float32Array {
         const coords = new Float32Array(meshCoords.length)
+        const v = vec3.create()
         for (let [bname, mapping] of vertBoneMapping.entries()) {
             const [verts, weights] = mapping
             const bone = this.getBone(bname)
             for (let i = 0; i < verts.length; ++i) {
                 const vert = verts[i] * 3
                 const weight = weights[i]
-                const vec = vec3.transformMat4(
-                    vec3.create(),
+                vec3.transformMat4(
+                    v,
                     vec3.fromValues(meshCoords[vert], meshCoords[vert + 1], meshCoords[vert + 2]),
                     bone.matPoseVerts!
                 )
-                coords[vert] += vec[0] * weight
-                coords[vert + 1] += vec[1] * weight
-                coords[vert + 2] += vec[2] * weight
+                vec3.scale(v, v, weight)
+                coords[vert] += v[0]
+                coords[vert + 1] += v[1]
+                coords[vert + 2] += v[2]
             }
         }
         return coords
