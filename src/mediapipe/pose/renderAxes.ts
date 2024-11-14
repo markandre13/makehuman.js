@@ -4,6 +4,9 @@ import { ColorShader } from "render/shader/ColorShader"
 import { BlazePoseConverter } from "./BlazePoseConverter"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
 import { Blaze } from "./Blaze"
+import { deg2rad } from "lib/calculateNormals"
+
+let counter = 0
 
 export function renderAxes(
     programColor: ColorShader,

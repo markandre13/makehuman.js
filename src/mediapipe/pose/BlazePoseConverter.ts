@@ -3,6 +3,7 @@ import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { easeMedianAngle, medianAngle } from "lib/medianAngle"
 import { Blaze } from "./Blaze"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
+import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 function vecFromTo(from: vec3, to: vec3) {
     return vec3.sub(vec3.create(), to, from)
@@ -190,11 +191,6 @@ export class BlazePoseConverter {
             // adjustmentByEffector = 0
         }
 
-        const debug = document.getElementById("debug1")
-        if (debug != null) {
-            debug.innerHTML = `adjustmentBy a: ${angle.toFixed(4)}, e: ${adjustmentByEffector.toFixed(4)}, l: ${adjustmentByLower.toFixed(4)}`
-        }
-
         // blauer pfeil muss in die ellenbogen beuge zeigen!!!
         // hand bewegt sich mehr als fuss, darum schauen wir erst [5,10] statt [15,25] auf sie
 
@@ -208,6 +204,12 @@ export class BlazePoseConverter {
 
         this.leftLowerArm = mat4.clone(upper)
         mat4.rotateX(this.leftLowerArm, this.leftLowerArm, deg2rad(-angle))
+
+        const debug = document.getElementById("debug1")
+        if (debug != null) {
+            // debug.innerHTML = `adjustmentBy a: ${angle.toFixed(4)}, e: ${adjustmentByEffector.toFixed(4)}, l: ${adjustmentByLower.toFixed(4)}`
+            debug.innerHTML = `upper: ${str(upper)}, lower = ${str(this.leftLowerArm)}<br/>xxx`
+        }
 
         return upper
     }
@@ -569,4 +571,9 @@ function matFromDirection(direction: vec3, up: vec3 = _up) {
         zaxis[0], zaxis[1], zaxis[2], 0,
         0,        0,        0,        1
     )
+}
+
+function str(m: mat4): string {
+    const a = euler_from_matrix(m)
+    return `${rad2deg(a.x).toFixed(2)}, ${rad2deg(a.y).toFixed(2)}, ${rad2deg(a.z).toFixed(2)}`
 }

@@ -422,3 +422,7 @@ describe("Skeleton", function () {
         })
     })
 })
+
+function eulerDeg2mat4(x: number, y: number, z: number) {
+    return euler_matrix(deg2rad(x), deg2rad(y), deg2rad(z))
+}

@@ -13,7 +13,6 @@ import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
 import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
 import { deg2rad } from "lib/calculateNormals"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 
 export const REST_QUAT = quat2.create()
 
@@ -245,14 +244,25 @@ export class UpdateManager {
 
             const setPoseX = (boneName: string, m: mat4) => {
                 const bone = this.skeleton.getBone(boneName)
+                bone.matUserPoseGlobal = m
                 switch (boneName) {
                     case "upperarm01.L":
-                    case "upperarm01.R":
                     case "lowerarm01.L":
+                    case "wrist.L":
+                    case "upperarm01.R":
                     case "lowerarm01.R":
-                        // FIXME: this doesn't work (see frame 955 in test data)
-                        mat4.rotateZ(m, m, deg2rad(-180)) // upperarm points down
-                        bone.matUserPoseGlobal = m
+                    case "wrist.R":
+                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(180), vec3.fromValues(0,0,1))
+                        break
+                    case "upperleg01.L":
+                    case "lowerleg01.L":
+                    case "upperleg01.R":
+                    case "lowerleg01.R":
+                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(170), vec3.fromValues(1,0,0))
+                        break
+                    case "foot.L":
+                    case "foot.R":
+                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(115), vec3.fromValues(1,0,0))
                         break
                 }
             }
@@ -263,32 +273,18 @@ export class UpdateManager {
             this.bpl.data = this.app.frontend._poseLandmarks!
             const hip = this.bpc.getHip(this.bpl)
             const invHip = mat4.invert(mat4.create(), hip)
-            // const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
-            // mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
-            // setPose("root", hipWithTranslation)
-            setPose("root", hip)
+            const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
+            mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
+            setPose("root", hipWithTranslation)
+            // setPose("root", hip)
 
-            const leftUpperLeg = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
-            const invLeftUpperLeg = mat4.invert(mat4.create(), leftUpperLeg)
-            setPose("upperleg01.L", mat4.mul(mat4.create(), invHip, leftUpperLeg))
+            setPoseX("upperleg01.L", this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
+            setPoseX("lowerleg01.L", this.bpc.getLeftLowerLeg(this.bpl))
+            setPoseX("foot.L", this.bpc.getLeftFoot(this.bpl))
 
-            const leftLowerLeg = this.bpc.getLeftLowerLeg(this.bpl)
-            const invLeftLowerLeg = mat4.invert(mat4.create(), leftLowerLeg)
-            setPose("lowerleg01.L", mat4.mul(mat4.create(), invLeftUpperLeg, leftLowerLeg))
-
-            const leftFoot = this.bpc.getLeftFoot(this.bpl)
-            setPose("foot.L", mat4.mul(mat4.create(), invLeftLowerLeg, leftFoot))
-
-            const rightUpperLeg = this.bpc.getRightUpperLegWithAdjustment(this.bpl)
-            const invRightUpperLeg = mat4.invert(mat4.create(), rightUpperLeg)
-            setPose("upperleg01.R", mat4.mul(mat4.create(), invHip, rightUpperLeg))
-
-            const rightLowerLeg = this.bpc.getRightLowerLeg(this.bpl)
-            const invRightLowerLeg = mat4.invert(mat4.create(), rightLowerLeg)
-            setPose("lowerleg01.R", mat4.mul(mat4.create(), invRightUpperLeg, rightLowerLeg))
-
-            const rightFoot = this.bpc.getRightFoot(this.bpl)
-            setPose("foot.R", mat4.mul(mat4.create(), invRightLowerLeg, rightFoot))
+            setPoseX("upperleg01.R", this.bpc.getRightUpperLegWithAdjustment(this.bpl))
+            setPoseX("lowerleg01.R", this.bpc.getRightLowerLeg(this.bpl))
+            setPoseX("foot.R", this.bpc.getRightFoot(this.bpl))
 
             const shoulder = this.bpc.getShoulder(this.bpl)
             const invShoulder = mat4.invert(mat4.create(), shoulder)
@@ -312,27 +308,12 @@ export class UpdateManager {
             setPose("neck03", relHead)
             setPose("head", relHead)
 
-            const leftUpperArm = this.bpc.getLeftUpperArmWithAdjustment(this.bpl)
-            const invLeftUpperArm = mat4.invert(mat4.create(), leftUpperArm)
-            setPoseX("upperarm01.L", mat4.mul(mat4.create(), invShoulder, leftUpperArm))
-
-            const leftLowerArm = this.bpc.getLeftLowerArm(this.bpl)
-            const invLeftLowerArm = mat4.invert(mat4.create(), leftLowerArm)
-            setPoseX("lowerarm01.L", mat4.mul(mat4.create(), invLeftUpperArm, leftLowerArm))
-
-            // const leftHand = this.bpc.getLeftHand(this.bpl)
-            // setPose("wrist.L", mat4.mul(mat4.create(), invLeftLowerArm, leftHand))
-
-            const rightUpperArm = this.bpc.getRightUpperArmWithAdjustment(this.bpl)
-            const invRightUpperArm = mat4.invert(mat4.create(), rightUpperArm)
-            setPoseX("upperarm01.R", mat4.mul(mat4.create(), invShoulder, rightUpperArm))
-
-            const rightLowerArm = this.bpc.getRightLowerArm(this.bpl)
-            const invRightLowerArm = mat4.invert(mat4.create(), rightLowerArm)
-            setPoseX("lowerarm01.R", mat4.mul(mat4.create(), invRightUpperArm, rightLowerArm))
-
-            // const leftHand = this.bpc.getLeftHand(this.bpl)
-            // setPose("wrist.L", mat4.mul(mat4.create(), invLeftLowerArm, leftHand))
+            setPoseX("upperarm01.L", this.bpc.getLeftUpperArmWithAdjustment(this.bpl))
+            setPoseX("lowerarm01.L", this.bpc.getLeftLowerArm(this.bpl))
+            setPoseX("wrist.L", this.bpc.getLeftHand(this.bpl))
+            setPoseX("upperarm01.R", this.bpc.getRightUpperArmWithAdjustment(this.bpl))
+            setPoseX("lowerarm01.R", this.bpc.getRightLowerArm(this.bpl))
+            setPoseX("wrist.R", this.bpc.getRightHand(this.bpl))
         }
 
         // UPDATE_SKINNING_MATRIX
