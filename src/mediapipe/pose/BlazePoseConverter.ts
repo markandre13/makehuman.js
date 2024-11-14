@@ -99,7 +99,7 @@ export class BlazePoseConverter {
 
         const adjustment = (left + right) / 4 // add 1/4, improve by looking at real body
 
-        mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(adjustment))
+        mat4.rotateX(rootPoseGlobal, rootPoseGlobal, deg2rad(-adjustment))
 
         return rootPoseGlobal
     }

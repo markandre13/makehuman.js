@@ -255,10 +255,12 @@ export class UpdateManager {
                         mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(180), vec3.fromValues(0,0,1))
                         break
                     case "upperleg01.L":
-                    case "lowerleg01.L":
                     case "upperleg01.R":
+                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(175 - 10 + 2.5), vec3.fromValues(1,0,0))
+                        break
+                    case "lowerleg01.L":
                     case "lowerleg01.R":
-                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(170), vec3.fromValues(1,0,0))
+                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(180 - 4.5), vec3.fromValues(1,0,0))
                         break
                     case "foot.L":
                     case "foot.R":
@@ -271,7 +273,7 @@ export class UpdateManager {
             skeletonChanged = true
 
             this.bpl.data = this.app.frontend._poseLandmarks!
-            const hip = this.bpc.getHip(this.bpl)
+            const hip = this.bpc.getHipWithAdjustment(this.bpl)
             const invHip = mat4.invert(mat4.create(), hip)
             const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
             mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
@@ -286,17 +288,28 @@ export class UpdateManager {
             setPoseX("lowerleg01.R", this.bpc.getRightLowerLeg(this.bpl))
             setPoseX("foot.R", this.bpc.getRightFoot(this.bpl))
 
+            // FRAME 1864 looks wrong, try to fine tune against the video recprdings
+            // FRAME 1953 looks wrong (head more bend forward)
+            // getting up from the ground looks wrong
+
+            // const spine = this.bpc.getSpine(this.bpl)
+            // mat4.mul(spine, spine, hip)
+            const spine = this.bpc.getSpine(this.bpl)
+            const invSpine = mat4.invert(mat4.create(), spine)
+            const relSpine = mat4.mul(mat4.create(), invHip, spine)
+            const spineQuat = quat2.fromMat4(quat2.create(), relSpine)
+            const spineDelta = quaternion_slerp(REST_QUAT, spineQuat, 0.5) // FIXME
+            mat4.fromQuat2(relSpine, spineDelta)
+            // only spine04 & spine05???
+            // setPose("spine01", relShoulder)
+            // setPose("spine02", relShoulder)
+            setPose("spine04", relSpine)
+            setPose("spine05", relSpine)
+
             const shoulder = this.bpc.getShoulder(this.bpl)
             const invShoulder = mat4.invert(mat4.create(), shoulder)
-            const relShoulder = mat4.mul(mat4.create(), invHip, shoulder)
-            const shoulderQuat = quat2.fromMat4(quat2.create(), relShoulder)
-            const shoulderDelta = quaternion_slerp(REST_QUAT, shoulderQuat, 0.25)
-            mat4.fromQuat2(relShoulder, shoulderDelta)
-            // only spine04 & spine05???
-            setPose("spine01", relShoulder)
-            setPose("spine02", relShoulder)
-            setPose("spine04", relShoulder)
-            setPose("spine05", relShoulder)
+            const relShoulder = mat4.mul(mat4.create(), invSpine, shoulder)
+            setPose("spine01", relShoulder) // FIXME: better to add this to the clavicle?
 
             const head = this.bpc.getHead(this.bpl)
             const relHead = mat4.mul(mat4.create(), invShoulder, head)

@@ -68,7 +68,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         const data = new Float32Array(landmarks)
 
         // move blaze skeleton to origin to ease debugging
-        if (true) {
+        if (false) {
             this.bpl.data = landmarks
             const root = vec3.add(vec3.create(), this.bpl.getVec(Blaze.LEFT_HIP), this.bpl.getVec(Blaze.RIGHT_HIP))
             vec3.scale(root, root, 0.5)

@@ -22,7 +22,7 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     const rightHipX = bpl.getVec(Blaze.RIGHT_HIP)
     const lengthHip = vec3.length(vec3.sub(vec3.create(), rightHipX, leftHipX))
 
-    const hip = bpc.getHip(bpl)
+    const hip = bpc.getHipWithAdjustment(bpl)
     const shoulder = bpc.getShoulder(bpl)
 
     const leftHip2 = vec3.fromValues(lengthHip/2, 0, 0)

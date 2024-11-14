@@ -29,7 +29,7 @@ export function renderAxes(
 
     const m = mat4.create()
     mat4.translate(m, modelViewMatrix, hipCenter)
-    const hip = bpc.getHip(bpl)
+    const hip = bpc.getHipWithAdjustment(bpl)
     mat4.mul(m, m, hip)
     programColor.setModelViewMatrix(m)
     arrowMesh.draw(programColor)
