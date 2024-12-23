@@ -38,10 +38,10 @@ class XYZModel extends Model {
 
     constructor(options?: ModelOptions) {
         super(options)
-        const t = () => this.modified.trigger()
-        this.x.modified.add(t)
-        this.y.modified.add(t)
-        this.z.modified.add(t)
+        const t = () => this.signal.emit()
+        this.x.signal.add(t)
+        this.y.signal.add(t)
+        this.z.signal.add(t)
     }
 
     toMatrix() {
@@ -127,7 +127,7 @@ export class SimulatedModel {
     constructor() {
         this.update = this.update.bind(this)
         for (const model of this.all) {
-            model.modified.add(this.update)
+            model.signal.add(this.update)
         }
         this.update()
     }

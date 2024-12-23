@@ -37,7 +37,7 @@ export function MediapipeTab(props: { app: Application }) {
             [ict, "ICTKit Blendshape"],
             [lm, "Mediapipe Landmarks"],
         ], {label: "Render Engine"})
-        renderEngine.modified.add(() => {
+        renderEngine.signal.add(() => {
             props.app.setRenderer(renderEngine.value, renderEngine.value !== mh)
         })
 
@@ -50,7 +50,7 @@ export function MediapipeTab(props: { app: Application }) {
                 label: "Capture Engine"
             }
         )
-        captureEngine.modified.add( () => {
+        captureEngine.signal.add( () => {
             props.app.frontend.backend?.setEngine(MotionCaptureType.FACE, captureEngine.value)
         })
     }

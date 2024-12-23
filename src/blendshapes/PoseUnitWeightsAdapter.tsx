@@ -1,5 +1,6 @@
-import { TableAdapter, TablePos, TableEvent, TableEventType, NumberModel } from "toad.js"
+import { TableAdapter, TablePos, NumberModel } from "toad.js"
 import { PoseUnitWeights } from "./PoseUnitWeights"
+import { CELL_CHANGED } from "toad.js/table/TableEvent"
 
 export class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
     override getColumnHead(col: number) {
@@ -19,9 +20,9 @@ export class PoseUnitWeightsAdapter extends TableAdapter<PoseUnitWeights> {
             case 1:
                 // cell.innerText = this.model.getWeight(pos.row).toString()
                 const poseUnit = this.model.getWeight(pos.row)
-                if (poseUnit.modified.count() == 0) {
-                    poseUnit.modified.add(
-                        () => this.model.modified.trigger(new TableEvent(TableEventType.CELL_CHANGED, pos.col, pos.row))
+                if (poseUnit.signal.count() == 0) {
+                    poseUnit.signal.add(
+                        () => this.model.signal.emit({type: CELL_CHANGED, col: pos.col, row: pos.row})
                         // ALSO
                         // o accumulate MHFacePoseUnits and copy them to BlendshapeConverter
                         // source

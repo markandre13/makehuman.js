@@ -12,10 +12,10 @@ export class NumberRelModel extends NumberModel {
     // note: relations can change at runtime
     observe(model: NumberModel) {
         this.observed.push(model)
-        model.modified.add(this.change, this)
+        model.signal.add(this.change, this)
     }
     clear() {
-        this.observed.forEach((it) => it.modified.remove(this))
+        this.observed.forEach((it) => it.signal.remove(this))
         this.observed.length = 0
     }
     change() {

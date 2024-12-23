@@ -47,7 +47,7 @@ export class SliderNode implements TreeNode {
             if (this.modifier !== undefined) {
                 const modifier = this.modifier
                 this.model = this.modifier.getModel()
-                this.model.modified.add(() => {
+                this.model.signal.add(() => {
                     // modifier.setValue(this.model!.value)
                     // modifier.updateValue(this.model!.value)
                     // self.modifier.updateValue(value, G.app.getSetting('realtimeNormalUpdates'))

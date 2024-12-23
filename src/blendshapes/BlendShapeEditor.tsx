@@ -92,7 +92,7 @@ export class BlendShapeEditor extends RenderHandler {
         //     data. how? dunno...
         // [ ] make an interim copy which can not be destroyed
 
-        this.blendshape.modified.add(() => {
+        this.blendshape.signal.add(() => {
             // console.log(`BlendShapeEditor.blendshape.value became ${this.blendshape.value}`)
             switch (this.blendshape.value) {
                 case "_neutral":
@@ -127,7 +127,7 @@ export class BlendShapeEditor extends RenderHandler {
             this.app.updateManager.invalidateView()
         })
         // copy pose unit weights from ui model to config
-        this.poseUnitWeightsModel.modified.add((ev) => {
+        this.poseUnitWeightsModel.signal.add((ev) => {
             // console.log(`!!!!! copy pose unit weights from ui model to config of ${this.blendshape.value}`)
             // console.log(ev)
             if (dontCopyFlag) {
@@ -144,14 +144,14 @@ export class BlendShapeEditor extends RenderHandler {
             })
             // FIXME: this next call erases part of the configuration
             // but it is not the cause. blendshapeToPoseConfig is messed up when it fails
-            app.blendshapeToPoseConfig.modified.trigger()
+            app.blendshapeToPoseConfig.signal.emit()
             app.updateManager.invalidateView()
         })
 
         // bone
 
         // when bone changes, copy config to bone values
-        this.currentBone.modified.add(() => {
+        this.currentBone.signal.add(() => {
             // console.log(`current bone changed to ${this.currentBone.value}`)
             // copy config to bone
             const bone = app.skeleton.getBone(this.currentBone.value)
@@ -192,15 +192,15 @@ export class BlendShapeEditor extends RenderHandler {
             const cfg = app.blendshapeToPoseConfig.get(this.blendshape.value)
             cfg?.boneTransform.set(bone, q)
 
-            app.blendshapeToPoseConfig.modified.trigger()
+            app.blendshapeToPoseConfig.signal.emit()
             app.updateManager.invalidateView()
         }
         for (const boneModel of [this.boneRX, this.boneRY, this.boneRZ, this.boneTX, this.boneTY, this.boneTZ]) {
-            boneModel.modified.add(updateBoneCfg)
+            boneModel.signal.add(updateBoneCfg)
         }
 
         // vary strength of current blendshape
-        this.primaryWeight.modified.add(() => {
+        this.primaryWeight.signal.add(() => {
             this.blendshapeModel.setBlendshapeWeight(this.blendshape.value, this.primaryWeight.value)
             this.update = true
             this.app.updateManager.invalidateView()
@@ -210,16 +210,16 @@ export class BlendShapeEditor extends RenderHandler {
     override paint(app: Application, view: GLView): void {
         // console.log(`paint with scale ${this.scale.value}`)
         if (!this.initialized) {
-            this.scale.modified.add(() => {
+            this.scale.signal.add(() => {
                 // console.log(`scale changed to ${this.scale.value}`)
                 this.update = true
                 app.updateManager.invalidateView()
             })
-            this.dy.modified.add(() => {
+            this.dy.signal.add(() => {
                 this.update = true
                 app.updateManager.invalidateView()
             })
-            this.dz.modified.add(() => {
+            this.dz.signal.add(() => {
                 this.update = true
                 app.updateManager.invalidateView()
             })

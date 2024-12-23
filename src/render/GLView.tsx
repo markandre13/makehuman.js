@@ -84,10 +84,10 @@ export class GLView extends View {
         // this belongs here but...
         this.app.updateManager.render = this.paint
         // ...this does not
-        this.app.humanMesh.human.modified.add( () => {
+        this.app.humanMesh.human.signal.add( () => {
             this.app.updateManager.invalidateView()
         })
-        this.app.humanMesh.wireframe.modified.add( () => {
+        this.app.humanMesh.wireframe.signal.add( () => {
             this.app.updateManager.invalidateView() 
         })
 

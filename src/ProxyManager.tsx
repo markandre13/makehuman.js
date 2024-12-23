@@ -56,7 +56,7 @@ export class ProxyManager {
                     defaultValue = "none"
             }
             const model = new OptionModel(defaultValue, proxyList)
-            model.modified.add(() => {
+            model.signal.add(() => {
                 // console.log(`${ProxyType[type]} (${type}) = '${model.value}'`)
                 if (model.value === "none") {
                     humanMesh.proxies.delete(type)
@@ -67,9 +67,9 @@ export class ProxyManager {
                     humanMesh.proxies.set(type, loadProxy(humanMesh.human, `${prefix}.${suffix}`, type))
                 }
                 humanMesh.changedProxy = type
-                humanMesh.human.modified.trigger()
+                humanMesh.human.signal.emit()
             })
-            model.modified.trigger()
+            model.signal.emit()
             this.list.set(type, model)
         }
     }

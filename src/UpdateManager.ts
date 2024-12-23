@@ -2,7 +2,6 @@ import { NumberRelModel } from "expression/NumberRelModel"
 import { PoseNode } from "expression/PoseNode"
 import { SliderNode } from "modifier/loadSliders"
 import { RenderList } from "render/RenderList"
-import { ModelReason } from "toad.js/model/Model"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
 import { mat4, quat2, vec3 } from "gl-matrix"
@@ -13,6 +12,8 @@ import { quaternion_slerp } from "lib/quaternion_slerp"
 import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
 import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
 import { deg2rad } from "lib/calculateNormals"
+import { VALUE } from "toad.js/model/ValueModel"
+import { ALL } from "toad.js/model/Model"
 
 export const REST_QUAT = quat2.create()
 
@@ -32,11 +33,11 @@ export class UpdateManager {
 
     setBlendshapeModel(blendshapeModel?: BlendshapeModel) {
         if (this.blendshapeModel) {
-            this.blendshapeModel.modified.remove(this)
+            this.blendshapeModel.signal.remove(this)
         }
         this.blendshapeModel = blendshapeModel
         if (this.blendshapeModel) {
-            this.blendshapeModel.modified.add(() => {
+            this.blendshapeModel.signal.add(() => {
                 this.blendshapeModelChanged = true
             }, this)
         }
@@ -103,11 +104,12 @@ export class UpdateManager {
             forEachMorphSliderNode(node.down, cb)
         }
         forEachMorphSliderNode(sliderNodes, (node) =>
-            node.model?.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: morph slider '${node.label}' has changed to ${node.model?.value}`)
-                    this.invalidateView()
-                    this.modifiedMorphNodes.add(node) // keep track of what has changed
+            node.model?.signal.add((event) => {
+                switch (event.type) {
+                    case ALL:
+                    case VALUE:
+                        this.invalidateView()
+                        this.modifiedMorphNodes.add(node) // keep track of what has changed
                 }
             })
         )
@@ -122,30 +124,36 @@ export class UpdateManager {
             forEachBonePoseNode(node.down, cb)
         }
         forEachBonePoseNode(this.skeleton.poseNodes, (poseNode) => {
-            poseNode.x.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
-                    this.invalidateView()
-                    this.modifiedPoseNodes.add(poseNode)
+            poseNode.x.signal.add((event) => {
+                switch (event.type) {
+                    case ALL:
+                    case VALUE:
+                        // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
+                        this.invalidateView()
+                        this.modifiedPoseNodes.add(poseNode)
                 }
             })
-            poseNode.y.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
-                    this.invalidateView()
-                    this.modifiedPoseNodes.add(poseNode)
+            poseNode.y.signal.add((event) => {
+                switch (event.type) {
+                    case ALL:
+                    case VALUE:
+                        // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
+                        this.invalidateView()
+                        this.modifiedPoseNodes.add(poseNode)
                 }
             })
-            poseNode.z.modified.add((reason) => {
-                if (reason === ModelReason.ALL || reason === ModelReason.VALUE) {
-                    // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
-                    this.invalidateView()
-                    this.modifiedPoseNodes.add(poseNode)
+            poseNode.z.signal.add((event) => {
+                switch (event.type) {
+                    case ALL:
+                    case VALUE:
+                        // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
+                        this.invalidateView()
+                        this.modifiedPoseNodes.add(poseNode)
                 }
             })
         })
 
-        this.app.blendshapeToPoseConfig.modified.add(() => {
+        this.app.blendshapeToPoseConfig.signal.add(() => {
             this.blendshapeToPoseConfigChanged = true
         }, this)
         this.setBlendshapeModel(app.blendshapeModel)
@@ -252,19 +260,39 @@ export class UpdateManager {
                     case "upperarm01.R":
                     case "lowerarm01.R":
                     case "wrist.R":
-                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(180), vec3.fromValues(0,0,1))
+                        mat4.rotate(
+                            bone.matUserPoseGlobal,
+                            bone.matUserPoseGlobal,
+                            deg2rad(180),
+                            vec3.fromValues(0, 0, 1)
+                        )
                         break
                     case "upperleg01.L":
                     case "upperleg01.R":
-                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(175 - 10 + 2.5), vec3.fromValues(1,0,0))
+                        mat4.rotate(
+                            bone.matUserPoseGlobal,
+                            bone.matUserPoseGlobal,
+                            deg2rad(175 - 10 + 2.5),
+                            vec3.fromValues(1, 0, 0)
+                        )
                         break
                     case "lowerleg01.L":
                     case "lowerleg01.R":
-                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(180 - 4.5), vec3.fromValues(1,0,0))
+                        mat4.rotate(
+                            bone.matUserPoseGlobal,
+                            bone.matUserPoseGlobal,
+                            deg2rad(180 - 4.5),
+                            vec3.fromValues(1, 0, 0)
+                        )
                         break
                     case "foot.L":
                     case "foot.R":
-                        mat4.rotate(bone.matUserPoseGlobal, bone.matUserPoseGlobal, deg2rad(115), vec3.fromValues(1,0,0))
+                        mat4.rotate(
+                            bone.matUserPoseGlobal,
+                            bone.matUserPoseGlobal,
+                            deg2rad(115),
+                            vec3.fromValues(1, 0, 0)
+                        )
                         break
                 }
             }

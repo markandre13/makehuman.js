@@ -44,6 +44,6 @@ export class Connector {
             return
         }
         this.m_state = state
-        this.signal.trigger()
+        this.signal.emit()
     }
 }

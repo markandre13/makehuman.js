@@ -5,7 +5,7 @@ import { Signal } from "toad.js"
  */
 
 export class BlendshapeModel {
-    modified = new Signal();
+    signal = new Signal();
 
     private blendshapeName2Index = new Map<string, number>();
     private blendshapeNames?: string[]
@@ -44,7 +44,7 @@ export class BlendshapeModel {
     setBlendshapeWeights(blendshapes: Float32Array, transform: Float32Array): void {
         this.blendshapesWeights = blendshapes
         this.transform = transform
-        this.modified.trigger()
+        this.signal.emit()
     }
 
     reset() {
@@ -64,6 +64,6 @@ export class BlendshapeModel {
         }
         this.blendshapesWeights[index] = weight
         // console.log(`BlendshapeModel.setBlendshapeWeight('${name}', ${weight}})`)
-        this.modified.trigger()
+        this.signal.emit()
     }
 }

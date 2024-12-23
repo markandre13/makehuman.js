@@ -49,7 +49,7 @@ export class BlendshapePose {
 }
 
 export class BlendshapeToPoseConfig extends Map<string, BlendshapePose> {
-    modified = new Signal()
+    signal = new Signal()
     toJSON() {
         const out = {} as any
         for (const [blendshapeName, pose] of this) {

@@ -1,9 +1,9 @@
 import { vec3 } from "gl-matrix"
 import { BooleanModel, NumberModel, Signal } from "toad.js"
-import { NumberModelReason } from "toad.js/model/NumberModel"
+import { NumberModelEvent } from "toad.js/model/NumberModel"
 import { ValueModel } from "toad.js/model/ValueModel"
 
-export class Rot3Model extends ValueModel<vec3, NumberModelReason> {
+export class Rot3Model extends ValueModel<vec3, NumberModelEvent> {
     x: NumberModel
     y: NumberModel
     z: NumberModel
@@ -13,17 +13,17 @@ export class Rot3Model extends ValueModel<vec3, NumberModelReason> {
         this.x = new NumberModel(value[0], { min: -180, max: 180, step: 5 })
         this.y = new NumberModel(value[0], { min: -180, max: 180, step: 5 })
         this.z = new NumberModel(value[0], { min: -180, max: 180, step: 5 })
-        this.x.modified.add( (reason) => {
+        this.x.signal.add( (event) => {
             this._value[0] = this.x.value
-            this.modified.trigger(reason)
+            this.signal.emit(event)
         })
-        this.y.modified.add( (reason) => {
+        this.y.signal.add( (event) => {
             this._value[1] = this.y.value
-            this.modified.trigger(reason)
+            this.signal.emit(event)
         })
-        this.z.modified.add( (reason) => {
+        this.z.signal.add( (event) => {
             this._value[2] = this.z.value
-            this.modified.trigger(reason)
+            this.signal.emit(event)
         })
     }
 }
@@ -34,9 +34,9 @@ export class ChordataSettings {
     v1 = new Rot3Model()
 
     constructor() {
-        this.mountKCeptorView.modified.add( () => this.modified.trigger() )
-        this.v0.modified.add( () => this.modified.trigger() )
-        this.v1.modified.add( () => this.modified.trigger() )
+        this.mountKCeptorView.signal.add( () => this.modified.emit() )
+        this.v0.signal.add( () => this.modified.emit() )
+        this.v1.signal.add( () => this.modified.emit() )
     }
     mountKCeptorView = new BooleanModel(false, {
         label: "Mount KCeptor View"

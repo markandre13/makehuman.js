@@ -42,7 +42,7 @@ export function initHistoryManager(tabModel: EnumModel<TAB>) {
     }
 
     // push state when the user switches tabs
-    tabModel.modified.add((tab) => {
+    tabModel.signal.add((tab) => {
         // console.log(`MODEL CHANGE, PUSHSTATE = ${location.hash}`)
         if (location.hash !== `#${tab}`) {
             history.pushState(undefined, "", makeUrl(tabModel))

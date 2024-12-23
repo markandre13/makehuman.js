@@ -12,7 +12,6 @@ import { UpdateManager } from "UpdateManager"
 import { RenderMode } from "./render/RenderMode"
 import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
 import { EnumModel } from "toad.js/model/EnumModel"
-import { ModelReason } from "toad.js/model/Model"
 import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
 import { GLView, RenderHandler } from "render/GLView"
@@ -26,6 +25,7 @@ import { BlendshapeToPose } from "blendshapes/BlendshapeToPose"
 import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshapeToPoseConfig"
 import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
+import { VALUE } from "toad.js/model/ValueModel"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
@@ -121,14 +121,14 @@ export class Application {
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty
         this.human.modifiers.forEach((modifer) => {
-            modifer.getModel().modified.trigger(ModelReason.VALUE)
+            modifer.getModel().signal.emit({type: VALUE})
         })
 
         this.renderView = {} as any
 
         // FIXME: OOP SMELL => replace ENUM with OBJECT
         this.tabModel = new EnumModel(TAB.PROXY, TAB)
-        this.tabModel.modified.add(() => {
+        this.tabModel.signal.add(() => {
             if (this.renderView.overlay) {
                 this.renderView.overlay.replaceChildren()
             }

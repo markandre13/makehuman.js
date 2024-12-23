@@ -10,7 +10,7 @@ import { HumanMesh, isZero } from "mesh/HumanMesh"
 export class MorphManager {
     humanMesh!: HumanMesh
 
-    modified = new Signal()
+    signal = new Signal()
 
     modifiers: Map<string, Modifier>
     private modifierGroups: Map<string, Modifier[]>
@@ -63,17 +63,17 @@ export class MorphManager {
     constructor() {
         this._setDependendValues()
 
-        this.gender.modified.add(() => this._setGenderVals())
-        this.age.modified.add(() => this._setAgeVals())
-        this.muscle.modified.add(() => this._setMuscleVals())
-        this.weight.modified.add(() => this._setWeightVals())
-        this.height.modified.add(() => this._setHeightVals())
-        this.breastSize.modified.add(() => this._setBreastSizeVals())
-        this.breastFirmness.modified.add(() => this._setBreastFirmnessVals())
-        this.bodyProportions.modified.add(() => this._setBodyProportionVals())
-        this.africanVal.modified.add(() => this._setEthnicVals("African"))
-        this.asianVal.modified.add(() => this._setEthnicVals("Asian"))
-        this.caucasianVal.modified.add(() => this._setEthnicVals("Caucasian"))
+        this.gender.signal.add(() => this._setGenderVals())
+        this.age.signal.add(() => this._setAgeVals())
+        this.muscle.signal.add(() => this._setMuscleVals())
+        this.weight.signal.add(() => this._setWeightVals())
+        this.height.signal.add(() => this._setHeightVals())
+        this.breastSize.signal.add(() => this._setBreastSizeVals())
+        this.breastFirmness.signal.add(() => this._setBreastFirmnessVals())
+        this.bodyProportions.signal.add(() => this._setBodyProportionVals())
+        this.africanVal.signal.add(() => this._setEthnicVals("African"))
+        this.asianVal.signal.add(() => this._setEthnicVals("Asian"))
+        this.caucasianVal.signal.add(() => this._setEthnicVals("Caucasian"))
 
         this.modifiers = new Map<string, Modifier>()
         this.modifierGroups = new Map<string, Modifier[]>()
@@ -285,13 +285,13 @@ export class MorphManager {
     _setEthnicVals(exclude: undefined | "African" | "Asian" | "Caucasian") {
         if (this.flag) return
         this.flag = true
-        this.africanVal.modified.lock()
-        this.asianVal.modified.lock()
-        this.caucasianVal.modified.lock()
+        this.africanVal.signal.lock()
+        this.asianVal.signal.lock()
+        this.caucasianVal.signal.lock()
         this._setEthnicValsCore(exclude)
-        this.africanVal.modified.unlock()
-        this.asianVal.modified.unlock()
-        this.caucasianVal.modified.unlock()
+        this.africanVal.signal.unlock()
+        this.asianVal.signal.unlock()
+        this.caucasianVal.signal.unlock()
         this.flag = false
     }
 
@@ -365,7 +365,7 @@ export class MorphManager {
 
     updateProxyMesh(fitToPosed = false) {
         // console.log("Human.updateProxyMesh with:")
-        this.modified.trigger()
+        this.signal.emit()
         // this.targetsDetailStack.forEach( (value, targetName) => console.log(`${targetName}=${value}`) )
         // if self.proxy and self.__proxyMesh:
         //     self.proxy.update(self.__proxyMesh, fit_to_posed)

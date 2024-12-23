@@ -235,15 +235,15 @@ export function BlendShapeTab(props: { app: Application }) {
                                 const cfg = BlendshapeToPoseConfig.fromJSON(props.app.skeleton, jsonString)
 
                                 // FIXME: nasty hack
-                                props.app.blendshapeToPoseConfig.modified.remove(props.app.updateManager)
+                                props.app.blendshapeToPoseConfig.signal.remove(props.app.updateManager)
 
                                 props.app.blendshapeToPoseConfig = cfg
 
-                                props.app.blendshapeToPoseConfig.modified.add(() => {
+                                props.app.blendshapeToPoseConfig.signal.add(() => {
                                     props.app.updateManager.blendshapeToPoseConfigChanged = true
                                 }, props.app.updateManager)
 
-                                cfg.modified.trigger()
+                                cfg.signal.emit()
                             }
                         }}
                     >
