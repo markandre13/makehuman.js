@@ -35,22 +35,22 @@
     "toad.js": "0.1.17"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.1",
-    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@types/chai": "^5.0.1",
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
-    "@types/mocha": "^10.0.9",
-    "@types/node": "^22.9.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.10.2",
     "@web/dev-server": "^0.4.6",
     "@web/test-runner": "^0.19.0",
     "chai": "^5.1.2",
-    "mocha": "^10.8.2",
-    "rollup": "^4.26.0",
+    "mocha": "^11.0.1",
+    "rollup": "^4.29.1",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
-    "ts-patch": "^3.2.1",
-    "typescript": "^5.6.3"
+    "ts-patch": "^3.3.0",
+    "typescript": "^5.7.2"
   }
 }
