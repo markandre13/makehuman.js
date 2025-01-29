@@ -33,6 +33,11 @@ interface Frontend {
         in unsigned long long timestamp_ms);
 };
 
+interface VideoCamera2 {
+    readonly attribute string id;
+    attribute string name;
+};
+
 struct Range {
     unsigned long long start_ms;
     unsigned long long end_ms;
@@ -49,6 +54,8 @@ interface Backend {
     // quick hack to load and store files
     void save(in string filename, in string data);
     string load(in string filename);
+
+    sequence<VideoCamera2> getVideoCameras();
 
     // quick hack to save/play video
     void record(in string filename);
