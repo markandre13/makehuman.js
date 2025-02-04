@@ -197,6 +197,8 @@ export class SimulatedModel {
 
 export const simulatedModel = new SimulatedModel()
 
+// TODO: disable/enable button with constraints
+
 export function TransportBar(props: { app: Application }) {
     return (
         <>
@@ -214,7 +216,16 @@ export function TransportBar(props: { app: Application }) {
             </Button> */}
             <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
             {/* <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button> */}
-            <Button action={() => props.app.frontend.backend?.play("mediapipe_body_3d_xyz.csv")}>▶︎</Button>
+            <Button action={async () => {
+                try {
+                    await props.app.frontend.backend?.play("test/freemocap/mediapipe_body_3d_xyz.csv")
+                } catch(e) {
+                    console.log("UPSY DAISY")
+                    if (e instanceof Error) {
+                        alert(`${e.name}: ${e.message}`)
+                    }
+                }
+            }}>▶︎</Button>
             <Button action={() => props.app.frontend.backend?.pause()}>❙ ❙</Button>
             <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value - 30n)}>
                 ◀︎◀︎
