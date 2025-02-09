@@ -14,6 +14,7 @@ import { ModelOptions } from "toad.js/model/Model"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 import { Backend } from "net/makehuman"
 import { sleep } from "lib/sleep"
+import { ConnectionState } from "net/ConnectionState"
 
 // function PoseTab(props: { app: Application }) {
 //     return (
@@ -197,7 +198,7 @@ export class SimulatedModel {
 
 export const simulatedModel = new SimulatedModel()
 
-// TODO: disable/enable button with constraints
+// TODO: disable/enable buttons with constraints
 
 export function TransportBar(props: { app: Application }) {
     return (
@@ -216,16 +217,21 @@ export function TransportBar(props: { app: Application }) {
             </Button> */}
             <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
             {/* <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button> */}
-            <Button action={async () => {
-                try {
-                    await props.app.frontend.backend?.play("test/freemocap/mediapipe_body_3d_xyz.csv")
-                } catch(e) {
-                    console.log("UPSY DAISY")
-                    if (e instanceof Error) {
-                        alert(`${e.name}: ${e.message}`)
+            <Button
+                action={async () => {
+                    try {
+                        // cp ~/freemocap_data/recording_sessions/session_2024-10-06_13_24_28/recording_13_29_02_gmt+2__drei/output_data/mediapipe_body_3d_xyz.csv .
+                        await props.app.frontend.backend?.play("mediapipe_body_3d_xyz.csv")
+                    } catch (e) {
+                        console.log("UPSY DAISY")
+                        if (e instanceof Error) {
+                            alert(`${e.name}: ${e.message}`)
+                        }
                     }
-                }
-            }}>▶︎</Button>
+                }}
+            >
+                ▶︎
+            </Button>
             <Button action={() => props.app.frontend.backend?.pause()}>❙ ❙</Button>
             <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value - 30n)}>
                 ◀︎◀︎
@@ -239,13 +245,32 @@ export function TransportBar(props: { app: Application }) {
             <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value + 30n)}>
                 ▶︎▶︎
             </Button>
-            <TextField model={props.app.frontend._poseLandmarksTS as any}/>
+            <TextField model={props.app.frontend._poseLandmarksTS as any} />
         </>
     )
-    // 
+    //
 }
 
 export function PoseTab(props: { app: Application }) {
+    console.log("POSETAB =====================================================")
+    props.app.connector.signal.add(async () => {
+        if (props.app.connector.state === ConnectionState.CONNECTED) {
+            console.log("HAVE BACKEND =====================================================")
+            console.log(props.app.frontend.backend)
+            const cameras = await props.app.frontend.backend!.getVideoCameras()
+            console.log(`found ${cameras.length} cameras`)
+            try {
+                for (const camera of cameras) {
+                    const name = await camera.name()
+                    const features = await camera.features()
+                    console.log(`${name}: ${features}`)
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        }
+    })
+
     return (
         <Tab
             label="Pose"

@@ -33,7 +33,7 @@ export function ConnectButton(props: { connector: Connector} ) {
     s.style.cursor = "default"
     s.onpointerdown = (ev: MouseEvent) => {
         ev.preventDefault()
-        connector.connect()
+        connector.connectToBackend()
     }
     return s
 }

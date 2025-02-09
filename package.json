@@ -29,7 +29,7 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "corba.js": "^0.1.13",
+    "corba.js": "^0.1.16",
     "fflate": "^0.8.2",
     "gl-matrix": "^3.4.3",
     "toad.js": "^0.2.0"

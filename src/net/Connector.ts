@@ -4,6 +4,9 @@ import { Frontend_impl } from "./Frontend_impl"
 import { Backend } from "./makehuman_stub"
 import { ORB } from "corba.js"
 
+/**
+ * handles connecting the frontend to the backend
+ */
 export class Connector {
     signal = new Signal();
     hostname = new TextModel("localhost")
@@ -16,13 +19,16 @@ export class Connector {
         this.frontend = frontend    
     }
 
-    async connect() {
+    /**
+     * initiates a connection to the backend
+     */
+    async connectToBackend() {
         if (this.state != ConnectionState.NOT_CONNECTED) {
             return
         }
         try {
             this.state = ConnectionState.CONNECTING
-            const object = await this.frontend.orb.stringToObject(`corbaname::${this.hostname.value}:${this.port.value}#Backend`)
+            const object = await this.frontend._orb.stringToObject(`corbaname::${this.hostname.value}:${this.port.value}#Backend`)
             const backend = Backend.narrow(object)
             this.frontend.backend = backend
             ORB.installSystemExceptionHandler(backend, () => {

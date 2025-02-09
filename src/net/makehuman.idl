@@ -36,6 +36,7 @@ interface Frontend {
 interface VideoCamera2 {
     readonly attribute string id;
     attribute string name;
+    readonly attribute string features;
 };
 
 struct Range {

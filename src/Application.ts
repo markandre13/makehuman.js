@@ -16,7 +16,7 @@ import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
 import { GLView, RenderHandler } from "render/GLView"
 import { ORB } from "corba.js"
-import { Backend } from "net/makehuman_stub"
+import { Backend, VideoCamera2 } from "net/makehuman_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
 import { Blendshape2PoseConverter } from "blendshapes/Blendshape2PoseConverter"
@@ -26,6 +26,7 @@ import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshapeToPoseConfig"
 import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 import { VALUE } from "toad.js/model/ValueModel"
+import { Connector } from "net/Connector"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
@@ -41,6 +42,7 @@ export function setRenderer(app: Application, renderer: RenderHandler, classic: 
 export class Application {
     orb: ORB
     frontend: Frontend_impl
+    connector: Connector
     blendshapeModel: BlendshapeModel
     blendshapeConverter: Blendshape2PoseConverter
     blendshapeToPoseConfig: BlendshapeToPoseConfig
@@ -158,8 +160,12 @@ export class Application {
 
         this.orb = new ORB()
         this.orb.registerStubClass(Backend)
+        this.orb.registerStubClass(VideoCamera2)
         this.orb.addProtocol(new WsProtocol())
         this.frontend = new Frontend_impl(this.orb, this.updateManager, this.blendshapeModel)
+
+        this.connector = new Connector(this.frontend)
+        this.connector.connectToBackend()
     }
 
     renderer?: RenderHandler

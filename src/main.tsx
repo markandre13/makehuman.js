@@ -50,7 +50,6 @@ import { GLView } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { BlendShapeTab } from "blendshapes/BlendShapeTab"
 import { ConnectButton } from "net/ConnectButton"
-import { Connector } from "net/Connector"
 import { PoseTab } from "mediapipe/pose/PoseTab"
 
 export async function main() {
@@ -89,8 +88,7 @@ async function run() {
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
 
     const oiah = "calc((12/16) * 1rem + 8px"
-    const connector = new Connector(app.frontend)
-    connector.connect()
+
 
     document.body.replaceChildren(
         ...(
@@ -128,7 +126,7 @@ async function run() {
                         overflow: "hidden",
                     }}
                 >
-                    <ConnectButton connector={connector} />
+                    <ConnectButton connector={app.connector} />
                 </div>
             </>
         )
