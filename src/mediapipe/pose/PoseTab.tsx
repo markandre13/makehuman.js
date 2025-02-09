@@ -12,7 +12,7 @@ import { Blaze } from "./Blaze"
 import { deg2rad } from "lib/calculateNormals"
 import { ModelOptions } from "toad.js/model/Model"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
-import { Backend } from "net/makehuman"
+import { VideoCamera2 } from "net/makehuman"
 import { sleep } from "lib/sleep"
 import { ConnectionState } from "net/ConnectionState"
 
@@ -251,25 +251,26 @@ export function TransportBar(props: { app: Application }) {
     //
 }
 
-export function PoseTab(props: { app: Application }) {
-    console.log("POSETAB =====================================================")
-    props.app.connector.signal.add(async () => {
-        if (props.app.connector.state === ConnectionState.CONNECTED) {
-            console.log("HAVE BACKEND =====================================================")
-            console.log(props.app.frontend.backend)
-            const cameras = await props.app.frontend.backend!.getVideoCameras()
-            console.log(`found ${cameras.length} cameras`)
-            try {
-                for (const camera of cameras) {
-                    const name = await camera.name()
-                    const features = await camera.features()
-                    console.log(`${name}: ${features}`)
-                }
-            } catch (e) {
-                console.log(e)
+function makeCamerasModel(app: Application) {
+    const cameras = new OptionModel<VideoCamera2 | null>(null, [[null, "None"]])
+
+    app.connector.signal.add(async () => {
+        if (app.connector.state === ConnectionState.CONNECTED) {
+            const mapping: ([VideoCamera2 | null, string | number | HTMLElement] | string)[] = [[null, "None"]]
+            for (const camera of await app.frontend.backend!.getVideoCameras()) {
+                const name = await camera.name()
+                const features = await camera.features()
+                mapping.push([camera, `${name} (${features})`])
             }
+            cameras.setMapping(mapping)
         }
     })
+
+    return cameras
+}
+
+export function PoseTab(props: { app: Application }) {
+    const cameras = makeCamerasModel(props.app)
 
     return (
         <Tab
@@ -284,6 +285,7 @@ export function PoseTab(props: { app: Application }) {
             <h3>Mediapipe Pose</h3>
             <div>
                 <TransportBar app={props.app} />
+                <Select model={cameras} />
             </div>
             <h3>Simulated Pose</h3>
             <Form>
