@@ -251,12 +251,13 @@ export function TransportBar(props: { app: Application }) {
     //
 }
 
+// TODO: make this an object
 function makeCamerasModel(app: Application) {
-    const cameras = new OptionModel<VideoCamera2 | null>(null, [[null, "None"]])
+    const cameras = new OptionModel<VideoCamera2 | undefined>(undefined, [[undefined, "None"]])
 
     app.connector.signal.add(async () => {
         if (app.connector.state === ConnectionState.CONNECTED) {
-            const mapping: ([VideoCamera2 | null, string | number | HTMLElement] | string)[] = [[null, "None"]]
+            const mapping: ([VideoCamera2 | undefined, string | number | HTMLElement] | string)[] = [[undefined, "None"]]
             for (const camera of await app.frontend.backend!.getVideoCameras()) {
                 const name = await camera.name()
                 const features = await camera.features()
@@ -264,6 +265,14 @@ function makeCamerasModel(app: Application) {
             }
             cameras.setMapping(mapping)
         }
+    })
+    cameras.signal.add( () => {
+        // [ ] can CORBA send a nil of VideoCamera2 to be used instead of null?
+        //     test this with OmniORB
+        // [ ] extend corba.cc/corba.js to send/receive a stub
+        // [ ] corba.js: drop need to register stub?
+        // [ ] corba.js: add method to register impl?
+        app.frontend.backend?.setCamera(cameras.value!)
     })
 
     return cameras

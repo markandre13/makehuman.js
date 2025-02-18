@@ -57,6 +57,7 @@ interface Backend {
     string load(in string filename);
 
     sequence<VideoCamera2> getVideoCameras();
+    void setCamera(in VideoCamera2 camera);
 
     // quick hack to save/play video
     void record(in string filename);
