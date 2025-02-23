@@ -15,6 +15,7 @@ import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 import { VideoCamera2, MediaPipeTask } from "net/makehuman"
 import { sleep } from "lib/sleep"
 import { ConnectionState } from "net/ConnectionState"
+import { FormSelect } from "toad.js/view/FormSelect"
 
 // function PoseTab(props: { app: Application }) {
 //     return (
@@ -253,7 +254,11 @@ export function TransportBar(props: { app: Application }) {
 
 // TODO: make this an object
 function makeMediaPipeTasksModel(app: Application) {
-    const tasks = new OptionModel<MediaPipeTask | null>(null, [[null, "None"]])
+    const tasks = new OptionModel<MediaPipeTask | null>(
+        null,
+        [[null, "None"]],
+        {label: "Mediapipe Task"}
+    )
 
     app.connector.signal.add(async () => {
         if (app.connector.state === ConnectionState.CONNECTED) {
@@ -265,19 +270,18 @@ function makeMediaPipeTasksModel(app: Application) {
         }
     })
     tasks.signal.add( () => {
-        // [ ] can CORBA send a nil of VideoCamera2 to be used instead of null?
-        //     test this with OmniORB
-        // [ ] extend corba.cc/corba.js to send/receive a stub
-        // [ ] corba.js: drop need to register stub?
-        // [ ] corba.js: add method to register impl?
-        app.frontend.backend?.camera(tasks.value ? tasks.value : null as any)
+        app.frontend.backend?.mediaPipeTask(tasks.value ? tasks.value : null as any)
     })
 
     return tasks
 }
 
 function makeCamerasModel(app: Application) {
-    const cameras = new OptionModel<VideoCamera2 | null>(null, [[null, "None"]])
+    const cameras = new OptionModel<VideoCamera2 | null>(
+        null,
+        [[null, "None"]],
+        {label: "Camera"}
+    )
 
     app.connector.signal.add(async () => {
         if (app.connector.state === ConnectionState.CONNECTED) {
@@ -304,6 +308,7 @@ function makeCamerasModel(app: Application) {
 
 export function PoseTab(props: { app: Application }) {
     const cameras = makeCamerasModel(props.app)
+    const mediaPipeTasks = makeMediaPipeTasksModel(props.app)
 
     return (
         <Tab
@@ -318,7 +323,10 @@ export function PoseTab(props: { app: Application }) {
             <h3>Mediapipe Pose</h3>
             <div>
                 <TransportBar app={props.app} />
-                <Select model={cameras} />
+                <Form>
+                    <FormSelect model={cameras} />
+                    <FormSelect model={mediaPipeTasks} />
+                </Form>
             </div>
             <h3>Simulated Pose</h3>
             <Form>
