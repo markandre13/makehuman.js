@@ -39,6 +39,10 @@ interface VideoCamera2 {
     readonly attribute string features;
 };
 
+interface MediaPipeTask {
+    attribute string name;
+};
+
 struct Range {
     unsigned long long start_ms;
     unsigned long long end_ms;
@@ -57,7 +61,10 @@ interface Backend {
     string load(in string filename);
 
     sequence<VideoCamera2> getVideoCameras();
-    void setCamera(in VideoCamera2 camera);
+    attribute VideoCamera2 camera;
+
+    sequence<MediaPipeTask> getMediaPipeTasks();
+    attribute MediaPipeTask mediaPipeTask;
 
     // quick hack to save/play video
     void record(in string filename);
