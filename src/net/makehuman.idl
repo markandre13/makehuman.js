@@ -40,7 +40,7 @@ interface VideoCamera2 {
 };
 
 interface MediaPipeTask {
-    attribute string name;
+    readonly attribute string name;
 };
 
 struct Range {
