@@ -5,8 +5,11 @@ node_modules
 data
 base/blendshapes
 src/net/makehuman.ts
-src/net/makehuman_skel.ts       
+src/net/makehuman_skel.ts
 src/net/makehuman_stub.ts
+src/net/fs.ts
+src/net/fs_skel.ts
+src/net/fs_stub.ts
 dist
 build
 package-lock.json

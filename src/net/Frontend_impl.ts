@@ -59,10 +59,10 @@ export class Frontend_impl extends Frontend_skel {
         // flip y-axis
 
         // adjustments for free mocap
-        const s = 0.01
-        for (let i = 0; i < landmarks.length; i += 3) {
-            [landmarks[i], landmarks[i + 1], landmarks[i + 2]] = [landmarks[i] * s, landmarks[i + 2] * s, -landmarks[i + 1] * s];
-        }
+        // const s = 0.01
+        // for (let i = 0; i < landmarks.length; i += 3) {
+        //     [landmarks[i], landmarks[i + 1], landmarks[i + 2]] = [landmarks[i] * s, landmarks[i + 2] * s, -landmarks[i + 1] * s];
+        // }
 
         // adjustments for mediapipe
         // for(let i = 1; i < landmarks.length ; i += 3) {

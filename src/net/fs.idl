@@ -1,0 +1,47 @@
+/*
+ *
+ * file system api
+ *
+ */
+
+// Milliseconds since UNIX epoch 1970-01-01 00:00 UTC
+// typedef unsigned long long TimeStamp;
+
+struct DirectoryEntry {
+    string name;
+    boolean directory;
+    unsigned long long size;
+    unsigned long long created;
+    unsigned long long modified;
+};
+
+interface FileSystem {
+    // get the current filesystem location
+    string path();
+
+    // get the contents of the current directory
+    sequence<DirectoryEntry> list();
+
+    // go to parent directory
+    void up();
+    // go down into directory
+    void down(in string name);
+    // go to root directory
+    void rootdir();
+    // go to the user's home directory
+    void homedir();
+    // go the directory in which the application was launched
+    void currentdir();
+
+    // create directory
+    void mkdir(in string name);
+    // remove directory
+    void rmdir(in string name);
+
+    // read file
+    sequence<octet> read(in string name);
+    // write file
+    void write(in string name, in sequence<octet> data);
+    // remove file
+    void rm(in string name);
+};
