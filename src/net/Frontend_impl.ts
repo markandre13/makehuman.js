@@ -1,5 +1,6 @@
 import { ORB } from "corba.js"
-import { Backend } from "net/makehuman_stub"
+import { Backend } from "net/makehuman"
+import { FileSystem } from "net/fs"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { UpdateManager } from "UpdateManager"
 import { handleChordata } from "chordata/chordata"
@@ -11,6 +12,7 @@ export class Frontend_impl extends Frontend_skel {
     blendshapeModel: BlendshapeModel
 
     backend?: Backend
+    filesystem?: FileSystem
 
     constructor(orb: ORB, updateManager: UpdateManager, blendshapeModel: BlendshapeModel) {
         super(orb)

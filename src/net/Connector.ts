@@ -2,7 +2,8 @@ import { NumberModel, Signal, TextModel } from "toad.js"
 import { ConnectionState } from "net/ConnectionState"
 import { Frontend_impl } from "./Frontend_impl"
 import { Backend } from "./makehuman_stub"
-import { ORB } from "corba.js"
+import { FileSystem } from "./fs_stub"
+import { CORBAObject, ORB } from "corba.js"
 
 /**
  * handles connecting the frontend to the backend
@@ -28,16 +29,23 @@ export class Connector {
         }
         try {
             this.state = ConnectionState.CONNECTING
-            const object = await this.frontend._orb.stringToObject(`corbaname::${this.hostname.value}:${this.port.value}#Backend`)
-            const backend = Backend.narrow(object)
+            const backendObject = this.frontend._orb.stringToObject(`corbaname::${this.hostname.value}:${this.port.value}#Backend`)
+            const filesystemObject = this.frontend._orb.stringToObject(`corbaname::${this.hostname.value}:${this.port.value}#FileSystem`)
+
+            const backend = Backend.narrow(await backendObject)
             this.frontend.backend = backend
+            this.frontend.filesystem = FileSystem.narrow(await filesystemObject)
+
+            // FIXME: only switch to NOT_CONNECT when the exeption indicates a connection loss
             ORB.installSystemExceptionHandler(backend, () => {
                 this.frontend.backend = undefined
+                this.frontend.filesystem = undefined
                 this.state = ConnectionState.NOT_CONNECTED
             })
             backend.setFrontend(this.frontend)
             this.state = ConnectionState.CONNECTED
         } catch (e) {
+            console.error(e)
             this.state = ConnectionState.NOT_CONNECTED
         }
     }

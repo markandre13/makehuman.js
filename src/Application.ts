@@ -17,6 +17,7 @@ import { Skeleton } from "skeleton/Skeleton"
 import { GLView, RenderHandler } from "render/GLView"
 import { ORB } from "corba.js"
 import { Backend, MediaPipeTask, VideoCamera2 } from "net/makehuman_stub"
+import { FileSystem } from "net/fs_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
 import { Blendshape2PoseConverter } from "blendshapes/Blendshape2PoseConverter"
@@ -160,6 +161,7 @@ export class Application {
 
         this.orb = new ORB()
         this.orb.registerStubClass(Backend)
+        this.orb.registerStubClass(FileSystem)
         this.orb.registerStubClass(VideoCamera2)
         this.orb.registerStubClass(MediaPipeTask)
         this.orb.addProtocol(new WsProtocol())
