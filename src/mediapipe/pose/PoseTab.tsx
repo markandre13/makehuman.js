@@ -53,7 +53,14 @@ export function PoseTab(props: { app: Application }) {
                     <FormSelect model={cameras} />
                     <FormSelect model={mediaPipeTasks} />
                 </Form>
-                <Button action={async () => selectFile(props.app.frontend.filesystem)}>Select File</Button>
+                <Button
+                    action={async () => {
+                        const filename = await selectFile(props.app.frontend.filesystem)
+                        console.log(`open file "${filename}"`)
+                    }}
+                >
+                    Select File
+                </Button>
             </div>
             {/* <h3>Simulated Pose</h3>
             <Form>
