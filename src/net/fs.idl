@@ -16,8 +16,8 @@ struct DirectoryEntry {
 };
 
 interface FileSystem {
-    // get the current filesystem location
-    string path();
+    // get/set the current filesystem location
+    attribute string path;
 
     // get the contents of the current directory
     sequence<DirectoryEntry> list();

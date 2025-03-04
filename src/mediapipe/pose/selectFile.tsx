@@ -1,5 +1,17 @@
 import { DirectoryEntry, FileSystem } from "net/fs"
-import { Button, Display, SelectionModel, Table, TableEditMode, TableModel, TablePos, text, TextModel } from "toad.js"
+import {
+    Button,
+    Display,
+    OptionModel,
+    Select,
+    SelectionModel,
+    Table,
+    TableEditMode,
+    TableModel,
+    TablePos,
+    text,
+    TextModel,
+} from "toad.js"
 import { ALL } from "toad.js/model/Model"
 import { TableAdapter } from "toad.js/table/adapter/TableAdapter"
 
@@ -45,7 +57,7 @@ class FileListAdapter extends TableAdapter<FileListModel> {
         switch (pos.col) {
             case 0:
                 if (this.model._data[pos.row].directory) {
-                    cell.appendChild(text(">"))
+                    cell.appendChild(text("📁"))
                 }
                 break
             case 1:
@@ -84,31 +96,52 @@ export async function selectFile(fs: FileSystem | undefined): Promise<string | u
                 }
 
                 const path = new TextModel(await fs.path())
+                const pathSelect = new OptionModel(path.value, [[path.value, ""]])
+                let flag = false
+                function updatePathList() {
+                    if (flag) {
+                        return
+                    }
+                    flag = true
+                    let growingPath = ""
+                    let pathList: string[][] = [["/", "📁 /"]]
+                    for (const segment of path.value.split("/")) {
+                        if (segment != "") {
+                            growingPath += `/${segment}`
+                            pathList.push([growingPath, `📁 ${segment}`])
+                        }
+                    }
+                    pathList.reverse()
+                    pathSelect.setMapping(pathList as any)
+                    flag = false
+                }
+                updatePathList()
+                pathSelect.signal.add(async () => {
+                    // console.log(`pathSelect.signal: open \"${pathSelect.value}\"`)
+                    path.value = pathSelect.value
+                    await fs.path(pathSelect.value)
+                    updatePathList()
+                    list._data = await fs.list()
+                    list.signal.emit({ type: ALL })
+                })
                 const list = new FileListModel(await fs.list())
                 const selection = new SelectionModel(TableEditMode.SELECT_ROW)
 
                 dialog = (
-                    <dialog>
+                    <dialog autofocus={true}>
                         <p>
                             <Display model={path} />
                         </p>
+                        <p>
+                            <Select model={pathSelect} />
+                        </p>
                         <div>
                             <Table
-                                style={{ color: "#fff", width: "512px", height: "256px" }}
+                                style={{ width: "512px", height: "256px" }}
                                 model={list}
                                 selectionModel={selection}
                             />
                         </div>
-                        <Button
-                            action={async () => {
-                                await fs.up()
-                                path.value = await fs.path()
-                                list._data = await fs.list()
-                                list.signal.emit({ type: ALL })
-                            }}
-                        >
-                            Up
-                        </Button>
                         <Button
                             action={() => {
                                 dialog!.close()
@@ -123,10 +156,15 @@ export async function selectFile(fs: FileSystem | undefined): Promise<string | u
                 selection.trigger.add(async () => {
                     const entry = list._data[selection.row]
                     if (entry.directory) {
-                        await fs.down(entry.name)
-                        path.value = await fs.path()
-                        list._data = await fs.list()
-                        list.signal.emit({ type: ALL })
+                        // TODO: this is pretty ugly because of the cross-dependencies
+                        await pathSelect.signal.withLockAsync(async () => {
+                            await fs.down(entry.name)
+                            path.value = await fs.path()
+                            updatePathList()
+                            pathSelect.value = path.value
+                            list._data = await fs.list()
+                            list.signal.emit({ type: ALL })
+                        })
                     } else {
                         if (dialog) {
                             dialog.close()
