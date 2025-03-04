@@ -32,7 +32,7 @@
     "corba.js": "^0.1.18",
     "fflate": "^0.8.2",
     "gl-matrix": "^3.4.3",
-    "toad.js": "^0.2.0"
+    "toad.js": "^0.2.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.2",
@@ -42,15 +42,15 @@
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.13.5",
+    "@types/node": "^22.13.9",
     "@web/dev-server": "^0.4.6",
     "@web/test-runner": "^0.20.0",
     "chai": "^5.2.0",
     "mocha": "^11.1.0",
-    "rollup": "^4.34.8",
+    "rollup": "^4.34.9",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.2"
   }
 }
