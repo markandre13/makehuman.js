@@ -20,7 +20,7 @@ interface FileSystem {
     attribute string path;
 
     // get the contents of the current directory
-    sequence<DirectoryEntry> list();
+    sequence<DirectoryEntry> list(in string filter);
 
     // go to parent directory
     void up();

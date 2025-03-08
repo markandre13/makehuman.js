@@ -1,9 +1,8 @@
 import { DirectoryEntry, FileSystem } from "net/fs"
 import {
+    Action,
     Button,
-    Display,
     OptionModel,
-    Select,
     SelectionModel,
     Table,
     TableEditMode,
@@ -14,6 +13,10 @@ import {
 } from "toad.js"
 import { ALL } from "toad.js/model/Model"
 import { TableAdapter } from "toad.js/table/adapter/TableAdapter"
+import { Form } from "toad.js/view/Form"
+import { FormSelect } from "toad.js/view/FormSelect"
+import { FormText } from "toad.js/view/FormText"
+import { FormDisplay } from "toad.js/view/FormDisplay"
 
 class FileListModel extends TableModel {
     _data: DirectoryEntry[]
@@ -86,7 +89,7 @@ TableAdapter.register(FileListAdapter, FileListModel)
  * @param fs
  * @returns
  */
-export async function selectFile(fs: FileSystem | undefined): Promise<string | undefined> {
+export async function selectFile(fs: FileSystem | undefined, filenameX: string | undefined): Promise<string | undefined> {
     return new Promise<string | undefined>(
         async (resolve: (value: string | undefined) => void, reject: (reason?: any) => void) => {
             let dialog: HTMLDialogElement | undefined
@@ -95,6 +98,14 @@ export async function selectFile(fs: FileSystem | undefined): Promise<string | u
                     throw Error("Not connected to backend filesystem")
                 }
 
+                const newFolder = new Action(() => {})
+                const fileFormat = new OptionModel("*.mp4", [
+                    ["*.mp4", "MPEG-4"],
+                    ["*", "All Files"]
+                ], {
+                    label: "File Format:"
+                })
+                const filename = new TextModel(filenameX, {label: "Save As:"})
                 const path = new TextModel(await fs.path())
                 const pathSelect = new OptionModel(path.value, [[path.value, ""]])
                 let flag = false
@@ -116,43 +127,27 @@ export async function selectFile(fs: FileSystem | undefined): Promise<string | u
                     flag = false
                 }
                 updatePathList()
+                const list = new FileListModel(await fs.list(fileFormat.value))
+                const selection = new SelectionModel(TableEditMode.SELECT_ROW)
                 pathSelect.signal.add(async () => {
                     // console.log(`pathSelect.signal: open \"${pathSelect.value}\"`)
                     path.value = pathSelect.value
                     await fs.path(pathSelect.value)
                     updatePathList()
-                    list._data = await fs.list()
+                    list._data = await fs.list(fileFormat.value)
                     list.signal.emit({ type: ALL })
                 })
-                const list = new FileListModel(await fs.list())
-                const selection = new SelectionModel(TableEditMode.SELECT_ROW)
-
-                dialog = (
-                    <dialog autofocus={true}>
-                        <p>
-                            <Display model={path} />
-                        </p>
-                        <p>
-                            <Select model={pathSelect} />
-                        </p>
-                        <div>
-                            <Table
-                                style={{ width: "512px", height: "256px" }}
-                                model={list}
-                                selectionModel={selection}
-                            />
-                        </div>
-                        <Button
-                            action={() => {
-                                dialog!.close()
-                                dialog!.remove()
-                            }}
-                        >
-                            Close
-                        </Button>
-                    </dialog>
-                ) as HTMLDialogElement
-
+                fileFormat.signal.add( async () => {
+                    list._data = await fs.list(fileFormat.value)
+                    list.signal.emit({ type: ALL })
+                })
+                selection.signal.add( () => {
+                    const entry = list._data[selection.row]
+                    if (entry.directory) {
+                        return
+                    }
+                    filename.value = entry.name
+                })
                 selection.trigger.add(async () => {
                     const entry = list._data[selection.row]
                     if (entry.directory) {
@@ -162,7 +157,7 @@ export async function selectFile(fs: FileSystem | undefined): Promise<string | u
                             path.value = await fs.path()
                             updatePathList()
                             pathSelect.value = path.value
-                            list._data = await fs.list()
+                            list._data = await fs.list(fileFormat.value)
                             list.signal.emit({ type: ALL })
                         })
                     } else {
@@ -173,6 +168,47 @@ export async function selectFile(fs: FileSystem | undefined): Promise<string | u
                         }
                     }
                 })
+
+                dialog = (
+                    <dialog autofocus={true}>
+                        <Form>
+                            <FormText model={filename}/>
+                            <FormDisplay model={path} />
+                            <FormSelect model={pathSelect} />
+                        </Form>
+                        <div>
+                            <Table
+                                style={{ width: "512px", height: "256px" }}
+                                model={list}
+                                selectionModel={selection}
+                            />
+                        </div>
+                        <Form>
+                            <FormSelect model={fileFormat}/>
+                        </Form>
+
+                        <Button action={newFolder}>New Folder</Button>
+                        <Button
+                            action={() => {
+                                dialog!.close()
+                                dialog!.remove()
+                                resolve(undefined)
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            action={() => {
+                                dialog!.close()
+                                dialog!.remove()
+                                resolve(`${path.value}/${filename.value}`)
+                            }}
+                        >
+                            Save
+                        </Button>
+
+                    </dialog>
+                ) as HTMLDialogElement
                 document.body.appendChild(dialog)
                 dialog.showModal()
             } catch (e) {

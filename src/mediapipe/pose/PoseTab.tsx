@@ -2,9 +2,9 @@ import { Application, setRenderer } from "Application"
 import { TAB } from "HistoryManager"
 import { MPPoseRenderer } from "./MPPoseRenderer"
 import { Tab } from "toad.js/view/Tab"
-import { Button, OptionModel, Select, Switch } from "toad.js"
-import { FormSwitch } from "toad.js/view/FormSwitch"
-import { Form } from "toad.js/view/Form"
+import { BooleanModel, Button, Display, OptionModel, Select, Switch, TextField, TextModel } from "toad.js"
+import { FormCheckbox } from "toad.js/view/FormCheckbox"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 import { sleep } from "lib/sleep"
 import { FormSelect } from "toad.js/view/FormSelect"
@@ -24,18 +24,26 @@ import { selectFile } from "./selectFile"
 
 // we have speech!!!
 // https://github.com/mdn/dom-examples/blob/main/web-speech-api/speak-easy-synthesis/script.js
-const delay = new OptionModel(0, [
-    [0, "None"],
-    [5, "5s"],
-    [10, "10s"],
-])
 
 export const simulatedModel = new SimulatedModel()
 
 export function PoseTab(props: { app: Application }) {
     const cameras = makeCamerasModel(props.app)
     const mediaPipeTasks = makeMediaPipeTasksModel(props.app)
-
+    const videoFile = new TextModel("video.mp4", {label: "Filename"})
+    const newFile = new BooleanModel(true, {
+        label: "Timestamp",
+        description: "Create new files by appending a timestamp to the file name."
+    })
+    const delay = new OptionModel(0, [
+        [0, "None"],
+        [5, "5s"],
+        [10, "10s"]
+    ], {
+        label: "Timer",
+        description: "Delay between pressing Record button and actual recording."
+    })
+    
     return (
         <Tab
             label="Pose"
@@ -48,19 +56,28 @@ export function PoseTab(props: { app: Application }) {
         >
             <h3>Mediapipe Pose</h3>
             <div>
-                <TransportBar app={props.app} />
                 <Form>
                     <FormSelect model={cameras} />
                     <FormSelect model={mediaPipeTasks} />
+                    <FormLabel model={videoFile} />
+                    <FormField>
+                        <Display model={videoFile} />
+                        <Button
+                            action={async () => {
+                                const filename = await selectFile(props.app.frontend.filesystem, videoFile.value)
+                                if (filename !== undefined) {
+                                    videoFile.value = filename
+                                }
+                            }}
+                        >
+                            📁
+                        </Button>
+                    </FormField>
+                    <FormHelp model={videoFile} />
+                    <FormCheckbox model={newFile}/>
+                    <FormSelect model={delay}/>
                 </Form>
-                <Button
-                    action={async () => {
-                        const filename = await selectFile(props.app.frontend.filesystem)
-                        console.log(`open file "${filename}"`)
-                    }}
-                >
-                    Select File
-                </Button>
+                <TransportBar app={props.app} file={videoFile} delay={delay}/>
             </div>
             {/* <h3>Simulated Pose</h3>
             <Form>
