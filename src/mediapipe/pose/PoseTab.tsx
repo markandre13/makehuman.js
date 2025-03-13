@@ -6,24 +6,12 @@ import { BooleanModel, Button, Display, OptionModel, Select, Switch, TextField, 
 import { FormCheckbox } from "toad.js/view/FormCheckbox"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
-import { sleep } from "lib/sleep"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { SimulatedModel } from "./SimulatedModel"
 import { TransportBar } from "./TransportBar"
 import { makeMediaPipeTasksModel } from "./makeMediaPipeTasksModel"
 import { makeCamerasModel } from "./makeCamerasModel"
 import { selectFile } from "./selectFile"
-
-// function PoseTab(props: { app: Application }) {
-//     return (
-//         <Tab label="Pose" value={TAB.POSE} visibilityChange={setRenderer(props.app, new RenderHuman())}>
-//             <Table model={props.app.poseControls} style={{ width: "100%", height: "100%" }} />
-//         </Tab>
-//     )
-// }
-
-// we have speech!!!
-// https://github.com/mdn/dom-examples/blob/main/web-speech-api/speak-easy-synthesis/script.js
 
 export const simulatedModel = new SimulatedModel()
 
@@ -95,30 +83,7 @@ export function PoseTab(props: { app: Application }) {
                 <XYZView model={simulatedModel.pre} />
                 <XYZView model={simulatedModel.post} />
             </Form>
-            <Button
-                action={() => {
-                    const msg = ["get ready", "10", "9", "8", "6", "5", "4", "3", "2", "1", "click"]
-                    const synth = window.speechSynthesis
-                    const voice = synth.getVoices().filter((it) => it.name === "Samantha")[0]
-                    let counter = 0
-                    const schedule = () => {
-                        const utter = new SpeechSynthesisUtterance(msg[counter])
-                        utter.voice = voice
-                        synth.speak(utter)
-                        ++counter
-                        if (counter < msg.length) {
-                            window.setTimeout(() => {
-                                schedule()
-                            }, 1000)
-                        } else {
-                            console.log(props.app.frontend._poseLandmarks?.toString())
-                        }
-                    }
-                    schedule()
-                }}
-            >
-                SNAPSHOT
-            </Button> */}
+            */}
             <div id="debug1">DEBUG</div>
         </Tab>
     )
