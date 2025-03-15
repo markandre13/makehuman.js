@@ -33,7 +33,7 @@ interface Frontend {
         in unsigned long long timestamp_ms);
 };
 
-interface VideoCamera2 {
+interface VideoCamera {
     readonly attribute string id;
     attribute string name;
     readonly attribute string features;
@@ -43,9 +43,10 @@ interface MediaPipeTask {
     readonly attribute string name;
 };
 
-struct Range {
-    unsigned long long start_ms;
-    unsigned long long end_ms;
+struct VideoRange {
+    unsigned short fps;
+    unsigned long firstFrame;
+    unsigned long lastFrame;
 };
 
 // backend is called by the frontend
@@ -60,15 +61,15 @@ interface Backend {
     void save(in string filename, in string data);
     string load(in string filename);
 
-    sequence<VideoCamera2> getVideoCameras();
-    attribute VideoCamera2 camera;
+    sequence<VideoCamera> getVideoCameras();
+    attribute VideoCamera camera;
 
     sequence<MediaPipeTask> getMediaPipeTasks();
     attribute MediaPipeTask mediaPipeTask;
 
     // quick hack to save/play video
     void record(in string filename);
-    Range play(in string filename);
+    VideoRange play(in string filename);
     void stop();
 
     void pause();
