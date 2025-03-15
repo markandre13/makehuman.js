@@ -2,7 +2,7 @@ import { Application, setRenderer } from "Application"
 import { TAB } from "HistoryManager"
 import { MPPoseRenderer } from "./MPPoseRenderer"
 import { Tab } from "toad.js/view/Tab"
-import { BooleanModel, Button, Display, OptionModel, Select, Switch, TextField, TextModel } from "toad.js"
+import { BooleanModel, Button, Display, NumberModel, OptionModel, Select, Switch, TextField, TextModel } from "toad.js"
 import { FormCheckbox } from "toad.js/view/FormCheckbox"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
@@ -12,6 +12,8 @@ import { TransportBar } from "./TransportBar"
 import { makeMediaPipeTasksModel } from "./makeMediaPipeTasksModel"
 import { makeCamerasModel } from "./makeCamerasModel"
 import { selectFile } from "./selectFile"
+import { SMPTEConverter } from "lib/smpte"
+import { FormText } from "toad.js/view/FormText"
 
 export const simulatedModel = new SimulatedModel()
 
@@ -31,6 +33,12 @@ export function PoseTab(props: { app: Application }) {
         label: "Timer",
         description: "Delay between pressing Record button and actual recording."
     })
+
+    const startFrame = new NumberModel(100, {label: "Start Frame", step: 1, min: 0})
+    const endFrame = new NumberModel(900, {label: "End Frame", step: 1, min: 0})
+    const fps = new NumberModel(24, {label: "fps", step: 1, min: 1})
+    const startTime = new SMPTEConverter(startFrame, fps, {label: "Start"})
+    const endTime = new SMPTEConverter(endFrame, fps, {label: "End"})
     
     return (
         <Tab
@@ -64,6 +72,13 @@ export function PoseTab(props: { app: Application }) {
                     <FormHelp model={videoFile} />
                     <FormCheckbox model={newFile}/>
                     <FormSelect model={delay}/>
+
+                    <FormText model={startFrame}/>
+                    <FormText model={endFrame}/>
+                    <FormText model={fps}/>
+                    <FormText model={startTime}/>
+                    <FormText model={endTime}/>
+
                 </Form>
                 <TransportBar app={props.app} file={videoFile} delay={delay}/>
             </div>
