@@ -46,7 +46,7 @@ export function TransportBar(props: { app: Application; file: TextModel; delay: 
             <Button
                 action={async () => {
                     try {
-                        await props.app.frontend.backend?.play(props.file.value)
+                        const range = await props.app.frontend.backend?.play(props.file.value)
                     } catch (e) {
                         console.log("UPSY DAISY")
                         if (e instanceof Error) {
