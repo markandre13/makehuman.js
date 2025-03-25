@@ -226,7 +226,7 @@ export function BlendShapeTab(props: { app: Application }) {
                 <FormSlider model={editor.secondaryWeight} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
 
-                <FormLabel>Store</FormLabel>
+                {/* <FormLabel>Store</FormLabel>
                 <FormField>
                     <Button
                         action={async () => {
@@ -259,7 +259,7 @@ export function BlendShapeTab(props: { app: Application }) {
                     >
                         Save
                     </Button>
-                </FormField>
+                </FormField> */}
             </Form>
             <Table model={editor.poseUnitWeightsModel} style={{ width: "calc(100% - 2px)", height: "200px" }} />
             <p>pose face to match blendshape</p>

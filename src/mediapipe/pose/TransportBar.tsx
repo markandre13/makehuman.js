@@ -1,11 +1,28 @@
-import { Application } from "Application"
-import { sleep } from "lib/sleep"
-import { Button, TextField, TextModel } from "toad.js"
-import { ValueModel } from "toad.js/model/ValueModel"
+import { Button, TextField } from "toad.js"
+import { PoseModel } from "./PoseTab"
+import { Frontend_impl } from "net/Frontend_impl"
 
 // TODO: disable/enable buttons with constraints
 
-export function TransportBar(props: { app: Application; file: TextModel; delay: ValueModel<number> }) {
+export function TransportBar(props: { model: PoseModel, frontend: Frontend_impl }) {
+    const recorder = props.frontend.recorder
+    const model = props.model
+    recorder.signal.add( () => {
+        if (recorder.value !== undefined) {
+            recorder.value.open(props.model.videoFile.value)
+            .then( size => {
+                props.model.videoFile.error = undefined
+                model.setSize(size)
+            })
+            .catch( (e) => {
+                if (e instanceof Error) {
+                    props.model.videoFile.error = e.message
+                }
+                model.setSize({fps: 24, frames: 0})
+            })
+        }
+    } )
+
     return (
         <>
             <Button
@@ -13,7 +30,7 @@ export function TransportBar(props: { app: Application; file: TextModel; delay: 
                     const synth = window.speechSynthesis
                     const voice = synth.getVoices().filter((it) => it.lang.startsWith("en"))[0]
 
-                    let countDown = props.delay.value
+                    let countDown = props.model.delay.value
                     const schedule = () => {
                         if (countDown > 0) {
                             const utter = new SpeechSynthesisUtterance(`${countDown}`)
@@ -27,13 +44,13 @@ export function TransportBar(props: { app: Application; file: TextModel; delay: 
                             }, 1000)
                         }
                         if (countDown === 0) {
-                            if (props.delay.value > 0) {
+                            if (props.model.delay.value > 0) {
                                 const utter = new SpeechSynthesisUtterance(`record`)
                                 utter.voice = voice
                                 synth.speak(utter)
                             }
                             // console.log(props.app.frontend._poseLandmarks?.toString())
-                            props.app.frontend.backend?.record(props.file.value)
+                            recorder.value?.record() // props.model.videoFile.value)
                         }
                     }
                     schedule()
@@ -41,12 +58,24 @@ export function TransportBar(props: { app: Application; file: TextModel; delay: 
             >
                 <span style={{ color: "#f00" }}>●</span>
             </Button>
-            <Button action={() => props.app.frontend.backend?.stop()}>◼︎</Button>
+            <Button action={() => props.frontend.recorder.value?.stop()}>◼︎</Button>
             {/* <Button action={() => props.app.frontend.backend?.play("video.mp4")}>▶︎</Button> */}
             <Button
                 action={async () => {
                     try {
-                        const range = await props.app.frontend.backend?.play(props.file.value)
+                        const size = await recorder.value?.open(props.model.videoFile.value)
+                        await recorder.value?.play()
+                        props.model.fps.value = size!.fps
+                        props.model.frame.duration.value = size!.frames
+                        
+                        props.model.frame.position.max = size!.frames
+                        props.model.frame.position.value = 0
+
+                        props.model.frame.loopStart.max =  size!.frames
+                        props.model.frame.loopStart.value = 0
+
+                        props.model.frame.loopEnd.max = size!.frames
+                        props.model.frame.loopEnd.value = size!.frames
                     } catch (e) {
                         console.log("UPSY DAISY")
                         if (e instanceof Error) {
@@ -57,20 +86,20 @@ export function TransportBar(props: { app: Application; file: TextModel; delay: 
             >
                 ▶︎
             </Button>
-            <Button action={() => props.app.frontend.backend?.pause()}>❙ ❙</Button>
-            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value - 30n)}>
+            <Button action={() => recorder.value?.pause()}>❙ ❙</Button>
+            <Button action={() => recorder.value?.seek(props.model.frame.position.value - props.model.fps.value)}>
                 ◀︎◀︎
             </Button>
-            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value - 1n)}>
+            <Button action={() => recorder.value?.seek(props.model.frame.position.value - 1)}>
                 ❙◀︎
             </Button>
-            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value + 1n)}>
+            <Button action={() => recorder.value?.seek(props.model.frame.position.value + 1)}>
                 ▶︎❙
             </Button>
-            <Button action={() => props.app.frontend.backend?.seek(props.app.frontend._poseLandmarksTS.value + 30n)}>
+            <Button action={() => recorder.value?.seek(props.model.frame.position.value + props.model.fps.value)}>
                 ▶︎▶︎
             </Button>
-            <TextField model={props.app.frontend._poseLandmarksTS as any} />
+            <TextField model={props.frontend._poseLandmarksTS as any} />
         </>
     )
     //

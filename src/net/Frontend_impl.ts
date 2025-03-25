@@ -1,5 +1,5 @@
 import { ORB } from "corba.js"
-import { Backend } from "net/makehuman"
+import { Backend, Recorder } from "net/makehuman"
 import { FileSystem } from "net/fs"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { UpdateManager } from "UpdateManager"
@@ -13,6 +13,7 @@ export class Frontend_impl extends Frontend_skel {
 
     backend?: Backend
     filesystem?: FileSystem
+    recorder = new ValueModel<Recorder | undefined>(undefined)
 
     constructor(orb: ORB, updateManager: UpdateManager, blendshapeModel: BlendshapeModel) {
         super(orb)
@@ -72,5 +73,8 @@ export class Frontend_impl extends Frontend_skel {
         // }
         // console.log(`nose: ${landmarks[0]}, ${landmarks[1]}, ${landmarks[2]}`)
         this.updateManager.invalidateView()
+    }
+    override frame(frame: bigint): void {
+        throw new Error("Method not implemented.")
     }
 }

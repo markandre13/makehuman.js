@@ -1,18 +1,3 @@
-enum MotionCaptureType {
-    BODY,
-    FACE,
-    HAND
-};
-
-enum MotionCaptureEngine {
-    NONE,
-    MEDIAPIPE,
-    LIVELINK,
-    CHORDATA
-};
-
-// the API for now isn't very much OO but it works for now
-
 // frontend is called by the backend
 interface Frontend {
     // callback to receive raw chordata frame
@@ -20,6 +5,7 @@ interface Frontend {
 
     // callbacks to receive face data
     // names for the entries in faceLandmarks() blendshapes sequence
+
     // send at the beginning or whenever that list of names changes
     oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
     oneway void faceLandmarks(
@@ -31,6 +17,9 @@ interface Frontend {
     oneway void poseLandmarks(
         in sequence<float> landmarks,
         in unsigned long long timestamp_ms);
+
+    // temporary hack
+    oneway void frame(in unsigned long long frame);
 };
 
 interface VideoCamera {
@@ -43,10 +32,19 @@ interface MediaPipeTask {
     readonly attribute string name;
 };
 
-struct VideoRange {
+struct VideoSize {
     unsigned short fps;
-    unsigned long firstFrame;
-    unsigned long lastFrame;
+    unsigned long frames;
+};
+
+interface Recorder {
+    VideoSize open(in string filename);
+    void close();
+    void record();
+    void play();
+    void stop();
+    void pause();
+    void seek(in unsigned long frame);
 };
 
 // backend is called by the frontend
@@ -54,24 +52,11 @@ interface Backend {
     // called by the frontend to register itself to receive data
     void setFrontend(in Frontend frontend);
 
-    // selects the kind of data the frontend wants to receive
-    void setEngine(in MotionCaptureType type, in MotionCaptureEngine engine);
-
-    // quick hack to load and store files
-    void save(in string filename, in string data);
-    string load(in string filename);
+    readonly attribute Recorder recorder;
 
     sequence<VideoCamera> getVideoCameras();
     attribute VideoCamera camera;
 
     sequence<MediaPipeTask> getMediaPipeTasks();
     attribute MediaPipeTask mediaPipeTask;
-
-    // quick hack to save/play video
-    void record(in string filename);
-    VideoRange play(in string filename);
-    void stop();
-
-    void pause();
-    void seek(in unsigned long long timestamp_ms);
 };

@@ -35,11 +35,13 @@ export class Connector {
             const backend = Backend.narrow(await backendObject)
             this.frontend.backend = backend
             this.frontend.filesystem = FileSystem.narrow(await filesystemObject)
+            this.frontend.recorder.value = await backend.recorder()
 
             // FIXME: only switch to NOT_CONNECT when the exeption indicates a connection loss
             ORB.installSystemExceptionHandler(backend, () => {
                 this.frontend.backend = undefined
                 this.frontend.filesystem = undefined
+                this.frontend.recorder.value = undefined
                 this.state = ConnectionState.NOT_CONNECTED
             })
             backend.setFrontend(this.frontend)

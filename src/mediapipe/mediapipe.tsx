@@ -10,7 +10,6 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { RenderHandler } from "render/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { FormSwitch } from "toad.js/view/FormSwitch"
-import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 
 // NEXT STEPS:
 // [X] for finetuning the animation in realtime, render in the backend
@@ -24,7 +23,7 @@ import { MotionCaptureEngine, MotionCaptureType } from "net/makehuman"
 // [ ] write an editor to create pose units matching the blendshapes
 
 let renderEngine: OptionModel<RenderHandler>
-let captureEngine: OptionModel<MotionCaptureEngine>
+
 export function MediapipeTab(props: { app: Application }) {
     if (renderEngine === undefined) {
         const lm = new FaceLandmarkRenderer(props.app.frontend)
@@ -40,19 +39,6 @@ export function MediapipeTab(props: { app: Application }) {
         renderEngine.signal.add(() => {
             props.app.setRenderer(renderEngine.value, renderEngine.value !== mh)
         })
-
-        captureEngine = new OptionModel<MotionCaptureEngine>(
-            MotionCaptureEngine.MEDIAPIPE, [
-                [MotionCaptureEngine.NONE, "None"],
-                [MotionCaptureEngine.MEDIAPIPE, "Mediapipe"],
-                [MotionCaptureEngine.LIVELINK, "Live Link"],
-            ], {
-                label: "Capture Engine"
-            }
-        )
-        captureEngine.signal.add( () => {
-            props.app.frontend.backend?.setEngine(MotionCaptureType.FACE, captureEngine.value)
-        })
     }
 
     return (
@@ -65,7 +51,6 @@ export function MediapipeTab(props: { app: Application }) {
         >
             <Form>
                 <FormSelect model={renderEngine} />
-                <FormSelect model={captureEngine} />
                 <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
         </Tab>
