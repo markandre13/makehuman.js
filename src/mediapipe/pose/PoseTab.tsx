@@ -73,6 +73,10 @@ export class PoseModel {
             loopStart: new SMPTEConverter(this.frame.loopStart, this.fps, { label: "Loop Start" }),
             loopEnd: new SMPTEConverter(this.frame.loopEnd, this.fps, { label: "Loop End" }),
         }
+
+        app.frontend.frameHandler = (frame) => {
+            this.frame.position.value = frame
+        }
     }
 
     setSize(size: VideoSize) {

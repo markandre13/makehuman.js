@@ -19,7 +19,7 @@ interface Frontend {
         in unsigned long long timestamp_ms);
 
     // temporary hack
-    oneway void frame(in unsigned long long frame);
+    oneway void frame(in unsigned long frame);
 };
 
 interface VideoCamera {

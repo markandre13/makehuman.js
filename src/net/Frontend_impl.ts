@@ -74,7 +74,11 @@ export class Frontend_impl extends Frontend_skel {
         // console.log(`nose: ${landmarks[0]}, ${landmarks[1]}, ${landmarks[2]}`)
         this.updateManager.invalidateView()
     }
-    override frame(frame: bigint): void {
-        throw new Error("Method not implemented.")
+    frameHandler?: (frame: number) => void
+    override frame(frame: number): void {
+        console.log(`at frame ${frame}`);
+        if (this.frameHandler) {
+            this.frameHandler(frame)
+        }
     }
 }
