@@ -56,10 +56,12 @@ export function createNormalMatrix(modelViewMatrix: mat4) {
     mat4.transpose(normalMatrix, normalMatrix)
     return normalMatrix
 }
-//
-// Initialize a texture and load an image.
-// When the image finished loading copy it into the texture.
-//
+
+/**
+ * Initialize a texture and load an image.
+ * 
+ * When the image finished loading copy it into the texture.
+ */
 export function loadTexture(gl: WebGLRenderingContext, url: string, cb?: () => void) {
     const texture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, texture)

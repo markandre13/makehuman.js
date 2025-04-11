@@ -76,7 +76,7 @@ export class Frontend_impl extends Frontend_skel {
     }
     frameHandler?: (frame: number) => void
     override frame(frame: number): void {
-        console.log(`at frame ${frame}`);
+        // console.log(`at frame ${frame}`)
         if (this.frameHandler) {
             this.frameHandler(frame)
         }

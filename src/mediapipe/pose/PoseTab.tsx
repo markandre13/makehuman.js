@@ -73,6 +73,12 @@ export class PoseModel {
             loopStart: new SMPTEConverter(this.frame.loopStart, this.fps, { label: "Loop Start" }),
             loopEnd: new SMPTEConverter(this.frame.loopEnd, this.fps, { label: "Loop End" }),
         }
+        this.frame.position.signal.add( () => {
+            if (app.frontend.recorder) {
+                app.frontend.recorder.value?.seek(this.frame.position.value)
+            }
+        })
+        // recorder.value?.seek(props.model.frame.position.value - props.model.fps.value)
 
         app.frontend.frameHandler = (frame) => {
             this.frame.position.value = frame
