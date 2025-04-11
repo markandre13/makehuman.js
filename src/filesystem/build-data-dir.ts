@@ -34,12 +34,12 @@ const branch = "master"
 
 const makehumanDir = getMakehumanDirName()
 const assetDirectory = `${makehumanDir}${sep}official_assets`
-
-let sizeUncompressed = 0
-let sizeCompressed = 0
 const sourceDirs = [`base`, `${assetDirectory}/base`]
+
 const directoryList = new Map<string, Map<string, boolean>>()
 const animation = [" ", ".", "o", "O", "o", "."]
+let sizeUncompressed = 0
+let sizeCompressed = 0
 let animationTime = 0
 let animationStep = 0
 
@@ -50,6 +50,7 @@ async function main() {
     await downloadARKitFaceBlendshapes()
     await downloadICTFaceKitBlendshapes()
 
+    checkGitLFS()
     if (isDir(assetDirectory)) {
         updateAssetDirectory(assetDirectory)
     } else {
@@ -79,6 +80,16 @@ function getMakehumanDirName() {
     return makehumanDir
 }
 
+function checkGitLFS() {
+    try {
+        exec('git lfs install')
+    } catch(error) {
+        console.error(`\nplease install git lfs to download makehuman assets`)
+        console.error((error as any).message.trim())
+        exit(1)
+    }
+}
+
 function updateAssetDirectory(assetDirectory: string) {
     console.info(`updating makehuman assets in directory '${assetDirectory}'`)
     try {
@@ -91,7 +102,7 @@ function updateAssetDirectory(assetDirectory: string) {
 function cloneAssetDirectory(repository: string, branch: string, makehumanDir: string) {
     console.log(`downloading makehuman assets into directory '${makehumanDir}${sep}official_assets'`)
     try {
-        mkdirSync(makehumanDir)
+        mkdirSync(makehumanDir, {recursive: true})
         exec(`git -C ${makehumanDir} clone -b '${branch}' '${repository}' official_assets`)
     } catch (error) {
         console.error(`\nunable to clone directory '${assetDirectory}'`)
@@ -133,11 +144,15 @@ function copyFiles(sourceRoot: string, sourcePath: string = "") {
         if (!isDir(dirOut)) {
             mkdirSync(dirOut)
         }
+
+        // ADD DIRECTORY
         if (isDir(pathIn)) {
             directory.set(file, true)
             copyFiles(sourceRoot, sourcePath.length === 0 ? file : `${sourcePath}${sep}${file}`)
             continue
         }
+
+        // ADD COMPRESSED FILE
         if (
             file.endsWith(".modifier") ||
             file.endsWith(".target") ||
@@ -168,6 +183,8 @@ function copyFiles(sourceRoot: string, sourcePath: string = "") {
             writeFileSync(`${fileOut}.z`, compressed)
             continue
         }
+
+        // ADD COPIED FILE
         if (file.endsWith(".png") || file.endsWith(".jpg") || file.endsWith(".tif") || file.endsWith(".bmp")) {
             if (directory.has(file)) {
                 console.warn(`file collision for ${fileOut}`)
