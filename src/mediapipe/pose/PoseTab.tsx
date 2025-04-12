@@ -19,8 +19,8 @@ import { MediaPipeTask, VideoCamera, VideoSize } from "net/makehuman"
 export const simulatedModel = new SimulatedModel()
 
 export class PoseModel {
-    cameras: OptionModel<VideoCamera | null>
-    mediaPipeTasks: OptionModel<MediaPipeTask | null>
+    cameras: OptionModel<VideoCamera | undefined>
+    mediaPipeTasks: OptionModel<MediaPipeTask | undefined>
     videoFile: TextModel
     newFile: BooleanModel
     delay: OptionModel<number>
