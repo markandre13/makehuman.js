@@ -38,19 +38,19 @@
     "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
-    "@types/chai": "^5.2.0",
+    "@types/chai": "^5.2.1",
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.14.1",
     "@web/dev-server": "^0.4.6",
-    "@web/test-runner": "^0.20.0",
+    "@web/test-runner": "^0.20.1",
     "chai": "^5.2.0",
     "mocha": "^11.1.0",
-    "rollup": "^4.35.0",
+    "rollup": "^4.40.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }
