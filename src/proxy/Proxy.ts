@@ -10,6 +10,7 @@ import { ProxyRefVert } from "./ProxyRefVert"
 import { TMatrix } from "./TMatrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { zipForEach } from "lib/zipForEach"
+import { assert } from "lib/assert"
 
 // the lowercase version of ProxyType matches the directory
 export enum ProxyType {
@@ -101,6 +102,10 @@ export class Proxy {
      * @returns proxy mesh vertices
      */
     getCoords(hcoord: Float32Array): Float32Array {
+        assert(this.tmatrix !== undefined)
+        assert(this.human !== undefined)
+        assert(this.human.humanMesh !== undefined)
+        assert(this.human.humanMesh.vertexMorphed !== undefined)
         const matrix = this.tmatrix.getMatrix(this.human.humanMesh.vertexMorphed)
 
         const ref_vIdxs = this.ref_vIdxs! // three vertices in the base mesh

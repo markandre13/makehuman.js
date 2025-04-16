@@ -9,6 +9,7 @@ import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
 import { euler_from_matrix } from "lib/euler_matrix"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
+import { assert } from "lib/assert"
 
 export class Skeleton {
     poseNodes: PoseNode
@@ -482,6 +483,7 @@ export class Skeleton {
             for (let i = 0; i < verts.length; ++i) {
                 const vert = verts[i] * 3
                 const weight = weights[i]
+                // assert(bone.matPoseVerts !== undefined)
                 vec3.transformMat4(
                     v,
                     vec3.fromValues(meshCoords[vert], meshCoords[vert + 1], meshCoords[vert + 2]),

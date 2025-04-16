@@ -1,0 +1,9 @@
+{
+  "trailingComma": "es5",
+  "tabWidth": 4,
+  "semi": false,
+  "singleQuote": true,
+  "max_line_length": 240,
+  "objectWrap": collapse,
+  "insert_final_newline": true
+}

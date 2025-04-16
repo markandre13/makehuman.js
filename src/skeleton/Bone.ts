@@ -197,7 +197,6 @@ export class Bone {
      * calculate matPoseGlobal & matPoseVerts
      */
     update() {
-        // console.log(`Bone(name="${this.name}").update()`)
         if (this.matUserPoseGlobal !== undefined) {
             mat4.identity(this.matUserPoseRelative)
         }

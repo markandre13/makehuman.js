@@ -24,7 +24,7 @@ export interface Material {
     b: number
 }
 
-export function exportCollada(humanMesh: HumanMesh) {
+export function exportCollada(humanMesh: HumanMesh, date: Date = new Date()) {
     let s = humanMesh
     // s = testCube
     const geometry = new Geometry()
@@ -84,7 +84,7 @@ export function exportCollada(humanMesh: HumanMesh) {
         }
     ]
 
-    return colladaHead() +
+    return colladaHead(date) +
         colladaEffects(materials) +
         colladaMaterials(materials) +
         colladaGeometries(s, geometry, materials) + // mesh
@@ -116,7 +116,7 @@ const skinIbmArrayName = `${skinIbmName}-array`
 
 // TODO: try to export with meter="1" and Z_UP so that blender doesn't scale and rotate
 //       the human. this will simplify the workflow in blender after the import
-function colladaHead() {
+function colladaHead(date: Date) {
     return `<?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <asset>
@@ -124,8 +124,8 @@ function colladaHead() {
       <author>makehuman.js user</author>
       <authoring_tool>https://github.com/markandre13/makehuman.js</authoring_tool>
     </contributor>
-    <created>${new Date().toISOString()}</created>
-    <modified>${new Date().toISOString()}</modified>
+    <created>${date.toISOString()}</created>
+    <modified>${date.toISOString()}</modified>
     <unit name="meter" meter="0.1"/>
     <up_axis>Y_UP</up_axis>
   </asset>
@@ -259,6 +259,7 @@ function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials:
     <controller id="${skinName}" name="${armatureName}">
       <skin source="#${meshName}">
         <bind_shape_matrix>${mat2txt(identity)}</bind_shape_matrix>
+
         <source id="${skinJointsName}">
           <Name_array id="${skinJointsArrayName}" count="3">${allBoneNames.join(" ").replace(/\./g, "_")}</Name_array>
           <technique_common>
@@ -267,6 +268,7 @@ function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials:
             </accessor>
           </technique_common>
         </source>
+        
         <source id="${skinIbmName}">
           <float_array id="${skinIbmArrayName}" count="${allBoneNames.length * 16}">${ibmAll}</float_array>
           <technique_common>
@@ -275,6 +277,7 @@ function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials:
             </accessor>
           </technique_common>
         </source>
+        
         <source id="${skinWeightsName}">
           <float_array id="${skinWeightsArrayName}" count="${weights.length}">${weights.join(" ")}</float_array>
           <technique_common>
@@ -283,10 +286,12 @@ function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials:
             </accessor>
           </technique_common>
         </source>
+        
         <joints>
           <input semantic="JOINT" source="#${skinJointsName}"/>
           <input semantic="INV_BIND_MATRIX" source="#${skinIbmName}"/>
         </joints>
+        
         <vertex_weights count="${boneWeightPairs.length}">
           <input semantic="JOINT" source="#${skinJointsName}" offset="0"/>
           <input semantic="WEIGHT" source="#${skinWeightsName}" offset="1"/>
@@ -336,7 +341,6 @@ function colladaAnimations() {
     // here/mat\(3\)\(2\)
     return `  <library_animations>
     <animation id="action_container-Armature" name="Armature">
-        <!-- X -->
        <animation id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X" name="Armature_jaw">
          <source id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-input">
            <float_array id="Armature_jaw_ArmatureAction___jaw___rotation_euler_X-input-array" count="3">0.04166662 0.4166666 0.8333333</float_array>
@@ -369,7 +373,6 @@ function colladaAnimations() {
          </sampler>
          <channel source="#Armature_jaw_ArmatureAction___jaw___rotation_euler_X-sampler" target="Armature_jaw/rotationX.ANGLE"/>
        </animation>
-       <!-- Y, Z, ... -->
      </animation>
    </library_animations>\n`
 }
@@ -626,12 +629,12 @@ function bsm(bone: Bone) {
 }
 
 // create the "inverse bind pose matrix" from the collada spec
-function ibm(bone: Bone) {
+export function ibm(bone: Bone) {
     return mat2txt(mat4.invert(mat4.create(), bone.matRestGlobal!))
 }
 
 // output mat4 in collada format (translation on the right instead of bottom)
-function mat2txt(m: mat4) {
+export function mat2txt(m: mat4) {
     const map = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15]
     let out = ""
     for (let i = 0; i < 16; ++i) {
@@ -641,7 +644,7 @@ function mat2txt(m: mat4) {
     return out.trimEnd()
 }
 
-function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectWithParent: boolean = false) {
+export function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectWithParent: boolean = false) {
     const is = indentToString(indent)
     let out = ``
     out += `${is}<node id="${armatureName}_${bone.name.replace(/\./g, "_")}" name="${bone.name}" sid="${bone.name.replace(/\./g, "_")}" type="JOINT">\n`
@@ -686,7 +689,7 @@ function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectW
     return out
 }
 
-function indentToString(indent: number): string {
+export function indentToString(indent: number): string {
     let indentStr = ""
     for (let i = 0; i < indent; ++i) {
         indentStr += "  "
