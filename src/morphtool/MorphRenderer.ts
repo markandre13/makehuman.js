@@ -1,4 +1,5 @@
 import { Application } from 'Application'
+import { mat4, vec3, vec4 } from 'gl-matrix'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { GLView, Projection, RenderHandler } from 'render/GLView'
 import { RenderMesh } from 'render/RenderMesh'
@@ -9,6 +10,7 @@ import {
     prepareCanvas,
     prepareViewport,
 } from 'render/util'
+import { span, text } from 'toad.js'
 
 // i'm not sure if i should go with the webgl classes i've created so far...
 
@@ -82,8 +84,8 @@ export class MorphRenderer extends RenderHandler {
 
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
-        gl.enable(gl.CULL_FACE)
-        gl.cullFace(gl.BACK)
+        // gl.enable(gl.CULL_FACE)
+        // gl.cullFace(gl.BACK)
         gl.depthMask(true)
         gl.disable(gl.BLEND)
 
@@ -91,5 +93,34 @@ export class MorphRenderer extends RenderHandler {
         this.mesh.bind(programRGBA)
 
         gl.drawElements(gl.TRIANGLES, this.faces.length, gl.UNSIGNED_SHORT, 0)
+
+        // add text label
+        const m = mat4.create()
+        const vertexIdx = 3 * 340
+        mat4.translate(m, m, vec3.fromValues(this.vertex[vertexIdx], this.vertex[vertexIdx+1], this.vertex[vertexIdx+2]))
+        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+        mat4.multiply(m0, m0, m)
+        const point = vec4.fromValues(0, 0, 0, 1) // this is the front top right corner
+        const clipspace = vec4.transformMat4(point, point, m0)
+        clipspace[0] /= clipspace[3]
+        clipspace[1] /= clipspace[3]
+        const pixelX = (clipspace[0] * 0.5 + 0.5) * gl.canvas.width
+        const pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height
+     
+        const overlay = view.overlay
+        let label: HTMLElement
+        if (overlay.children.length === 0) {
+            label = span(text("BOO"))
+            label.style.position = "absolute"
+            label.style.color = "#f00"
+            overlay.appendChild(label)
+        } else {
+            label = overlay.children[0] as HTMLElement
+        }
+        label.style.left = `${pixelX}px`
+        label.style.top = `${pixelY}px`
+
+        // calculate (pixelX, pixelY) back to vertexIdx
+        // ...
     }
 }
