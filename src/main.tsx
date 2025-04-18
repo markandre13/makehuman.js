@@ -51,6 +51,7 @@ import { RenderHuman } from "render/RenderHuman"
 import { BlendShapeTab } from "blendshapes/BlendShapeTab"
 import { ConnectButton } from "net/ConnectButton"
 import { PoseTab } from "mediapipe/pose/PoseTab"
+import { MorphTool } from "morphtool/MorphTool"
 
 export async function main() {
     try {
@@ -101,7 +102,8 @@ async function run() {
                     <MorphTab app={app} />
                     <ProxyTab app={app} />
                     {/* <PoseTab app={app} /> */}
-                    <BlendShapeTab app={app} />
+                    {/* <BlendShapeTab app={app} /> */}
+                    <MorphTool app={app} />
                     <PoseTab app={app} />
                     {/* <ExpressionTab app={app} /> */}
                     {/* <MediapipeTab app={app} /> */}

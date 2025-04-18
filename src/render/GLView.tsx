@@ -122,7 +122,6 @@ export class GLView extends View {
         this.programTex = new TextureShader(this.gl)
         this.programColor = new ColorShader(this.gl)
 
-
         this.renderList = new RenderList(this.gl, this.app.humanMesh)
         this.app.updateManager.setRenderList(this.renderList)
     }
