@@ -1,6 +1,7 @@
 import { Application } from 'Application'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { GLView, Projection, RenderHandler } from 'render/GLView'
+import { RenderMesh } from 'render/RenderMesh'
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -9,274 +10,64 @@ import {
     prepareViewport,
 } from 'render/util'
 
-import { calculateNormalsQuads, calculateNormalsTriangles } from "../lib/calculateNormals"
-import { AbstractShader } from 'render/shader/AbstractShader'
-
-interface GLXYZUV {
-    idxExtra: number[]
-    indices: number[]
-    vertex: Float32Array
-    texcoord?: Float32Array
-}
-
-/**
- * I am a mesh which can be rendered by OpenGL.
- * a) convert quads to triangles
- * b) join fxyz and fuv into one list
- * c) calculate normals
- */
-class FlatMesh {
-    gl: WebGL2RenderingContext
-    glIndices: WebGLBuffer
-    glVertex: WebGLBuffer
-    glNormal: WebGLBuffer
-    glTexture?: WebGLBuffer
-
-    fvertex: number[]
-    normal: Float32Array
-    glData: GLXYZUV
-    quads: boolean
-
-    constructor(
-        gl: WebGL2RenderingContext,
-        vertex: Float32Array,
-        fvertex: number[],
-        uvs?: Float32Array,
-        fuvs?: number[],
-        quads = true
-    ) {
-        this.gl = gl
-        this.fvertex = fvertex
-        this.quads = quads
-
-        if (quads === false) {
-            this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, fvertex)
-            this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
-            this.normal = new Float32Array(vertex.length)
-            calculateNormalsTriangles(this.normal, vertex, fvertex)
-            this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
-            this.glData = {
-                indices: fvertex,
-            } as GLXYZUV
-            return
-        }
-
-        const glData = decoupleXYZandUV(vertex, fvertex, uvs, fuvs)
-        this.glData = glData
-        this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
-        this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.vertex)
-        if (glData.texcoord) {
-            this.glTexture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
-        }
-
-        this.normal = new Float32Array(glData.vertex.length)
-        calculateNormalsQuads(this.normal, vertex, fvertex)
-        this.glData.idxExtra.forEach((v, i) => {
-            this.normal[vertex.length + i * 3] = this.normal[v * 3]
-            this.normal[vertex.length + i * 3 + 1] = this.normal[v * 3 + 1]
-            this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
-        })
-
-        this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
-    }
-
-    update(vertex: Float32Array) {
-        if (this.quads) {
-            this.glData.vertex.set(vertex)
-            calculateNormalsQuads(this.normal, vertex, this.fvertex)
-
-            this.glData.idxExtra.forEach((v, i) => {
-                this.glData.vertex[vertex.length + i * 3] = vertex[v * 3]
-                this.glData.vertex[vertex.length + i * 3 + 1] = vertex[v * 3 + 1]
-                this.glData.vertex[vertex.length + i * 3 + 2] = vertex[v * 3 + 2]
-
-                this.normal[vertex.length + i * 3] = this.normal[v * 3]
-                this.normal[vertex.length + i * 3 + 1] = this.normal[v * 3 + 1]
-                this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
-            })
-            // prettier-ignore
-            this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
-            this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
-        } else {
-            this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, vertex)
-            calculateNormalsTriangles(this.normal, vertex, this.fvertex)
-            this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
-        }
-    }
-
-    draw(programInfo: AbstractShader, mode: number) {
-        this.bind(programInfo)
-        this.gl.drawElements(mode, this.glData.indices.length, this.gl.UNSIGNED_SHORT, 0)
-    }
-
-    bind(programInfo: AbstractShader): void {
-        programInfo.bind(this.glIndices, this.glVertex, this.glNormal, this.glTexture)
-    }
-
-    drawSubset(mode: number, offset: number, length: number) {
-        this.gl.drawElements(mode, (length / 4) * 6, this.gl.UNSIGNED_SHORT, (offset / 4) * 6)
-    }
-
-    protected createBuffer(
-        target: GLenum,
-        usage: GLenum,
-        type: Float32ArrayConstructor | Uint16ArrayConstructor,
-        data: number[] | Float32Array
-    ): WebGLBuffer {
-        const buffer = this.gl.createBuffer()
-        if (buffer === null) {
-            throw Error("Failed to create new WebGLBuffer")
-        }
-        this.updateBuffer(buffer, target, usage, type, data)
-        return buffer
-    }
-
-    protected updateBuffer(
-        buffer: WebGLBuffer,
-        target: GLenum,
-        usage: GLenum,
-        type: Float32ArrayConstructor | Uint16ArrayConstructor,
-        data: number[] | Float32Array
-    ) {
-        this.gl.bindBuffer(target, buffer)
-        if (data instanceof Float32Array) {
-            this.gl.bufferData(target, data, usage)
-            return
-        }
-        if (data instanceof Int16Array) {
-            this.gl.bufferData(target, data, usage)
-            return
-        }
-        this.gl.bufferData(target, new type(data), usage)
-    }
-}
-
-export function decoupleXYZandUV(
-    xyz: Float32Array,
-    fxyz: Uint16Array | number[],
-    uv?: Float32Array | number[],
-    fuv?: Uint16Array | number[]
-): GLXYZUV {
-    if (fuv !== undefined && fxyz.length !== fuv.length) {
-        throw Error(`fvertex and fuv must have the same length, instead it is ${fxyz.length} and ${fuv.length}`)
-    }
-    if (fuv !== undefined && uv === undefined) {
-        throw Error(`uv & fuv must both be defined`)
-    }
-    const indices: number[] = []
-    const uvOut = new Array((xyz.length / 3) * 2) // for each vertex we have texture coordinate
-
-    const idxExtra: number[] = []
-    const xyzOutExtra: number[] = []
-    const uvOutExtra: number[] = []
-
-    function getIndex(i: number) {
-        return fxyz[i]
-    }
-
-    function decoupleXYZandUV(i: number) {
-        const idxXYZ = fxyz[i]
-
-        const xyzIdx = fxyz[i]
-        const uvIdx = fuv![i]
-        const u = uv![uvIdx * 2]
-        const v = uv![uvIdx * 2 + 1]
-
-        if (uvOut[xyzIdx * 2] === undefined) {
-            uvOut[xyzIdx * 2] = u
-            uvOut[xyzIdx * 2 + 1] = v
-            return idxXYZ
-        }
-        if (uvOut[xyzIdx * 2] === u && uvOut[xyzIdx * 2 + 1] === v) {
-            return idxXYZ
-        }
-
-        const newIdxXYZ = (xyz.length + xyzOutExtra.length) / 3
-
-        const idxXYZIn = idxXYZ * 3
-        const x = xyz[idxXYZIn]
-        const y = xyz[idxXYZIn + 1]
-        const z = xyz[idxXYZIn + 2]
-
-        idxExtra.push(idxXYZ)
-        xyzOutExtra.push(x)
-        xyzOutExtra.push(y)
-        xyzOutExtra.push(z)
-        uvOutExtra.push(u)
-        uvOutExtra.push(v)
-
-        return newIdxXYZ
-    }
-
-    let f
-    if (fuv === undefined) {
-        f = getIndex
-    } else {
-        f = decoupleXYZandUV
-    }
-
-    for (let i = 0; i < fxyz.length; i += 4) {
-        const i0 = f(i)
-        indices.push(i0)
-        indices.push(f(i + 1))
-        const i2 = f(i + 2)
-        indices.push(i2)
-        indices.push(f(i + 3))
-        indices.push(i0)
-        indices.push(i2)
-    }
-
-    if (fuv === undefined) {
-        return {
-            idxExtra: [],
-            indices,
-            vertex: xyz,
-            texcoord: undefined,
-        }
-    }
-
-    const vertex = new Float32Array(xyz.length + xyzOutExtra.length)
-    const texcoord = new Float32Array(uvOut.length + uvOutExtra.length)
-
-    vertex.set(xyz)
-    vertex.set(xyzOutExtra, xyz.length)
-    texcoord.set(uvOut)
-    texcoord.set(uvOutExtra, uvOut.length)
-
-    return { indices, vertex, texcoord, idxExtra }
-}
-
-
 // i'm not sure if i should go with the webgl classes i've created so far...
 
 export class MorphRenderer extends RenderHandler {
-    arkit?: FaceARKitLoader
-    mesh!: FlatMesh
+    // arkit?: FaceARKitLoader
+    mesh!: RenderMesh
+    
+    vertex!: Float32Array
+    faces!: number[]
 
-    override paint(app: Application, view: GLView): void {
-        if (this.arkit === undefined) {
-            this.arkit = FaceARKitLoader.getInstance().preload()
-        }
-        const neutral = this.arkit.neutral!
-
+    override paint(app: Application, view: GLView): void {      
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA
         
-        const vertex = this.arkit.getVertex(
-            app.updateManager.getBlendshapeModel()!
-        )
         if (this.mesh === undefined) {
-            this.mesh = new FlatMesh(
+            const arkit = FaceARKitLoader.getInstance().preload()
+
+            this.faces = arkit.neutral!.fxyz
+            this.vertex = arkit.getVertex(
+                app.updateManager.getBlendshapeModel()!
+            )
+
+            // duplicate triangles to achieve flat shading
+            const v2 = new Float32Array(this.faces.length * 3)
+            const f2 = new Array<number>(this.faces.length * 3)
+            for(let i=0, vo=0, fo=0; i<this.faces.length;) {
+                let i0 = this.faces[i++] * 3
+                let i1 = this.faces[i++] * 3
+                let i2 = this.faces[i++] * 3
+                v2[vo++] = this.vertex[i0++]
+                v2[vo++] = this.vertex[i0++]
+                v2[vo++] = this.vertex[i0++]
+                v2[vo++] = this.vertex[i1++]
+                v2[vo++] = this.vertex[i1++]
+                v2[vo++] = this.vertex[i1++]
+                v2[vo++] = this.vertex[i2++]
+                v2[vo++] = this.vertex[i2++]
+                v2[vo++] = this.vertex[i2++]
+                f2[fo] = fo
+                ++fo
+                f2[fo] = fo
+                ++fo
+                f2[fo] = fo
+                ++fo
+            }
+            this.faces = f2
+            this.vertex = v2
+
+            this.mesh = new RenderMesh(
                 gl,
-                vertex,
-                neutral.fxyz,
+                this.vertex,
+                this.faces,
                 undefined,
                 undefined,
                 false
             )
-        } else {
-            this.mesh.update(vertex)
+        // } else {
+        //     this.mesh.update(this.vertex)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
@@ -299,6 +90,6 @@ export class MorphRenderer extends RenderHandler {
         programRGBA.setColor([1, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
 
-        gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
+        gl.drawElements(gl.TRIANGLES, this.faces.length, gl.UNSIGNED_SHORT, 0)
     }
 }
