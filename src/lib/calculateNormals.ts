@@ -9,6 +9,8 @@ export function deg2rad(d: number) {
 }
 
 export function calculateNormalsQuads(normals: Float32Array, vertex: Float32Array, indices: number[]): Float32Array {
+    normals.fill(0)
+
     function addNormal(index: number, normal: vec3) {
         normals[index] += normal[0]
         normals[index + 1] += normal[1]
@@ -70,7 +72,7 @@ export function calculateNormalsTriangles(
         normals[index + 2] += normal[2]
     }
 
-    // summarize the nurmals
+    // summarize the normals
     for (let i = 0; i < indices.length; ) {
         // get indices of rectangle
         const i1 = indices[i++] * 3

@@ -14,6 +14,9 @@ export enum Projection {
 
 export abstract class RenderHandler {
     abstract paint(app: Application, view: GLView): void
+    onpointerdown(ev: PointerEvent): boolean { return true }
+    onpointermove(ev: PointerEvent): boolean { return true }
+    onpointerup(ev: PointerEvent): boolean { return true }
 }
 
 interface GLViewProps extends HTMLElementProps {
@@ -43,6 +46,9 @@ export class GLView extends View {
         super(props)
         this.app = props.app
         this.app.glview = this
+        if (props.app.renderer) {
+            this.renderHandler = props.app.renderer
+        }
         this.init = this.init.bind(this)
         this.paint = this.paint.bind(this)
 
@@ -145,15 +151,24 @@ export class GLView extends View {
             downY = 0,
             buttonDown = false
         canvas.onpointerdown = (ev: PointerEvent) => {
+            if (this.renderHandler && !this.renderHandler.onpointerdown(ev) ) {
+                return
+            }
             canvas.setPointerCapture(ev.pointerId)
             buttonDown = true
             downX = ev.x
             downY = ev.y
         }
         canvas.onpointerup = (ev: PointerEvent) => {
+            if (!buttonDown && this.renderHandler && !this.renderHandler.onpointerup(ev) ) {
+                return
+            }
             buttonDown = false
         }
         canvas.onpointermove = (ev: PointerEvent) => {
+            if (!buttonDown && this.renderHandler && !this.renderHandler.onpointermove(ev) ) {
+                return
+            }
             if (buttonDown) {
                 const x = ev.x - downX
                 const y = ev.y - downY

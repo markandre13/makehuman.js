@@ -177,5 +177,8 @@ export class Application {
     setRenderer(renderer: RenderHandler, classic: boolean = true) {
         this.renderer = renderer
         this.classic = classic
+        if (this.glview) {
+            this.glview.renderHandler = renderer
+        }
     }
 }

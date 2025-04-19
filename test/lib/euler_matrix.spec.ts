@@ -4,7 +4,6 @@ use(chaiAlmost())
 
 import { euler_from_matrix, euler_matrix } from "../../src/lib/euler_matrix"
 import { mat4 } from "gl-matrix"
-import { assert } from "console"
 
 describe("lib", function () {
     it("euler_matrix(x,y,z,axis): mat4", function () {

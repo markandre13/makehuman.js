@@ -7,7 +7,7 @@ import { MorphRenderer } from './MorphRenderer'
  * Tool to morph face meshes.
  */
 export function MorphTool(props: { app: Application }) {
-    const renderer = new MorphRenderer()
+    const renderer = new MorphRenderer(props.app)
     return (
         <Tab
             label="Morph"
