@@ -2,6 +2,7 @@ import { Application } from 'Application'
 import { mat4, vec2, vec4 } from 'gl-matrix'
 import { findVertex } from 'lib/distance'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
+import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { GLView, Projection, RenderHandler } from 'render/GLView'
 import { RenderMesh } from 'render/RenderMesh'
 import {
@@ -11,7 +12,7 @@ import {
     prepareCanvas,
     prepareViewport,
 } from 'render/util'
-import { span, text } from 'toad.js'
+import { NumberModel, span, text } from 'toad.js'
 
 // i'm not sure if i should go with the webgl classes i've created so far...
 
@@ -49,55 +50,14 @@ export class MorphRenderer extends RenderHandler {
     //     console.log(`pointerup`)
     //     return false
     // }
-    override paint(app: Application, view: GLView): void {      
+
+    override paint(app: Application, view: GLView): void {
+        // prepare
         const gl = view.gl
         const ctx = view.ctx
-        const programRGBA = view.programRGBA
-        
+        const programRGBA = view.programRGBA       
         if (this.mesh === undefined) {
-            const arkit = FaceARKitLoader.getInstance().preload()
-
-            this.faces = arkit.neutral!.fxyz
-            this.vertexOrig = this.vertex = arkit.getVertex(
-                app.updateManager.getBlendshapeModel()!
-            )
-
-            // duplicate triangles to achieve flat shading
-            const v2 = new Float32Array(this.faces.length * 3)
-            const f2 = new Array<number>(this.faces.length * 3)
-            for(let i=0, vo=0, fo=0; i<this.faces.length;) {    
-                let i0 = this.faces[i++] * 3
-                let i1 = this.faces[i++] * 3
-                let i2 = this.faces[i++] * 3
-                v2[vo++] = this.vertex[i0++]
-                v2[vo++] = this.vertex[i0++]
-                v2[vo++] = this.vertex[i0++]
-                v2[vo++] = this.vertex[i1++]
-                v2[vo++] = this.vertex[i1++]
-                v2[vo++] = this.vertex[i1++]
-                v2[vo++] = this.vertex[i2++]
-                v2[vo++] = this.vertex[i2++]
-                v2[vo++] = this.vertex[i2++]
-                f2[fo] = fo
-                ++fo
-                f2[fo] = fo
-                ++fo
-                f2[fo] = fo
-                ++fo
-            }
-            this.faces = f2
-            this.vertex = v2
-
-            this.mesh = new RenderMesh(
-                gl,
-                this.vertex,
-                this.faces,
-                undefined,
-                undefined,
-                false
-            )
-        // } else {
-        //     this.mesh.update(this.vertex)
+            this.initialize(app, gl)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
@@ -107,20 +67,43 @@ export class MorphRenderer extends RenderHandler {
             canvas,
             ctx.projection === Projection.PERSPECTIVE
         )
-        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
+        
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-
-        // gl.enable(gl.CULL_FACE)
-        // gl.cullFace(gl.BACK)
         gl.depthMask(true)
+
+        // draw makehuman
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
         gl.disable(gl.BLEND)
-
+      
         programRGBA.setColor([1, 0.8, 0.7, 1])
-        this.mesh.bind(programRGBA)
+        const WORD_LENGTH = 2
+        let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+        let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+        view.renderList.base.bind(programRGBA)
+        view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
 
+        // draw arkit neutral
+        gl.depthMask(true)
+        gl.disable(gl.CULL_FACE)
+        gl.enable(gl.BLEND)
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+        const alpha = 0.5
+
+        programRGBA.setColor([0, 0.5, 1, alpha])
+
+        this.mesh.bind(programRGBA)
         gl.drawElements(gl.TRIANGLES, this.faces.length, gl.UNSIGNED_SHORT, 0)
+
+
+        // const WORD_LENGTH = 2
+        // let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+        // let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+        // view.renderList.base.bind(programRGBA)
+        // view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
 
         // add text label
         // ---------------
@@ -136,6 +119,7 @@ export class MorphRenderer extends RenderHandler {
         const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
         const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
      
+        // overlay is a div, not an svg...
         const overlay = view.overlay
         let label: HTMLElement
         if (overlay.children.length === 0) {
@@ -169,5 +153,66 @@ export class MorphRenderer extends RenderHandler {
 
         // console.log(distancePointToLine(pointInWorld as vec3, l0, l1))
         // console.log(distancePointToLine(v as vec3, l0, l1))
+    }
+
+    private initialize(app: Application, gl: WebGL2RenderingContext): void {
+        const arkit = FaceARKitLoader.getInstance().preload()
+
+        this.faces = arkit.neutral!.fxyz
+        this.vertexOrig = this.vertex = arkit.getVertex(
+            app.updateManager.getBlendshapeModel()!
+        )
+
+        const scale = new NumberModel(0.18, { min: 9, max: 11, step: 0.1, label: "scale" });
+        const dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" });
+        const dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" });
+    
+        const xyz = new Float32Array(this.vertex)
+        // this.blendshapeSet.getTarget(this.blendshape.value)?.apply(this.xyz, 1)
+        for (let i = 0; i < xyz.length; ++i) {
+            xyz[i] *= scale.value
+        }
+        for (let i = 1; i < xyz.length; i += 3) {
+            xyz[i] += dy.value
+        }
+        for (let i = 2; i < xyz.length; i += 3) {
+            xyz[i] += dz.value
+        }
+        this.vertexOrig = this.vertex = xyz
+
+        // duplicate triangles to achieve flat shading
+        const v2 = new Float32Array(this.faces.length * 3)
+        const f2 = new Array<number>(this.faces.length * 3)
+        for(let i=0, vo=0, fo=0; i<this.faces.length;) {    
+            let i0 = this.faces[i++] * 3
+            let i1 = this.faces[i++] * 3
+            let i2 = this.faces[i++] * 3
+            v2[vo++] = this.vertex[i0++]
+            v2[vo++] = this.vertex[i0++]
+            v2[vo++] = this.vertex[i0++]
+            v2[vo++] = this.vertex[i1++]
+            v2[vo++] = this.vertex[i1++]
+            v2[vo++] = this.vertex[i1++]
+            v2[vo++] = this.vertex[i2++]
+            v2[vo++] = this.vertex[i2++]
+            v2[vo++] = this.vertex[i2++]
+            f2[fo] = fo
+            ++fo
+            f2[fo] = fo
+            ++fo
+            f2[fo] = fo
+            ++fo
+        }
+        this.faces = f2
+        this.vertex = v2
+
+        this.mesh = new RenderMesh(
+            gl,
+            this.vertex,
+            this.faces,
+            undefined,
+            undefined,
+            false
+        )
     }
 }

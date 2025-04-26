@@ -30,6 +30,8 @@ export function MorphTool(props: { app: Application }) {
             <ul>
                 <li>use flat shader to make it easier to select vertices</li>
                 <li>select vertices</li>
+                <li>try to overlay both faces, otherwise quad view (or both?)</li>
+                <li>begin morph algorithm</li>
                 <li>
                     use color to visualize morph / difference between meshes
                 </li>
