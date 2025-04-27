@@ -54,7 +54,11 @@ export class MorphRenderer extends RenderHandler {
         const canvas = this.app.glview.canvas as HTMLCanvasElement
         const ctx = this.app.glview.ctx
         let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
-        const index = findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), this.vertexARKitFlat, canvas, modelViewMatrix)
+        const index = findVertex(
+            vec2.fromValues(ev.offsetX, ev.offsetY),
+            this.model.isARKitActive.value ? this.vertexARKitOrig : this.vertexMHOrig,
+            canvas,
+            modelViewMatrix)
         if (index === undefined) {
             return true
         }
@@ -141,7 +145,12 @@ export class MorphRenderer extends RenderHandler {
         // add text label
         // ---------------
         const vertexIdx = this.indexOfSelectedVertex
-        const pointInWorld = vec4.fromValues(this.vertexARKitFlat[vertexIdx], this.vertexARKitFlat[vertexIdx+1], this.vertexARKitFlat[vertexIdx+2], 1)
+        let pointInWorld
+        if (this.model.isARKitActive.value) {
+            pointInWorld = vec4.fromValues(this.vertexARKitOrig[vertexIdx], this.vertexARKitOrig[vertexIdx+1], this.vertexARKitOrig[vertexIdx+2], 1)
+        } else {
+            pointInWorld = vec4.fromValues(this.vertexMHOrig[vertexIdx], this.vertexMHOrig[vertexIdx+1], this.vertexMHOrig[vertexIdx+2], 1)
+        }
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
 
@@ -189,6 +198,8 @@ export class MorphRenderer extends RenderHandler {
         const WORD_LENGTH = 2
         let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
         let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+
+        this.vertexMHOrig = xyz
 
         const f2 = new Array<number>(length * 4) // same number of faces
         const v2 = new Float32Array(length * 4 * 3) // four times the number of vertices
