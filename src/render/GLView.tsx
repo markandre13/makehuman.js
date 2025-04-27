@@ -31,6 +31,7 @@ export class GLView extends View {
     // DOM
     canvas!: HTMLCanvasElement
     overlay!: HTMLElement
+    overlaySVG!: SVGElement
 
     // GL
     ctx: Context
@@ -74,6 +75,20 @@ export class GLView extends View {
                             pointerEvents: "none",
                         }}
                     ></div>
+                    <svg
+                        set={ref(this, "overlaySVG")}
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            overflow: "hidden",
+                            pointerEvents: "none",
+                            width: "100%",
+                            height: "100%"
+                        }}
+                    ></svg>
                 </>
             )
         )

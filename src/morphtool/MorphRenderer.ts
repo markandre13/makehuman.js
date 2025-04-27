@@ -51,17 +51,16 @@ export class MorphRenderer extends RenderHandler {
     }
 
     override onpointerdown(ev: PointerEvent): boolean  {       
-        return true
-        // const canvas = this.app.glview.canvas as HTMLCanvasElement
-        // const ctx = this.app.glview.ctx
-        // let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
-        // const index = findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), this.vertexARKitFlat, canvas, modelViewMatrix)
-        // if (index === undefined) {
-        //     return true
-        // }
-        // this.indexOfSelectedVertex = index
-        // this.app.updateManager.invalidateView()
-        // return false
+        const canvas = this.app.glview.canvas as HTMLCanvasElement
+        const ctx = this.app.glview.ctx
+        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
+        const index = findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), this.vertexARKitFlat, canvas, modelViewMatrix)
+        if (index === undefined) {
+            return true
+        }
+        this.indexOfSelectedVertex = index
+        this.app.updateManager.invalidateView()
+        return false
     }
     // override onpointermove(ev: PointerEvent): boolean  {
     //     console.log(`pointermove`)
@@ -153,7 +152,7 @@ export class MorphRenderer extends RenderHandler {
         const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
         const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
      
-        // overlay is a div, not an svg...
+        // overlay text
         const overlay = view.overlay
         let label: HTMLElement
         if (overlay.children.length === 0) {
@@ -167,26 +166,20 @@ export class MorphRenderer extends RenderHandler {
         label.style.left = `${pixelX}px`
         label.style.top = `${pixelY}px`
 
-        // console.log(`canvas := ${canvas.width} x ${canvas.height}, rotation=${ctx.rotateX}, ${ctx.rotateY}, pointInWorld := ${vec4.str(pointInWorld)}, screen = ${pixelX}, ${pixelY}`)
-
-        // calculate (pixelX, pixelY) back to vertexIdx
-        // --------------------------------------------
-        // const mi = mat4.invert(mat4.create(), m0)
-
-        // let clipspaceX = (pixelX / gl.canvas.width - 0.5 ) / 0.5
-        // let clipspaceY = (pixelY / gl.canvas.height - 0.5 ) / -0.5
-        // // console.log(`${clipX} == ${clipspaceX} && ${clipY} == ${clipspaceY}`)
-        // const v = vec4.fromValues(clipspaceX * pointInClipSpace[3], clipspaceY * pointInClipSpace[3], pointInClipSpace[2], pointInClipSpace[3])
-        // vec4.transformMat4(v, v, mi)
-
-        // // console.log(`${vec4.str(v)} =? ${vec4.str(clipspace)}`)
-
-
-        // const l0 = vec3.create()
-        // const l1 = v as vec3
-
-        // console.log(distancePointToLine(pointInWorld as vec3, l0, l1))
-        // console.log(distancePointToLine(v as vec3, l0, l1))
+        // overlay svg circle
+        const overlaySVG = view.overlaySVG
+        let circle: SVGCircleElement
+        if (overlaySVG.children.length === 0) {
+            circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+            circle.setAttributeNS(null, 'r', `3`)
+            circle.setAttributeNS(null, 'stroke', `#f80`)
+            circle.setAttributeNS(null, 'fill', `#f80`)
+            overlaySVG.appendChild(circle)
+        } else {
+            circle = overlaySVG.children[0] as SVGCircleElement
+        }
+        circle.setAttributeNS(null, 'cx', `${pixelX}`)
+        circle.setAttributeNS(null, 'cy', `${pixelY}`)
     }
 
     private initializeMHFlat(app: Application, gl: WebGL2RenderingContext) {
