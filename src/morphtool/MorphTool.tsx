@@ -1,13 +1,17 @@
 import { Application } from 'Application'
 import { TAB } from 'HistoryManager'
 import { Tab } from 'toad.js/view/Tab'
-import { MorphRenderer } from './MorphRenderer'
+import { MorphRenderer, MorphToolModel } from './MorphRenderer'
+import { Form } from 'toad.js/view/Form'
+import { FormSwitch } from 'toad.js/view/FormSwitch'
 
 /**
  * Tool to morph face meshes.
  */
 export function MorphTool(props: { app: Application }) {
-    const renderer = new MorphRenderer(props.app)
+    const model = new MorphToolModel()
+    const renderer = new MorphRenderer(props.app, model)
+
     return (
         <Tab
             label="Morph"
@@ -27,6 +31,10 @@ export function MorphTool(props: { app: Application }) {
             }}
         >
             Tool to morph face meshes onto each other.
+            <Form>
+                <FormSwitch model={model.isARKitActive}/>
+                <FormSwitch model={model.showBothMeshes}/>
+            </Form>
             <ul>
                 <li>use flat shader to make it easier to select vertices</li>
                 <li>select vertices</li>

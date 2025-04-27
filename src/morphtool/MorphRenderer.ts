@@ -12,13 +12,19 @@ import {
     prepareCanvas,
     prepareViewport,
 } from 'render/util'
-import { NumberModel, span, text } from 'toad.js'
+import { BooleanModel, NumberModel, span, text } from 'toad.js'
 
 // i'm not sure if i should go with the webgl classes i've created so far...
+
+export class MorphToolModel {
+    isARKitActive = new BooleanModel(false, {label: "MH / ARKit"})
+    showBothMeshes = new BooleanModel(true, {label: "Show both meshes"})
+}
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
     private app: Application
+    private model: MorphToolModel
     
     private indexOfSelectedVertex: number = 0
     
@@ -32,9 +38,16 @@ export class MorphRenderer extends RenderHandler {
     private facesMHFlat!: number[]
     private meshMHFlat!: RenderMesh
 
-    constructor(app: Application) {
+    constructor(app: Application, model: MorphToolModel) {
         super()
         this.app = app
+        this.model = model
+        this.model.isARKitActive.signal.add( () => {
+            this.app.updateManager.invalidateView()
+        })
+        this.model.showBothMeshes.signal.add( () => {
+            this.app.updateManager.invalidateView()
+        })
     }
 
     override onpointerdown(ev: PointerEvent): boolean  {       
@@ -81,42 +94,50 @@ export class MorphRenderer extends RenderHandler {
   
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
-
-        // draw makehuman
-        gl.disable(gl.CULL_FACE)
-        gl.cullFace(gl.BACK)
-        gl.disable(gl.BLEND)
-      
-        programRGBA.setColor([1, 0.8, 0.7, 1])
-
-        // const WORD_LENGTH = 2
-        // let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        // let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-        // view.renderList.base.bind(programRGBA)
-        // view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
-
-        this.meshMHFlat.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, this.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
-
-        return
-
-        // draw arkit neutral
-        gl.depthMask(true)
-        gl.disable(gl.CULL_FACE)
-        gl.enable(gl.BLEND)
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
         const alpha = 0.5
 
-        programRGBA.setColor([0, 0.5, 1, alpha])
+        if (!this.model.isARKitActive.value) {
+            // draw makehuman
+            gl.enable(gl.CULL_FACE)
+            gl.cullFace(gl.BACK)
+            gl.disable(gl.BLEND)
 
-        this.meshARKitFlat.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+            programRGBA.setColor([1, 0.8, 0.7, 1])
+            this.meshMHFlat.bind(programRGBA)
+            gl.drawElements(gl.TRIANGLES, this.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
 
-        // const WORD_LENGTH = 2
-        // let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        // let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-        // view.renderList.base.bind(programRGBA)
-        // view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+            // draw arkit neutral
+            if (this.model.showBothMeshes.value) {
+                gl.disable(gl.CULL_FACE)
+                gl.enable(gl.BLEND)
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+                programRGBA.setColor([0, 0.5, 1, alpha])
+                this.meshARKitFlat.bind(programRGBA)
+                gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+            }
+        } else {
+            
+            // draw arkit neutral
+            gl.disable(gl.CULL_FACE)
+            gl.cullFace(gl.BACK)
+            gl.disable(gl.BLEND)
+
+            programRGBA.setColor([0, 0.5, 1, 1])
+            this.meshARKitFlat.bind(programRGBA)
+            gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+
+            // draw makehuman
+            if (this.model.showBothMeshes.value) {
+                gl.enable(gl.CULL_FACE)
+                gl.enable(gl.BLEND)
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+                programRGBA.setColor([1, 0.8, 0.7, alpha])
+                this.meshMHFlat.bind(programRGBA)
+                gl.drawElements(gl.TRIANGLES, this.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
+            }
+        }
 
         // add text label
         // ---------------
@@ -224,7 +245,7 @@ export class MorphRenderer extends RenderHandler {
         )
 
         const scale = new NumberModel(0.18, { min: 9, max: 11, step: 0.1, label: "scale" });
-        const dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" });
+        const dy = new NumberModel(7.0312, { min: 0, max: 7.4, step: 0.01, label: "dy" });
         const dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" });
     
         const xyz = new Float32Array(this.vertexARKitFlat)
