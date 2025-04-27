@@ -18,29 +18,37 @@ import { NumberModel, span, text } from 'toad.js'
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
-    app: Application
-    mesh!: RenderMesh
-    indexOfSelectedVertex: number = 0
+    private app: Application
     
-    vertexOrig!: Float32Array
-    vertex!: Float32Array
-    faces!: number[]
+    private indexOfSelectedVertex: number = 0
+    
+    private vertexARKitOrig!: Float32Array
+    private vertexARKitFlat!: Float32Array
+    private facesARKitFlat!: number[]
+    private meshARKitFlat!: RenderMesh
+
+    private vertexMHOrig!: Float32Array
+    private vertexMHFlat!: Float32Array
+    private facesMHFlat!: number[]
+    private meshMHFlat!: RenderMesh
+
     constructor(app: Application) {
         super()
         this.app = app
     }
 
     override onpointerdown(ev: PointerEvent): boolean  {       
-        const canvas = this.app.glview.canvas as HTMLCanvasElement
-        const ctx = this.app.glview.ctx
-        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
-        const index = findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), this.vertex, canvas, modelViewMatrix)
-        if (index === undefined) {
-            return true
-        }
-        this.indexOfSelectedVertex = index
-        this.app.updateManager.invalidateView()
-        return false
+        return true
+        // const canvas = this.app.glview.canvas as HTMLCanvasElement
+        // const ctx = this.app.glview.ctx
+        // let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
+        // const index = findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), this.vertexARKitFlat, canvas, modelViewMatrix)
+        // if (index === undefined) {
+        //     return true
+        // }
+        // this.indexOfSelectedVertex = index
+        // this.app.updateManager.invalidateView()
+        // return false
     }
     // override onpointermove(ev: PointerEvent): boolean  {
     //     console.log(`pointermove`)
@@ -56,8 +64,9 @@ export class MorphRenderer extends RenderHandler {
         const gl = view.gl
         const ctx = view.ctx
         const programRGBA = view.programRGBA       
-        if (this.mesh === undefined) {
-            this.initialize(app, gl)
+        if (this.meshARKitFlat === undefined) {
+            this.initializeMHFlat(app, gl)
+            this.initializeARKit(app, gl)
         }
 
         const canvas = app.glview.canvas as HTMLCanvasElement
@@ -69,22 +78,27 @@ export class MorphRenderer extends RenderHandler {
         )
         let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
-
-        
+  
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
 
         // draw makehuman
-        gl.enable(gl.CULL_FACE)
+        gl.disable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.disable(gl.BLEND)
       
         programRGBA.setColor([1, 0.8, 0.7, 1])
-        const WORD_LENGTH = 2
-        let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-        view.renderList.base.bind(programRGBA)
-        view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+
+        // const WORD_LENGTH = 2
+        // let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+        // let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+        // view.renderList.base.bind(programRGBA)
+        // view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+
+        this.meshMHFlat.bind(programRGBA)
+        gl.drawElements(gl.TRIANGLES, this.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
+
+        return
 
         // draw arkit neutral
         gl.depthMask(true)
@@ -95,9 +109,8 @@ export class MorphRenderer extends RenderHandler {
 
         programRGBA.setColor([0, 0.5, 1, alpha])
 
-        this.mesh.bind(programRGBA)
-        gl.drawElements(gl.TRIANGLES, this.faces.length, gl.UNSIGNED_SHORT, 0)
-
+        this.meshARKitFlat.bind(programRGBA)
+        gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
 
         // const WORD_LENGTH = 2
         // let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
@@ -108,7 +121,7 @@ export class MorphRenderer extends RenderHandler {
         // add text label
         // ---------------
         const vertexIdx = this.indexOfSelectedVertex
-        const pointInWorld = vec4.fromValues(this.vertex[vertexIdx], this.vertex[vertexIdx+1], this.vertex[vertexIdx+2], 1)
+        const pointInWorld = vec4.fromValues(this.vertexARKitFlat[vertexIdx], this.vertexARKitFlat[vertexIdx+1], this.vertexARKitFlat[vertexIdx+2], 1)
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
 
@@ -155,11 +168,58 @@ export class MorphRenderer extends RenderHandler {
         // console.log(distancePointToLine(v as vec3, l0, l1))
     }
 
-    private initialize(app: Application, gl: WebGL2RenderingContext): void {
+    private initializeMHFlat(app: Application, gl: WebGL2RenderingContext) {
+        const xyz = app.humanMesh.baseMesh.xyz
+        const fxyz = app.humanMesh.baseMesh.fxyz
+
+        const WORD_LENGTH = 2
+        let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+        let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+
+        const f2 = new Array<number>(length * 4) // same number of faces
+        const v2 = new Float32Array(length * 4 * 3) // four times the number of vertices
+        for(let i=offset, vo=0, fo=0; i<length+offset;) {    
+            let i0 = fxyz[i++] * 3
+            let i1 = fxyz[i++] * 3
+            let i2 = fxyz[i++] * 3
+            let i3 = fxyz[i++] * 3
+            v2[vo++] = xyz[i0++]
+            v2[vo++] = xyz[i0++]
+            v2[vo++] = xyz[i0++]
+
+            v2[vo++] = xyz[i1++]
+            v2[vo++] = xyz[i1++]
+            v2[vo++] = xyz[i1++]
+
+            v2[vo++] = xyz[i2++]
+            v2[vo++] = xyz[i2++]
+            v2[vo++] = xyz[i2++]
+
+            v2[vo++] = xyz[i3++]
+            v2[vo++] = xyz[i3++]
+            v2[vo++] = xyz[i3++]
+
+            f2[fo] = fo
+            ++fo
+            f2[fo] = fo
+            ++fo
+            f2[fo] = fo
+            ++fo
+            f2[fo] = fo
+            ++fo
+        }
+        this.vertexMHFlat = v2
+        this.facesMHFlat = f2
+        // this.vertexMHFlat = xyz
+        // this.facesMHFlat = fxyz
+        this.meshMHFlat = new RenderMesh(gl, v2, f2)
+    }
+
+    private initializeARKit(app: Application, gl: WebGL2RenderingContext): void {
         const arkit = FaceARKitLoader.getInstance().preload()
 
-        this.faces = arkit.neutral!.fxyz
-        this.vertexOrig = this.vertex = arkit.getVertex(
+        this.facesARKitFlat = arkit.neutral!.fxyz
+        this.vertexARKitOrig = this.vertexARKitFlat = arkit.getVertex(
             app.updateManager.getBlendshapeModel()!
         )
 
@@ -167,7 +227,7 @@ export class MorphRenderer extends RenderHandler {
         const dy = new NumberModel(7.12, { min: 0, max: 7.4, step: 0.01, label: "dy" });
         const dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" });
     
-        const xyz = new Float32Array(this.vertex)
+        const xyz = new Float32Array(this.vertexARKitFlat)
         // this.blendshapeSet.getTarget(this.blendshape.value)?.apply(this.xyz, 1)
         for (let i = 0; i < xyz.length; ++i) {
             xyz[i] *= scale.value
@@ -178,24 +238,24 @@ export class MorphRenderer extends RenderHandler {
         for (let i = 2; i < xyz.length; i += 3) {
             xyz[i] += dz.value
         }
-        this.vertexOrig = this.vertex = xyz
+        this.vertexARKitOrig = this.vertexARKitFlat = xyz
 
         // duplicate triangles to achieve flat shading
-        const v2 = new Float32Array(this.faces.length * 3)
-        const f2 = new Array<number>(this.faces.length * 3)
-        for(let i=0, vo=0, fo=0; i<this.faces.length;) {    
-            let i0 = this.faces[i++] * 3
-            let i1 = this.faces[i++] * 3
-            let i2 = this.faces[i++] * 3
-            v2[vo++] = this.vertex[i0++]
-            v2[vo++] = this.vertex[i0++]
-            v2[vo++] = this.vertex[i0++]
-            v2[vo++] = this.vertex[i1++]
-            v2[vo++] = this.vertex[i1++]
-            v2[vo++] = this.vertex[i1++]
-            v2[vo++] = this.vertex[i2++]
-            v2[vo++] = this.vertex[i2++]
-            v2[vo++] = this.vertex[i2++]
+        const v2 = new Float32Array(this.facesARKitFlat.length * 3)
+        const f2 = new Array<number>(this.facesARKitFlat.length * 3)
+        for(let i=0, vo=0, fo=0; i<this.facesARKitFlat.length;) {    
+            let i0 = this.facesARKitFlat[i++] * 3
+            let i1 = this.facesARKitFlat[i++] * 3
+            let i2 = this.facesARKitFlat[i++] * 3
+            v2[vo++] = this.vertexARKitFlat[i0++]
+            v2[vo++] = this.vertexARKitFlat[i0++]
+            v2[vo++] = this.vertexARKitFlat[i0++]
+            v2[vo++] = this.vertexARKitFlat[i1++]
+            v2[vo++] = this.vertexARKitFlat[i1++]
+            v2[vo++] = this.vertexARKitFlat[i1++]
+            v2[vo++] = this.vertexARKitFlat[i2++]
+            v2[vo++] = this.vertexARKitFlat[i2++]
+            v2[vo++] = this.vertexARKitFlat[i2++]
             f2[fo] = fo
             ++fo
             f2[fo] = fo
@@ -203,13 +263,13 @@ export class MorphRenderer extends RenderHandler {
             f2[fo] = fo
             ++fo
         }
-        this.faces = f2
-        this.vertex = v2
+        this.facesARKitFlat = f2
+        this.vertexARKitFlat = v2
 
-        this.mesh = new RenderMesh(
+        this.meshARKitFlat = new RenderMesh(
             gl,
-            this.vertex,
-            this.faces,
+            this.vertexARKitFlat,
+            this.facesARKitFlat,
             undefined,
             undefined,
             false
