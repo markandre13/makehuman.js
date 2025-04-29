@@ -50,22 +50,22 @@ export class MorphRenderer extends RenderHandler {
         })
     }
 
-    override onpointerdown(ev: PointerEvent): boolean  {       
-        const canvas = this.app.glview.canvas as HTMLCanvasElement
-        const ctx = this.app.glview.ctx
-        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
-        const index = findVertex(
-            vec2.fromValues(ev.offsetX, ev.offsetY),
-            this.model.isARKitActive.value ? this.vertexARKitOrig : this.vertexMHOrig,
-            canvas,
-            modelViewMatrix)
-        if (index === undefined) {
-            return true
-        }
-        this.indexOfSelectedVertex = index
-        this.app.updateManager.invalidateView()
-        return false
-    }
+    // override onpointerdown(ev: PointerEvent): boolean  {       
+    //     const canvas = this.app.glview.canvas as HTMLCanvasElement
+    //     const ctx = this.app.glview.ctx
+    //     let modelViewMatrix = createModelViewMatrix(ctx, true)
+    //     const index = findVertex(
+    //         vec2.fromValues(ev.offsetX, ev.offsetY),
+    //         this.model.isARKitActive.value ? this.vertexARKitOrig : this.vertexMHOrig,
+    //         canvas,
+    //         modelViewMatrix)
+    //     if (index === undefined) {
+    //         return true
+    //     }
+    //     this.indexOfSelectedVertex = index
+    //     this.app.updateManager.invalidateView()
+    //     return false
+    // }
     // override onpointermove(ev: PointerEvent): boolean  {
     //     console.log(`pointermove`)
     //     return false
@@ -92,7 +92,7 @@ export class MorphRenderer extends RenderHandler {
             canvas,
             ctx.projection === Projection.PERSPECTIVE
         )
-        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
+        let modelViewMatrix = createModelViewMatrix(ctx, true)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
   
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)

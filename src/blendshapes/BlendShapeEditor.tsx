@@ -269,7 +269,7 @@ export class BlendShapeEditor extends RenderHandler {
         prepareCanvas(canvas)
         prepareViewport(gl, canvas)
         const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
+        const modelViewMatrix = createModelViewMatrix(ctx, true)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)

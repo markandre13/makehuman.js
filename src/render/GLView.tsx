@@ -6,6 +6,7 @@ import { TextureShader } from "render/shader/TextureShader"
 import { loadTexture } from "render/util"
 import { HTMLElementProps, View, ref } from "toad.js"
 import { ColorShader } from "./shader/ColorShader"
+import { mat4, vec3, vec4 } from "gl-matrix"
 
 export enum Projection {
     ORTHOGONAL,
@@ -56,6 +57,7 @@ export class GLView extends View {
         this.ctx = {
             rotateX: 0,
             rotateY: 0,
+            pos: vec3.create(),
             projection: Projection.PERSPECTIVE,
         }
 
@@ -200,8 +202,60 @@ export class GLView extends View {
         //
         // keyboard
         //
+
         window.onkeydown = (ev: KeyboardEvent) => {
+            const acceleration = 2.5 / 100
+
+            const D = 180 / Math.PI
+            const cm = mat4.create()
+            mat4.rotateY(cm, cm, this.ctx.rotateY / D)
+            mat4.rotateX(cm, cm, this.ctx.rotateX / D)
+            mat4.invert(cm, cm)
+            const dirX = vec3.transformMat4(vec3.create(), vec3.fromValues(acceleration, 0, 0), cm)
+            const dirY = vec3.transformMat4(vec3.create(), vec3.fromValues(0, acceleration, 0), cm)
+            const dirZ = vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, acceleration), cm)
+            console.log(vec3.str(dirZ))
+
             switch (ev.code) {
+                // acceleration: 0.25
+                case "KeyW": // forward
+                    // ctx.pos[2] += acceleration
+                    vec3.add(ctx.pos, ctx.pos, dirZ)
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyS": // backward
+                    vec3.sub(ctx.pos, ctx.pos, dirZ)
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyA": // left
+                    vec3.add(ctx.pos, ctx.pos, dirX)
+                    // ctx.pos[0] += acceleration
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyD": // right
+                    vec3.sub(ctx.pos, ctx.pos, dirX)
+                    // ctx.pos[0] -= acceleration
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyQ": // down
+                    ctx.pos[1] += acceleration
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyE": // up
+                    ctx.pos[1] -= acceleration
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyR": // local down
+                    vec3.add(ctx.pos, ctx.pos, dirY)
+                    requestAnimationFrame(this.paint)
+                    break;
+                case "KeyF": // local up
+                    vec3.sub(ctx.pos, ctx.pos, dirY)
+                    requestAnimationFrame(this.paint)
+                    break;
+                // Z: z-axis correction (z to 0 with ease-in-out animation)
+                // shift: fast
+                // option: slow
                 case "Numpad1": // front orthographic
                     if (ev.ctrlKey) {
                         // back
@@ -265,6 +319,8 @@ export class GLView extends View {
                     }
                     requestAnimationFrame(this.paint)
                     break
+                default:
+                    console.log(ev.code)
             }
         }
     }

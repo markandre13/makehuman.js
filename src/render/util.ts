@@ -1,5 +1,6 @@
-import { mat4 } from "gl-matrix"
+import { mat4, vec3 } from "gl-matrix"
 import { RenderMesh } from "./RenderMesh"
+import { Context } from "./Context"
 
 export function prepareCanvas(canvas: HTMLCanvasElement) {
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
@@ -17,21 +18,30 @@ export function prepareViewport(gl: WebGL2RenderingContext, canvas: HTMLCanvasEl
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-export function createModelViewMatrix(rotX: number, rotY: number, head: boolean = false) {
+export function createModelViewMatrix(cam: Context, head: boolean = false) {
     const D = 180 / Math.PI
     const modelViewMatrix = mat4.create()
 
     if (!head) {
         // full body view
         mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -25])
-        mat4.rotateY(modelViewMatrix, modelViewMatrix, rotY / D)
-        mat4.rotateX(modelViewMatrix, modelViewMatrix, rotX / D)
+        mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
+        mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
     } else {
-        // head view (works unless the model is morphed...)
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5])
-        mat4.rotateX(modelViewMatrix, modelViewMatrix, rotX / D)
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0, -7, 0])
-        mat4.rotateY(modelViewMatrix, modelViewMatrix, rotY / D)
+
+
+        // rotate around camera
+        mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
+        mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
+        // move camera
+        mat4.translate(modelViewMatrix, modelViewMatrix, cam.pos)
+        // move body away
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5]) // move body away
+        // mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D) // 
+        mat4.translate(modelViewMatrix, modelViewMatrix, [0, -7, 0]) // body down
+        // mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
+
+        // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, rotX]) // move body away
     }
     return modelViewMatrix
 }

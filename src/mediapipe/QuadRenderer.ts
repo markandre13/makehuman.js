@@ -54,7 +54,7 @@ export class QuadRenderer extends RenderHandler {
         prepareCanvas(canvas)
         prepareViewport(gl, canvas)
         const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        let modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+        let modelViewMatrix = createModelViewMatrix(ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
         programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
@@ -76,14 +76,16 @@ export class QuadRenderer extends RenderHandler {
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
 
         gl.viewport(w, 0, w, h)
-        programRGBA.setModelViewMatrix(createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45))
+        ctx.rotateY -= 45
+        programRGBA.setModelViewMatrix(createModelViewMatrix(ctx))
+        ctx.rotateY += 45
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
 
         // draw makehuman
         app.updateManager.updateIt()
 
         gl.viewport(0, h, w, h)
-        modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY, true)
+        modelViewMatrix = createModelViewMatrix(ctx, true)
         programRGBA.setModelViewMatrix(modelViewMatrix)
         programTex.useProgram()
         programTex.setModelViewMatrix(modelViewMatrix)
@@ -92,7 +94,9 @@ export class QuadRenderer extends RenderHandler {
         drawHumanCore(app, view)
 
         gl.viewport(0, 0, w, h)
-        modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY - 45, true)
+        ctx.rotateY -= 45
+        modelViewMatrix = createModelViewMatrix(ctx, true)
+        ctx.rotateY += 45
         // programTex.useProgram()
         programTex.setModelViewMatrix(modelViewMatrix)
         programRGBA.useProgram()

@@ -173,7 +173,7 @@ export function renderChordata(
         // s.draw(programRGBA, gl.TRIANGLES)
     } else {
         const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        const modelViewMatrix = createModelViewMatrix(ctx.rotateX, ctx.rotateY)
+        const modelViewMatrix = createModelViewMatrix(ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
         const vertex: number[] = []

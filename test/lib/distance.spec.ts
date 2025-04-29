@@ -33,7 +33,7 @@ describe('lib', function () {
         // GIVEN from model to screen
         const pointInModelSpace = vec4.fromValues(-0.6809099912643433, -2.361138105392456, 3.3671700954437256, 1)
         const projectionMatrix = createProjectionMatrix(canvas)
-        const modelViewMatrix = createModelViewMatrix(15, 25)
+        const modelViewMatrix = createModelViewMatrix({rotateX: 15, rotateY: 25} as any)
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInModelSpace, m0)
         const screen = vec2.fromValues(pointInClipSpace[0]/pointInClipSpace[3], pointInClipSpace[1]/pointInClipSpace[3])
@@ -68,7 +68,7 @@ describe('lib', function () {
 
         const canvas = { width: 1061, height: 878 }
         const projectionMatrix = createProjectionMatrix(canvas)
-        const modelViewMatrix = createModelViewMatrix(15, 25)
+        const modelViewMatrix = createModelViewMatrix({rotateX: 15, rotateY: 25} as any)
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
 
         for(let idx=0; idx<vertex.length; ) {

@@ -59,7 +59,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         const programColor = view.programColor
 
         const projectionMatrix = createProjectionMatrix(canvas)
-        const modelViewMatrix = createModelViewMatrix(view.ctx.rotateX, view.ctx.rotateY)
+        const modelViewMatrix = createModelViewMatrix(view.ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
 
