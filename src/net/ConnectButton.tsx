@@ -6,25 +6,24 @@ export function ConnectButton(props: { connector: Connector} ) {
     const s = document.createElement("span")
     // s.replaceChildren(document.createTextNode(connector.peer))
     const update = () => {
-        // console.log(`update state to ${connector.state}`)
         switch (connector.state) {
             case ConnectionState.NOT_CONNECTED:
                 s.classList.remove("connecting")
                 s.style.color = "var(--tx-warning-color)"
-                // s.title = "NOT CONNECTED"
-                s.replaceChildren(document.createTextNode("NOT CONNECTED"))
+                s.title = "Not connected to backend."
+                s.replaceChildren(document.createTextNode("X"))
                 break
             case ConnectionState.CONNECTING:
                 s.classList.add("connecting")
                 s.style.color = ""
-                // s.title = "CONNECTING"
-                s.replaceChildren(document.createTextNode("CONNECTING"))
+                s.title = "Connecting to backend..."
+                s.replaceChildren(document.createTextNode("…"))
                 break
             case ConnectionState.CONNECTED:
                 s.classList.remove("connecting")
                 s.style.color = "var(--tx-gray-700)"
-                // s.title = "CONNECTED"
-                s.replaceChildren(document.createTextNode("CONNECTED"))
+                s.title = "Connected to backend."
+                s.replaceChildren(document.createTextNode("↯"))
                 break
         }
     }

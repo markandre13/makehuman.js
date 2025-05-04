@@ -28,6 +28,7 @@ import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshape
 import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 import { VALUE } from "toad.js/model/ValueModel"
 import { Connector } from "net/Connector"
+import { TextModel } from "toad.js"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
@@ -49,6 +50,8 @@ export class Application {
     blendshapeToPoseConfig: BlendshapeToPoseConfig
     makehumanFacePoseUnits: MHFacePoseUnits
     blendshape2pose: BlendshapeToPose
+
+    status = new TextModel("")
 
     // makehuman
     human: MorphManager // MorphManager / MorphController

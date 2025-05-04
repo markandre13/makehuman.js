@@ -24,8 +24,74 @@ interface GLViewProps extends HTMLElementProps {
     app: Application
 }
 
+interface InputHandler {
+    keydown(ev: KeyboardEvent): void
+}
+// class DefaultMode implements InputMode {
+// }
+class FlyMode implements InputHandler {
+    private _view: GLView
+    constructor(view: GLView) {
+        this._view = view
+    }
+    keydown(ev: KeyboardEvent) {
+        const ctx = this._view.ctx
+        const acceleration = 2.5 / 100
+
+        const D = 180 / Math.PI
+        const cm = mat4.create()
+        mat4.rotateY(cm, cm, ctx.rotateY / D)
+        mat4.rotateX(cm, cm, ctx.rotateX / D)
+        mat4.invert(cm, cm)
+        const dirX = vec3.transformMat4(vec3.create(), vec3.fromValues(acceleration, 0, 0), cm)
+        const dirY = vec3.transformMat4(vec3.create(), vec3.fromValues(0, acceleration, 0), cm)
+        const dirZ = vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, acceleration), cm)
+
+        switch (ev.code) {
+            case "KeyW": // forward
+                vec3.add(ctx.pos, ctx.pos, dirZ)
+                this._view.invalidate()
+                break;
+            case "KeyS": // backward
+                vec3.sub(ctx.pos, ctx.pos, dirZ)
+                this._view.invalidate()
+                break;
+            case "KeyA": // left
+                vec3.add(ctx.pos, ctx.pos, dirX)
+                this._view.invalidate()
+                break;
+            case "KeyD": // right
+                vec3.sub(ctx.pos, ctx.pos, dirX)
+                this._view.invalidate()
+                break;
+            case "KeyQ": // down
+                ctx.pos[1] += acceleration
+                this._view.invalidate()
+                break;
+            case "KeyE": // up
+                ctx.pos[1] -= acceleration
+                this._view.invalidate()
+                break;
+            case "KeyR": // local down
+                vec3.add(ctx.pos, ctx.pos, dirY)
+                this._view.invalidate()
+                break;
+            case "KeyF": // local up
+                vec3.sub(ctx.pos, ctx.pos, dirY)
+                this._view.invalidate()
+                break;
+            case "Escape":
+                this._view.inputHandler = undefined
+                this._view.app.status.value = ""
+                break
+        }
+    }
+}
+
 export class GLView extends View {
     renderHandler?: RenderHandler
+    inputHandler?: InputHandler
+    private _redrawIsPending = false
 
     app: Application
 
@@ -120,10 +186,23 @@ export class GLView extends View {
         // schedule initial paint
         requestAnimationFrame(this.paint)
     }
+
     private paint() {
+        this._redrawIsPending = false
         if (this.app.renderer) {
             this.app.renderer.paint(this.app, this)
         }
+    }
+
+    /**
+     * Invalidate view and schedule to render the view again
+     */
+    invalidate(): void {
+        if (this._redrawIsPending) {
+            return
+        }
+        this._redrawIsPending = true
+        requestAnimationFrame(this.paint)
     }
 
     private initRender() {
@@ -214,48 +293,12 @@ export class GLView extends View {
             const dirX = vec3.transformMat4(vec3.create(), vec3.fromValues(acceleration, 0, 0), cm)
             const dirY = vec3.transformMat4(vec3.create(), vec3.fromValues(0, acceleration, 0), cm)
             const dirZ = vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, acceleration), cm)
-            console.log(vec3.str(dirZ))
+
+            if (this.inputHandler) {
+                this.inputHandler.keydown(ev)
+            }
 
             switch (ev.code) {
-                // acceleration: 0.25
-                case "KeyW": // forward
-                    // ctx.pos[2] += acceleration
-                    vec3.add(ctx.pos, ctx.pos, dirZ)
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyS": // backward
-                    vec3.sub(ctx.pos, ctx.pos, dirZ)
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyA": // left
-                    vec3.add(ctx.pos, ctx.pos, dirX)
-                    // ctx.pos[0] += acceleration
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyD": // right
-                    vec3.sub(ctx.pos, ctx.pos, dirX)
-                    // ctx.pos[0] -= acceleration
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyQ": // down
-                    ctx.pos[1] += acceleration
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyE": // up
-                    ctx.pos[1] -= acceleration
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyR": // local down
-                    vec3.add(ctx.pos, ctx.pos, dirY)
-                    requestAnimationFrame(this.paint)
-                    break;
-                case "KeyF": // local up
-                    vec3.sub(ctx.pos, ctx.pos, dirY)
-                    requestAnimationFrame(this.paint)
-                    break;
-                // Z: z-axis correction (z to 0 with ease-in-out animation)
-                // shift: fast
-                // option: slow
                 case "Numpad1": // front orthographic
                     if (ev.ctrlKey) {
                         // back
@@ -319,8 +362,15 @@ export class GLView extends View {
                     }
                     requestAnimationFrame(this.paint)
                     break
+                case "Backquote":
+                    if (ev.shiftKey) {
+                        console.log(`enter flymode`)
+                        this.app.status.value = '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
+                        this.inputHandler = new FlyMode(this)
+                    }
+                    break
                 default:
-                    console.log(ev.code)
+                    console.log(ev)
             }
         }
     }

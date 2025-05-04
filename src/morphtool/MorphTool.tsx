@@ -32,30 +32,52 @@ export function MorphTool(props: { app: Application }) {
         >
             Tool to morph face meshes onto each other.
             <Form>
-                <FormSwitch model={model.isARKitActive}/>
-                <FormSwitch model={model.showBothMeshes}/>
+                <FormSwitch model={model.isARKitActive} />
+                <FormSwitch model={model.showBothMeshes} />
             </Form>
             <ul>
                 <li>✅ use flat shader to make it easier to select vertices</li>
                 <li>✅ select vertices</li>
-                <li>✅ try to overlay both faces, otherwise quad view (or both?)</li>
-                <li>limit mh selection to BaseMeshGroup.SKIN, with tests and cleanup code</li>
-                <li>add blender like fly mode, zoom, etc. to get closer to the model, with tests and cleanup code
-                    <li>middle mouse: rotate around origin/selection</li>
-                    <li>wheel up/down: zoom in/out</li>
-                    <li>shift+`: start fly mode
-                        <li>mouse: rotate</li>
-                        <li>wheel: acceleration (numerical value show at bottom)</li>
-                        <li>q/e: down/up</li>
-                        <li>w/s: forward/backward</li>
-                        <li>...</li>
-                    </li>
+                <li>
+                    ✅ try to overlay both faces, otherwise quad view (or both?)
                 </li>
-                <li>calculate and visualize morph of selected point to clostest point on other mesh</li>
-                <li>mark and store points, lines and faces on both meshes
+                <li>
+                    limit mh selection to BaseMeshGroup.SKIN, with tests and
+                    cleanup code
+                </li>
+                <li>
+                    add blender like fly mode, zoom, etc. to get closer to the
+                    model, with tests and cleanup code
+                    <ul>
+                        <li>middle mouse: rotate around origin/selection</li>
+                        <li>wheel up/down: zoom in/out</li>
+                        <li>
+                            shift+`: start fly mode
+                            <ul>
+                                <li>mouse: rotate</li>
+                                <li>
+                                    wheel: acceleration (numerical value show at
+                                    bottom)
+                                </li>
+                                <li>q/e: down/up</li>
+                                <li>w/s: forward/backward</li>
+                                <li>...</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    calculate and visualize morph of selected point to clostest
+                    point on other mesh
+                </li>
+                <li>
+                    mark and store points, lines and faces on both meshes
                     <ul>
                         <li>to be used to validate quality of morph</li>
-                        <li>to be used to tweak mesh and/or choose morph strategy</li>
+                        <li>
+                            to be used to tweak mesh and/or choose morph
+                            strategy
+                        </li>
                     </ul>
                 </li>
                 <li>...</li>

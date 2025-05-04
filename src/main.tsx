@@ -41,7 +41,7 @@ import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
 import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
 import { Tab, Tabs } from "toad.js/view/Tab"
 import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { Select, TableAdapter } from "toad.js"
+import { Display, Select, TableAdapter } from "toad.js"
 import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
@@ -129,6 +129,8 @@ async function run() {
                     }}
                 >
                     <ConnectButton connector={app.connector} />
+                    &nbsp;
+                    <Display model={app.status}/>
                 </div>
             </>
         )
