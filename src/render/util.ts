@@ -28,17 +28,16 @@ export function createModelViewMatrix(cam: Context, head: boolean = false) {
         mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
         mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
     } else {
-
-
-        // rotate around camera
+        // rotate around camera (TODO: i think this needs to be accumalative...)
+        // TODO: save camera pos, rot during reloads
         mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
         mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
         // move camera
         mat4.translate(modelViewMatrix, modelViewMatrix, cam.pos)
         // move body away
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5]) // move body away
+        // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5]) // move body away
         // mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D) // 
-        mat4.translate(modelViewMatrix, modelViewMatrix, [0, -7, 0]) // body down
+        // mat4.translate(modelViewMatrix, modelViewMatrix, [0, -7, 0]) // body down
         // mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
 
         // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, rotX]) // move body away

@@ -24,17 +24,36 @@ interface GLViewProps extends HTMLElementProps {
     app: Application
 }
 
-interface InputHandler {
-    keydown(ev: KeyboardEvent): void
+class InputHandler {
+    keydown(ev: KeyboardEvent): boolean { return true }
+    onpointerdown(ev: PointerEvent): boolean { return true }
+    onpointermove(ev: PointerEvent): boolean { return true }
+    onpointerup(ev: PointerEvent): boolean { return true }
 }
 // class DefaultMode implements InputMode {
 // }
-class FlyMode implements InputHandler {
+class FlyMode extends InputHandler {
     private _view: GLView
+    private _rotateX: number
+    private _rotateY: number
+
     constructor(view: GLView) {
+        super()
         this._view = view
+        const ctx = this._view.ctx;
+        [this._rotateX, this._rotateY] = [ctx.rotateX, ctx.rotateY]
     }
-    keydown(ev: KeyboardEvent) {
+    override onpointermove(ev: PointerEvent): boolean {
+        const canvas = this._view.canvas
+        const ctx = this._view.ctx;
+        const x = canvas.width / 2 - ev.offsetX
+        const y = canvas.height / 2 - ev.offsetY
+        ctx.rotateX = this._rotateX - y
+        ctx.rotateY = this._rotateY - x
+        this._view.invalidate()
+        return true
+    }
+    override keydown(ev: KeyboardEvent): boolean {
         const ctx = this._view.ctx
         const acceleration = 2.5 / 100
 
@@ -84,7 +103,10 @@ class FlyMode implements InputHandler {
                 this._view.inputHandler = undefined
                 this._view.app.status.value = ""
                 break
+            default:
+                return false
         }
+        return true
     }
 }
 
@@ -184,7 +206,7 @@ export class GLView extends View {
         this.bodyTexture = loadTexture(this.gl, "data/skins/textures/young_caucasian_female_special_suit.png", this.paint)!
         this.eyeTexture = loadTexture(this.gl, "data/eyes/materials/green_eye.png", this.paint)!
         // schedule initial paint
-        requestAnimationFrame(this.paint)
+        this.paint()
     }
 
     private paint() {
@@ -247,6 +269,9 @@ export class GLView extends View {
             downY = 0,
             buttonDown = false
         canvas.onpointerdown = (ev: PointerEvent) => {
+            if (this.inputHandler && !this.inputHandler.onpointerdown(ev) ) {
+                return
+            }
             if (this.renderHandler && !this.renderHandler.onpointerdown(ev) ) {
                 return
             }
@@ -256,12 +281,18 @@ export class GLView extends View {
             downY = ev.y
         }
         canvas.onpointerup = (ev: PointerEvent) => {
+            if (this.inputHandler && !this.inputHandler.onpointerup(ev) ) {
+                return
+            }
             if (!buttonDown && this.renderHandler && !this.renderHandler.onpointerup(ev) ) {
                 return
             }
             buttonDown = false
         }
         canvas.onpointermove = (ev: PointerEvent) => {
+            if (this.inputHandler && !this.inputHandler.onpointermove(ev) ) {
+                return
+            }
             if (!buttonDown && this.renderHandler && !this.renderHandler.onpointermove(ev) ) {
                 return
             }
@@ -364,13 +395,13 @@ export class GLView extends View {
                     break
                 case "Backquote":
                     if (ev.shiftKey) {
-                        console.log(`enter flymode`)
+                        // console.log(`enter flymode`)
                         this.app.status.value = '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
                         this.inputHandler = new FlyMode(this)
                     }
                     break
                 default:
-                    console.log(ev)
+                    // console.log(ev)
             }
         }
     }
