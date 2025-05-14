@@ -1,12 +1,13 @@
-import { Application } from "Application"
-import { Context } from "render/Context"
-import { RenderList } from "render/RenderList"
-import { RGBAShader } from "render/shader/RGBAShader"
-import { TextureShader } from "render/shader/TextureShader"
-import { loadTexture } from "render/util"
-import { HTMLElementProps, View, ref } from "toad.js"
-import { ColorShader } from "./shader/ColorShader"
-import { mat4, vec3, vec4 } from "gl-matrix"
+import { Application } from 'Application'
+import { Context } from 'render/Context'
+import { RenderList } from 'render/RenderList'
+import { RGBAShader } from 'render/shader/RGBAShader'
+import { TextureShader } from 'render/shader/TextureShader'
+import { loadTexture } from 'render/util'
+import { HTMLElementProps, View, ref, text } from 'toad.js'
+import { ColorShader } from './shader/ColorShader'
+import { mat4, vec2, vec3, vec4 } from 'gl-matrix'
+import { euler_matrix } from 'lib/euler_matrix'
 
 export enum Projection {
     ORTHOGONAL,
@@ -15,98 +16,223 @@ export enum Projection {
 
 export abstract class RenderHandler {
     abstract paint(app: Application, view: GLView): void
-    onpointerdown(ev: PointerEvent): boolean { return true }
-    onpointermove(ev: PointerEvent): boolean { return true }
-    onpointerup(ev: PointerEvent): boolean { return true }
+    onpointerdown(ev: PointerEvent): boolean {
+        return true
+    }
+    onpointermove(ev: PointerEvent): boolean {
+        return true
+    }
+    onpointerup(ev: PointerEvent): boolean {
+        return true
+    }
 }
 
 interface GLViewProps extends HTMLElementProps {
     app: Application
 }
 
-class InputHandler {
-    keydown(ev: KeyboardEvent): boolean { return true }
-    onpointerdown(ev: PointerEvent): boolean { return true }
-    onpointermove(ev: PointerEvent): boolean { return true }
-    onpointerup(ev: PointerEvent): boolean { return true }
+const D = 180 / Math.PI
+
+export class InputHandler {
+    keydown(ev: KeyboardEvent): boolean {
+        return true
+    }
+    onpointerdown(ev: PointerEvent): boolean {
+        return true
+    }
+    onpointermove(ev: PointerEvent): boolean {
+        return true
+    }
+    onpointerup(ev: PointerEvent): boolean {
+        return true
+    }
 }
 // class DefaultMode implements InputMode {
 // }
-class FlyMode extends InputHandler {
+export class FlyMode extends InputHandler {
     private _view: GLView
-    private _rotateX: number
-    private _rotateY: number
+    private _initial: mat4
+    private _translate: mat4
+    private _rotate: mat4
+    private _rotate0 = vec2.create()
+    private _rotate1 = vec2.create()
+    private _cartet?: SVGGElement
 
     constructor(view: GLView) {
         super()
         this._view = view
-        const ctx = this._view.ctx;
-        [this._rotateX, this._rotateY] = [ctx.rotateX, ctx.rotateY]
+        const ctx = this._view.ctx
+        this._initial = mat4.clone(ctx.camera)
+        this._translate = mat4.create()
+        this._rotate = mat4.create()
+        // this._cartet .setAttributeNS(null, 'cx', `${pixelX}`)
+        // this._cartet .setAttributeNS(null, 'cy', `${pixelY}`)
+    }
+    private update() {
+        mat4.identity(this._view.ctx.camera)
+        mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._rotate)
+        mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._translate)
+        mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._initial)
+    }
+    private createCaret() {
+        const overlaySVG = this._view.overlaySVG
+        if (overlaySVG === undefined) {
+            return
+        }
+        if (this._cartet !== undefined) {
+            return
+        }
+        const canvas = this._view.canvas
+
+        const centerX = Math.round(canvas.width / 2)
+        const centerY = Math.round(canvas.height / 2)
+
+        // also display pos & rotation in overlay?
+
+        this._cartet = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        function rect(x: number, y: number, w: number, h: number) {
+            
+            const rect: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+            rect.setAttributeNS(null, 'x', `${x}`)
+            rect.setAttributeNS(null, 'y', `${y}`)
+            rect.setAttributeNS(null, 'rx', `3`)
+            rect.setAttributeNS(null, 'ry', `3`)
+            rect.setAttributeNS(null, 'width', `${w}`)
+            rect.setAttributeNS(null, 'height', `${h}`)
+            rect.setAttributeNS(null, 'stroke', `#fff`)
+            rect.setAttributeNS(null, 'stroke-width', `1`)
+            rect.setAttributeNS(null, 'fill', `#000`)
+            return rect
+        }
+        this._cartet.appendChild(rect(centerX-40.5, centerY, 30, 3))
+        this._cartet.appendChild(rect(centerX+10.5, centerY, 30, 3))
+        this._cartet.appendChild(rect(centerX, centerY+10.5, 3, 30))
+        this._cartet.appendChild(rect(centerX, centerY-40.5, 3, 30))
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttributeNS(null, 'x', `10`)
+        text.setAttributeNS(null, 'y', `20`)
+        text.setAttributeNS(null, 'fill', `#fff`)
+        text.appendChild(document.createTextNode(`POS: x, y, z`))
+        this._cartet.appendChild(text)
+
+        if (overlaySVG) {
+            overlaySVG.appendChild(this._cartet)
+        }
     }
     override onpointermove(ev: PointerEvent): boolean {
+        this.createCaret()
         const canvas = this._view.canvas
-        const ctx = this._view.ctx;
+
+        const marginX = Math.round(((canvas.width / 2) * 9) / 10)
+        const marginY = Math.round(((canvas.height / 2) * 9) / 10)
+
         const x = canvas.width / 2 - ev.offsetX
         const y = canvas.height / 2 - ev.offsetY
-        ctx.rotateX = this._rotateX - y
-        ctx.rotateY = this._rotateY - x
+
+        if (x < -marginX) {
+            this._rotate1[0] -= x + marginX
+        } else if (x > marginX) {
+            this._rotate1[0] -= x - marginX
+        } else {
+            this._rotate0[0] = -x
+        }
+
+        if (y < -marginY) {
+            this._rotate1[1] -= y + marginY
+        } else if (y > marginY) {
+            this._rotate1[1] -= y - marginY
+        } else {
+            this._rotate0[1] = -y
+        }
+
+        this._rotate = euler_matrix(
+            (this._rotate0[0] + this._rotate1[0]) / D / 10,
+            (this._rotate0[1] + this._rotate1[1]) / D / 10,
+            0,
+            'syxz'
+        )
+
+        // mat4.identity(this._rotate)
+        // mat4.rotateX(this._rotate, this._rotate, y)
+        // mat4.rotateY(this._rotate, this._rotate, x)
+
+        this.update()
+
         this._view.invalidate()
         return true
     }
     override keydown(ev: KeyboardEvent): boolean {
         const ctx = this._view.ctx
-        const acceleration = 2.5 / 100
+        const acceleration = 2.5 / 10
 
-        const D = 180 / Math.PI
-        const cm = mat4.create()
-        mat4.rotateY(cm, cm, ctx.rotateY / D)
-        mat4.rotateX(cm, cm, ctx.rotateX / D)
-        mat4.invert(cm, cm)
-        const dirX = vec3.transformMat4(vec3.create(), vec3.fromValues(acceleration, 0, 0), cm)
-        const dirY = vec3.transformMat4(vec3.create(), vec3.fromValues(0, acceleration, 0), cm)
-        const dirZ = vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, acceleration), cm)
+        const cameraRotation = mat4.clone(ctx.camera)
+        mat4.mul(cameraRotation, cameraRotation, this._rotate)
+        cameraRotation[12] = cameraRotation[13] = cameraRotation[14] = 0
+        // mat4.rotateY(cm, cm, ctx.rotateY / D)
+        // mat4.rotateX(cm, cm, ctx.rotateX / D)
+        mat4.invert(cameraRotation, cameraRotation)
+
+        const dirX = vec3.transformMat4(
+            vec3.create(),
+            vec3.fromValues(acceleration, 0, 0),
+            cameraRotation
+        )
+        const dirY = vec3.transformMat4(
+            vec3.create(),
+            vec3.fromValues(0, acceleration, 0),
+            cameraRotation
+        )
+        const dirZ = vec3.transformMat4(
+            vec3.create(),
+            vec3.fromValues(0, 0, acceleration),
+            cameraRotation
+        )
 
         switch (ev.code) {
-            case "KeyW": // forward
-                vec3.add(ctx.pos, ctx.pos, dirZ)
+            case 'KeyW': // forward
+                mat4.translate(this._translate, this._translate, dirZ)
                 this._view.invalidate()
-                break;
-            case "KeyS": // backward
-                vec3.sub(ctx.pos, ctx.pos, dirZ)
+                break
+            case 'KeyS': // backward
+                vec3.negate(dirZ, dirZ)
+                mat4.translate(this._translate, this._translate, dirZ)
                 this._view.invalidate()
-                break;
-            case "KeyA": // left
-                vec3.add(ctx.pos, ctx.pos, dirX)
+                break
+            case 'KeyA': // left
+                mat4.translate(this._translate, this._translate, dirX)
                 this._view.invalidate()
-                break;
-            case "KeyD": // right
-                vec3.sub(ctx.pos, ctx.pos, dirX)
+                break
+            case 'KeyD': // right
+                vec3.negate(dirX, dirX)
+                mat4.translate(this._translate, this._translate, dirX)
                 this._view.invalidate()
-                break;
-            case "KeyQ": // down
-                ctx.pos[1] += acceleration
+                break
+            case 'KeyQ': // down
+                this._translate[13] += acceleration
                 this._view.invalidate()
-                break;
-            case "KeyE": // up
-                ctx.pos[1] -= acceleration
+                break
+            case 'KeyE': // up
+                this._translate[13] -= acceleration
                 this._view.invalidate()
-                break;
-            case "KeyR": // local down
-                vec3.add(ctx.pos, ctx.pos, dirY)
-                this._view.invalidate()
-                break;
-            case "KeyF": // local up
-                vec3.sub(ctx.pos, ctx.pos, dirY)
-                this._view.invalidate()
-                break;
-            case "Escape":
+                break
+            case 'KeyR': // local down
+                mat4.translate(this._translate, this._translate, dirY)
+                break
+            case 'KeyF': // local up
+                vec3.negate(dirY, dirY)
+                mat4.translate(this._translate, this._translate, dirY)
+                break
+            case 'Escape':
                 this._view.inputHandler = undefined
-                this._view.app.status.value = ""
+                this._view.app.status.value = ''
                 break
             default:
                 return false
         }
-        return true
+        this.update()
+        // return true
+        return false
     }
 }
 
@@ -143,40 +269,50 @@ export class GLView extends View {
         this.paint = this.paint.bind(this)
 
         this.ctx = {
+            camera: mat4.create(),
             rotateX: 0,
             rotateY: 0,
             pos: vec3.create(),
             projection: Projection.PERSPECTIVE,
         }
+        // move up by 7, move backwards by 5
+        mat4.translate(this.ctx.camera, this.ctx.camera, [0, -7, -5])
+
+        this.app.status.value =
+            '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
+        this.inputHandler = new FlyMode(this)
 
         this.replaceChildren(
             ...(
                 <>
-                    <canvas set={ref(this, "canvas")} style={{ width: "100%", height: "100%" }} />
+                    <canvas
+                        set={ref(this, 'canvas')}
+                        style={{ width: '100%', height: '100%' }}
+                    />
                     <div
-                        set={ref(this, "overlay")}
+                        set={ref(this, 'overlay')}
                         style={{
-                            position: "absolute",
+                            position: 'absolute',
                             left: 0,
                             right: 0,
                             top: 0,
                             bottom: 0,
-                            overflow: "hidden",
-                            pointerEvents: "none",
+                            overflow: 'hidden',
+                            pointerEvents: 'none',
                         }}
                     ></div>
                     <svg
-                        set={ref(this, "overlaySVG")}
+                        set={ref(this, 'overlaySVG')}
                         style={{
-                            position: "absolute",
+                            position: 'absolute',
                             left: 0,
                             right: 0,
                             top: 0,
                             bottom: 0,
-                            overflow: "hidden",
-                            pointerEvents: "none",
-                            width: "100%",
-                            height: "100%"
+                            overflow: 'hidden',
+                            pointerEvents: 'none',
+                            width: '100%',
+                            height: '100%',
                         }}
                     ></svg>
                 </>
@@ -195,16 +331,24 @@ export class GLView extends View {
         // this belongs here but...
         this.app.updateManager.render = this.paint
         // ...this does not
-        this.app.humanMesh.human.signal.add( () => {
+        this.app.humanMesh.human.signal.add(() => {
             this.app.updateManager.invalidateView()
         })
-        this.app.humanMesh.wireframe.signal.add( () => {
-            this.app.updateManager.invalidateView() 
+        this.app.humanMesh.wireframe.signal.add(() => {
+            this.app.updateManager.invalidateView()
         })
 
         // load texture and repaint once loaded
-        this.bodyTexture = loadTexture(this.gl, "data/skins/textures/young_caucasian_female_special_suit.png", this.paint)!
-        this.eyeTexture = loadTexture(this.gl, "data/eyes/materials/green_eye.png", this.paint)!
+        this.bodyTexture = loadTexture(
+            this.gl,
+            'data/skins/textures/young_caucasian_female_special_suit.png',
+            this.paint
+        )!
+        this.eyeTexture = loadTexture(
+            this.gl,
+            'data/eyes/materials/green_eye.png',
+            this.paint
+        )!
         // schedule initial paint
         this.paint()
     }
@@ -233,10 +377,15 @@ export class GLView extends View {
             premultipliedAlpha: false,
         }
 
-        this.gl = (this.canvas.getContext("webgl2", opt) ||
-            this.canvas.getContext("experimental-webgl", opt)) as WebGL2RenderingContext
+        this.gl = (this.canvas.getContext('webgl2', opt) ||
+            this.canvas.getContext(
+                'experimental-webgl',
+                opt
+            )) as WebGL2RenderingContext
         if (this.gl == null) {
-            throw Error("Unable to initialize WebGL. Your browser or machine may not support it.")
+            throw Error(
+                'Unable to initialize WebGL. Your browser or machine may not support it.'
+            )
         }
 
         // flip texture pixels into the bottom-to-top order that WebGL expects.
@@ -269,10 +418,10 @@ export class GLView extends View {
             downY = 0,
             buttonDown = false
         canvas.onpointerdown = (ev: PointerEvent) => {
-            if (this.inputHandler && !this.inputHandler.onpointerdown(ev) ) {
+            if (this.inputHandler && !this.inputHandler.onpointerdown(ev)) {
                 return
             }
-            if (this.renderHandler && !this.renderHandler.onpointerdown(ev) ) {
+            if (this.renderHandler && !this.renderHandler.onpointerdown(ev)) {
                 return
             }
             canvas.setPointerCapture(ev.pointerId)
@@ -281,19 +430,27 @@ export class GLView extends View {
             downY = ev.y
         }
         canvas.onpointerup = (ev: PointerEvent) => {
-            if (this.inputHandler && !this.inputHandler.onpointerup(ev) ) {
+            if (this.inputHandler && !this.inputHandler.onpointerup(ev)) {
                 return
             }
-            if (!buttonDown && this.renderHandler && !this.renderHandler.onpointerup(ev) ) {
+            if (
+                !buttonDown &&
+                this.renderHandler &&
+                !this.renderHandler.onpointerup(ev)
+            ) {
                 return
             }
             buttonDown = false
         }
         canvas.onpointermove = (ev: PointerEvent) => {
-            if (this.inputHandler && !this.inputHandler.onpointermove(ev) ) {
+            if (this.inputHandler && !this.inputHandler.onpointermove(ev)) {
                 return
             }
-            if (!buttonDown && this.renderHandler && !this.renderHandler.onpointermove(ev) ) {
+            if (
+                !buttonDown &&
+                this.renderHandler &&
+                !this.renderHandler.onpointermove(ev)
+            ) {
                 return
             }
             if (buttonDown) {
@@ -321,16 +478,28 @@ export class GLView extends View {
             mat4.rotateY(cm, cm, this.ctx.rotateY / D)
             mat4.rotateX(cm, cm, this.ctx.rotateX / D)
             mat4.invert(cm, cm)
-            const dirX = vec3.transformMat4(vec3.create(), vec3.fromValues(acceleration, 0, 0), cm)
-            const dirY = vec3.transformMat4(vec3.create(), vec3.fromValues(0, acceleration, 0), cm)
-            const dirZ = vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, acceleration), cm)
+            const dirX = vec3.transformMat4(
+                vec3.create(),
+                vec3.fromValues(acceleration, 0, 0),
+                cm
+            )
+            const dirY = vec3.transformMat4(
+                vec3.create(),
+                vec3.fromValues(0, acceleration, 0),
+                cm
+            )
+            const dirZ = vec3.transformMat4(
+                vec3.create(),
+                vec3.fromValues(0, 0, acceleration),
+                cm
+            )
 
             if (this.inputHandler) {
                 this.inputHandler.keydown(ev)
             }
 
             switch (ev.code) {
-                case "Numpad1": // front orthographic
+                case 'Numpad1': // front orthographic
                     if (ev.ctrlKey) {
                         // back
                         ctx.rotateX = 0
@@ -343,7 +512,7 @@ export class GLView extends View {
                     ctx.projection = Projection.ORTHOGONAL
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad7": // top orthographic
+                case 'Numpad7': // top orthographic
                     if (ev.ctrlKey) {
                         // bottom
                         ctx.rotateX = -90
@@ -356,7 +525,7 @@ export class GLView extends View {
                     ctx.projection = Projection.ORTHOGONAL
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad3": // right orthographic
+                case 'Numpad3': // right orthographic
                     if (ev.ctrlKey) {
                         // left
                         ctx.rotateX = 0
@@ -369,23 +538,23 @@ export class GLView extends View {
                     ctx.projection = Projection.ORTHOGONAL
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad4":
+                case 'Numpad4':
                     ctx.rotateY -= 11.25
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad6":
+                case 'Numpad6':
                     ctx.rotateY += 11.25
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad8":
+                case 'Numpad8':
                     ctx.rotateX -= 11.25
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad2":
+                case 'Numpad2':
                     ctx.rotateX += 11.25
                     requestAnimationFrame(this.paint)
                     break
-                case "Numpad5": // toggle orthographic/perspective
+                case 'Numpad5': // toggle orthographic/perspective
                     if (ctx.projection === Projection.ORTHOGONAL) {
                         ctx.projection = Projection.PERSPECTIVE
                     } else {
@@ -393,17 +562,18 @@ export class GLView extends View {
                     }
                     requestAnimationFrame(this.paint)
                     break
-                case "Backquote":
+                case 'Backquote':
                     if (ev.shiftKey) {
                         // console.log(`enter flymode`)
-                        this.app.status.value = '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
+                        this.app.status.value =
+                            '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
                         this.inputHandler = new FlyMode(this)
                     }
                     break
                 default:
-                    // console.log(ev)
+                // console.log(ev)
             }
         }
     }
 }
-GLView.define("mh-glview", GLView)
+GLView.define('mh-glview', GLView)

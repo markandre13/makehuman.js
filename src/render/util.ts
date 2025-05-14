@@ -28,6 +28,7 @@ export function createModelViewMatrix(cam: Context, head: boolean = false) {
         mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
         mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
     } else {
+        return cam.camera
         // rotate around camera (TODO: i think this needs to be accumalative...)
         // TODO: save camera pos, rot during reloads
         mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
