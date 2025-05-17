@@ -7,7 +7,7 @@ import { loadTexture } from 'render/util'
 import { HTMLElementProps, View, ref, text } from 'toad.js'
 import { ColorShader } from './shader/ColorShader'
 import { mat4, vec2, vec3, vec4 } from 'gl-matrix'
-import { euler_matrix } from 'lib/euler_matrix'
+import { euler_from_matrix, euler_matrix } from 'lib/euler_matrix'
 
 export enum Projection {
     ORTHOGONAL,
@@ -47,6 +47,92 @@ export class InputHandler {
         return true
     }
 }
+
+class FlyModeOnScreenDisplay {
+    private _glview: GLView
+    private _caret: SVGGElement
+    constructor(glview: GLView) {
+        const overlaySVG = glview.overlaySVG
+        // if (overlaySVG === undefined) {
+        //     return
+        // }
+        // if (this._cartet !== undefined) {
+        //     return
+        // }
+        this._glview = glview
+        const canvas = glview.canvas
+
+        const centerX = Math.round(canvas.width / 2)
+        const centerY = Math.round(canvas.height / 2)
+
+        // also display pos & rotation in overlay?
+
+        this._caret = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        function rect(x: number, y: number, w: number, h: number) {               
+            const rect: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+            rect.setAttributeNS(null, 'x', `${x}`)
+            rect.setAttributeNS(null, 'y', `${y}`)
+            rect.setAttributeNS(null, 'rx', `3`)
+            rect.setAttributeNS(null, 'ry', `3`)
+            rect.setAttributeNS(null, 'width', `${w}`)
+            rect.setAttributeNS(null, 'height', `${h}`)
+            rect.setAttributeNS(null, 'stroke', `#fff`)
+            rect.setAttributeNS(null, 'stroke-width', `1`)
+            rect.setAttributeNS(null, 'fill', `#000`)
+            return rect
+        }
+        this._caret.appendChild(rect(centerX-40.5, centerY, 30, 3))
+        this._caret.appendChild(rect(centerX+10.5, centerY, 30, 3))
+        this._caret.appendChild(rect(centerX, centerY+10.5, 3, 30))
+        this._caret.appendChild(rect(centerX, centerY-40.5, 3, 30))
+
+        const cam = glview.ctx.camera
+        let text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttributeNS(null, 'x', `10`)
+        text.setAttributeNS(null, 'y', `20`)
+        text.setAttributeNS(null, 'fill', `#fff`)
+        text.appendChild(document.createTextNode(`POS: ${cam[12].toFixed(2)}, ${cam[13].toFixed(2)}, ${cam[14].toFixed(2)}`))
+        this._caret.appendChild(text)
+
+        const r = euler_from_matrix(cam, 'syxz')
+        const D = 360 / 2 / Math.PI
+        r.x *= D
+        r.y *= D
+        r.z *= D
+        text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttributeNS(null, 'x', `10`)
+        text.setAttributeNS(null, 'y', `40`)
+        text.setAttributeNS(null, 'fill', `#fff`)
+        text.appendChild(document.createTextNode(`ROT: ${r.x.toFixed(2)}, ${r.y.toFixed(2)}, ${r.z.toFixed(2)}`))
+        this._caret.appendChild(text)
+
+        overlaySVG.appendChild(this._caret)
+    }
+    update() {
+        const canvas = this._glview.canvas
+        const centerX = Math.round(canvas.width / 2)
+        const centerY = Math.round(canvas.height / 2)
+        this._caret.children[0].setAttributeNS(null, 'x', `${centerX-40.5}`)
+        this._caret.children[0].setAttributeNS(null, 'y', `${centerY}`)
+        this._caret.children[1].setAttributeNS(null, 'x', `${centerX+10.5}`)
+        this._caret.children[1].setAttributeNS(null, 'y', `${centerY}`)
+        this._caret.children[2].setAttributeNS(null, 'x', `${centerX}`)
+        this._caret.children[2].setAttributeNS(null, 'y', `${centerY+10.5}`)
+        this._caret.children[3].setAttributeNS(null, 'x', `${centerX}`)
+        this._caret.children[3].setAttributeNS(null, 'y', `${centerY-40.5}`)
+
+        const cam = this._glview.ctx.camera
+        ;(this._caret.children[4] as SVGTextElement).innerHTML = `POS: ${cam[12].toFixed(2)}, ${cam[13].toFixed(2)}, ${cam[14].toFixed(2)}`
+        const r = euler_from_matrix(cam, 'syxz')
+        const D = 360 / 2 / Math.PI
+        r.x *= D
+        r.y *= D
+        r.z *= D
+
+        ;(this._caret.children[5] as SVGTextElement).innerHTML = `ROT: ${r.x.toFixed(2)}, ${r.y.toFixed(2)}, ${r.z.toFixed(2)}`
+    }
+}
+
 // class DefaultMode implements InputMode {
 // }
 export class FlyMode extends InputHandler {
@@ -56,7 +142,7 @@ export class FlyMode extends InputHandler {
     private _rotate: mat4
     private _rotate0 = vec2.create()
     private _rotate1 = vec2.create()
-    private _cartet?: SVGGElement
+    private _osd?: FlyModeOnScreenDisplay
 
     constructor(view: GLView) {
         super()
@@ -73,55 +159,15 @@ export class FlyMode extends InputHandler {
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._rotate)
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._translate)
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._initial)
-    }
-    private createCaret() {
-        const overlaySVG = this._view.overlaySVG
-        if (overlaySVG === undefined) {
-            return
-        }
-        if (this._cartet !== undefined) {
-            return
-        }
-        const canvas = this._view.canvas
 
-        const centerX = Math.round(canvas.width / 2)
-        const centerY = Math.round(canvas.height / 2)
-
-        // also display pos & rotation in overlay?
-
-        this._cartet = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-        function rect(x: number, y: number, w: number, h: number) {
-            
-            const rect: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
-            rect.setAttributeNS(null, 'x', `${x}`)
-            rect.setAttributeNS(null, 'y', `${y}`)
-            rect.setAttributeNS(null, 'rx', `3`)
-            rect.setAttributeNS(null, 'ry', `3`)
-            rect.setAttributeNS(null, 'width', `${w}`)
-            rect.setAttributeNS(null, 'height', `${h}`)
-            rect.setAttributeNS(null, 'stroke', `#fff`)
-            rect.setAttributeNS(null, 'stroke-width', `1`)
-            rect.setAttributeNS(null, 'fill', `#000`)
-            return rect
-        }
-        this._cartet.appendChild(rect(centerX-40.5, centerY, 30, 3))
-        this._cartet.appendChild(rect(centerX+10.5, centerY, 30, 3))
-        this._cartet.appendChild(rect(centerX, centerY+10.5, 3, 30))
-        this._cartet.appendChild(rect(centerX, centerY-40.5, 3, 30))
-
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-        text.setAttributeNS(null, 'x', `10`)
-        text.setAttributeNS(null, 'y', `20`)
-        text.setAttributeNS(null, 'fill', `#fff`)
-        text.appendChild(document.createTextNode(`POS: x, y, z`))
-        this._cartet.appendChild(text)
-
-        if (overlaySVG) {
-            overlaySVG.appendChild(this._cartet)
+        if (this._osd) {
+            this._osd.update()
+        } else {
+            this._osd = new FlyModeOnScreenDisplay(this._view)
         }
     }
     override onpointermove(ev: PointerEvent): boolean {
-        this.createCaret()
+
         const canvas = this._view.canvas
 
         const marginX = Math.round(((canvas.width / 2) * 9) / 10)
