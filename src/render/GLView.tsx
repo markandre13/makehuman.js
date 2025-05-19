@@ -4,9 +4,9 @@ import { RenderList } from 'render/RenderList'
 import { RGBAShader } from 'render/shader/RGBAShader'
 import { TextureShader } from 'render/shader/TextureShader'
 import { loadTexture } from 'render/util'
-import { HTMLElementProps, View, ref, text } from 'toad.js'
+import { HTMLElementProps, View, ref } from 'toad.js'
 import { ColorShader } from './shader/ColorShader'
-import { mat4, vec2, vec3, vec4 } from 'gl-matrix'
+import { mat4, vec2, vec3 } from 'gl-matrix'
 import { euler_from_matrix, euler_matrix } from 'lib/euler_matrix'
 
 export enum Projection {
@@ -34,6 +34,7 @@ interface GLViewProps extends HTMLElementProps {
 const D = 180 / Math.PI
 
 export class InputHandler {
+    paint() {}
     keydown(ev: KeyboardEvent): boolean {
         return true
     }
@@ -48,6 +49,11 @@ export class InputHandler {
     }
 }
 
+/**
+ * On Screen Display while the Fly Mode is active
+ * 
+ * Displays a caret in the center of the view and the current position and rotation
+ */
 class FlyModeOnScreenDisplay {
     private _glview: GLView
     private _caret: SVGGElement
@@ -87,6 +93,9 @@ class FlyModeOnScreenDisplay {
         this._caret.appendChild(rect(centerX, centerY-40.5, 3, 30))
 
         const cam = glview.ctx.camera
+        const v = vec3.create()
+        const ic = mat4.invert(mat4.create(), cam)
+        vec3.transformMat4(v, v, ic)
         let text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
         text.setAttributeNS(null, 'x', `10`)
         text.setAttributeNS(null, 'y', `20`)
@@ -108,6 +117,9 @@ class FlyModeOnScreenDisplay {
 
         overlaySVG.appendChild(this._caret)
     }
+    destructor() {
+        this._glview.overlaySVG.removeChild(this._caret)
+    }
     update() {
         const canvas = this._glview.canvas
         const centerX = Math.round(canvas.width / 2)
@@ -122,7 +134,11 @@ class FlyModeOnScreenDisplay {
         this._caret.children[3].setAttributeNS(null, 'y', `${centerY-40.5}`)
 
         const cam = this._glview.ctx.camera
-        ;(this._caret.children[4] as SVGTextElement).innerHTML = `POS: ${cam[12].toFixed(2)}, ${cam[13].toFixed(2)}, ${cam[14].toFixed(2)}`
+        const v = vec3.create()
+        const ic = mat4.invert(mat4.create(), cam)
+        vec3.transformMat4(v, v, ic)
+
+        ;(this._caret.children[4] as SVGTextElement).innerHTML = `POS: ${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)}`
         const r = euler_from_matrix(cam, 'syxz')
         const D = 360 / 2 / Math.PI
         r.x *= D
@@ -133,16 +149,39 @@ class FlyModeOnScreenDisplay {
     }
 }
 
-// class DefaultMode implements InputMode {
-// }
+/**
+ * Fly Mode similar to Blender
+ */
 export class FlyMode extends InputHandler {
     private _view: GLView
-    private _initial: mat4
-    private _translate: mat4
-    private _rotate: mat4
-    private _rotate0 = vec2.create()
-    private _rotate1 = vec2.create()
     private _osd?: FlyModeOnScreenDisplay
+
+    /**
+     *  initial camera
+     */
+    private _initial: mat4
+    /**
+     * translation
+     */
+    private _translate: mat4
+    /**
+     * _rotate0 * _rotate1
+     */
+    private _rotate: mat4
+    /**
+     * rotation given by pointer position
+     */
+    private _rotate0 = vec2.create()
+    /**
+     * rotation while pointer is close to view border
+     */
+    private _rotate1 = vec2.create()
+
+    /**
+     * timer based drift while the pointer is near the view border
+     */
+    private _driftX = 0
+    private _driftY = 0
 
     constructor(view: GLView) {
         super()
@@ -154,7 +193,21 @@ export class FlyMode extends InputHandler {
         // this._cartet .setAttributeNS(null, 'cx', `${pixelX}`)
         // this._cartet .setAttributeNS(null, 'cy', `${pixelY}`)
     }
+    override paint() {
+        if (this._driftX || this._driftY) {
+            this._rotate1[0] -= this._driftX
+            this._rotate1[1] -= this._driftY
+            this.update()
+            this._view.invalidate()
+        }
+    }
     private update() {
+        this._rotate = euler_matrix(
+            (this._rotate0[0] + this._rotate1[0]) / D / 10,
+            (this._rotate0[1] + this._rotate1[1]) / D / 10,
+            0,
+            'syxz'
+        )
         mat4.identity(this._view.ctx.camera)
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._rotate)
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._translate)
@@ -170,41 +223,39 @@ export class FlyMode extends InputHandler {
 
         const canvas = this._view.canvas
 
-        const marginX = Math.round(((canvas.width / 2) * 9) / 10)
-        const marginY = Math.round(((canvas.height / 2) * 9) / 10)
+        const marginX = Math.round(((canvas.width / 2) * 8) / 10)
+        const marginY = Math.round(((canvas.height / 2) * 8) / 10)
 
         const x = canvas.width / 2 - ev.offsetX
         const y = canvas.height / 2 - ev.offsetY
 
         if (x < -marginX) {
-            this._rotate1[0] -= x + marginX
+            this._driftX = (x + marginX) / 10
+            this._rotate1[0] -= this._driftX
         } else if (x > marginX) {
-            this._rotate1[0] -= x - marginX
+            this._driftX = (x - marginX) / 10
+            this._rotate1[0] -= this._driftX
         } else {
+            this._driftX = 0
             this._rotate0[0] = -x
         }
 
         if (y < -marginY) {
-            this._rotate1[1] -= y + marginY
+            this._driftY = (y + marginY) / 10
+            this._rotate1[1] -= this._driftY
         } else if (y > marginY) {
-            this._rotate1[1] -= y - marginY
+            this._driftY = (y - marginY) / 10
+            this._rotate1[1] -= this._driftY
         } else {
+            this._driftY = 0
             this._rotate0[1] = -y
         }
-
-        this._rotate = euler_matrix(
-            (this._rotate0[0] + this._rotate1[0]) / D / 10,
-            (this._rotate0[1] + this._rotate1[1]) / D / 10,
-            0,
-            'syxz'
-        )
 
         // mat4.identity(this._rotate)
         // mat4.rotateX(this._rotate, this._rotate, y)
         // mat4.rotateY(this._rotate, this._rotate, x)
 
         this.update()
-
         this._view.invalidate()
         return true
     }
@@ -219,63 +270,59 @@ export class FlyMode extends InputHandler {
         // mat4.rotateX(cm, cm, ctx.rotateX / D)
         mat4.invert(cameraRotation, cameraRotation)
 
-        const dirX = vec3.transformMat4(
-            vec3.create(),
-            vec3.fromValues(acceleration, 0, 0),
-            cameraRotation
-        )
-        const dirY = vec3.transformMat4(
-            vec3.create(),
-            vec3.fromValues(0, acceleration, 0),
-            cameraRotation
-        )
-        const dirZ = vec3.transformMat4(
-            vec3.create(),
-            vec3.fromValues(0, 0, acceleration),
-            cameraRotation
-        )
+        let dir: vec3 | undefined
 
         switch (ev.code) {
             case 'KeyW': // forward
-                mat4.translate(this._translate, this._translate, dirZ)
-                this._view.invalidate()
+                dir = vec3.fromValues(0, 0, acceleration)
                 break
             case 'KeyS': // backward
-                vec3.negate(dirZ, dirZ)
-                mat4.translate(this._translate, this._translate, dirZ)
-                this._view.invalidate()
+                dir = vec3.fromValues(0, 0, -acceleration)
                 break
             case 'KeyA': // left
-                mat4.translate(this._translate, this._translate, dirX)
-                this._view.invalidate()
+                dir = vec3.fromValues(acceleration, 0, 0)
                 break
             case 'KeyD': // right
-                vec3.negate(dirX, dirX)
-                mat4.translate(this._translate, this._translate, dirX)
-                this._view.invalidate()
+                dir = vec3.fromValues(-acceleration, 0, 0)
                 break
             case 'KeyQ': // down
-                this._translate[13] += acceleration
-                this._view.invalidate()
+                dir = vec3.fromValues(0, acceleration, 0)
                 break
             case 'KeyE': // up
-                this._translate[13] -= acceleration
-                this._view.invalidate()
+                dir = vec3.fromValues(0, -acceleration, 0)
                 break
             case 'KeyR': // local down
-                mat4.translate(this._translate, this._translate, dirY)
+                // mat4.translate(this._translate, this._translate, dirY)
+                // mat4.translate(this._translate, this._translate, dirY)
                 break
             case 'KeyF': // local up
-                vec3.negate(dirY, dirY)
-                mat4.translate(this._translate, this._translate, dirY)
+                // vec3.negate(dirY, dirY)
+                // mat4.translate(this._translate, this._translate, dirY)
                 break
             case 'Escape':
                 this._view.inputHandler = undefined
                 this._view.app.status.value = ''
+                this._osd?.destructor()
                 break
             default:
                 return false
         }
+        if (dir !== undefined) {
+            const d = mat4.create()
+            mat4.translate(d, d, dir)
+
+            const iM = mat4.invert(mat4.create(), this._rotate)
+
+            const j = mat4.create()
+            mat4.mul(j, j, iM)
+            mat4.mul(j, j, d)
+            mat4.mul(j, j, this._rotate)
+
+            mat4.mul(this._translate, this._translate, j)
+
+            this._view.invalidate()        
+        }
+
         this.update()
         // return true
         return false
@@ -324,9 +371,9 @@ export class GLView extends View {
         // move up by 7, move backwards by 5
         mat4.translate(this.ctx.camera, this.ctx.camera, [0, -7, -5])
 
-        this.app.status.value =
-            '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
-        this.inputHandler = new FlyMode(this)
+        // this.app.status.value =
+        //     '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
+        // this.inputHandler = new FlyMode(this)
 
         this.replaceChildren(
             ...(
@@ -402,7 +449,19 @@ export class GLView extends View {
     private paint() {
         this._redrawIsPending = false
         if (this.app.renderer) {
+            // const m = this.ctx.camera
+            // mat4.identity(m)
+            // // rotate around camera
+            // // ...
+            // // move camera UP -7, BACK -5
+            // mat4.translate(m, m, [0, -7, -5])
+            // // rotate object
+            // mat4.rotateY(m, m, 45 / 360 * 2 * Math.PI)
+
             this.app.renderer.paint(this.app, this)
+            if (this.inputHandler) {
+                this.inputHandler.paint()
+            }
         }
     }
 

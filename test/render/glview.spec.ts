@@ -6,7 +6,7 @@ use(chaiAlmost(0.00001))
 
 import { FlyMode, GLView, Projection } from '../../src/render/GLView'
 import { Context } from '../../src/render/Context'
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4, vec3, vec4 } from 'gl-matrix'
 
 interface ViewFake {
     ctx: Context
@@ -77,7 +77,9 @@ describe('FlyMode', function () {
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
 
             flymode.keydown({ code: 'KeyD' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.equal([-0.25, 0, 0])
+            expect(translationOf(glview.ctx.camera)).to.deep.equal([
+                -0.25, 0, 0,
+            ])
         })
         it('up', function () {
             const glview = makeview()
@@ -86,7 +88,9 @@ describe('FlyMode', function () {
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
 
             flymode.keydown({ code: 'KeyE' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.equal([0, -0.25, 0])
+            expect(translationOf(glview.ctx.camera)).to.deep.equal([
+                0, -0.25, 0,
+            ])
         })
         it('down', function () {
             const glview = makeview()
@@ -108,7 +112,9 @@ describe('FlyMode', function () {
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([-0.25, 0, 0])
+            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([
+                -0.25, 0, 0,
+            ])
         })
         it('left', function () {
             const glview = makeview()
@@ -119,7 +125,9 @@ describe('FlyMode', function () {
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyA' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([0, 0, 0.25])
+            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([
+                0, 0, 0.25,
+            ])
         })
         it('right', function () {
             const glview = makeview()
@@ -130,7 +138,9 @@ describe('FlyMode', function () {
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyD' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([0, 0, -0.25])
+            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([
+                0, 0, -0.25,
+            ])
         })
     })
     describe('looking left', function () {
@@ -143,7 +153,9 @@ describe('FlyMode', function () {
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([0.25, 0, 0])
+            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([
+                0.25, 0, 0,
+            ])
         })
     })
     describe('looking left & up', function () {
@@ -152,11 +164,16 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320 - 900, offsetY: 240 + 900} as any)
+            flymode.onpointermove({
+                offsetX: 320 - 900,
+                offsetY: 240 + 900,
+            } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([0, 0.25, 0])
+            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([
+                0, 0.25, 0,
+            ])
         })
     })
     describe('looking up', function () {
@@ -165,11 +182,73 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320, offsetY: 240 + 900} as any)
+            flymode.onpointermove({ offsetX: 320, offsetY: 240 + 900 } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)
-            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([0, 0.25, 0])
+            expect(translationOf(glview.ctx.camera)).to.deep.almost.equal([
+                0, 0.25, 0,
+            ])
+        })
+    })
+    // the order of operations:
+    // 1 rotate around camera
+    // 2 translate world/camera
+    // 3 rotate around object
+    ///
+    describe.only('grok opengl', function () {
+        it('alpha', function () {
+            const t = mat4.create()
+            mat4.translate(t, t, [0, -7, -5])
+
+            // rotate object
+            const r = mat4.create()
+            mat4.rotateY(r, r, (45 / 360) * 2 * Math.PI)
+
+            const m = mat4.create()
+            mat4.mul(m, m, t)
+            // mat4.mul(m,m,r)
+
+            const v0 = vec3.fromValues(3, 5, 7)
+            vec3.transformMat4(v0, v0, m)
+
+            // console.log(vec3.str(v0))
+            expect(v0).to.deep.equal(vec3.fromValues(3, -2, 2))
+        })
+        it('bravo', function () {
+            const r = mat4.create()
+            mat4.rotateY(r, r, (45 / 360) * 2 * Math.PI)
+
+            const t = mat4.create()
+            mat4.translate(t, t, [0, -7, -5])
+
+            const m = mat4.create()
+            mat4.mul(m, m, t)
+            mat4.mul(m, m, r)
+
+            const v0 = vec3.fromValues(0, 0, 0)
+            vec3.transformMat4(v0, v0, m)
+
+            expect(v0).to.deep.equal(vec3.fromValues(0, -7, -5))
+
+            // now move m
+            const d = mat4.create()
+            mat4.translate(d, d, [3, 5, 7])
+
+            const iM = mat4.create()
+            mat4.invert(iM, m)
+
+            const j = mat4.create()
+            mat4.mul(j, j, iM)
+            mat4.mul(j, j, d)
+            mat4.mul(j, j, m)
+
+            mat4.mul(m, m, j)
+
+            const v1 = vec3.fromValues(0, 0, 0)
+            vec3.transformMat4(v1, v1, m)
+
+            expect(v1).to.deep.almost.equal(vec3.fromValues(0 + 3, -7 + 5, -5 + 7))
         })
     })
 })
