@@ -204,11 +204,19 @@ export class FlyMode extends InputHandler {
      * rotation while pointer is close to view border
      */
     private _rotate1 = vec2.create()
+    /**
+     * timer based movement via keys
+     */
     private _move = vec3.create()
     /**
      * timer based drift while the pointer is near the view border
      */
     private _drift = vec2.create()
+
+    /**
+     * 
+     */
+    private _lastUpdate?: number
 
     constructor(view: GLView) {
         super()
@@ -223,12 +231,17 @@ export class FlyMode extends InputHandler {
     override paint() {
         this.update()
         if (this._move[0] || this._move[1] || this._move[2] || this._drift[0] || this._drift[1]) {
-            this._view.invalidate()
+            this.invalidate()
+        } else {
+            this._lastUpdate = undefined
         }
     }
     private update() {
+        const now = Date.now()
+
+        const acceleration = 2.5 / 500 * (now - this._lastUpdate!)
+
         if (this._move[0] !== 0 || this._move[1] !== 0 || this._move[2] !== 0) {
-            const acceleration = 2.5 / 50
 
             const dir = vec3.clone(this._move)
             vec3.scale(dir, dir, acceleration)
@@ -257,6 +270,8 @@ export class FlyMode extends InputHandler {
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._rotate)
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._translate)
         mat4.mul(this._view.ctx.camera, this._view.ctx.camera, this._initial)
+
+        this._lastUpdate = now
 
         if (this._osd) {
             this._osd.update()
@@ -291,9 +306,17 @@ export class FlyMode extends InputHandler {
             this._rotate0[1] = -y
         }
 
-        this.update()
+        this.invalidate()
         return true
     }
+
+    private invalidate() {
+        if (this._lastUpdate === undefined) {
+            this._lastUpdate = Date.now()
+        }
+        this._view.invalidate()
+    }
+
     override keyup(ev: KeyboardEvent): boolean {
         switch (ev.code) {
             case 'KeyW': // forward
@@ -376,7 +399,7 @@ export class FlyMode extends InputHandler {
             default:
                 return false
         }
-        this._view.invalidate()
+        this.invalidate()
         // return true
         return false
     }
