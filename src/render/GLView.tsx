@@ -35,6 +35,9 @@ const D = 180 / Math.PI
 
 export class InputHandler {
     paint() {}
+    keyup(ev: KeyboardEvent): boolean {
+        return true
+    }
     keydown(ev: KeyboardEvent): boolean {
         return true
     }
@@ -51,7 +54,7 @@ export class InputHandler {
 
 /**
  * On Screen Display while the Fly Mode is active
- * 
+ *
  * Displays a caret in the center of the view and the current position and rotation
  */
 class FlyModeOnScreenDisplay {
@@ -73,9 +76,15 @@ class FlyModeOnScreenDisplay {
 
         // also display pos & rotation in overlay?
 
-        this._caret = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-        function rect(x: number, y: number, w: number, h: number) {               
-            const rect: SVGRectElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        this._caret = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'g'
+        )
+        function rect(x: number, y: number, w: number, h: number) {
+            const rect: SVGRectElement = document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'rect'
+            )
             rect.setAttributeNS(null, 'x', `${x}`)
             rect.setAttributeNS(null, 'y', `${y}`)
             rect.setAttributeNS(null, 'rx', `3`)
@@ -87,20 +96,29 @@ class FlyModeOnScreenDisplay {
             rect.setAttributeNS(null, 'fill', `#000`)
             return rect
         }
-        this._caret.appendChild(rect(centerX-40.5, centerY, 30, 3))
-        this._caret.appendChild(rect(centerX+10.5, centerY, 30, 3))
-        this._caret.appendChild(rect(centerX, centerY+10.5, 3, 30))
-        this._caret.appendChild(rect(centerX, centerY-40.5, 3, 30))
+        this._caret.appendChild(rect(centerX - 40.5, centerY, 30, 3))
+        this._caret.appendChild(rect(centerX + 10.5, centerY, 30, 3))
+        this._caret.appendChild(rect(centerX, centerY + 10.5, 3, 30))
+        this._caret.appendChild(rect(centerX, centerY - 40.5, 3, 30))
 
         const cam = glview.ctx.camera
         const v = vec3.create()
         const ic = mat4.invert(mat4.create(), cam)
         vec3.transformMat4(v, v, ic)
-        let text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        let text = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text'
+        )
         text.setAttributeNS(null, 'x', `10`)
         text.setAttributeNS(null, 'y', `20`)
         text.setAttributeNS(null, 'fill', `#fff`)
-        text.appendChild(document.createTextNode(`POS: ${cam[12].toFixed(2)}, ${cam[13].toFixed(2)}, ${cam[14].toFixed(2)}`))
+        text.appendChild(
+            document.createTextNode(
+                `POS: ${cam[12].toFixed(2)}, ${cam[13].toFixed(
+                    2
+                )}, ${cam[14].toFixed(2)}`
+            )
+        )
         this._caret.appendChild(text)
 
         const r = euler_from_matrix(cam, 'syxz')
@@ -112,7 +130,11 @@ class FlyModeOnScreenDisplay {
         text.setAttributeNS(null, 'x', `10`)
         text.setAttributeNS(null, 'y', `40`)
         text.setAttributeNS(null, 'fill', `#fff`)
-        text.appendChild(document.createTextNode(`ROT: ${r.x.toFixed(2)}, ${r.y.toFixed(2)}, ${r.z.toFixed(2)}`))
+        text.appendChild(
+            document.createTextNode(
+                `ROT: ${r.x.toFixed(2)}, ${r.y.toFixed(2)}, ${r.z.toFixed(2)}`
+            )
+        )
         this._caret.appendChild(text)
 
         overlaySVG.appendChild(this._caret)
@@ -124,28 +146,34 @@ class FlyModeOnScreenDisplay {
         const canvas = this._glview.canvas
         const centerX = Math.round(canvas.width / 2)
         const centerY = Math.round(canvas.height / 2)
-        this._caret.children[0].setAttributeNS(null, 'x', `${centerX-40.5}`)
+        this._caret.children[0].setAttributeNS(null, 'x', `${centerX - 40.5}`)
         this._caret.children[0].setAttributeNS(null, 'y', `${centerY}`)
-        this._caret.children[1].setAttributeNS(null, 'x', `${centerX+10.5}`)
+        this._caret.children[1].setAttributeNS(null, 'x', `${centerX + 10.5}`)
         this._caret.children[1].setAttributeNS(null, 'y', `${centerY}`)
         this._caret.children[2].setAttributeNS(null, 'x', `${centerX}`)
-        this._caret.children[2].setAttributeNS(null, 'y', `${centerY+10.5}`)
+        this._caret.children[2].setAttributeNS(null, 'y', `${centerY + 10.5}`)
         this._caret.children[3].setAttributeNS(null, 'x', `${centerX}`)
-        this._caret.children[3].setAttributeNS(null, 'y', `${centerY-40.5}`)
+        this._caret.children[3].setAttributeNS(null, 'y', `${centerY - 40.5}`)
 
         const cam = this._glview.ctx.camera
         const v = vec3.create()
         const ic = mat4.invert(mat4.create(), cam)
         vec3.transformMat4(v, v, ic)
-
-        ;(this._caret.children[4] as SVGTextElement).innerHTML = `POS: ${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)}`
+        ;(
+            this._caret.children[4] as SVGTextElement
+        ).innerHTML = `POS: ${v[0].toFixed(2)}, ${v[1].toFixed(
+            2
+        )}, ${v[2].toFixed(2)}`
         const r = euler_from_matrix(cam, 'syxz')
         const D = 360 / 2 / Math.PI
         r.x *= D
         r.y *= D
         r.z *= D
-
-        ;(this._caret.children[5] as SVGTextElement).innerHTML = `ROT: ${r.x.toFixed(2)}, ${r.y.toFixed(2)}, ${r.z.toFixed(2)}`
+        ;(
+            this._caret.children[5] as SVGTextElement
+        ).innerHTML = `ROT: ${r.x.toFixed(2)}, ${r.y.toFixed(2)}, ${r.z.toFixed(
+            2
+        )}`
     }
 }
 
@@ -176,12 +204,11 @@ export class FlyMode extends InputHandler {
      * rotation while pointer is close to view border
      */
     private _rotate1 = vec2.create()
-
+    private _move = vec3.create()
     /**
      * timer based drift while the pointer is near the view border
      */
-    private _driftX = 0
-    private _driftY = 0
+    private _drift = vec2.create()
 
     constructor(view: GLView) {
         super()
@@ -194,14 +221,32 @@ export class FlyMode extends InputHandler {
         // this._cartet .setAttributeNS(null, 'cy', `${pixelY}`)
     }
     override paint() {
-        if (this._driftX || this._driftY) {
-            this._rotate1[0] -= this._driftX
-            this._rotate1[1] -= this._driftY
-            this.update()
+        this.update()
+        if (this._move[0] || this._move[1] || this._move[2] || this._drift[0] || this._drift[1]) {
             this._view.invalidate()
         }
     }
     private update() {
+        if (this._move[0] !== 0 || this._move[1] !== 0 || this._move[2] !== 0) {
+            const acceleration = 2.5 / 50
+
+            const dir = vec3.clone(this._move)
+            vec3.scale(dir, dir, acceleration)
+            const d = mat4.create()
+            mat4.translate(d, d, dir)
+
+            const iM = mat4.invert(mat4.create(), this._rotate)
+
+            const j = mat4.create()
+            mat4.mul(j, j, iM)
+            mat4.mul(j, j, d)
+            mat4.mul(j, j, this._rotate)
+
+            mat4.mul(this._translate, this._translate, j)
+        }
+
+        vec2.sub(this._rotate1, this._rotate1, this._drift)
+
         this._rotate = euler_matrix(
             (this._rotate0[0] + this._rotate1[0]) / D / 10,
             (this._rotate0[1] + this._rotate1[1]) / D / 10,
@@ -220,7 +265,6 @@ export class FlyMode extends InputHandler {
         }
     }
     override onpointermove(ev: PointerEvent): boolean {
-
         const canvas = this._view.canvas
 
         const marginX = Math.round(((canvas.width / 2) * 8) / 10)
@@ -230,66 +274,91 @@ export class FlyMode extends InputHandler {
         const y = canvas.height / 2 - ev.offsetY
 
         if (x < -marginX) {
-            this._driftX = (x + marginX) / 10
-            this._rotate1[0] -= this._driftX
+            this._drift[0] = (x + marginX) / 10
         } else if (x > marginX) {
-            this._driftX = (x - marginX) / 10
-            this._rotate1[0] -= this._driftX
+            this._drift[0] = (x - marginX) / 10
         } else {
-            this._driftX = 0
+            this._drift[0] = 0
             this._rotate0[0] = -x
         }
 
         if (y < -marginY) {
-            this._driftY = (y + marginY) / 10
-            this._rotate1[1] -= this._driftY
+            this._drift[1] = (y + marginY) / 10
         } else if (y > marginY) {
-            this._driftY = (y - marginY) / 10
-            this._rotate1[1] -= this._driftY
+            this._drift[1] = (y - marginY) / 10
         } else {
-            this._driftY = 0
+            this._drift[1] = 0
             this._rotate0[1] = -y
         }
 
-        // mat4.identity(this._rotate)
-        // mat4.rotateX(this._rotate, this._rotate, y)
-        // mat4.rotateY(this._rotate, this._rotate, x)
-
         this.update()
-        this._view.invalidate()
+        return true
+    }
+    override keyup(ev: KeyboardEvent): boolean {
+        switch (ev.code) {
+            case 'KeyW': // forward
+                if (this._move[2] > 0) {
+                    this._move[2] = 0
+                }
+                break
+            case 'KeyS': // backward
+                if (this._move[2] < 0) {
+                    this._move[2] = 0
+                }
+                break
+            case 'KeyA': // left
+                if (this._move[0] > 0) {
+                    this._move[0] = 0
+                }
+                break
+            case 'KeyD': // right
+                if (this._move[0] < 0) {
+                    this._move[0] = 0
+                }
+                break
+            case 'KeyQ': // down
+                if (this._move[1] > 0) {
+                    this._move[1] = 0
+                }
+                break
+            case 'KeyE': // up
+                if (this._move[1] < 0) {
+                    this._move[1] = 0
+                }
+                break
+        }
         return true
     }
     override keydown(ev: KeyboardEvent): boolean {
+        if (ev.repeat) {
+            return true
+        }
+
         const ctx = this._view.ctx
-        const acceleration = 2.5 / 10
 
         const cameraRotation = mat4.clone(ctx.camera)
         mat4.mul(cameraRotation, cameraRotation, this._rotate)
         cameraRotation[12] = cameraRotation[13] = cameraRotation[14] = 0
-        // mat4.rotateY(cm, cm, ctx.rotateY / D)
-        // mat4.rotateX(cm, cm, ctx.rotateX / D)
         mat4.invert(cameraRotation, cameraRotation)
-
-        let dir: vec3 | undefined
 
         switch (ev.code) {
             case 'KeyW': // forward
-                dir = vec3.fromValues(0, 0, acceleration)
+                this._move[2] = 1
                 break
             case 'KeyS': // backward
-                dir = vec3.fromValues(0, 0, -acceleration)
+                this._move[2] = -1
                 break
             case 'KeyA': // left
-                dir = vec3.fromValues(acceleration, 0, 0)
+                this._move[0] = 1
                 break
             case 'KeyD': // right
-                dir = vec3.fromValues(-acceleration, 0, 0)
+                this._move[0] = -1
                 break
             case 'KeyQ': // down
-                dir = vec3.fromValues(0, acceleration, 0)
+                this._move[1] = 1
                 break
             case 'KeyE': // up
-                dir = vec3.fromValues(0, -acceleration, 0)
+                this._move[1] = -1
                 break
             case 'KeyR': // local down
                 // mat4.translate(this._translate, this._translate, dirY)
@@ -307,23 +376,7 @@ export class FlyMode extends InputHandler {
             default:
                 return false
         }
-        if (dir !== undefined) {
-            const d = mat4.create()
-            mat4.translate(d, d, dir)
-
-            const iM = mat4.invert(mat4.create(), this._rotate)
-
-            const j = mat4.create()
-            mat4.mul(j, j, iM)
-            mat4.mul(j, j, d)
-            mat4.mul(j, j, this._rotate)
-
-            mat4.mul(this._translate, this._translate, j)
-
-            this._view.invalidate()        
-        }
-
-        this.update()
+        this._view.invalidate()
         // return true
         return false
     }
@@ -575,30 +628,13 @@ export class GLView extends View {
         // keyboard
         //
 
+        window.onkeyup = (ev: KeyboardEvent) => {
+            if (this.inputHandler) {
+                this.inputHandler.keyup(ev)
+            }
+        }
+
         window.onkeydown = (ev: KeyboardEvent) => {
-            const acceleration = 2.5 / 100
-
-            const D = 180 / Math.PI
-            const cm = mat4.create()
-            mat4.rotateY(cm, cm, this.ctx.rotateY / D)
-            mat4.rotateX(cm, cm, this.ctx.rotateX / D)
-            mat4.invert(cm, cm)
-            const dirX = vec3.transformMat4(
-                vec3.create(),
-                vec3.fromValues(acceleration, 0, 0),
-                cm
-            )
-            const dirY = vec3.transformMat4(
-                vec3.create(),
-                vec3.fromValues(0, acceleration, 0),
-                cm
-            )
-            const dirZ = vec3.transformMat4(
-                vec3.create(),
-                vec3.fromValues(0, 0, acceleration),
-                cm
-            )
-
             if (this.inputHandler) {
                 this.inputHandler.keydown(ev)
             }

@@ -6,10 +6,11 @@ use(chaiAlmost(0.00001))
 
 import { FlyMode, GLView, Projection } from '../../src/render/GLView'
 import { Context } from '../../src/render/Context'
-import { mat4, vec3, vec4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 
 interface ViewFake {
     ctx: Context
+    overlaySVG: SVGGElement
     canvas: {
         width: number
         height: number
@@ -17,8 +18,9 @@ interface ViewFake {
     invalidate: () => void
 }
 
-function makeview() {
+function makeview(): GLView {
     const glview: ViewFake = {
+        overlaySVG: document.createElementNS('http://www.w3.org/2000/svg', 'g'),
         ctx: {
             camera: mat4.create(),
             rotateX: 0,
@@ -32,7 +34,7 @@ function makeview() {
         },
         invalidate: () => {},
     }
-    return glview as GLView
+    return glview as any
 }
 
 function translationOf(m: mat4) {
@@ -41,13 +43,23 @@ function translationOf(m: mat4) {
 
 describe('FlyMode', function () {
     describe('looking forward', function () {
-        it('forward', function () {
+        it.only('forward', function () {
             const glview = makeview()
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
 
+            // we expect this not to change the position but trigger a call to invalidate
             flymode.keydown({ code: 'KeyW' } as any)
+
+            // we expect this to change the position based on time
+            flymode.paint()
+
+            // and again
+            flymode.paint()
+
+            // until key is up
+
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0.25])
         })
         it('backward', function () {
@@ -196,7 +208,7 @@ describe('FlyMode', function () {
     // 2 translate world/camera
     // 3 rotate around object
     ///
-    describe.only('grok opengl', function () {
+    describe('grok opengl', function () {
         it('alpha', function () {
             const t = mat4.create()
             mat4.translate(t, t, [0, -7, -5])
