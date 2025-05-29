@@ -1,5 +1,5 @@
 import { mat4, vec3 } from "gl-matrix"
-import { Projection } from "render/GLView"
+import { Projection } from './glview/Projection'
 
 export interface Context {
     /**

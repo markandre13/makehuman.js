@@ -1,7 +1,9 @@
 import { BaseMeshGroup } from "../mesh/BaseMeshGroup"
 import { ProxyType } from "proxy/Proxy"
 import { prepareCanvas, prepareViewport, createProjectionMatrix, createModelViewMatrix, createNormalMatrix } from "./util"
-import { GLView, Projection, RenderHandler } from "render/GLView"
+import { GLView } from "render/glview/GLView"
+import { RenderHandler } from './glview/RenderHandler'
+import { Projection } from './glview/Projection'
 import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
 

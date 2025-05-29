@@ -1,5 +1,6 @@
 import { Application } from "Application"
-import { GLView, RenderHandler } from "render/GLView"
+import { GLView } from "render/glview/GLView"
+import { RenderHandler } from 'render/glview/RenderHandler'
 import { WavefrontObj } from "mesh/WavefrontObj"
 import {
     createNormalMatrix,

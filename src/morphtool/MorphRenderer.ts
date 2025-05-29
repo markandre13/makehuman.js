@@ -3,7 +3,9 @@ import { mat4, vec2, vec4 } from 'gl-matrix'
 import { findVertex } from 'lib/distance'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
-import { GLView, Projection, RenderHandler } from 'render/GLView'
+import { GLView } from 'render/glview/GLView'
+import { RenderHandler } from 'render/glview/RenderHandler'
+import { Projection } from 'render/glview/Projection'
 import { RenderMesh } from 'render/RenderMesh'
 import {
     createModelViewMatrix,

@@ -1,6 +1,7 @@
 import { Application } from "Application"
 import { mat4, vec3 } from "gl-matrix"
-import { RenderHandler, GLView } from "render/GLView"
+import { GLView } from "render/glview/GLView"
+import { RenderHandler } from 'render/glview/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import { RGBAShader } from "render/shader/RGBAShader"
 import {

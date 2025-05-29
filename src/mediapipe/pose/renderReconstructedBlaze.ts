@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix"
-import { GLView } from "render/GLView"
+import { GLView } from "render/glview/GLView"
 import { RenderMesh } from "render/RenderMesh"
 import { Blaze } from "./Blaze"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"

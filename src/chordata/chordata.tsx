@@ -20,7 +20,8 @@ import { RemoteOptionModel } from "./RemoteOptionModel"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
-import { GLView, RenderHandler } from "render/GLView"
+import { GLView } from "render/glview/GLView"
+import { RenderHandler } from 'render/glview/RenderHandler'
 
 class Notochord {
     processState = new TextModel("UNAVAILABLE", {

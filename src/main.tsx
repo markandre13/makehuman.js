@@ -46,7 +46,7 @@ import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
 import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
 import { MediapipeTab } from "mediapipe/mediapipe"
 import { Application, setRenderer } from "Application"
-import { GLView } from "render/GLView"
+import { GLView } from "render/glview/GLView"
 import { RenderHuman } from "render/RenderHuman"
 import { BlendShapeTab } from "blendshapes/BlendShapeTab"
 import { ConnectButton } from "net/ConnectButton"
@@ -90,7 +90,6 @@ async function run() {
 
     const oiah = "calc((12/16) * 1rem + 8px"
 
-
     document.body.replaceChildren(
         ...(
             <>
@@ -111,7 +110,7 @@ async function run() {
                 </Tabs>
                 <GLView
                     app={app}
-                    style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: 0, overflow: "hidden" }}
+                    style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: "calc((12/16) * 1rem + 4px", overflow: "hidden" }}
                 />
                 <div
                     style={{
@@ -122,7 +121,7 @@ async function run() {
                         border: "none",
                         position: "absolute",
                         left: 0,
-                        width: "490px",
+                        right: 0,
                         height: "calc((12/16) * 1rem + 4px",
                         bottom: 0,
                         overflow: "hidden",

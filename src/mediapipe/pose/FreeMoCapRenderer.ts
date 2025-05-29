@@ -1,7 +1,8 @@
 import { Application } from "Application"
 import { vec3 } from "gl-matrix"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
-import { RenderHandler, GLView } from "render/GLView"
+import { GLView } from "render/glview/GLView"
+import { RenderHandler } from 'render/glview/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import { BlazePoseConverter } from "./BlazePoseConverter"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"

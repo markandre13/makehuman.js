@@ -16,7 +16,7 @@ import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
 import { ChordataSkeleton } from "./Skeleton"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { Projection } from "render/GLView"
+import { Projection } from 'render/glview/Projection'
 
 export const D = 180 / Math.PI
 

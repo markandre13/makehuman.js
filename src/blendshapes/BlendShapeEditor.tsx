@@ -1,6 +1,8 @@
 import { Application } from "Application"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { GLView, Projection, RenderHandler } from "render/GLView"
+import { GLView } from "render/glview/GLView"
+import { RenderHandler } from 'render/glview/RenderHandler'
+import { Projection } from 'render/glview/Projection'
 import { RenderMesh } from "render/RenderMesh"
 import {
     createModelViewMatrix,
