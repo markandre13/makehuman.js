@@ -4,7 +4,9 @@ use(chaiString)
 import { chaiAlmost } from '../chai/chaiAlmost'
 use(chaiAlmost(0.00001))
 
-import { FlyMode, GLView, Projection } from '../../src/render/GLView'
+import { GLView } from '../../src/render/glview/GLView'
+import { Projection } from '../../src/render/glview/Projection'
+import { FlyMode } from '../../src/render/glview/FlyMode'
 import { Context } from '../../src/render/Context'
 import { mat4, vec3 } from 'gl-matrix'
 

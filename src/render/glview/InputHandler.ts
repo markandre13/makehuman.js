@@ -1,19 +1,9 @@
-
 export class InputHandler {
-    paint() { }
-    keyup(ev: KeyboardEvent): boolean {
-        return true
-    }
-    keydown(ev: KeyboardEvent): boolean {
-        return true
-    }
-    onpointerdown(ev: PointerEvent): boolean {
-        return true
-    }
-    onpointermove(ev: PointerEvent): boolean {
-        return true
-    }
-    onpointerup(ev: PointerEvent): boolean {
-        return true
-    }
+    info(): string | undefined { return undefined }
+    paint() {}
+    keyup(ev: KeyboardEvent): void {}
+    keydown(ev: KeyboardEvent): void {}
+    onpointerdown(ev: PointerEvent): void {}
+    onpointermove(ev: PointerEvent): void {}
+    onpointerup(ev: PointerEvent): void {}
 }

@@ -58,6 +58,9 @@ export class FlyMode extends InputHandler {
         // this._cartet .setAttributeNS(null, 'cx', `${pixelX}`)
         // this._cartet .setAttributeNS(null, 'cy', `${pixelY}`)
     }
+    override info() {
+        return "◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction"
+    }
     override onpointerdown(ev: PointerEvent): boolean {
         switch (ev.button) {
             case 0:
@@ -177,10 +180,7 @@ export class FlyMode extends InputHandler {
                 // mat4.translate(this._translate, this._translate, dirY)
                 break
             case 'Escape':
-                this._view.inputHandler = undefined
-                this._view.app.status.value = ''
-                this._view.ctx.camera = this._initial
-                this._osd?.destructor()
+                this.cancel()
                 break
             default:
                 return false
@@ -189,7 +189,7 @@ export class FlyMode extends InputHandler {
         return false
     }
     confirm() {
-        this._view.inputHandler = undefined
+        this._view.popInputHandler()
         this._view.app.status.value = ''
         this._osd?.destructor()
         this._view.invalidate()

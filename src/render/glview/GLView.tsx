@@ -18,9 +18,47 @@ interface GLViewProps extends HTMLElementProps {
 
 export const D = 180 / Math.PI
 
+/**
+ * class GLView
+  paint()
+    this.app.renderer.paint(this.app, this)
+    this.inputHandler.paint()
+  onpointerdown()
+    this.inputHandler.onpointerdown(ev)
+    this.renderHandler.onpointerdown(ev)
+  onpointermove()
+    this.inputHandler.onpointermove(ev)
+    this.renderHandler.onpointermove(ev)
+  onpointerup()
+    this.inputHandler.onpointerup(ev)
+    this.renderHandler.onpointerup(ev)
+  onkeyup()
+    this.inputHandler.keyup(ev)
+  onkeydown()
+    this.inputHandler.keydown(ev)
+ */
 export class GLView extends View {
     renderHandler?: RenderHandler
-    inputHandler?: InputHandler
+
+    private _inputHandlerStack: InputHandler[] = []
+    pushInputHandler(inputHandler: InputHandler): void {
+        this._inputHandlerStack.push(inputHandler)
+        const info = inputHandler.info()
+        this.app.status.value = info ? info : ""
+    }
+    popInputHandler(): void {
+        this._inputHandlerStack.pop()
+        let info
+        let handler
+        if (this._inputHandlerStack.length > 0) {
+            handler = this._inputHandlerStack[this._inputHandlerStack.length-1]
+        }
+        if (handler) {
+            info = handler.info()
+        }
+        this.app.status.value = info ? info : ""
+    }
+
     private _redrawIsPending = false
 
     app: Application
@@ -59,10 +97,6 @@ export class GLView extends View {
         }
         // move up by 7, move backwards by 5
         mat4.translate(this.ctx.camera, this.ctx.camera, [0, -7, -5])
-
-        // this.app.status.value =
-        //     '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
-        // this.inputHandler = new FlyMode(this)
 
         this.replaceChildren(
             ...(
@@ -139,9 +173,9 @@ export class GLView extends View {
         this._redrawIsPending = false
         if (this.app.renderer) {
             this.app.renderer.paint(this.app, this)
-            if (this.inputHandler) {
-                this.inputHandler.paint()
-            }
+        }
+        for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+            this._inputHandlerStack[i].paint()
         }
     }
 
@@ -208,10 +242,14 @@ export class GLView extends View {
             ev.preventDefault()
         }
         canvas.onpointerdown = (ev: PointerEvent) => {
-            ev.preventDefault()
-            if (this.inputHandler && !this.inputHandler.onpointerdown(ev)) {
-                return
+            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+                this._inputHandlerStack[i].onpointerdown(ev)
+                if (ev.defaultPrevented) {
+                    break
+                }
             }
+            ev.preventDefault()
+
             if (this.renderHandler && !this.renderHandler.onpointerdown(ev)) {
                 return
             }
@@ -221,10 +259,13 @@ export class GLView extends View {
             downY = ev.y
         }
         canvas.onpointerup = (ev: PointerEvent) => {
-            ev.preventDefault()
-            if (this.inputHandler && !this.inputHandler.onpointerup(ev)) {
-                return
+            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+                this._inputHandlerStack[i].onpointerup(ev)
+                if (ev.defaultPrevented) {
+                    break
+                }
             }
+            ev.preventDefault()
             if (
                 !buttonDown &&
                 this.renderHandler &&
@@ -235,10 +276,13 @@ export class GLView extends View {
             buttonDown = false
         }
         canvas.onpointermove = (ev: PointerEvent) => {
-            ev.preventDefault()
-            if (this.inputHandler && !this.inputHandler.onpointermove(ev)) {
-                return
+            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+                this._inputHandlerStack[i].onpointermove(ev)
+                if (ev.defaultPrevented) {
+                    break
+                }
             }
+            ev.preventDefault()
             if (
                 !buttonDown &&
                 this.renderHandler &&
@@ -264,15 +308,23 @@ export class GLView extends View {
         //
 
         window.onkeyup = (ev: KeyboardEvent) => {
-            if (this.inputHandler) {
-                this.inputHandler.keyup(ev)
+            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+                this._inputHandlerStack[i].keyup(ev)
+                if (ev.defaultPrevented) {
+                    break
+                }
             }
+            ev.preventDefault()
         }
 
         window.onkeydown = (ev: KeyboardEvent) => {
-            if (this.inputHandler) {
-                this.inputHandler.keydown(ev)
+            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+                this._inputHandlerStack[i].keydown(ev)
+                if (ev.defaultPrevented) {
+                    break
+                }
             }
+            ev.preventDefault()
 
             switch (ev.code) {
                 case 'Numpad1': // front orthographic
@@ -343,7 +395,7 @@ export class GLView extends View {
                         // console.log(`enter flymode`)
                         this.app.status.value =
                             '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
-                        this.inputHandler = new FlyMode(this)
+                        this.pushInputHandler(new FlyMode(this))
                     }
                     break
                 default:
