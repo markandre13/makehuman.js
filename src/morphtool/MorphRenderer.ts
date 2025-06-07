@@ -1,6 +1,5 @@
 import { Application } from 'Application'
 import { mat4, vec2, vec4 } from 'gl-matrix'
-import { findVertex } from 'lib/distance'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { GLView } from 'render/glview/GLView'
@@ -97,7 +96,6 @@ export class MorphRenderer extends RenderHandler {
                 gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
             }
         } else {
-            
             // draw arkit neutral
             gl.disable(gl.CULL_FACE)
             gl.cullFace(gl.BACK)

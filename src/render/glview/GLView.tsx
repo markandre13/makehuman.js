@@ -44,8 +44,8 @@ export class GLView extends View {
     pushInputHandler(inputHandler: InputHandler): void {
         this._inputHandlerStack.push(inputHandler)
         const info = inputHandler.info()
-        console.log(`GLView: push ${info}`)
-        this.app.status.value = info ? info : 'X0'
+        // console.log(`GLView: push ${info}`)
+        this.app.status.value = info ? info : ''
     }
     popInputHandler(): void {
         this._inputHandlerStack.pop()
@@ -57,8 +57,8 @@ export class GLView extends View {
         if (handler) {
             info = handler.info()
         }
-        console.log(`GLView: pop (have handler: ${handler?"yes":"false"}, have info ${info?"yes":"false"}, info='${info}')`)
-        this.app.status.value = info ? info : 'X1'
+        // console.log(`GLView: pop (have handler: ${handler?"yes":"false"}, have info ${info?"yes":"false"}, info='${info}')`)
+        this.app.status.value = info ? info : ''
     }
 
     private _redrawIsPending = false

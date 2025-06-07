@@ -61,14 +61,15 @@ export function MorphTool(props: { app: Application }) {
                         <li>
                             shift+`: start fly mode
                             <ul>
-                                <li>mouse: rotate</li>
+                                <li>✅ mouse: rotate camera</li>
                                 <li>
-                                    wheel: acceleration (numerical value show at
+                                    wheel: acceleration (numerical value shown at
                                     bottom)
                                 </li>
-                                <li>q/e: down/up</li>
-                                <li>w/s: forward/backward</li>
-                                <li>...</li>
+                                <li>✅ q/e: down/up</li>
+                                <li>✅ w/s: forward/backward</li>
+                                <li>✅ a/d: left/right</li>
+                                <li>q/e: global up/down</li>
                             </ul>
                         </li>
                     </ul>
