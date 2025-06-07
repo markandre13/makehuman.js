@@ -10,7 +10,7 @@ import { mat4, vec3 } from 'gl-matrix'
 import { Projection } from './Projection'
 import { RenderHandler } from './RenderHandler'
 import { InputHandler } from './InputHandler'
-import { FlyMode } from './FlyMode'
+import { BasicMode } from './BasicMode'
 
 interface GLViewProps extends HTMLElementProps {
     app: Application
@@ -44,19 +44,21 @@ export class GLView extends View {
     pushInputHandler(inputHandler: InputHandler): void {
         this._inputHandlerStack.push(inputHandler)
         const info = inputHandler.info()
-        this.app.status.value = info ? info : ""
+        console.log(`GLView: push ${info}`)
+        this.app.status.value = info ? info : 'X0'
     }
     popInputHandler(): void {
         this._inputHandlerStack.pop()
         let info
         let handler
         if (this._inputHandlerStack.length > 0) {
-            handler = this._inputHandlerStack[this._inputHandlerStack.length-1]
+            handler = this._inputHandlerStack[this._inputHandlerStack.length - 1]
         }
         if (handler) {
             info = handler.info()
         }
-        this.app.status.value = info ? info : ""
+        console.log(`GLView: pop (have handler: ${handler?"yes":"false"}, have info ${info?"yes":"false"}, info='${info}')`)
+        this.app.status.value = info ? info : 'X1'
     }
 
     private _redrawIsPending = false
@@ -97,6 +99,8 @@ export class GLView extends View {
         }
         // move up by 7, move backwards by 5
         mat4.translate(this.ctx.camera, this.ctx.camera, [0, -7, -5])
+
+        this.pushInputHandler(new BasicMode(this))
 
         this.replaceChildren(
             ...(
@@ -174,7 +178,7 @@ export class GLView extends View {
         if (this.app.renderer) {
             this.app.renderer.paint(this.app, this)
         }
-        for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+        for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
             this._inputHandlerStack[i].paint()
         }
     }
@@ -225,8 +229,6 @@ export class GLView extends View {
         const ctx = this.ctx
         const canvas = this.canvas
 
-        this.app.status.value = '~ Fly Mode'
-
         //
         // resize
         //
@@ -242,7 +244,7 @@ export class GLView extends View {
             ev.preventDefault()
         }
         canvas.onpointerdown = (ev: PointerEvent) => {
-            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+            for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
                 this._inputHandlerStack[i].onpointerdown(ev)
                 if (ev.defaultPrevented) {
                     break
@@ -259,7 +261,7 @@ export class GLView extends View {
             downY = ev.y
         }
         canvas.onpointerup = (ev: PointerEvent) => {
-            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+            for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
                 this._inputHandlerStack[i].onpointerup(ev)
                 if (ev.defaultPrevented) {
                     break
@@ -276,7 +278,7 @@ export class GLView extends View {
             buttonDown = false
         }
         canvas.onpointermove = (ev: PointerEvent) => {
-            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+            for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
                 this._inputHandlerStack[i].onpointermove(ev)
                 if (ev.defaultPrevented) {
                     break
@@ -308,7 +310,7 @@ export class GLView extends View {
         //
 
         window.onkeyup = (ev: KeyboardEvent) => {
-            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+            for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
                 this._inputHandlerStack[i].keyup(ev)
                 if (ev.defaultPrevented) {
                     break
@@ -318,89 +320,13 @@ export class GLView extends View {
         }
 
         window.onkeydown = (ev: KeyboardEvent) => {
-            for(let i=this._inputHandlerStack.length-1; i>=0; --i) {
+            for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
                 this._inputHandlerStack[i].keydown(ev)
                 if (ev.defaultPrevented) {
                     break
                 }
             }
             ev.preventDefault()
-
-            switch (ev.code) {
-                case 'Numpad1': // front orthographic
-                    if (ev.ctrlKey) {
-                        // back
-                        ctx.rotateX = 0
-                        ctx.rotateY = 180
-                    } else {
-                        // front
-                        ctx.rotateY = 0
-                        ctx.rotateX = 0
-                    }
-                    ctx.projection = Projection.ORTHOGONAL
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad7': // top orthographic
-                    if (ev.ctrlKey) {
-                        // bottom
-                        ctx.rotateX = -90
-                        ctx.rotateY = 0
-                    } else {
-                        // top
-                        ctx.rotateX = 90
-                        ctx.rotateY = 0
-                    }
-                    ctx.projection = Projection.ORTHOGONAL
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad3': // right orthographic
-                    if (ev.ctrlKey) {
-                        // left
-                        ctx.rotateX = 0
-                        ctx.rotateY = -90
-                    } else {
-                        // right
-                        ctx.rotateX = 0
-                        ctx.rotateY = 90
-                    }
-                    ctx.projection = Projection.ORTHOGONAL
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad4':
-                    ctx.rotateY -= 11.25
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad6':
-                    ctx.rotateY += 11.25
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad8':
-                    ctx.rotateX -= 11.25
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad2':
-                    ctx.rotateX += 11.25
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Numpad5': // toggle orthographic/perspective
-                    if (ctx.projection === Projection.ORTHOGONAL) {
-                        ctx.projection = Projection.PERSPECTIVE
-                    } else {
-                        ctx.projection = Projection.ORTHOGONAL
-                    }
-                    requestAnimationFrame(this.paint)
-                    break
-                case 'Backquote':
-                    if (ev.shiftKey) {
-                        // console.log(`enter flymode`)
-                        this.app.status.value =
-                            '◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction'
-                        this.pushInputHandler(new FlyMode(this))
-                    }
-                    break
-                default:
-                // console.log(ev)
-            }
         }
     }
 }

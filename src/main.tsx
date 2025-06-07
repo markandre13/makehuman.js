@@ -23,35 +23,35 @@ TODO: IT'S TIME TO CLEAR UP THIS MESS
     main.tsx   ;; an no other files to make it prominent!
 */
 
-import { SliderNode } from "./modifier/loadSliders"
-import { PoseNode } from "expression/PoseNode"
-import { ProxyType } from "proxy/Proxy"
+import { SliderNode } from './modifier/loadSliders'
+import { PoseNode } from 'expression/PoseNode'
+import { ProxyType } from 'proxy/Proxy'
 
-import FileTab from "FileTab"
-import ChordataTab from "chordata/chordata"
-import { PoseTreeAdapter } from "ui/poseView"
-import { SliderTreeAdapter } from "ui/morphView"
-import { TAB } from "HistoryManager"
+import FileTab from 'FileTab'
+import ChordataTab from 'chordata/chordata'
+import { PoseTreeAdapter } from 'ui/poseView'
+import { SliderTreeAdapter } from 'ui/morphView'
+import { TAB } from 'HistoryManager'
 
-import { FileSystemAdapter } from "./filesystem/FileSystemAdapter"
-import { HTTPFSAdapter } from "./filesystem/HTTPFSAdapter"
+import { FileSystemAdapter } from './filesystem/FileSystemAdapter'
+import { HTTPFSAdapter } from './filesystem/HTTPFSAdapter'
 
-import { Table } from "toad.js/table/Table"
-import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
-import { TreeAdapter } from "toad.js/table/adapter/TreeAdapter"
-import { Tab, Tabs } from "toad.js/view/Tab"
-import { Form, FormLabel, FormField, FormHelp } from "toad.js/view/Form"
-import { Display, Select, TableAdapter } from "toad.js"
-import { StringArrayAdapter } from "toad.js/table/adapter/StringArrayAdapter"
-import { StringArrayModel } from "toad.js/table/model/StringArrayModel"
-import { MediapipeTab } from "mediapipe/mediapipe"
-import { Application, setRenderer } from "Application"
-import { GLView } from "render/glview/GLView"
-import { RenderHuman } from "render/RenderHuman"
-import { BlendShapeTab } from "blendshapes/BlendShapeTab"
-import { ConnectButton } from "net/ConnectButton"
-import { PoseTab } from "mediapipe/pose/PoseTab"
-import { MorphTool } from "morphtool/MorphTool"
+import { Table } from 'toad.js/table/Table'
+import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
+import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
+import { Tab, Tabs } from 'toad.js/view/Tab'
+import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
+import { Display, Select, TableAdapter } from 'toad.js'
+import { StringArrayAdapter } from 'toad.js/table/adapter/StringArrayAdapter'
+import { StringArrayModel } from 'toad.js/table/model/StringArrayModel'
+import { MediapipeTab } from 'mediapipe/mediapipe'
+import { Application, setRenderer } from 'Application'
+import { GLView } from 'render/glview/GLView'
+import { RenderHuman } from 'render/RenderHuman'
+import { BlendShapeTab } from 'blendshapes/BlendShapeTab'
+import { ConnectButton } from 'net/ConnectButton'
+import { PoseTab } from 'mediapipe/pose/PoseTab'
+import { MorphTool } from 'morphtool/MorphTool'
 
 export async function main() {
     try {
@@ -88,14 +88,35 @@ async function run() {
 
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
 
-    const oiah = "calc((12/16) * 1rem + 8px"
+    const oiah = 'calc((12/16) * 1rem + 8px'
+
+    // App.glview needs to be set before other operations
+    const glview = (
+        <GLView
+            app={app}
+            style={{
+                position: 'absolute',
+                left: '500px',
+                right: 0,
+                top: 0,
+                bottom: 'calc((12/16) * 1rem + 4px',
+                overflow: 'hidden',
+            }}
+        />
+    )
 
     document.body.replaceChildren(
         ...(
             <>
                 <Tabs
                     model={app.tabModel}
-                    style={{ position: "absolute", left: 0, width: "500px", top: 0, bottom: oiah }}
+                    style={{
+                        position: 'absolute',
+                        left: 0,
+                        width: '500px',
+                        top: 0,
+                        bottom: oiah,
+                    }}
                 >
                     <FileTab app={app} />
                     <MorphTab app={app} />
@@ -108,28 +129,25 @@ async function run() {
                     {/* <MediapipeTab app={app} /> */}
                     <ChordataTab app={app} />
                 </Tabs>
-                <GLView
-                    app={app}
-                    style={{ position: "absolute", left: "500px", right: 0, top: 0, bottom: "calc((12/16) * 1rem + 4px", overflow: "hidden" }}
-                />
+                {glview}
                 <div
                     style={{
-                        background: "var(--tx-gray-50)",
-                        padding: "2px",
-                        paddingLeft: "8px",
+                        background: 'var(--tx-gray-50)',
+                        padding: '2px',
+                        paddingLeft: '8px',
                         margin: 0,
-                        border: "none",
-                        position: "absolute",
+                        border: 'none',
+                        position: 'absolute',
                         left: 0,
                         right: 0,
-                        height: "calc((12/16) * 1rem + 4px",
+                        height: 'calc((12/16) * 1rem + 4px',
                         bottom: 0,
-                        overflow: "hidden",
+                        overflow: 'hidden',
                     }}
                 >
                     <ConnectButton connector={app.connector} />
                     &nbsp;
-                    <Display model={app.status}/>
+                    <Display model={app.status} />
                 </div>
             </>
         )
@@ -138,23 +156,39 @@ async function run() {
 
 function MorphTab(props: { app: Application }) {
     return (
-        <Tab label="Morph" value={TAB.MORPH} visibilityChange={setRenderer(props.app, new RenderHuman())}>
-            <Table model={props.app.morphControls} style={{ width: "100%", height: "100%" }} />
+        <Tab
+            label="Morph"
+            value={TAB.MORPH}
+            visibilityChange={setRenderer(props.app, new RenderHuman())}
+        >
+            <Table
+                model={props.app.morphControls}
+                style={{ width: '100%', height: '100%' }}
+            />
         </Tab>
     )
 }
 
 function ProxyTab(props: { app: Application }) {
     return (
-        <Tab label="Proxy" value={TAB.PROXY} visibilityChange={setRenderer(props.app, new RenderHuman())}>
+        <Tab
+            label="Proxy"
+            value={TAB.PROXY}
+            visibilityChange={setRenderer(props.app, new RenderHuman())}
+        >
             <Form variant="narrow">
                 {props.app.proxyManager.allProxyTypes.map((pid) => (
                     <>
                         <FormLabel>{ProxyType[pid]}</FormLabel>
                         <FormField>
-                            <Select id={ProxyType[pid]} model={props.app.proxyManager.list.get(pid)} />
+                            <Select
+                                id={ProxyType[pid]}
+                                model={props.app.proxyManager.list.get(pid)}
+                            />
                         </FormField>
-                        <FormHelp model={props.app.proxyManager.list.get(pid) as any} />
+                        <FormHelp
+                            model={props.app.proxyManager.list.get(pid) as any}
+                        />
                     </>
                 ))}
             </Form>

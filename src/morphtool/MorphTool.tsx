@@ -4,6 +4,13 @@ import { Tab } from 'toad.js/view/Tab'
 import { MorphRenderer, MorphToolModel } from './MorphRenderer'
 import { Form } from 'toad.js/view/Form'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
+import { InputHandler } from 'render/glview/InputHandler'
+
+class MorphToolMode extends InputHandler {
+    override info(): string | undefined {
+        return "Select Vertex"
+    }
+}
 
 /**
  * Tool to morph face meshes.
@@ -20,8 +27,14 @@ export function MorphTool(props: { app: Application }) {
                 switch (state) {
                     case 'visible':
                         props.app.setRenderer(renderer)
+                        if (props.app.glview) {
+                            props.app.glview.pushInputHandler(new MorphToolMode())
+                        } else {
+                            console.trace('NO GLVIEW')
+                        }
                         break
                     case 'hidden':
+                        props.app.glview.popInputHandler()
                         // reset blendhape model
                         props.app.updateManager.setBlendshapeModel(
                             props.app.frontend.blendshapeModel

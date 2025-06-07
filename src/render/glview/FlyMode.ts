@@ -59,7 +59,7 @@ export class FlyMode extends InputHandler {
         // this._cartet .setAttributeNS(null, 'cy', `${pixelY}`)
     }
     override info() {
-        return "◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction"
+        return "FlyMode: ◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction"
     }
     override onpointerdown(ev: PointerEvent): boolean {
         switch (ev.button) {
@@ -190,7 +190,6 @@ export class FlyMode extends InputHandler {
     }
     confirm() {
         this._view.popInputHandler()
-        this._view.app.status.value = ''
         this._osd?.destructor()
         this._view.invalidate()
     }
