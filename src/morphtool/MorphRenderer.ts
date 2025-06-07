@@ -28,14 +28,14 @@ export class MorphRenderer extends RenderHandler {
     private app: Application
     private model: MorphToolModel
     
-    private indexOfSelectedVertex: number = 0
+    indexOfSelectedVertex: number = 0
     
-    private vertexARKitOrig!: Float32Array
+    vertexARKitOrig!: Float32Array
     private vertexARKitFlat!: Float32Array
     private facesARKitFlat!: number[]
     private meshARKitFlat!: RenderMesh
 
-    private vertexMHOrig!: Float32Array
+    vertexMHOrig!: Float32Array
     private vertexMHFlat!: Float32Array
     private facesMHFlat!: number[]
     private meshMHFlat!: RenderMesh
@@ -51,31 +51,6 @@ export class MorphRenderer extends RenderHandler {
             this.app.updateManager.invalidateView()
         })
     }
-
-    // override onpointerdown(ev: PointerEvent): boolean  {       
-    //     const canvas = this.app.glview.canvas as HTMLCanvasElement
-    //     const ctx = this.app.glview.ctx
-    //     let modelViewMatrix = createModelViewMatrix(ctx, true)
-    //     const index = findVertex(
-    //         vec2.fromValues(ev.offsetX, ev.offsetY),
-    //         this.model.isARKitActive.value ? this.vertexARKitOrig : this.vertexMHOrig,
-    //         canvas,
-    //         modelViewMatrix)
-    //     if (index === undefined) {
-    //         return true
-    //     }
-    //     this.indexOfSelectedVertex = index
-    //     this.app.updateManager.invalidateView()
-    //     return false
-    // }
-    // override onpointermove(ev: PointerEvent): boolean  {
-    //     console.log(`pointermove`)
-    //     return false
-    // }
-    // override onpointerup(ev: PointerEvent): boolean  {
-    //     console.log(`pointerup`)
-    //     return false
-    // }
 
     override paint(app: Application, view: GLView): void {
         // prepare

@@ -61,7 +61,8 @@ export class FlyMode extends InputHandler {
     override info() {
         return "FlyMode: ◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction"
     }
-    override onpointerdown(ev: PointerEvent): boolean {
+    override onpointerdown(ev: PointerEvent): void {
+        ev.preventDefault()
         switch (ev.button) {
             case 0:
                 this.confirm()
@@ -70,9 +71,10 @@ export class FlyMode extends InputHandler {
                 this.cancel()
                 break
         }
-        return true
     }
-    override onpointermove(ev: PointerEvent): boolean {
+    override onpointermove(ev: PointerEvent): void {
+        ev.preventDefault()
+
         const canvas = this._view.canvas
 
         const marginX = Math.round(((canvas.width / 2) * 8) / 10)
@@ -103,9 +105,9 @@ export class FlyMode extends InputHandler {
         }
 
         this.invalidate()
-        return true
     }
-    override keyup(ev: KeyboardEvent): boolean {
+    override keyup(ev: KeyboardEvent): void {
+        ev.preventDefault()
         switch (ev.code) {
             case 'KeyW': // forward
                 if (this._move[2] > 0) {
@@ -138,11 +140,11 @@ export class FlyMode extends InputHandler {
                 }
                 break
         }
-        return true
     }
-    override keydown(ev: KeyboardEvent): boolean {
+    override keydown(ev: KeyboardEvent): void {
+        ev.preventDefault()
         if (ev.repeat) {
-            return true
+            return
         }
 
         const ctx = this._view.ctx
@@ -183,10 +185,9 @@ export class FlyMode extends InputHandler {
                 this.cancel()
                 break
             default:
-                return false
+                return
         }
         this.invalidate()
-        return false
     }
     confirm() {
         this._view.popInputHandler()
