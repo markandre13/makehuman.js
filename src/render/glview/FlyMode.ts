@@ -61,7 +61,7 @@ export class FlyMode extends InputHandler {
     override info() {
         return "FlyMode: ◧ Confirm ◨/␛ Cancel 🅆🄰🅂🄳 Move 🄴🅀 Up/Down 🅁🄵 Local Up/Down ⇧ Fast ⌥ Slow +− Acceleration 🅉 Z Axis Correction"
     }
-    override onpointerdown(ev: PointerEvent): void {
+    override pointerdown(ev: PointerEvent): void {
         ev.preventDefault()
         switch (ev.button) {
             case 0:
@@ -72,7 +72,7 @@ export class FlyMode extends InputHandler {
                 break
         }
     }
-    override onpointermove(ev: PointerEvent): void {
+    override pointermove(ev: PointerEvent): void {
         ev.preventDefault()
 
         const canvas = this._view.canvas

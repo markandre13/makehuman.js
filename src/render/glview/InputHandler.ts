@@ -3,7 +3,7 @@ export class InputHandler {
     paint() {}
     keyup(ev: KeyboardEvent): void {}
     keydown(ev: KeyboardEvent): void {}
-    onpointerdown(ev: PointerEvent): void {}
-    onpointermove(ev: PointerEvent): void {}
-    onpointerup(ev: PointerEvent): void {}
+    pointerdown(ev: PointerEvent): void {}
+    pointermove(ev: PointerEvent): void {}
+    pointerup(ev: PointerEvent): void {}
 }

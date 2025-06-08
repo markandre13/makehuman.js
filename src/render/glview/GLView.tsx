@@ -11,6 +11,7 @@ import { Projection } from './Projection'
 import { RenderHandler } from './RenderHandler'
 import { InputHandler } from './InputHandler'
 import { BasicMode } from './BasicMode'
+import { euler_matrix } from 'lib/euler_matrix'
 
 interface GLViewProps extends HTMLElementProps {
     app: Application
@@ -245,9 +246,9 @@ export class GLView extends View {
         }
         canvas.onpointerdown = (ev: PointerEvent) => {
             for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
-                this._inputHandlerStack[i].onpointerdown(ev)
+                this._inputHandlerStack[i].pointerdown(ev)
                 if (ev.defaultPrevented) {
-                    break
+                    return
                 }
             }
             ev.preventDefault()
@@ -262,9 +263,9 @@ export class GLView extends View {
         }
         canvas.onpointerup = (ev: PointerEvent) => {
             for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
-                this._inputHandlerStack[i].onpointerup(ev)
+                this._inputHandlerStack[i].pointerup(ev)
                 if (ev.defaultPrevented) {
-                    break
+                    return
                 }
             }
             ev.preventDefault()
@@ -279,9 +280,9 @@ export class GLView extends View {
         }
         canvas.onpointermove = (ev: PointerEvent) => {
             for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
-                this._inputHandlerStack[i].onpointermove(ev)
+                this._inputHandlerStack[i].pointermove(ev)
                 if (ev.defaultPrevented) {
-                    break
+                    return
                 }
             }
             ev.preventDefault()
