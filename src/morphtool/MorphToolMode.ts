@@ -76,8 +76,8 @@ export class MorphToolMode extends InputHandler {
         const index = findVertex(
             vec2.fromValues(ev.offsetX, ev.offsetY),
             this._model.isARKitActive.value
-                ? this._renderer.vertexARKitOrig
-                : this._renderer.vertexMHOrig,
+                ? this._renderer.arflat.vertexARKitOrig
+                : this._renderer.mhflat.vertexMHOrig,
             canvas,
             modelViewMatrix
         )

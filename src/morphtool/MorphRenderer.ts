@@ -15,158 +15,13 @@ import {
 } from 'render/util'
 import { BooleanModel, NumberModel, span, text } from 'toad.js'
 
-// i'm not sure if i should go with the webgl classes i've created so far...
-
-export class MorphToolModel {
-    isARKitActive = new BooleanModel(false, {label: "MH / ARKit"})
-    showBothMeshes = new BooleanModel(true, {label: "Show both meshes"})
-}
-
-export class MorphRenderer extends RenderHandler {
-    // arkit?: FaceARKitLoader
-    private app: Application
-    private model: MorphToolModel
-    
-    indexOfSelectedVertex: number = 0
-    
-    vertexARKitOrig!: Float32Array
-    private vertexARKitFlat!: Float32Array
-    private facesARKitFlat!: number[]
-    private meshARKitFlat!: RenderMesh
-
+class MHFlat {
     vertexMHOrig!: Float32Array
-    private vertexMHFlat!: Float32Array
-    private facesMHFlat!: number[]
-    private meshMHFlat!: RenderMesh
+    vertexMHFlat!: Float32Array
+    facesMHFlat!: number[]
+    meshMHFlat!: RenderMesh
 
-    constructor(app: Application, model: MorphToolModel) {
-        super()
-        this.app = app
-        this.model = model
-        this.model.isARKitActive.signal.add( () => {
-            this.app.updateManager.invalidateView()
-        })
-        this.model.showBothMeshes.signal.add( () => {
-            this.app.updateManager.invalidateView()
-        })
-    }
-
-    override paint(app: Application, view: GLView): void {
-        // prepare
-        const gl = view.gl
-        const ctx = view.ctx
-        const programRGBA = view.programRGBA       
-        if (this.meshARKitFlat === undefined) {
-            this.initializeMHFlat(app, gl)
-            this.initializeARKit(app, gl)
-        }
-
-        const canvas = app.glview.canvas as HTMLCanvasElement
-        prepareCanvas(canvas)
-        prepareViewport(gl, canvas)
-        const projectionMatrix = createProjectionMatrix(
-            canvas,
-            ctx.projection === Projection.PERSPECTIVE
-        )
-        let modelViewMatrix = createModelViewMatrix(ctx, true)
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
-  
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        gl.depthMask(true)
-        const alpha = 0.5
-
-        if (!this.model.isARKitActive.value) {
-            // draw makehuman
-            gl.enable(gl.CULL_FACE)
-            gl.cullFace(gl.BACK)
-            gl.disable(gl.BLEND)
-
-            programRGBA.setColor([1, 0.8, 0.7, 1])
-            this.meshMHFlat.bind(programRGBA)
-            gl.drawElements(gl.TRIANGLES, this.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
-
-            // draw arkit neutral
-            if (this.model.showBothMeshes.value) {
-                gl.disable(gl.CULL_FACE)
-                gl.enable(gl.BLEND)
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-                programRGBA.setColor([0, 0.5, 1, alpha])
-                this.meshARKitFlat.bind(programRGBA)
-                gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
-            }
-        } else {
-            // draw arkit neutral
-            gl.disable(gl.CULL_FACE)
-            gl.cullFace(gl.BACK)
-            gl.disable(gl.BLEND)
-
-            programRGBA.setColor([0, 0.5, 1, 1])
-            this.meshARKitFlat.bind(programRGBA)
-            gl.drawElements(gl.TRIANGLES, this.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
-
-            // draw makehuman
-            if (this.model.showBothMeshes.value) {
-                gl.enable(gl.CULL_FACE)
-                gl.enable(gl.BLEND)
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-                programRGBA.setColor([1, 0.8, 0.7, alpha])
-                this.meshMHFlat.bind(programRGBA)
-                gl.drawElements(gl.TRIANGLES, this.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
-            }
-        }
-
-        // add text label
-        // ---------------
-        const vertexIdx = this.indexOfSelectedVertex
-        let pointInWorld
-        if (this.model.isARKitActive.value) {
-            pointInWorld = vec4.fromValues(this.vertexARKitOrig[vertexIdx], this.vertexARKitOrig[vertexIdx+1], this.vertexARKitOrig[vertexIdx+2], 1)
-        } else {
-            pointInWorld = vec4.fromValues(this.vertexMHOrig[vertexIdx], this.vertexMHOrig[vertexIdx+1], this.vertexMHOrig[vertexIdx+2], 1)
-        }
-        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-        const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
-
-        // clipXY := point mapped to 2d??
-        const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-        const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-        // pixelXY := clipspace mapped to canvas
-        const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
-        const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
-     
-        // overlay text
-        const overlay = view.overlay
-        let label: HTMLElement
-        if (overlay.children.length === 0) {
-            label = span(text("BOO"))
-            label.style.position = "absolute"
-            label.style.color = "#f00"
-            overlay.appendChild(label)
-        } else {
-            label = overlay.children[0] as HTMLElement
-        }
-        label.style.left = `${pixelX}px`
-        label.style.top = `${pixelY}px`
-
-        // overlay svg circle
-        const overlaySVG = view.overlaySVG
-        let circle: SVGCircleElement
-        if (overlaySVG.children.length === 0) {
-            circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-            circle.setAttributeNS(null, 'r', `3`)
-            circle.setAttributeNS(null, 'stroke', `#f80`)
-            circle.setAttributeNS(null, 'fill', `#f80`)
-            overlaySVG.appendChild(circle)
-        } else {
-            circle = overlaySVG.children[0] as SVGCircleElement
-        }
-        circle.setAttributeNS(null, 'cx', `${pixelX}`)
-        circle.setAttributeNS(null, 'cy', `${pixelY}`)
-    }
-
-    private initializeMHFlat(app: Application, gl: WebGL2RenderingContext) {
+    constructor(app: Application, gl: WebGL2RenderingContext) {
         const xyz = app.humanMesh.baseMesh.xyz
         const fxyz = app.humanMesh.baseMesh.fxyz
 
@@ -214,8 +69,15 @@ export class MorphRenderer extends RenderHandler {
         // this.facesMHFlat = fxyz
         this.meshMHFlat = new RenderMesh(gl, v2, f2)
     }
+}
 
-    private initializeARKit(app: Application, gl: WebGL2RenderingContext): void {
+class ARKitFlat {
+    vertexARKitOrig!: Float32Array
+    facesARKitFlat!: number[]
+    vertexARKitFlat!: Float32Array
+    meshARKitFlat!: RenderMesh
+
+    constructor(app: Application, gl: WebGL2RenderingContext) {
         const arkit = FaceARKitLoader.getInstance().preload()
 
         this.facesARKitFlat = arkit.neutral!.fxyz
@@ -274,5 +136,148 @@ export class MorphRenderer extends RenderHandler {
             undefined,
             false
         )
+    }
+}
+
+export class MorphToolModel {
+    isARKitActive = new BooleanModel(false, {label: "MH / ARKit"})
+    showBothMeshes = new BooleanModel(true, {label: "Show both meshes"})
+}
+
+export class MorphRenderer extends RenderHandler {
+    // arkit?: FaceARKitLoader
+    private app: Application
+    private model: MorphToolModel
+    
+    indexOfSelectedVertex: number = 0
+    
+    arflat!: ARKitFlat
+    mhflat!: MHFlat
+
+    constructor(app: Application, model: MorphToolModel) {
+        super()
+        this.app = app
+        this.model = model
+        this.model.isARKitActive.signal.add( () => {
+            this.app.updateManager.invalidateView()
+        })
+        this.model.showBothMeshes.signal.add( () => {
+            this.app.updateManager.invalidateView()
+        })
+    }
+
+    override paint(app: Application, view: GLView): void {
+        // prepare
+        const gl = view.gl
+        const ctx = view.ctx
+        const programRGBA = view.programRGBA       
+        if (this.arflat === undefined) {
+            this.mhflat = new MHFlat(app, gl)
+            this.arflat = new ARKitFlat(app, gl)
+        }
+
+        const canvas = app.glview.canvas as HTMLCanvasElement
+        prepareCanvas(canvas)
+        prepareViewport(gl, canvas)
+        const projectionMatrix = createProjectionMatrix(
+            canvas,
+            ctx.projection === Projection.PERSPECTIVE
+        )
+        let modelViewMatrix = createModelViewMatrix(ctx, true)
+        const normalMatrix = createNormalMatrix(modelViewMatrix)
+  
+        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        gl.depthMask(true)
+        const alpha = 0.5
+
+        if (!this.model.isARKitActive.value) {
+            // draw makehuman
+            gl.enable(gl.CULL_FACE)
+            gl.cullFace(gl.BACK)
+            gl.disable(gl.BLEND)
+
+            programRGBA.setColor([1, 0.8, 0.7, 1])
+            this.mhflat.meshMHFlat.bind(programRGBA)
+            gl.drawElements(gl.TRIANGLES, this.mhflat.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
+
+            // draw arkit neutral
+            if (this.model.showBothMeshes.value) {
+                gl.disable(gl.CULL_FACE)
+                gl.enable(gl.BLEND)
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+                programRGBA.setColor([0, 0.5, 1, alpha])
+                this.arflat.meshARKitFlat.bind(programRGBA)
+                gl.drawElements(gl.TRIANGLES, this.arflat.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+            }
+        } else {
+            // draw arkit neutral
+            gl.disable(gl.CULL_FACE)
+            gl.cullFace(gl.BACK)
+            gl.disable(gl.BLEND)
+
+            programRGBA.setColor([0, 0.5, 1, 1])
+            this.arflat.meshARKitFlat.bind(programRGBA)
+            gl.drawElements(gl.TRIANGLES, this.arflat.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+
+            // draw makehuman
+            if (this.model.showBothMeshes.value) {
+                gl.enable(gl.CULL_FACE)
+                gl.enable(gl.BLEND)
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+                programRGBA.setColor([1, 0.8, 0.7, alpha])
+                this.mhflat.meshMHFlat.bind(programRGBA)
+                gl.drawElements(gl.TRIANGLES, this.mhflat.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
+            }
+        }
+
+        // add text label
+        // ---------------
+        const vertexIdx = this.indexOfSelectedVertex
+        let pointInWorld
+        if (this.model.isARKitActive.value) {
+            pointInWorld = vec4.fromValues(this.arflat.vertexARKitOrig[vertexIdx], this.arflat.vertexARKitOrig[vertexIdx+1], this.arflat.vertexARKitOrig[vertexIdx+2], 1)
+        } else {
+            pointInWorld = vec4.fromValues(this.mhflat.vertexMHOrig[vertexIdx], this.mhflat.vertexMHOrig[vertexIdx+1], this.mhflat.vertexMHOrig[vertexIdx+2], 1)
+        }
+        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+        const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
+
+        // clipXY := point mapped to 2d??
+        const clipX = pointInClipSpace[0] / pointInClipSpace[3]
+        const clipY = pointInClipSpace[1] / pointInClipSpace[3]
+        // pixelXY := clipspace mapped to canvas
+        const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
+        const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
+     
+        // overlay text
+        const overlay = view.overlay
+        let label: HTMLElement
+        if (overlay.children.length === 0) {
+            label = span(text("BOO"))
+            label.style.position = "absolute"
+            label.style.color = "#f00"
+            overlay.appendChild(label)
+        } else {
+            label = overlay.children[0] as HTMLElement
+        }
+        label.style.left = `${pixelX}px`
+        label.style.top = `${pixelY}px`
+
+        // overlay svg circle
+        const overlaySVG = view.overlaySVG
+        let circle: SVGCircleElement
+        if (overlaySVG.children.length === 0) {
+            circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+            circle.setAttributeNS(null, 'r', `3`)
+            circle.setAttributeNS(null, 'stroke', `#f80`)
+            circle.setAttributeNS(null, 'fill', `#f80`)
+            overlaySVG.appendChild(circle)
+        } else {
+            circle = overlaySVG.children[0] as SVGCircleElement
+        }
+        circle.setAttributeNS(null, 'cx', `${pixelX}`)
+        circle.setAttributeNS(null, 'cy', `${pixelY}`)
     }
 }
