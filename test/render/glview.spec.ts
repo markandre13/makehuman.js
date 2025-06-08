@@ -122,7 +122,7 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320 + 900, offsetY: 240 } as any)
+            flymode.pointermove({ offsetX: 320 + 900, offsetY: 240 } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)
@@ -135,7 +135,7 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320 + 900, offsetY: 240 } as any)
+            flymode.pointermove({ offsetX: 320 + 900, offsetY: 240 } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyA' } as any)
@@ -148,7 +148,7 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320 + 900, offsetY: 240 } as any)
+            flymode.pointermove({ offsetX: 320 + 900, offsetY: 240 } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyD' } as any)
@@ -163,7 +163,7 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320 - 900, offsetY: 240 } as any)
+            flymode.pointermove({ offsetX: 320 - 900, offsetY: 240 } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)
@@ -178,7 +178,7 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({
+            flymode.pointermove({
                 offsetX: 320 - 900,
                 offsetY: 240 + 900,
             } as any)
@@ -196,7 +196,7 @@ describe('FlyMode', function () {
             const flymode = new FlyMode(glview)
 
             expect(translationOf(glview.ctx.camera)).to.deep.equal([0, 0, 0])
-            flymode.onpointermove({ offsetX: 320, offsetY: 240 + 900 } as any)
+            flymode.pointermove({ offsetX: 320, offsetY: 240 + 900 } as any)
             console.log(mat4.str(glview.ctx.camera))
 
             flymode.keydown({ code: 'KeyW' } as any)

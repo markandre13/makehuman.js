@@ -4,7 +4,6 @@ import { findVertex } from 'lib/distance'
 import { InputHandler } from 'render/glview/InputHandler'
 import { createModelViewMatrix } from 'render/util'
 import { MorphRenderer, MorphToolModel } from './MorphRenderer'
-import { euler_matrix } from 'lib/euler_matrix'
 import { D } from 'render/glview/GLView'
 
 const BUTTON_LEFT = 0

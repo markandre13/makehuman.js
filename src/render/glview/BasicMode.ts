@@ -26,7 +26,7 @@ export class BasicMode extends InputHandler {
                     ctx.rotateX = 0
                 }
                 ctx.projection = Projection.ORTHOGONAL
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad7': // top orthographic
                 if (ev.ctrlKey) {
@@ -39,7 +39,7 @@ export class BasicMode extends InputHandler {
                     ctx.rotateY = 0
                 }
                 ctx.projection = Projection.ORTHOGONAL
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad3': // right orthographic
                 if (ev.ctrlKey) {
@@ -52,23 +52,23 @@ export class BasicMode extends InputHandler {
                     ctx.rotateY = 90
                 }
                 ctx.projection = Projection.ORTHOGONAL
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad4':
                 ctx.rotateY -= 11.25
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad6':
                 ctx.rotateY += 11.25
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad8':
                 ctx.rotateX -= 11.25
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad2':
                 ctx.rotateX += 11.25
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Numpad5': // toggle orthographic/perspective
                 if (ctx.projection === Projection.ORTHOGONAL) {
@@ -76,7 +76,7 @@ export class BasicMode extends InputHandler {
                 } else {
                     ctx.projection = Projection.ORTHOGONAL
                 }
-                requestAnimationFrame(this.paint)
+                this._view.invalidate()
                 break
             case 'Backquote':
                 if (ev.shiftKey) {

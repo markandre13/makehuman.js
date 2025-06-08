@@ -22,7 +22,9 @@ export function MorphTool(props: { app: Application }) {
                     case 'visible':
                         props.app.setRenderer(renderer)
                         if (props.app.glview) {
-                            props.app.glview.pushInputHandler(new MorphToolMode(props.app, model, renderer))
+                            props.app.glview.pushInputHandler(
+                                new MorphToolMode(props.app, model, renderer)
+                            )
                         } else {
                             console.trace('NO GLVIEW')
                         }
@@ -53,18 +55,26 @@ export function MorphTool(props: { app: Application }) {
                     cleanup code
                 </li>
                 <li>
+                    ⚠️ mark/unmark vertices on different meshes and store them as pairs
+                </li>
+                <li>
                     add blender like fly mode, zoom, etc. to get closer to the
                     model, with tests and cleanup code
                     <ul>
-                        <li>middle mouse: rotate around origin/selection</li>
+                        <li>✅ middle mouse: rotate around origin</li>
+                        <li>middle mouse: rotate around selection</li>
+                        <li>shift + middle mouse: grab view</li>
                         <li>wheel up/down: zoom in/out</li>
+                        <li>⚠️ reset camera</li>
+                        <li>save/restore camera</li>
+                        <li>transition z-axis to 0</li>
                         <li>
                             shift+`: start fly mode
                             <ul>
                                 <li>✅ mouse: rotate camera</li>
                                 <li>
-                                    wheel: acceleration (numerical value shown at
-                                    bottom)
+                                    wheel: acceleration (numerical value
+                                    shown at bottom)
                                 </li>
                                 <li>✅ q/e: down/up</li>
                                 <li>✅ w/s: forward/backward</li>
