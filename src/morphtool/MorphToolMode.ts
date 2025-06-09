@@ -3,7 +3,8 @@ import { mat4, vec2 } from 'gl-matrix'
 import { findVertex } from 'lib/distance'
 import { InputHandler } from 'render/glview/InputHandler'
 import { createModelViewMatrix } from 'render/util'
-import { MorphRenderer, MorphToolModel } from './MorphRenderer'
+import { MorphRenderer } from './MorphRenderer'
+import { MorphToolModel } from './MorphToolModel'
 import { D } from 'render/glview/GLView'
 
 const BUTTON_LEFT = 0
@@ -73,14 +74,10 @@ export class MorphToolMode extends InputHandler {
         const canvas = this._app.glview.canvas as HTMLCanvasElement
         const ctx = this._app.glview.ctx
         let modelViewMatrix = createModelViewMatrix(ctx, true)
-        const index = findVertex(
-            vec2.fromValues(ev.offsetX, ev.offsetY),
+        const index = 
             this._model.isARKitActive.value
-                ? this._renderer.arflat.vertexARKitOrig
-                : this._renderer.mhflat.vertexMHOrig,
-            canvas,
-            modelViewMatrix
-        )
+                ? this._renderer.arflat.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
+                : this._renderer.mhflat.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
         if (index !== undefined) {
             this._renderer.indexOfSelectedVertex = index
             this._app.glview.invalidate()

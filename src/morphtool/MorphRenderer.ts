@@ -1,11 +1,8 @@
 import { Application } from 'Application'
-import { mat4, vec2, vec4 } from 'gl-matrix'
-import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
-import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
+import { mat4, vec4 } from 'gl-matrix'
 import { GLView } from 'render/glview/GLView'
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { Projection } from 'render/glview/Projection'
-import { RenderMesh } from 'render/RenderMesh'
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -13,136 +10,10 @@ import {
     prepareCanvas,
     prepareViewport,
 } from 'render/util'
-import { BooleanModel, NumberModel, span, text } from 'toad.js'
-
-class MHFlat {
-    vertexMHOrig!: Float32Array
-    vertexMHFlat!: Float32Array
-    facesMHFlat!: number[]
-    meshMHFlat!: RenderMesh
-
-    constructor(app: Application, gl: WebGL2RenderingContext) {
-        const xyz = app.humanMesh.baseMesh.xyz
-        const fxyz = app.humanMesh.baseMesh.fxyz
-
-        const WORD_LENGTH = 2
-        let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-
-        this.vertexMHOrig = xyz
-
-        const f2 = new Array<number>(length * 4) // same number of faces
-        const v2 = new Float32Array(length * 4 * 3) // four times the number of vertices
-        for(let i=offset, vo=0, fo=0; i<length+offset;) {    
-            let i0 = fxyz[i++] * 3
-            let i1 = fxyz[i++] * 3
-            let i2 = fxyz[i++] * 3
-            let i3 = fxyz[i++] * 3
-            v2[vo++] = xyz[i0++]
-            v2[vo++] = xyz[i0++]
-            v2[vo++] = xyz[i0++]
-
-            v2[vo++] = xyz[i1++]
-            v2[vo++] = xyz[i1++]
-            v2[vo++] = xyz[i1++]
-
-            v2[vo++] = xyz[i2++]
-            v2[vo++] = xyz[i2++]
-            v2[vo++] = xyz[i2++]
-
-            v2[vo++] = xyz[i3++]
-            v2[vo++] = xyz[i3++]
-            v2[vo++] = xyz[i3++]
-
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-        }
-        this.vertexMHFlat = v2
-        this.facesMHFlat = f2
-        // this.vertexMHFlat = xyz
-        // this.facesMHFlat = fxyz
-        this.meshMHFlat = new RenderMesh(gl, v2, f2)
-    }
-}
-
-class ARKitFlat {
-    vertexARKitOrig!: Float32Array
-    facesARKitFlat!: number[]
-    vertexARKitFlat!: Float32Array
-    meshARKitFlat!: RenderMesh
-
-    constructor(app: Application, gl: WebGL2RenderingContext) {
-        const arkit = FaceARKitLoader.getInstance().preload()
-
-        this.facesARKitFlat = arkit.neutral!.fxyz
-        this.vertexARKitOrig = this.vertexARKitFlat = arkit.getVertex(
-            app.updateManager.getBlendshapeModel()!
-        )
-
-        const scale = new NumberModel(0.18, { min: 9, max: 11, step: 0.1, label: "scale" });
-        const dy = new NumberModel(7.0312, { min: 0, max: 7.4, step: 0.01, label: "dy" });
-        const dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" });
-    
-        const xyz = new Float32Array(this.vertexARKitFlat)
-        // this.blendshapeSet.getTarget(this.blendshape.value)?.apply(this.xyz, 1)
-        for (let i = 0; i < xyz.length; ++i) {
-            xyz[i] *= scale.value
-        }
-        for (let i = 1; i < xyz.length; i += 3) {
-            xyz[i] += dy.value
-        }
-        for (let i = 2; i < xyz.length; i += 3) {
-            xyz[i] += dz.value
-        }
-        this.vertexARKitOrig = this.vertexARKitFlat = xyz
-
-        // duplicate triangles to achieve flat shading
-        const v2 = new Float32Array(this.facesARKitFlat.length * 3)
-        const f2 = new Array<number>(this.facesARKitFlat.length * 3)
-        for(let i=0, vo=0, fo=0; i<this.facesARKitFlat.length;) {    
-            let i0 = this.facesARKitFlat[i++] * 3
-            let i1 = this.facesARKitFlat[i++] * 3
-            let i2 = this.facesARKitFlat[i++] * 3
-            v2[vo++] = this.vertexARKitFlat[i0++]
-            v2[vo++] = this.vertexARKitFlat[i0++]
-            v2[vo++] = this.vertexARKitFlat[i0++]
-            v2[vo++] = this.vertexARKitFlat[i1++]
-            v2[vo++] = this.vertexARKitFlat[i1++]
-            v2[vo++] = this.vertexARKitFlat[i1++]
-            v2[vo++] = this.vertexARKitFlat[i2++]
-            v2[vo++] = this.vertexARKitFlat[i2++]
-            v2[vo++] = this.vertexARKitFlat[i2++]
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-        }
-        this.facesARKitFlat = f2
-        this.vertexARKitFlat = v2
-
-        this.meshARKitFlat = new RenderMesh(
-            gl,
-            this.vertexARKitFlat,
-            this.facesARKitFlat,
-            undefined,
-            undefined,
-            false
-        )
-    }
-}
-
-export class MorphToolModel {
-    isARKitActive = new BooleanModel(false, {label: "MH / ARKit"})
-    showBothMeshes = new BooleanModel(true, {label: "Show both meshes"})
-}
+import { span, text } from 'toad.js'
+import { ARKitFlat } from './ARKitFlat'
+import { MorphToolModel } from './MorphToolModel'
+import { MHFlat } from './MHFlat'
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
@@ -197,8 +68,8 @@ export class MorphRenderer extends RenderHandler {
             gl.disable(gl.BLEND)
 
             programRGBA.setColor([1, 0.8, 0.7, 1])
-            this.mhflat.meshMHFlat.bind(programRGBA)
-            gl.drawElements(gl.TRIANGLES, this.mhflat.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
+            this.mhflat.bind(programRGBA)
+            this.mhflat.draw(gl)
 
             // draw arkit neutral
             if (this.model.showBothMeshes.value) {
@@ -207,8 +78,8 @@ export class MorphRenderer extends RenderHandler {
                 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
                 programRGBA.setColor([0, 0.5, 1, alpha])
-                this.arflat.meshARKitFlat.bind(programRGBA)
-                gl.drawElements(gl.TRIANGLES, this.arflat.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+                this.arflat.bind(programRGBA)
+                this.arflat.draw(gl)
             }
         } else {
             // draw arkit neutral
@@ -217,8 +88,8 @@ export class MorphRenderer extends RenderHandler {
             gl.disable(gl.BLEND)
 
             programRGBA.setColor([0, 0.5, 1, 1])
-            this.arflat.meshARKitFlat.bind(programRGBA)
-            gl.drawElements(gl.TRIANGLES, this.arflat.facesARKitFlat.length, gl.UNSIGNED_SHORT, 0)
+            this.arflat.bind(programRGBA)
+            this.arflat.draw(gl)
 
             // draw makehuman
             if (this.model.showBothMeshes.value) {
@@ -227,8 +98,8 @@ export class MorphRenderer extends RenderHandler {
                 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
                 programRGBA.setColor([1, 0.8, 0.7, alpha])
-                this.mhflat.meshMHFlat.bind(programRGBA)
-                gl.drawElements(gl.TRIANGLES, this.mhflat.facesMHFlat.length, gl.UNSIGNED_SHORT, 0)
+                this.mhflat.bind(programRGBA)
+                this.mhflat.draw(gl)
             }
         }
 
@@ -237,9 +108,9 @@ export class MorphRenderer extends RenderHandler {
         const vertexIdx = this.indexOfSelectedVertex
         let pointInWorld
         if (this.model.isARKitActive.value) {
-            pointInWorld = vec4.fromValues(this.arflat.vertexARKitOrig[vertexIdx], this.arflat.vertexARKitOrig[vertexIdx+1], this.arflat.vertexARKitOrig[vertexIdx+2], 1)
+            pointInWorld = this.arflat.getVec4(vertexIdx)
         } else {
-            pointInWorld = vec4.fromValues(this.mhflat.vertexMHOrig[vertexIdx], this.mhflat.vertexMHOrig[vertexIdx+1], this.mhflat.vertexMHOrig[vertexIdx+2], 1)
+            pointInWorld = this.mhflat.getVec4(vertexIdx)
         }
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
