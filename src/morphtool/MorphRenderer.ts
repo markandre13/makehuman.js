@@ -18,7 +18,7 @@ export class MorphRenderer extends RenderHandler {
     private app: Application
     private model: MorphToolModel
     
-    indexOfSelectedVertex: number = 0
+    // indexOfSelectedVertex: number = 0
     
     arflat!: ARKitFlat
     mhflat!: MHFlat
@@ -57,9 +57,9 @@ export class MorphRenderer extends RenderHandler {
   
         programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
-        const alpha = 0.5
+        const alpha = 0.25
 
-        const mesh = this.model.isARKitActive.value ? [this.mhflat, this.arflat] : [this.mhflat, this.arflat]
+        const mesh = this.model.isARKitActive.value ? [this.arflat, this.mhflat] : [this.mhflat, this.arflat]
 
         // draw solid mesh
         gl.enable(gl.CULL_FACE)

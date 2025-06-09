@@ -1,22 +1,81 @@
 import { Application } from 'Application'
 import { mat4, vec2, vec4 } from 'gl-matrix'
-import { findVertex } from 'lib/distance'
 import { InputHandler } from 'render/glview/InputHandler'
 import { createModelViewMatrix, createProjectionMatrix } from 'render/util'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphToolModel } from './MorphToolModel'
 import { D } from 'render/glview/GLView'
-import { span, text } from 'toad.js'
 import { Projection } from 'render/glview/Projection'
 
 const BUTTON_LEFT = 0
 const BUTTON_MIDDLE = 1
 const BUTTON_RIGHT = 2
 
+class Selection {
+    mhvertex = new Map<number, SVGCircleElement>()
+    arvertex = new Map<number, SVGCircleElement>()
+
+    clear(arkit: boolean) {
+        if (arkit) {
+            this.arvertex.forEach( element => element.remove())
+            this.arvertex.clear()
+        } else {
+            this.mhvertex.forEach( element => element.remove())
+            this.mhvertex.clear()
+        }
+    }
+    add(arkit: boolean, index: number, overlay: SVGGElement) {
+        if (this.has(arkit, index)) {
+            return
+        }
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+        circle.setAttributeNS(null, 'r', `3`)
+        circle.setAttributeNS(null, 'stroke', `#f80`)
+        circle.setAttributeNS(null, 'fill', `#f80`)
+        overlay.appendChild(circle)
+        if (arkit) {
+            this.arvertex.set(index, circle)
+        } else {
+            this.mhvertex.set(index, circle)
+        }
+    }
+    remove(arkit: boolean, index: number) {
+        if (arkit) {
+            const element = this.arvertex.get(index)
+            if (element) {
+                element.remove()
+                this.arvertex.delete(index)
+            }
+        } else {
+            const element = this.mhvertex.get(index)
+            if (element) {
+                element.remove()
+                this.arvertex.delete(index)
+            }
+        }
+    }
+    toggle(arkit: boolean, index: number, overlay: SVGGElement) {
+        if (this.has(arkit, index)) {
+            this.remove(arkit, index)
+        } else {
+            this.add(arkit, index, overlay)
+        }
+    }
+    has(arkit: boolean, index: number) {
+        if (arkit) {
+            return this.arvertex.has(index)
+        } else {
+            return this.mhvertex.has(index)
+        }
+    }
+}
+
 export class MorphToolMode extends InputHandler {
     _app: Application
     _model: MorphToolModel
     _renderer: MorphRenderer
+
+    _selection = new Selection()
 
     // for rotation
     _downX = 0
@@ -84,12 +143,14 @@ export class MorphToolMode extends InputHandler {
         const canvas = this._app.glview.canvas as HTMLCanvasElement
         const ctx = this._app.glview.ctx
         let modelViewMatrix = createModelViewMatrix(ctx, true)
-        const index = 
-            this._model.isARKitActive.value
-                ? this._renderer.arflat.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
-                : this._renderer.mhflat.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
+        const mesh = this._model.isARKitActive.value ? this._renderer.arflat : this._renderer.mhflat
+        const index = mesh.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
+
         if (index !== undefined) {
-            this._renderer.indexOfSelectedVertex = index
+            if (!ev.shiftKey) {
+                this._selection.clear(this._model.isARKitActive.value)
+            }
+            this._selection.toggle(this._model.isARKitActive.value, index, this._overlay)
             this._app.glview.invalidate()
         }
     }
@@ -106,51 +167,34 @@ export class MorphToolMode extends InputHandler {
             ctx.projection === Projection.PERSPECTIVE
         )
         let modelViewMatrix = createModelViewMatrix(ctx, true)
-
-        // add text label
-        // ---------------
-        const vertexIdx = this._renderer.indexOfSelectedVertex
-        const gl = this._app.glview.gl
-        let pointInWorld
-        if (this._model.isARKitActive.value) {
-            pointInWorld = this._renderer.arflat.getVec4(vertexIdx)
-        } else {
-            pointInWorld = this._renderer.mhflat.getVec4(vertexIdx)
-        }
         const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-        const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
 
-        // clipXY := point mapped to 2d??
-        const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-        const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-        // pixelXY := clipspace mapped to canvas
-        const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
-        const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
-     
-        // overlay text
-        const overlay = this._overlay
-        let label: SVGTextElement
-        let circle: SVGCircleElement
-        if (overlay.children.length === 0) {
-            label = document.createElementNS("http://www.w3.org/2000/svg", "text")
-            label.setAttributeNS(null, 'fill', `#f00`)
-            label.appendChild(document.createTextNode("BOO"))
-            overlay.appendChild(label)
+        // update markers
+        this._selection.mhvertex.forEach( (element, index) => {
+            const pointInWorld = this._renderer.mhflat.getVec4(index)
+            const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
+            // clipXY := point mapped to 2d??
+            const clipX = pointInClipSpace[0] / pointInClipSpace[3]
+            const clipY = pointInClipSpace[1] / pointInClipSpace[3]
+            // pixelXY := clipspace mapped to canvas
+            const pixelX = (clipX * 0.5 + 0.5) * canvas.width
+            const pixelY = (clipY * -0.5 + 0.5) * canvas.height
+            element.setAttributeNS(null, 'cx', `${pixelX}`)
+            element.setAttributeNS(null, 'cy', `${pixelY}`)
+        })
 
-            circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-            circle.setAttributeNS(null, 'r', `3`)
-            circle.setAttributeNS(null, 'stroke', `#f80`)
-            circle.setAttributeNS(null, 'fill', `#f80`)
-            overlay.appendChild(circle)
-        } else {
-            label = overlay.children[0] as SVGTextElement
-            circle = overlay.children[1] as SVGCircleElement
-        }
-        label.setAttributeNS(null, 'x', `${pixelX}`)
-        label.setAttributeNS(null, 'y', `${pixelY}`)
-
-        circle.setAttributeNS(null, 'cx', `${pixelX}`)
-        circle.setAttributeNS(null, 'cy', `${pixelY}`)
+        this._selection.arvertex.forEach( (element, index) => {
+            const pointInWorld = this._renderer.arflat.getVec4(index)
+            const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
+            // clipXY := point mapped to 2d??
+            const clipX = pointInClipSpace[0] / pointInClipSpace[3]
+            const clipY = pointInClipSpace[1] / pointInClipSpace[3]
+            // pixelXY := clipspace mapped to canvas
+            const pixelX = (clipX * 0.5 + 0.5) * canvas.width
+            const pixelY = (clipY * -0.5 + 0.5) * canvas.height
+            element.setAttributeNS(null, 'cx', `${pixelX}`)
+            element.setAttributeNS(null, 'cy', `${pixelY}`)
+        })
     }
 
     /**
