@@ -1,11 +1,13 @@
 import { Application } from 'Application'
-import { mat4, vec2 } from 'gl-matrix'
+import { mat4, vec2, vec4 } from 'gl-matrix'
 import { findVertex } from 'lib/distance'
 import { InputHandler } from 'render/glview/InputHandler'
-import { createModelViewMatrix } from 'render/util'
+import { createModelViewMatrix, createProjectionMatrix } from 'render/util'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphToolModel } from './MorphToolModel'
 import { D } from 'render/glview/GLView'
+import { span, text } from 'toad.js'
+import { Projection } from 'render/glview/Projection'
 
 const BUTTON_LEFT = 0
 const BUTTON_MIDDLE = 1
@@ -22,6 +24,8 @@ export class MorphToolMode extends InputHandler {
     _buttonDown = false
     _origCamera!: mat4
 
+    _overlay: SVGGElement
+
     constructor(
         app: Application,
         model: MorphToolModel,
@@ -31,6 +35,11 @@ export class MorphToolMode extends InputHandler {
         this._app = app
         this._model = model
         this._renderer = renderer
+        this._overlay = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+        this._app.glview.overlaySVG.appendChild(this._overlay)
+    }
+    override destructor(): void {
+        this._app.glview.overlaySVG.removeChild(this._overlay)
     }
     override info(): string | undefined {
         return 'Select Vertex'
@@ -67,6 +76,7 @@ export class MorphToolMode extends InputHandler {
         }
         // console.log(`pointerup`)
     }
+
     /**
      * select vertex at pointer position
      */
@@ -83,6 +93,66 @@ export class MorphToolMode extends InputHandler {
             this._app.glview.invalidate()
         }
     }
+
+    /**
+     * paint selected vertices
+     */
+    override paint() {
+        // console.log(`MorphToolMode.paint()`)
+        const canvas = this._app.glview.canvas
+        const ctx = this._app.glview.ctx
+        const projectionMatrix = createProjectionMatrix(
+            canvas,
+            ctx.projection === Projection.PERSPECTIVE
+        )
+        let modelViewMatrix = createModelViewMatrix(ctx, true)
+
+        // add text label
+        // ---------------
+        const vertexIdx = this._renderer.indexOfSelectedVertex
+        const gl = this._app.glview.gl
+        let pointInWorld
+        if (this._model.isARKitActive.value) {
+            pointInWorld = this._renderer.arflat.getVec4(vertexIdx)
+        } else {
+            pointInWorld = this._renderer.mhflat.getVec4(vertexIdx)
+        }
+        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+        const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
+
+        // clipXY := point mapped to 2d??
+        const clipX = pointInClipSpace[0] / pointInClipSpace[3]
+        const clipY = pointInClipSpace[1] / pointInClipSpace[3]
+        // pixelXY := clipspace mapped to canvas
+        const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
+        const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
+     
+        // overlay text
+        const overlay = this._overlay
+        let label: SVGTextElement
+        let circle: SVGCircleElement
+        if (overlay.children.length === 0) {
+            label = document.createElementNS("http://www.w3.org/2000/svg", "text")
+            label.setAttributeNS(null, 'fill', `#f00`)
+            label.appendChild(document.createTextNode("BOO"))
+            overlay.appendChild(label)
+
+            circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+            circle.setAttributeNS(null, 'r', `3`)
+            circle.setAttributeNS(null, 'stroke', `#f80`)
+            circle.setAttributeNS(null, 'fill', `#f80`)
+            overlay.appendChild(circle)
+        } else {
+            label = overlay.children[0] as SVGTextElement
+            circle = overlay.children[1] as SVGCircleElement
+        }
+        label.setAttributeNS(null, 'x', `${pixelX}`)
+        label.setAttributeNS(null, 'y', `${pixelY}`)
+
+        circle.setAttributeNS(null, 'cx', `${pixelX}`)
+        circle.setAttributeNS(null, 'cy', `${pixelY}`)
+    }
+
     /**
      *
      */

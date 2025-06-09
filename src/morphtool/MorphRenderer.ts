@@ -1,5 +1,4 @@
 import { Application } from 'Application'
-import { mat4, vec4 } from 'gl-matrix'
 import { GLView } from 'render/glview/GLView'
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { Projection } from 'render/glview/Projection'
@@ -10,7 +9,6 @@ import {
     prepareCanvas,
     prepareViewport,
 } from 'render/util'
-import { span, text } from 'toad.js'
 import { ARKitFlat } from './ARKitFlat'
 import { MorphToolModel } from './MorphToolModel'
 import { MHFlat } from './MHFlat'
@@ -61,94 +59,26 @@ export class MorphRenderer extends RenderHandler {
         gl.depthMask(true)
         const alpha = 0.5
 
-        if (!this.model.isARKitActive.value) {
-            // draw makehuman
-            gl.enable(gl.CULL_FACE)
-            gl.cullFace(gl.BACK)
-            gl.disable(gl.BLEND)
+        const mesh = this.model.isARKitActive.value ? [this.mhflat, this.arflat] : [this.mhflat, this.arflat]
 
-            programRGBA.setColor([1, 0.8, 0.7, 1])
-            this.mhflat.bind(programRGBA)
-            this.mhflat.draw(gl)
+        // draw solid mesh
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
+        gl.disable(gl.BLEND)
 
-            // draw arkit neutral
-            if (this.model.showBothMeshes.value) {
-                gl.disable(gl.CULL_FACE)
-                gl.enable(gl.BLEND)
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+        programRGBA.setColor([1, 0.8, 0.7, 1])
+        mesh[0].bind(programRGBA)
+        mesh[0].draw(gl)
 
-                programRGBA.setColor([0, 0.5, 1, alpha])
-                this.arflat.bind(programRGBA)
-                this.arflat.draw(gl)
-            }
-        } else {
-            // draw arkit neutral
+        // draw transparent mesh
+        if (this.model.showBothMeshes.value) {
             gl.disable(gl.CULL_FACE)
-            gl.cullFace(gl.BACK)
-            gl.disable(gl.BLEND)
+            gl.enable(gl.BLEND)
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-            programRGBA.setColor([0, 0.5, 1, 1])
-            this.arflat.bind(programRGBA)
-            this.arflat.draw(gl)
-
-            // draw makehuman
-            if (this.model.showBothMeshes.value) {
-                gl.enable(gl.CULL_FACE)
-                gl.enable(gl.BLEND)
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-                programRGBA.setColor([1, 0.8, 0.7, alpha])
-                this.mhflat.bind(programRGBA)
-                this.mhflat.draw(gl)
-            }
-        }
-
-        // add text label
-        // ---------------
-        const vertexIdx = this.indexOfSelectedVertex
-        let pointInWorld
-        if (this.model.isARKitActive.value) {
-            pointInWorld = this.arflat.getVec4(vertexIdx)
-        } else {
-            pointInWorld = this.mhflat.getVec4(vertexIdx)
-        }
-        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-        const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
-
-        // clipXY := point mapped to 2d??
-        const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-        const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-        // pixelXY := clipspace mapped to canvas
-        const pixelX = (clipX * 0.5 + 0.5) * gl.canvas.width
-        const pixelY = (clipY * -0.5 + 0.5) * gl.canvas.height
-     
-        // overlay text
-        const overlay = view.overlay
-        let label: HTMLElement
-        if (overlay.children.length === 0) {
-            label = span(text("BOO"))
-            label.style.position = "absolute"
-            label.style.color = "#f00"
-            overlay.appendChild(label)
-        } else {
-            label = overlay.children[0] as HTMLElement
-        }
-        label.style.left = `${pixelX}px`
-        label.style.top = `${pixelY}px`
-
-        // overlay svg circle
-        const overlaySVG = view.overlaySVG
-        let circle: SVGCircleElement
-        if (overlaySVG.children.length === 0) {
-            circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-            circle.setAttributeNS(null, 'r', `3`)
-            circle.setAttributeNS(null, 'stroke', `#f80`)
-            circle.setAttributeNS(null, 'fill', `#f80`)
-            overlaySVG.appendChild(circle)
-        } else {
-            circle = overlaySVG.children[0] as SVGCircleElement
-        }
-        circle.setAttributeNS(null, 'cx', `${pixelX}`)
-        circle.setAttributeNS(null, 'cy', `${pixelY}`)
+            programRGBA.setColor([0, 0.5, 1, alpha])
+            mesh[1].bind(programRGBA)
+            mesh[1].draw(gl)
+        }      
     }
 }

@@ -49,7 +49,7 @@ export class GLView extends View {
         this.app.status.value = info ? info : ''
     }
     popInputHandler(): void {
-        this._inputHandlerStack.pop()
+        this._inputHandlerStack.pop()?.destructor()
         let info
         let handler
         if (this._inputHandlerStack.length > 0) {

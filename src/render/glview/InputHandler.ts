@@ -1,4 +1,5 @@
 export class InputHandler {
+    destructor() {}
     info(): string | undefined { return undefined }
     paint() {}
     keyup(ev: KeyboardEvent): void {}
