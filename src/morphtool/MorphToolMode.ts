@@ -11,6 +11,15 @@ const BUTTON_LEFT = 0
 const BUTTON_MIDDLE = 1
 const BUTTON_RIGHT = 2
 
+// some notes on blender's mesh editor
+// * Preferences > Viewport > Selection > GPU Depth Picking > yes
+// * Preferences > Themes > 3D Viewport > Vertex Size: 3px
+//   valid values are 1px to 32px, and it looks like they are drawn
+//   as flat, filled circles, not spheres
+//.  source/blender/gpu/GPU_shader_builtin.hh:  /** Draw round points with per vertex size and color. */
+//.  GPU_SHADER_3D_POINT_VARYING_SIZE_VARYING_COLOR
+//   gpu_shader_3D_point_varying_size_varying_color
+
 class Selection {
     mhvertex = new Map<number, SVGCircleElement>()
     arvertex = new Map<number, SVGCircleElement>()

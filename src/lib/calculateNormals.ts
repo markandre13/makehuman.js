@@ -8,6 +8,7 @@ export function deg2rad(d: number) {
     return (d / 360) * 2.0 * Math.PI
 }
 
+// TODO: we can optimize this similar to quadsToFlatTriangles()
 export function calculateNormalsQuads(normals: Float32Array, vertex: Float32Array, indices: number[]): Float32Array {
     normals.fill(0)
 

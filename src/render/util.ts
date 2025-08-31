@@ -1,5 +1,4 @@
-import { mat4, vec3 } from "gl-matrix"
-import { RenderMesh } from "./RenderMesh"
+import { mat4 } from "gl-matrix"
 import { Context } from "./Context"
 
 export function prepareCanvas(canvas: HTMLCanvasElement) {
