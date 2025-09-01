@@ -1,7 +1,5 @@
 import { Application } from "Application"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
-import { Projection } from 'render/glview/Projection'
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -16,6 +14,8 @@ import { blendshapeNames } from "./blendshapeNames"
 import { FaceICTKitLoader } from "./FaceICTKitLoader"
 import { mat4, vec3 } from "gl-matrix"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
+import { RenderView } from "render/glview/RenderView"
+import { Projection } from "gl/Projection"
 
 /**
  * Render MediaPipe's blendshape using ICT's FaceKit Mesh
@@ -27,10 +27,10 @@ export class FaceICTKitRenderer extends RenderHandler {
 
     constructor(blendshapeModel: BlendshapeModel) {
         super()
-        this.blendshapeModel = blendshapeModel        
+        this.blendshapeModel = blendshapeModel
     }
 
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         if (this.blendshapeSet === undefined) {
             this.blendshapeSet = FaceICTKitLoader.getInstance() // .preload()
         }
@@ -57,11 +57,11 @@ export class FaceICTKitRenderer extends RenderHandler {
         const t = this.blendshapeModel.transform!!
         // prettier-ignore
         const m = mat4.fromValues(
-            t[0],  t[1],  t[2], 0,
-            t[4],  t[5],  t[6], 0,
-            t[8],  t[9], t[10], 0,
-               0,     0,     0, 1
-       )
+            t[0], t[1], t[2], 0,
+            t[4], t[5], t[6], 0,
+            t[8], t[9], t[10], 0,
+            0, 0, 0, 1
+        )
 
         const s = 0.5
         mat4.scale(m, m, vec3.fromValues(s, s, s))
@@ -91,14 +91,14 @@ export class FaceICTKitRenderer extends RenderHandler {
         const modelViewMatrix = createModelViewMatrix(ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
         gl.disable(gl.BLEND)
 
-        programRGBA.setColor([1, 0.8, 0.7, 1])
+        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
         // const length = this.neutral.fxyz.length
         const length = 11144 * 6 // head and neck

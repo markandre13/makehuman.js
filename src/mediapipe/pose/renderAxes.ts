@@ -1,15 +1,15 @@
 import { mat4, vec3 } from "gl-matrix"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
-import { ColorShader } from "render/shader/ColorShader"
 import { BlazePoseConverter } from "./BlazePoseConverter"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
 import { Blaze } from "./Blaze"
-import { deg2rad } from "lib/calculateNormals"
+import { ShaderShadedColored } from "gl/shaders/ShaderShadedColored"
 
 let counter = 0
 
 export function renderAxes(
-    programColor: ColorShader,
+    gl: WebGL2RenderingContext,
+    programColor: ShaderShadedColored,
     arrowMesh: ArrowMesh,
     modelViewMatrix: mat4,
     bpl: BlazePoseLandmarks,
@@ -31,7 +31,7 @@ export function renderAxes(
     mat4.translate(m, modelViewMatrix, hipCenter)
     const hip = bpc.getHipWithAdjustment(bpl)
     mat4.mul(m, m, hip)
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // SHOULDER
@@ -41,7 +41,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, shoulderCenter)
     mat4.mul(m, m, bpc.getShoulder(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // SPINE
@@ -51,7 +51,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, spineCenter)
     mat4.mul(m, m, bpc.getSpine(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // HEAD
@@ -63,7 +63,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, headCenter)
     mat4.mul(m, m, bpc.getHead(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT UPPER ARM
@@ -78,7 +78,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftUpperArmCenter)
     mat4.mul(m, m, bpc.getLeftUpperArmWithAdjustment(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT LOWER ARM
@@ -90,7 +90,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftLowerArmCenter)
     mat4.mul(m, m, bpc.getLeftLowerArm(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT HAND
@@ -105,7 +105,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftHandCenter) // thumb
     mat4.mul(m, m, bpc.getLeftHand(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // RIGHT UPPER ARM
@@ -120,7 +120,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, rightUpperArmCenter)
     mat4.mul(m, m, bpc.getRightUpperArmWithAdjustment(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // RIGHT LOWER ARM
@@ -132,7 +132,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, rightLowerArmCenter)
     mat4.mul(m, m, bpc.getRightLowerArm(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // RIGHT HAND
@@ -146,7 +146,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, rightHandCenter) // thumb
     mat4.mul(m, m, bpc.getRightHand(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT UPPER LEG
@@ -158,7 +158,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftUpperLegCenter)
     mat4.mul(m, m, bpc.getLeftUpperLegWithAdjustment(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT LOWER LEG
@@ -170,7 +170,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftLowerLegCenter)
     mat4.mul(m, m, bpc.getLeftLowerLeg(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT FOOT
@@ -184,7 +184,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, leftFootCenter)
     mat4.mul(m, m, bpc.getLeftFoot(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // RIGHT UPPER LEG
@@ -197,7 +197,7 @@ export function renderAxes(
     mat4.translate(m, modelViewMatrix, rightUpperLegCenter)
     mat4.mul(m, m, bpc.getRightUpperLegWithAdjustment(bpl))
     // mat4.mul(m, m, this.bpc.getRightUpperLegWithAdjustment(this.bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // RIGHT LOWER LEG
@@ -209,7 +209,7 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, rightLowerLegCenter)
     mat4.mul(m, m, bpc.getRightLowerLeg(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 
     // LEFT FOOT
@@ -223,6 +223,6 @@ export function renderAxes(
     mat4.identity(m)
     mat4.translate(m, modelViewMatrix, rightFootCenter)
     mat4.mul(m, m, bpc.getRightFoot(bpl))
-    programColor.setModelViewMatrix(m)
+    programColor.setModelView(gl, m)
     arrowMesh.draw(programColor)
 }

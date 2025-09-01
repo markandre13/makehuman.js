@@ -1,15 +1,13 @@
 import { Application } from 'Application'
 import { mat4, vec2, vec4 } from 'gl-matrix'
-import { InputHandler } from 'render/glview/InputHandler'
 import { createModelViewMatrix, createProjectionMatrix } from 'render/util'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphToolModel } from './MorphToolModel'
-import { D } from 'render/glview/GLView'
-import { Projection } from 'render/glview/Projection'
-
-const BUTTON_LEFT = 0
-const BUTTON_MIDDLE = 1
-const BUTTON_RIGHT = 2
+import { D } from 'render/glview/RenderView'
+import { InputHandler } from 'gl/input/InputHandler'
+import { ButtonVariant } from 'toad.js/view/Button'
+import { MouseButton } from 'gl/input/MouseButton'
+import { Projection } from 'gl/Projection'
 
 // some notes on blender's mesh editor
 // * Preferences > Viewport > Selection > GPU Depth Picking > yes
@@ -115,10 +113,10 @@ export class MorphToolMode extends InputHandler {
     override pointerdown(ev: PointerEvent): void {
         ev.preventDefault()
         switch (ev.button) {
-            case BUTTON_LEFT:
+            case MouseButton.LEFT:
                 this.selectVertex(ev)
                 break
-            case BUTTON_MIDDLE:
+            case MouseButton.MIDDLE:
                 this._buttonDown = true
                 this._downX = ev.x
                 this._downY = ev.y
@@ -135,7 +133,7 @@ export class MorphToolMode extends InputHandler {
     override pointerup(ev: PointerEvent): void {
         ev.preventDefault()
         switch (ev.button) {
-            case BUTTON_MIDDLE:
+            case MouseButton.MIDDLE:
                 if (this._buttonDown) {
                     this._buttonDown = false
                     this.rotate(ev)

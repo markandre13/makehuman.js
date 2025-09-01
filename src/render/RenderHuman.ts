@@ -1,11 +1,10 @@
 import { BaseMeshGroup } from "../mesh/BaseMeshGroup"
 import { ProxyType } from "proxy/Proxy"
-import { prepareCanvas, prepareViewport, createProjectionMatrix, createModelViewMatrix, createNormalMatrix } from "./util"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from './glview/RenderHandler'
-import { Projection } from './glview/Projection'
 import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
+import { RenderView } from "./glview/RenderView"
+import { Projection } from "gl/Projection"
 
 export class RenderHuman extends RenderHandler {
     private viewHead: boolean
@@ -13,7 +12,7 @@ export class RenderHuman extends RenderHandler {
         super()
         this.viewHead = viewHead
     }
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         if (view.overlay.children.length !== 0) {
             view.overlay.replaceChildren()
         }
@@ -47,25 +46,19 @@ export class RenderHuman extends RenderHandler {
         const programRGBA = view.programRGBA
         const programTex = view.programTex
         const viewHead = this.viewHead
-     
-        const canvas = gl.canvas as HTMLCanvasElement
-        prepareCanvas(canvas)
-        prepareViewport(gl, canvas)
-        const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        const modelViewMatrix = createModelViewMatrix(ctx, viewHead)
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
     
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        view.prepareCanvas()
+        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
+    
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        programTex.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         app.updateManager.updateIt()
         drawHumanCore(app, view)
     }
 }
 
-export function drawHumanCore(app: Application, view: GLView) {
-    
-
+export function drawHumanCore(app: Application, view: RenderView) {
     const humanMesh = app.humanMesh
     const renderList = view.renderList
     const gl = view.gl
@@ -89,7 +82,7 @@ export function drawHumanCore(app: Application, view: GLView) {
         alpha = 1
     }
 
-    programRGBA.useProgram()
+    programRGBA.use(gl)
 
     //
     // JOINTS AND SKELETON
@@ -99,7 +92,7 @@ export function drawHumanCore(app: Application, view: GLView) {
         const offset = humanMesh.baseMesh.groups[2].startIndex * WORD_LENGTH
         const count = humanMesh.baseMesh.groups[2].length * NUMBER_OF_JOINTS
 
-        programRGBA.setColor([1, 1, 1, 1])
+        programRGBA.setColor(gl, [1, 1, 1, 1])
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
         renderList.skeleton.draw(programRGBA, gl.LINES)
     }
@@ -149,7 +142,7 @@ export function drawHumanCore(app: Application, view: GLView) {
 
         // render
         const rgba = x[COLOR_INDEX] as number[]
-        programRGBA.setColor(rgba)
+        programRGBA.setColor(gl, rgba)
         let offset = humanMesh.baseMesh.groups[idx].startIndex * WORD_LENGTH
         let length = humanMesh.baseMesh.groups[idx].length
 
@@ -195,7 +188,7 @@ export function drawHumanCore(app: Application, view: GLView) {
                 rgba = [1, 0, 0, alpha]
                 break
         }
-        programRGBA.setColor(rgba)
+        programRGBA.setColor(gl, rgba)
         renderMesh.draw(programRGBA, gl.TRIANGLES)
     })
 
@@ -203,8 +196,9 @@ export function drawHumanCore(app: Application, view: GLView) {
     // TEXTURED SKIN
     //
 
-    programTex.useProgram()
-    programTex.texture(view.bodyTexture!, alpha)
+    programTex.use(gl)
+    // programTex.texture(view.bodyTexture!, alpha)
+    view.bodyTexture.bind()
     if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
         let offset = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
         let length = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
@@ -216,7 +210,8 @@ export function drawHumanCore(app: Application, view: GLView) {
     // // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
         gl.depthMask(false) // must be false, otherwise the texture ain't visible
         const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
-        programTex.texture(view.eyeTexture!, alpha)           
+        // programTex.texture(view.eyeTexture!, alpha)           
+        view.eyeTexture.bind()
         renderMesh.bind(programTex)
         renderMesh.draw(programTex, gl.TRIANGLES)
     }

@@ -20,8 +20,8 @@ import { RemoteOptionModel } from "./RemoteOptionModel"
 import { HumanMesh } from "mesh/HumanMesh"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderView } from "render/glview/RenderView"
 
 class Notochord {
     processState = new TextModel("UNAVAILABLE", {
@@ -587,7 +587,7 @@ function VectorView(props: { model: Rot3Model }) {
 
 class ChordataRenderer extends RenderHandler {
     rh = new RenderHuman(false)
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         // throw new Error("Method not implemented.")
         if (app.chordataSettings.mountKCeptorView.value) {
             renderChordata(view.ctx, view.gl, view.programColor, view.overlay, app.humanMesh, app.chordataSettings)

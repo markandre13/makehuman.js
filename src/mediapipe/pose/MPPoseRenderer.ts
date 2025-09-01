@@ -1,9 +1,7 @@
 import { Application } from "Application"
 import { mat4, vec3 } from "gl-matrix"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
-import { RGBAShader } from "render/shader/RGBAShader"
 import {
     prepareCanvas,
     prepareViewport,
@@ -18,7 +16,7 @@ import { ArrowMesh } from "mediapipe/ArrowMesh"
 import { simulatedModel } from "./PoseTab"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { html } from "toad.js"
-import { ColorShader } from "render/shader/ColorShader"
+import { RenderView } from "render/glview/RenderView"
 
 let a = 0
 
@@ -42,7 +40,7 @@ export class MPPoseRenderer extends RenderHandler {
         8, 7, 7, 0, 0, 8,
     ]
 
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         if (this.arrowMesh === undefined) {
             this.arrowMesh = new ArrowMesh(view.gl, 0.1)
         }
@@ -78,7 +76,7 @@ export class MPPoseRenderer extends RenderHandler {
         mat4.translate(modelViewMatrix, modelViewMatrix, v) // obj file face centered
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         if (this.mesh0 === undefined) {
             this.mesh0 = new RenderMesh(gl, landmarks, this.line0, undefined, undefined, false)
@@ -96,7 +94,7 @@ export class MPPoseRenderer extends RenderHandler {
         //
         // draw blaze skeleton
         //
-        programRGBA.setColor([1, 1, 1, 1])
+        programRGBA.setColor(gl, [1, 1, 1, 1])
         this.mesh0.bind(programRGBA)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
@@ -112,11 +110,12 @@ export class MPPoseRenderer extends RenderHandler {
         const kneeLeft = this.bpl.getVec(Blaze.LEFT_KNEE)
         const kneeRight = this.bpl.getVec(Blaze.RIGHT_KNEE)
 
-        programColor.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programColor.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+
 
         // HIP
         const hipMatrix = this.bpc.getHipWithAdjustment(this.bpl)
-        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
+        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
         this.arrowMesh.draw(view.programColor)
 
         // CENTER OF SHOULDER
@@ -127,21 +126,21 @@ export class MPPoseRenderer extends RenderHandler {
         // SHOULDER
         const shoulderMatrix = this.bpc.getShoulder(this.bpl)
         mat4.mul(shoulderMatrix, middleOfShoulderMat, shoulderMatrix)
-        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
+        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
         this.arrowMesh.draw(view.programColor)
 
         // LEFT UPPER LEG
         const leftUpperLegGlobal = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
         const leftUpperLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), hipLeft), leftUpperLegGlobal)
 
-        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, leftUpperLeg))
+        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, leftUpperLeg))
         this.arrowMesh.draw(view.programColor)
 
         // LEFT LOWER LEG
         const leftLowerLegGlobal = this.bpc.getLeftLowerLeg(this.bpl)
         const leftLowerLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), kneeLeft), leftLowerLegGlobal)
 
-        programColor.setModelViewMatrix(mat4.mul(mat4.create(), modelViewMatrix, leftLowerLeg))
+        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, leftLowerLeg))
         this.arrowMesh.draw(view.programColor)
 
         // DRAW SIDE VIEW
@@ -162,8 +161,8 @@ export class MPPoseRenderer extends RenderHandler {
             this.bpl.setVec(i, v)
         }
 
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.setColor([1.0, 0.0, 0.0, 1])
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.setColor(gl, [1.0, 0.0, 0.0, 1])
         this.mesh0.bind(programRGBA)
         this.mesh0.update(vertices)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)

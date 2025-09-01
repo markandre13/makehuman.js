@@ -1,16 +1,18 @@
 import { mat4, vec2, vec3 } from 'gl-matrix'
-import { euler_matrix } from 'lib/euler_matrix'
-import { FlyModeOnScreenDisplay } from './FlyModeOnScreenDisplay'
-import { GLView, D } from './GLView'
 import { InputHandler } from './InputHandler'
+import type { GLView } from "../GLView"
+import { euler_matrix } from '../lib/euler'
+
+export const D = 180 / Math.PI
 
 /**
  * Fly Mode similar to Blender
  */
 
 export class FlyMode extends InputHandler {
+    // private _ctx!: Context
     private _view: GLView
-    private _osd?: FlyModeOnScreenDisplay
+    // private _osd?: FlyModeOnScreenDisplay
 
     /**
      *  initial camera
@@ -50,6 +52,7 @@ export class FlyMode extends InputHandler {
 
     constructor(view: GLView) {
         super()
+        // this._ctx = context
         this._view = view
         const ctx = this._view.ctx
         this._initial = mat4.clone(ctx.camera)
@@ -191,7 +194,7 @@ export class FlyMode extends InputHandler {
     }
     confirm() {
         this._view.popInputHandler()
-        this._osd?.destructor()
+        // this._osd?.destructor()
         this._view.invalidate()
     }
     cancel() {
@@ -252,10 +255,10 @@ export class FlyMode extends InputHandler {
 
         this._lastUpdate = now
 
-        if (this._osd) {
-            this._osd.update()
-        } else {
-            this._osd = new FlyModeOnScreenDisplay(this._view)
-        }
+        // if (this._osd) {
+        //     this._osd.update()
+        // } else {
+        //     this._osd = new FlyModeOnScreenDisplay(this._view)
+        // }
     }
 }

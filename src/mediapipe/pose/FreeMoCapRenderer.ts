@@ -1,7 +1,6 @@
 import { Application } from "Application"
 import { vec3 } from "gl-matrix"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import { BlazePoseConverter } from "./BlazePoseConverter"
@@ -16,6 +15,7 @@ import {
 } from "render/util"
 import { renderAxes } from "./renderAxes"
 import { renderReconstructedBlaze } from "./renderReconstructedBlaze"
+import { RenderView } from "render/glview/RenderView"
 
 export class FreeMoCapRenderer extends RenderHandler {
     mesh0?: RenderMesh
@@ -35,7 +35,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         8, 7, 7, 0, 0, 8,
     ]
 
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         if (view.overlay.children.length !== 0) {
             view.overlay.replaceChildren()
         }
@@ -62,7 +62,9 @@ export class FreeMoCapRenderer extends RenderHandler {
         const projectionMatrix = createProjectionMatrix(canvas)
         const modelViewMatrix = createModelViewMatrix(view.ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.setProjection(gl, projectionMatrix)
+        programRGBA.setModelView(gl, modelViewMatrix)
+        programRGBA.setNormal(gl, normalMatrix)
 
         // adjust freemocap data to opengl screen space
         const landmarks = app.frontend._poseLandmarks
@@ -88,13 +90,13 @@ export class FreeMoCapRenderer extends RenderHandler {
         }
 
         // draw blaze
-        programRGBA.setColor([0, 0.5, 1, 1])
+        programRGBA.setColor(gl, [0, 0.5, 1, 1])
         this.mesh0.bind(programRGBA)
         this.mesh0.draw(programRGBA, gl.LINES)
 
         // draw rotations
-        programColor.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        renderAxes(programColor, this.arrowMesh, modelViewMatrix, this.bpl, this.bpc)
+        programColor.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        renderAxes(gl, programColor, this.arrowMesh, modelViewMatrix, this.bpl, this.bpc)
 
         renderReconstructedBlaze(this, view)
     }

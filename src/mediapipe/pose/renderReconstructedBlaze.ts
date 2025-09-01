@@ -1,8 +1,8 @@
 import { vec3 } from "gl-matrix"
-import { GLView } from "render/glview/GLView"
 import { RenderMesh } from "render/RenderMesh"
 import { Blaze } from "./Blaze"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
+import { RenderView } from "render/glview/RenderView"
 
 /**
  * re-create blaze pose skeleton from blaze pose converter
@@ -10,7 +10,7 @@ import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
  * @param t 
  * @param view 
  */
-export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
+export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: RenderView) {
     const programRGBA = view.programRGBA
     const gl = view.gl
     const bpc = t.bpc
@@ -133,8 +133,8 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: GLView) {
     } else {
         t.mesh1.update(data1)
     }
-    programRGBA.useProgram()
-    programRGBA.setColor([1, 0.5, 0, 1])
+    programRGBA.use(gl)
+    programRGBA.setColor(gl, [1, 0.5, 0, 1])
     t.mesh1.bind(programRGBA)
     t.mesh1.draw(programRGBA, gl.LINES)
 }

@@ -1,5 +1,4 @@
 import { Application } from "Application"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { WavefrontObj } from "mesh/WavefrontObj"
 import {
@@ -10,8 +9,10 @@ import {
 } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "../net/Frontend_impl"
-import { RGBAShader } from "render/shader/RGBAShader"
 import { mat4 } from "gl-matrix"
+import { RenderView } from "render/glview/RenderView"
+import { ShaderShadedColored } from "gl/shaders/ShaderShadedColored"
+import { ShaderShaded } from "gl/shaders/ShaderShaded"
 
 /**
  * Render MediaPipe's 3d face landmarks
@@ -26,7 +27,7 @@ export class FaceLandmarkRenderer extends RenderHandler {
         this.frontend = frontend
         this.neutral = new WavefrontObj("data/3dobjs/mediapipe_canonical_face_model.obj")
     }
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         if (this.frontend.landmarks === undefined) {
             return
         }
@@ -35,21 +36,21 @@ export class FaceLandmarkRenderer extends RenderHandler {
         if (gl == null) {
             throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
         }
-    
-        const programRGBA = new RGBAShader(gl)
+
+        const programRGBA = new ShaderShaded(gl)
         prepareCanvas(view.canvas)
         prepareViewport(gl, view.canvas)
         const projectionMatrix = createProjectionMatrix(view.canvas)
         const modelViewMatrix = mat4.create()
         mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -0.5]) // obj file face centered
         const normalMatrix = createNormalMatrix(modelViewMatrix)
-    
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         const xyz = this.frontend.landmarks
         const fxyz = this.neutral.fxyz
         center(xyz)
-    
-        programRGBA.setColor([1, 0.8, 0.7, 1])
+
+        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
         const mesh0 = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
         mesh0.bind(programRGBA)
         gl.drawElements(gl.TRIANGLES, fxyz.length, gl.UNSIGNED_SHORT, 0)

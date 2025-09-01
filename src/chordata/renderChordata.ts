@@ -7,16 +7,20 @@ import {
     prepareCanvas,
     prepareViewport,
 } from "../render/util"
-import { RGBAShader } from "../render/shader/RGBAShader"
 import { ChordataSettings } from "./ChordataSettings"
 import { HumanMesh } from "mesh/HumanMesh"
-import { Context } from "render/Context"
 import { SkeletonMesh } from "./SkeletonMesh"
-import { ColorShader } from "render/shader/ColorShader"
 import { span, text } from "toad.js"
 import { ChordataSkeleton } from "./Skeleton"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
-import { Projection } from 'render/glview/Projection'
+import { Context } from "gl/input/Context"
+import { ShaderColored } from "gl/shaders/ShaderColored"
+import { Projection } from "gl/Projection"
+import { ShaderShadedColored } from "gl/shaders/ShaderShadedColored"
+import { VertexBuffer } from "gl/buffers/VertexBuffer"
+import { NormalBuffer } from "gl/buffers/NormalBuffer"
+import { ColorBuffer } from "gl/buffers/ColorBuffer"
+import { IndexBuffer } from "gl/buffers/IndexBuffer"
 
 export const D = 180 / Math.PI
 
@@ -129,7 +133,7 @@ function initSkeleton() {
 export function renderChordata(
     ctx: Context,
     gl: WebGL2RenderingContext,
-    colorShader: ColorShader,
+    colorShader: ShaderShadedColored,
     overlay: HTMLElement,
     humanMesh: HumanMesh,
     settings: ChordataSettings
@@ -267,25 +271,33 @@ export function renderChordata(
 
         // console.log(index)
 
-        const glVertex = gl.createBuffer()!
-        gl.bindBuffer(gl.ARRAY_BUFFER, glVertex)
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
+        // const glVertex = gl.createBuffer()!
+        // gl.bindBuffer(gl.ARRAY_BUFFER, glVertex)
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
+        const glVertex = new VertexBuffer(gl, vertex)
 
-        const glNormal = gl.createBuffer()!
-        gl.bindBuffer(gl.ARRAY_BUFFER, glNormal)
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(fvertex), gl.STATIC_DRAW)
+        // const glNormal = gl.createBuffer()!
+        // gl.bindBuffer(gl.ARRAY_BUFFER, glNormal)
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(fvertex), gl.STATIC_DRAW)
+        const glNormal = new NormalBuffer(gl, fvertex)
 
-        const glColor = gl.createBuffer()!
-        gl.bindBuffer(gl.ARRAY_BUFFER, glColor)
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
+        // const glColor = gl.createBuffer()!
+        // gl.bindBuffer(gl.ARRAY_BUFFER, glColor)
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
+        const glColor = new ColorBuffer(gl, color)
 
-        const glIndices = gl.createBuffer()!
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIndices)
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(index), gl.STATIC_DRAW)
+        // const glIndices = gl.createBuffer()!
+        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIndices)
+        // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(index), gl.STATIC_DRAW)
+        const glIndices = new IndexBuffer(gl, index)
 
-        colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        colorShader.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        // colorShader.bind(glIndices, glVertex, glNormal, glColor)
+        glIndices.bind()
+        glVertex.bind(colorShader)
+        glNormal.bind(colorShader)
+        glColor.bind(colorShader)
 
-        colorShader.bind(glIndices, glVertex, glNormal, glColor)
         gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0)
 
         // const v = gl.createBuffer()

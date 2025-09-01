@@ -1,8 +1,8 @@
 import { Application } from 'Application'
-import { GLView } from './GLView'
+import { RenderView } from './RenderView'
 
 export abstract class RenderHandler {
-    abstract paint(app: Application, view: GLView): void
+    abstract paint(app: Application, view: RenderView): void
     onpointerdown(ev: PointerEvent): boolean {
         return true
     }

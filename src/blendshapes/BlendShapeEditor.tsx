@@ -1,8 +1,6 @@
 import { Application } from "Application"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
-import { Projection } from 'render/glview/Projection'
 import { RenderMesh } from "render/RenderMesh"
 import {
     createModelViewMatrix,
@@ -22,6 +20,8 @@ import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { isZero } from "mesh/HumanMesh"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, quat2, vec3 } from "gl-matrix"
+import { RenderView } from "render/glview/RenderView"
+import { Projection } from "gl/Projection"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -209,7 +209,7 @@ export class BlendShapeEditor extends RenderHandler {
         })
     }
 
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         // console.log(`paint with scale ${this.scale.value}`)
         if (!this.initialized) {
             this.scale.signal.add(() => {
@@ -274,14 +274,14 @@ export class BlendShapeEditor extends RenderHandler {
         const modelViewMatrix = createModelViewMatrix(ctx, true)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
 
         gl.enable(gl.BLEND)
-        programRGBA.setColor([1, 0.8, 0.7, 1])
+        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
         const WORD_LENGTH = 2
         let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
         let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
@@ -292,7 +292,7 @@ export class BlendShapeEditor extends RenderHandler {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
         const alpha = 0.5
 
-        programRGBA.setColor([0, 0.5, 1, alpha])
+        programRGBA.setColor(gl, [0, 0.5, 1, alpha])
         // this.renderMeshBS.bind(programRGBA)
         // gl.drawElements(gl.TRIANGLES, 100, gl.UNSIGNED_SHORT, 0)
         this.renderMeshBS.draw(programRGBA, gl.TRIANGLES)

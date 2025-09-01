@@ -1,7 +1,7 @@
 import { mat4 } from "gl-matrix"
 import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./util"
 import { RenderMesh } from "./RenderMesh"
-import { RGBAShader } from "./shader/RGBAShader"
+import { ShaderShaded } from "gl/shaders/ShaderShaded"
 
 let lastXYZ: Float32Array | undefined
 
@@ -15,7 +15,7 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: n
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
-    const programRGBA = new RGBAShader(gl)
+    const programRGBA = new ShaderShaded(gl)
 
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
@@ -24,7 +24,7 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: n
     mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -0.5]) // obj file face centered
     const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-    programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+    programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
     if (xyz !== lastXYZ) {
         center(xyz)
@@ -67,21 +67,21 @@ function center(xyz: Float32Array) {
     }
 }
 
-function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array) {
+function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: ShaderShaded, xyz: Float32Array) {
     const fxyz = new Array<number>(xyz.length / 3)
     for (let i = 0; i < fxyz.length; ++i) {
         fxyz[i] = i
     }
     const mesh = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
-    programRGBA.setColor([10.0, 8, 7, 1])
+    programRGBA.setColor(gl, [10.0, 8, 7, 1])
     mesh.bind(programRGBA)
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 }
 
-function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: Float32Array, fxyz: number[]) {
+function drawLineArt(gl: WebGL2RenderingContext, programRGBA: ShaderShaded, xyz: Float32Array, fxyz: number[]) {
     // DRAW LINE ART
     // programRGBA.setColor([0.0, 1.8, 0.0, 1])
-    programRGBA.setColor([0.0, 5.0, 10.0, 1])
+    programRGBA.setColor(gl, [0.0, 5.0, 10.0, 1])
     const lineStrips = [[
         // RING 0
         10, 338, 297, 332, 284, 251, 389, 356,
@@ -251,12 +251,12 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: RGBAShader, xyz: F
         mesh0.bind(programRGBA)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
         if (line[0] === 34) {
-            programRGBA.setColor([8.0, 0.0, 0.0, 1])
+            programRGBA.setColor(gl, [8.0, 0.0, 0.0, 1])
         }
     }
 
     // draw solid face
-    programRGBA.setColor([1, 0.8, 0.7, 1])
+    programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
     const mesh0 = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
     mesh0.bind(programRGBA)
     gl.drawElements(gl.TRIANGLES, fxyz.length, gl.UNSIGNED_SHORT, 0)

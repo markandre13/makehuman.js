@@ -1,5 +1,10 @@
+import { IndexBuffer } from "gl/buffers/IndexBuffer"
 import { calculateNormalsQuads, calculateNormalsTriangles } from "../lib/calculateNormals"
-import { AbstractShader } from "./shader/AbstractShader"
+import { VertexBuffer } from "gl/buffers/VertexBuffer"
+import { NormalBuffer } from "gl/buffers/NormalBuffer"
+import { UVBuffer } from "gl/buffers/UVBuffer"
+import { ShaderShaded } from "gl/shaders/ShaderShaded"
+import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
 
 interface GLXYZUV {
     idxExtra: number[]
@@ -16,10 +21,10 @@ interface GLXYZUV {
  */
 export class RenderMesh {
     gl: WebGL2RenderingContext
-    glIndices: WebGLBuffer
-    glVertex: WebGLBuffer
-    glNormal: WebGLBuffer
-    glTexture?: WebGLBuffer
+    glIndices: IndexBuffer
+    glVertex: VertexBuffer
+    glNormal: NormalBuffer
+    glTexture?: UVBuffer
 
     fvertex: number[]
     normal: Float32Array
@@ -39,11 +44,14 @@ export class RenderMesh {
         this.quads = quads
 
         if (quads === false) {
-            this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, fvertex)
-            this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
+            // this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, fvertex)
+            this.glIndices = new IndexBuffer(gl, fvertex)
+            // this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
+            this.glVertex = new VertexBuffer(gl, vertex)
             this.normal = new Float32Array(vertex.length)
             calculateNormalsTriangles(this.normal, vertex, fvertex)
-            this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
+            // this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
+            this.glNormal = new NormalBuffer(gl, this.normal)
             this.glData = {
                 indices: fvertex,
             } as GLXYZUV
@@ -52,10 +60,13 @@ export class RenderMesh {
 
         const glData = decoupleXYZandUV(vertex, fvertex, uvs, fuvs)
         this.glData = glData
-        this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
-        this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.vertex)
+        // this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
+        this.glIndices = new IndexBuffer(gl, glData.indices)
+        // this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.vertex)
+        this.glVertex = new VertexBuffer(gl, glData.vertex)
         if (glData.texcoord) {
-            this.glTexture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
+            // this.glTexture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
+            this.glTexture = new UVBuffer(gl, glData.texcoord)
         }
 
         this.normal = new Float32Array(glData.vertex.length)
@@ -66,7 +77,8 @@ export class RenderMesh {
             this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
         })
 
-        this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
+        // this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
+        this.glNormal = new NormalBuffer(gl, this.normal)
     }
 
     update(vertex: Float32Array) {
@@ -84,40 +96,32 @@ export class RenderMesh {
                 this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
             })
             // prettier-ignore
-            this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
-            this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
+            this.updateBuffer(this.glVertex.glbuffer, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.glData.vertex)
+            this.updateBuffer(this.glNormal.glbuffer, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
         } else {
-            this.updateBuffer(this.glVertex, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, vertex)
+            this.updateBuffer(this.glVertex.glbuffer, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, vertex)
             calculateNormalsTriangles(this.normal, vertex, this.fvertex)
-            this.updateBuffer(this.glNormal, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
+            this.updateBuffer(this.glNormal.glbuffer, this.gl.ARRAY_BUFFER, this.gl.STATIC_DRAW, Float32Array, this.normal)
         }
     }
 
-    draw(programInfo: AbstractShader, mode: number) {
+    draw(programInfo: ShaderShaded | ShaderShadedTextured, mode: number) {
         this.bind(programInfo)
         this.gl.drawElements(mode, this.glData.indices.length, this.gl.UNSIGNED_SHORT, 0)
     }
 
-    bind(programInfo: AbstractShader): void {
-        programInfo.bind(this.glIndices, this.glVertex, this.glNormal, this.glTexture)
+    bind(programInfo: ShaderShaded | ShaderShadedTextured): void {
+        // programInfo.bind(this.glIndices, this.glVertex, this.glNormal, this.glTexture)
+        this.glIndices.bind()
+        this.glVertex.bind(programInfo)
+        this.glNormal.bind(programInfo)
+        if (this.glTexture && programInfo instanceof ShaderShadedTextured) {
+            this.glTexture.bind(programInfo)
+        }
     }
 
     drawSubset(mode: number, offset: number, length: number) {
         this.gl.drawElements(mode, (length / 4) * 6, this.gl.UNSIGNED_SHORT, (offset / 4) * 6)
-    }
-
-    protected createBuffer(
-        target: GLenum,
-        usage: GLenum,
-        type: Float32ArrayConstructor | Uint16ArrayConstructor,
-        data: number[] | Float32Array
-    ): WebGLBuffer {
-        const buffer = this.gl.createBuffer()
-        if (buffer === null) {
-            throw Error("Failed to create new WebGLBuffer")
-        }
-        this.updateBuffer(buffer, target, usage, type, data)
-        return buffer
     }
 
     protected updateBuffer(
@@ -127,6 +131,9 @@ export class RenderMesh {
         type: Float32ArrayConstructor | Uint16ArrayConstructor,
         data: number[] | Float32Array
     ) {
+        if (!(buffer instanceof WebGLBuffer)) {
+            console.log(`RenderMesh::updateBuffer(): buffer is ${(buffer as any).constructor.name}`)
+        }
         this.gl.bindBuffer(target, buffer)
         if (data instanceof Float32Array) {
             this.gl.bufferData(target, data, usage)

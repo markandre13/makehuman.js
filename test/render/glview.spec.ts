@@ -4,11 +4,12 @@ use(chaiString)
 import { chaiAlmost } from '../chai/chaiAlmost'
 use(chaiAlmost(0.00001))
 
-import { GLView } from '../../src/render/glview/GLView'
-import { Projection } from '../../src/render/glview/Projection'
-import { FlyMode } from '../../src/render/glview/FlyMode'
-import { Context } from '../../src/render/Context'
+// import { RenderView } from '../../src/render/glview/RenderView.tsx'
+import { Projection } from '../../src/gl/Projection'
+import { FlyMode } from '../../src/gl/input/FlyMode'
+import { Context } from '../../src/gl/input/Context'
 import { mat4, vec3 } from 'gl-matrix'
+import { GLView } from '../../src/gl/GLView'
 
 interface ViewFake {
     ctx: Context
@@ -25,16 +26,18 @@ function makeview(): GLView {
         overlaySVG: document.createElementNS('http://www.w3.org/2000/svg', 'g'),
         ctx: {
             camera: mat4.create(),
-            rotateX: 0,
-            rotateY: 0,
-            pos: vec3.create(),
+            // rotateX: 0,
+            // rotateY: 0,
+            // pos: vec3.create(),
             projection: Projection.PERSPECTIVE,
+            rotateCameraTo: () => {}
         },
         canvas: {
             width: 640,
             height: 480,
         },
         invalidate: () => {},
+       
     }
     return glview as any
 }

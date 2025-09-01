@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix"
-import { Context } from "./Context"
+import { Context } from "gl/input/Context"
 
 export function prepareCanvas(canvas: HTMLCanvasElement) {
     if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
@@ -24,16 +24,16 @@ export function createModelViewMatrix(cam: Context, head: boolean = false) {
     if (!head) {
         // full body view
         mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -25])
-        mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
-        mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
+        // mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
+        // mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
     } else {
         return cam.camera
         // rotate around camera (TODO: i think this needs to be accumalative...)
         // TODO: save camera pos, rot during reloads
-        mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
-        mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
+        // mat4.rotateY(modelViewMatrix, modelViewMatrix, cam.rotateY / D)
+        // mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D)
         // move camera
-        mat4.translate(modelViewMatrix, modelViewMatrix, cam.pos)
+        // mat4.translate(modelViewMatrix, modelViewMatrix, cam.pos)
         // move body away
         // mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -5]) // move body away
         // mat4.rotateX(modelViewMatrix, modelViewMatrix, cam.rotateX / D) // 

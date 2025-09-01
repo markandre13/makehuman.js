@@ -46,12 +46,12 @@ import { StringArrayAdapter } from 'toad.js/table/adapter/StringArrayAdapter'
 import { StringArrayModel } from 'toad.js/table/model/StringArrayModel'
 import { MediapipeTab } from 'mediapipe/mediapipe'
 import { Application, setRenderer } from 'Application'
-import { GLView } from 'render/glview/GLView'
 import { RenderHuman } from 'render/RenderHuman'
 import { BlendShapeTab } from 'blendshapes/BlendShapeTab'
 import { ConnectButton } from 'net/ConnectButton'
 import { PoseTab } from 'mediapipe/pose/PoseTab'
 import { MorphTool } from 'morphtool/MorphTool'
+import { RenderView } from 'render/glview/RenderView'
 
 export async function main() {
     try {
@@ -92,7 +92,7 @@ async function run() {
 
     // App.glview needs to be set before other operations
     const glview = (
-        <GLView
+        <RenderView
             app={app}
             style={{
                 position: 'absolute',

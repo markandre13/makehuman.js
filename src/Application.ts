@@ -14,7 +14,6 @@ import { TreeNodeModel } from "toad.js/table/model/TreeNodeModel"
 import { EnumModel } from "toad.js/model/EnumModel"
 import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { ORB } from "corba.js"
 import { Backend, MediaPipeTask, Recorder, VideoCamera } from "net/makehuman_stub"
@@ -30,12 +29,14 @@ import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 import { VALUE } from "toad.js/model/ValueModel"
 import { Connector } from "net/Connector"
 import { TextModel } from "toad.js"
+import { GLView } from "gl/GLView"
+import { RenderView } from "render/glview/RenderView"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // smooth my crappy API design for now
 export function setRenderer(app: Application, renderer: RenderHandler, classic: boolean = true) {
     return (state: "visible" | "hidden") => {
-        // console.log(`setRenderer(state=${state}, renderer='${renderer.constructor.name})`)
+        console.log(`setRenderer(state=${state}, renderer='${renderer.constructor.name})`)
         if (state === "visible") {
             app.setRenderer(renderer, classic)
         }
@@ -59,7 +60,7 @@ export class Application {
     humanMesh: HumanMesh // base mesh, morphed mesh, posed mesh
     skeleton: Skeleton
 
-    glview!: GLView
+    glview!: RenderView
     classic = true
 
     // application
@@ -182,7 +183,7 @@ export class Application {
         this.renderer = renderer
         this.classic = classic
         if (this.glview) {
-            this.glview.renderHandler = renderer
+            this.glview.draw = () => renderer.paint(this, this.glview)
         }
     }
 }

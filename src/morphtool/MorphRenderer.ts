@@ -1,7 +1,5 @@
 import { Application } from 'Application'
-import { GLView } from 'render/glview/GLView'
 import { RenderHandler } from 'render/glview/RenderHandler'
-import { Projection } from 'render/glview/Projection'
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -12,6 +10,8 @@ import {
 import { ARKitFlat } from './ARKitFlat'
 import { MorphToolModel } from './MorphToolModel'
 import { MHFlat } from './MHFlat'
+import { RenderView } from 'render/glview/RenderView'
+import { Projection } from 'gl/Projection'
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
@@ -35,7 +35,8 @@ export class MorphRenderer extends RenderHandler {
         })
     }
 
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
+        console.log(`MorphRenderer::paint()`)
         // prepare
         const gl = view.gl
         const ctx = view.ctx
@@ -44,18 +45,20 @@ export class MorphRenderer extends RenderHandler {
             this.mhflat = new MHFlat(app, gl)
             this.arflat = new ARKitFlat(app, gl)
         }
+        view.prepareCanvas()
 
-        const canvas = app.glview.canvas as HTMLCanvasElement
-        prepareCanvas(canvas)
-        prepareViewport(gl, canvas)
-        const projectionMatrix = createProjectionMatrix(
-            canvas,
-            ctx.projection === Projection.PERSPECTIVE
-        )
-        let modelViewMatrix = createModelViewMatrix(ctx, true)
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
+        // const canvas = app.glview.canvas as HTMLCanvasElement
+        // prepareCanvas(canvas)
+        // prepareViewport(gl, canvas)
+        // const projectionMatrix = createProjectionMatrix(
+        //     canvas,
+        //     ctx.projection === Projection.PERSPECTIVE
+        // )
+        // let modelViewMatrix = createModelViewMatrix(ctx, true)
+        // const normalMatrix = createNormalMatrix(modelViewMatrix)
+        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
   
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
         const alpha = 0.25
 
@@ -66,7 +69,7 @@ export class MorphRenderer extends RenderHandler {
         gl.cullFace(gl.BACK)
         gl.disable(gl.BLEND)
 
-        programRGBA.setColor([1, 0.8, 0.7, 1])
+        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
         mesh[0].bind(programRGBA)
         mesh[0].draw(gl)
 
@@ -76,7 +79,7 @@ export class MorphRenderer extends RenderHandler {
             gl.enable(gl.BLEND)
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-            programRGBA.setColor([0, 0.5, 1, alpha])
+            programRGBA.setColor(gl, [0, 0.5, 1, alpha])
             mesh[1].bind(programRGBA)
             mesh[1].draw(gl)
         }      

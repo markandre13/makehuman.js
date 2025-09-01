@@ -1,7 +1,5 @@
 import { Application } from "Application"
-import { GLView } from "render/glview/GLView"
 import { RenderHandler } from 'render/glview/RenderHandler'
-import { Projection } from 'render/glview/Projection'
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -16,6 +14,8 @@ import { drawHumanCore } from "render/RenderHuman"
 import { mat4 } from "gl-matrix"
 import { BlendShapeEditor } from "blendshapes/BlendShapeEditor"
 import { ArrowMesh } from "./ArrowMesh"
+import { RenderView } from "render/glview/RenderView"
+import { Projection } from "gl/Projection"
 
 /**
  * Renders 4 views: 2x MakeHuman Head, 2x Blendshape
@@ -32,7 +32,7 @@ export class QuadRenderer extends RenderHandler {
         this.editor = editor
     }
 
-    override paint(app: Application, view: GLView): void {
+    override paint(app: Application, view: RenderView): void {
         if (this.arkit === undefined) {
             this.arkit = FaceARKitLoader.getInstance().preload()
         }
@@ -59,15 +59,15 @@ export class QuadRenderer extends RenderHandler {
         let modelViewMatrix = createModelViewMatrix(ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programTex.init(projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.init(projectionMatrix, modelViewMatrix, normalMatrix)
+        programTex.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
         gl.disable(gl.BLEND)
 
-        programRGBA.setColor([1, 0.8, 0.7, 1])
+        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
         this.mesh.bind(programRGBA)
 
         const w = canvas.width / 2
@@ -78,9 +78,9 @@ export class QuadRenderer extends RenderHandler {
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
 
         gl.viewport(w, 0, w, h)
-        ctx.rotateY -= 45
-        programRGBA.setModelViewMatrix(createModelViewMatrix(ctx))
-        ctx.rotateY += 45
+        // FIXME: ctx.rotateY -= 45
+        programRGBA.setModelView(gl, createModelViewMatrix(ctx))
+        // FIXME: ctx.rotateY += 45
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
 
         // draw makehuman
@@ -88,21 +88,21 @@ export class QuadRenderer extends RenderHandler {
 
         gl.viewport(0, h, w, h)
         modelViewMatrix = createModelViewMatrix(ctx, true)
-        programRGBA.setModelViewMatrix(modelViewMatrix)
-        programTex.useProgram()
-        programTex.setModelViewMatrix(modelViewMatrix)
+        programRGBA.setModelView(gl, modelViewMatrix)
+        programTex.use(gl)
+        programTex.setModelView(gl, modelViewMatrix)
         // programRGBA.useProgram()
         app.updateManager.updateIt()
         drawHumanCore(app, view)
 
         gl.viewport(0, 0, w, h)
-        ctx.rotateY -= 45
+        // FIXME: ctx.rotateY -= 45
         modelViewMatrix = createModelViewMatrix(ctx, true)
-        ctx.rotateY += 45
-        // programTex.useProgram()
-        programTex.setModelViewMatrix(modelViewMatrix)
-        programRGBA.useProgram()
-        programRGBA.setModelViewMatrix(modelViewMatrix)
+        // FIXME: ctx.rotateY += 45
+        // programTex.use(gl)
+        programTex.setModelView(gl, modelViewMatrix)
+        programRGBA.use(gl)
+        programRGBA.setModelView(gl, modelViewMatrix)
 
         drawHumanCore(app, view)
 
@@ -117,7 +117,7 @@ export class QuadRenderer extends RenderHandler {
             mat4.mul(modelViewMatrix, modelViewMatrix, bone.matPoseGlobal!)
 
             const colorShader = view.programColor
-            colorShader.init(projectionMatrix, modelViewMatrix, normalMatrix)
+            colorShader.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
             this.arrowMesh.draw(view.programColor)
         }
     }

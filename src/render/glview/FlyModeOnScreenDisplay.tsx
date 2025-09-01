@@ -1,6 +1,6 @@
 import { vec3, mat4 } from 'gl-matrix'
+import { GLView } from 'gl/GLView'
 import { euler_from_matrix } from 'lib/euler_matrix'
-import { GLView } from './GLView'
 
 /**
  * On Screen Display while the Fly Mode is active
