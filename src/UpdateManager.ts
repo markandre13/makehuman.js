@@ -243,7 +243,7 @@ export class UpdateManager {
                 const restRotation = mat4.clone(bone.matRestGlobal!)
                 restRotation[12] = restRotation[13] = restRotation[14] = 0
 
-                const inv = mat4.invert(mat4.create(), restRotation)
+                const inv = mat4.invert(mat4.create(), restRotation)!
                 const local = mat4.mul(mat4.create(), inv, m)
                 mat4.mul(local, local, restRotation)
 
@@ -302,7 +302,7 @@ export class UpdateManager {
 
             this.bpl.data = this.app.frontend._poseLandmarks!
             const hip = this.bpc.getHipWithAdjustment(this.bpl)
-            const invHip = mat4.invert(mat4.create(), hip)
+            const invHip = mat4.invert(mat4.create(), hip)!
             const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
             mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
             setPose("root", hipWithTranslation)
@@ -323,7 +323,7 @@ export class UpdateManager {
             // const spine = this.bpc.getSpine(this.bpl)
             // mat4.mul(spine, spine, hip)
             const spine = this.bpc.getSpine(this.bpl)
-            const invSpine = mat4.invert(mat4.create(), spine)
+            const invSpine = mat4.invert(mat4.create(), spine)!
             const relSpine = mat4.mul(mat4.create(), invHip, spine)
             const spineQuat = quat2.fromMat4(quat2.create(), relSpine)
             const spineDelta = quaternion_slerp(REST_QUAT, spineQuat, 0.5) // FIXME
@@ -335,7 +335,7 @@ export class UpdateManager {
             setPose("spine05", relSpine)
 
             const shoulder = this.bpc.getShoulder(this.bpl)
-            const invShoulder = mat4.invert(mat4.create(), shoulder)
+            const invShoulder = mat4.invert(mat4.create(), shoulder)!
             const relShoulder = mat4.mul(mat4.create(), invSpine, shoulder)
             setPose("spine01", relShoulder) // FIXME: better to add this to the clavicle?
 

@@ -7,7 +7,7 @@ const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), 
 const parentRelative = parentGlobal
 const childRelative = mat4.mul(
     mat4.create(),
-    mat4.invert(mat4.create(), parentGlobal),
+    mat4.invert(mat4.create(), parentGlobal)!,
     childGlobal
 )
 

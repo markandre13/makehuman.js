@@ -187,7 +187,7 @@ export class Bone {
         } else {
             this.matRestRelative = mat4.mul(
                 mat4.create(),
-                mat4.invert(mat4.create(), this.parent.matRestGlobal!),
+                mat4.invert(mat4.create(), this.parent.matRestGlobal!)!,
                 this.matRestGlobal
             )
         }
@@ -212,7 +212,7 @@ export class Bone {
         }
 
         if (this.matUserPoseGlobal !== undefined) {
-            this.matUserPoseRelative = mat4.invert(mat4.create(), this.matPoseGlobal)
+            this.matUserPoseRelative = mat4.invert(mat4.create(), this.matPoseGlobal)!
             const m = this.matUserPoseRelative
             // FIXME: the following line is not covered in test as Skeleton.spec.ts just checks rotations
             m[12] = m[13] = m[14] = 0
@@ -232,7 +232,7 @@ export class Bone {
         this.matPoseVerts = mat4.multiply(
             mat4.create(),
             this.matPoseGlobal,
-            mat4.invert(mat4.create(), this.matRestGlobal!)
+            mat4.invert(mat4.create(), this.matRestGlobal!)!
         )
     }
 
@@ -283,7 +283,7 @@ export class Bone {
         this.matPoseVerts = mat4.multiply(
             mat4.create(),
             this.matPoseGlobal,
-            mat4.invert(mat4.create(), this.matRestGlobal!)
+            mat4.invert(mat4.create(), this.matRestGlobal!)!
         )
     }
 

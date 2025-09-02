@@ -1,6 +1,7 @@
 import type { mat4 } from "gl-matrix"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
 import { initShaderProgram } from "../lib/initShaderProgram"
+import { mat42float32array } from "./ShaderColored"
 
 export class ShaderMono implements ShaderHasPositions {
     private program: WebGLProgram
@@ -27,10 +28,10 @@ export class ShaderMono implements ShaderHasPositions {
     }
 
     setProjection(gl: WebGL2RenderingContext, projectionMatrix: mat4) {
-        gl.uniformMatrix4fv(this.projectionMatrix, false, projectionMatrix)
+        gl.uniformMatrix4fv(this.projectionMatrix, false, mat42float32array(projectionMatrix))
     }
     setModelView(gl: WebGL2RenderingContext, modelViewMatrix: mat4) {
-        gl.uniformMatrix4fv(this.modelViewMatrix, false, modelViewMatrix)
+        gl.uniformMatrix4fv(this.modelViewMatrix, false, mat42float32array(modelViewMatrix))
     }
     setColor(gl: WebGL2RenderingContext, color: number[]) {
         gl.uniform4fv(this.color, color)

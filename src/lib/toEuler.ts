@@ -18,7 +18,7 @@ function almost(left: number, right: number) {
 
 function isRotation(m: mat4): boolean {
     let mT = mat4.transpose(mat4.create(), m)
-    let mI = mat4.invert(mat4.create(), m)
+    let mI = mat4.invert(mat4.create(), m)!
     if (!mat4.equals(mT, mI)) {
         return false
     }

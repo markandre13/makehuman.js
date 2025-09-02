@@ -149,7 +149,7 @@ export class MPPoseRenderer extends RenderHandler {
         // const rot = mat4.fromYRotation(mat4.create(), deg2rad(90))
         // mat4.mul(inv2, rot, inv2)
 
-        const inv2 = mat4.invert(mat4.create(), leftUpperLegGlobal)
+        const inv2 = mat4.invert(mat4.create(), leftUpperLegGlobal)!
         // const rotX = mat4.fromXRotation(mat4.create(), deg2rad(90))
         // mat4.mul(inv2, rotX, inv2)
 

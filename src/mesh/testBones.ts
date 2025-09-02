@@ -29,7 +29,7 @@ function makeBone(
         matRestRelative =
             mat4.mul(
                 mat4.create(),
-                mat4.invert(mat4.create(), parent.matRestGlobal),
+                mat4.invert(mat4.create(), parent.matRestGlobal)!,
                 matRestGlobal
             )
     }

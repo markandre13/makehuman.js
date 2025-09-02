@@ -1,4 +1,4 @@
-import type { mat4 } from "gl-matrix"
+import { glMatrix, type mat4 } from "gl-matrix"
 import type { ShaderHasColors } from "../interfaces/ShaderHasColors"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
 import { initShaderProgram } from "../lib/initShaderProgram"
@@ -32,13 +32,21 @@ export class ShaderColored implements ShaderHasPositions, ShaderHasColors {
 
     setProjection(gl: WebGL2RenderingContext, projectionMatrix: mat4) {
         // Set the shader uniforms
-        gl.uniformMatrix4fv(this.projectionMatrix, false, projectionMatrix)
+        gl.uniformMatrix4fv(this.projectionMatrix, false, mat42float32array(projectionMatrix))
     }
     setModelView(gl: WebGL2RenderingContext, modelViewMatrix: mat4) {
-        gl.uniformMatrix4fv(this.modelViewMatrix, false, modelViewMatrix)
+        gl.uniformMatrix4fv(this.modelViewMatrix, false, mat42float32array(modelViewMatrix))
     }
     use(gl: WebGL2RenderingContext) {
         gl.useProgram(this.program)
+    }
+}
+
+export function mat42float32array(m: mat4): Float32Array {
+    if (glMatrix.ARRAY_TYPE === Float32Array) {
+        return m as Float32Array
+    } else {
+        return new Float32Array(m)
     }
 }
 

@@ -124,7 +124,7 @@ export class BasicMode extends InputHandler {
 
         const cameraRotation = mat4.clone(this._camera!)
         cameraRotation[12] = cameraRotation[13] = cameraRotation[14] = 0
-        const invCameraRotation = mat4.invert(mat4.create(), cameraRotation)
+        const invCameraRotation = mat4.invert(mat4.create(), cameraRotation)!
 
         const moveToRotationCenter = mat4.create()
         mat4.translate(
@@ -133,7 +133,7 @@ export class BasicMode extends InputHandler {
             this._center!
         )
 
-        const backFromRotationCenter = mat4.invert(mat4.create(), moveToRotationCenter)
+        const backFromRotationCenter = mat4.invert(mat4.create(), moveToRotationCenter)!
 
         const m = mat4.create()
         mat4.mul(m, m, moveToRotationCenter)

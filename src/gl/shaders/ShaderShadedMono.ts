@@ -2,6 +2,7 @@ import type { mat4 } from "gl-matrix"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
 import type { ShaderHasNormals } from "../interfaces/ShaderHasNormals"
 import { initShaderProgram } from "../lib/initShaderProgram"
+import { mat42float32array } from "./ShaderColored"
 
 export class ShaderShadedMono implements ShaderHasPositions, ShaderHasNormals {
     private program: WebGLProgram
@@ -38,13 +39,13 @@ export class ShaderShadedMono implements ShaderHasPositions, ShaderHasNormals {
 
     setProjection(gl: WebGL2RenderingContext, projectionMatrix: mat4) {
         // Set the shader uniforms
-        gl.uniformMatrix4fv(this.projectionMatrix, false, projectionMatrix)
+        gl.uniformMatrix4fv(this.projectionMatrix, false,  mat42float32array(projectionMatrix))
     }
     setModelView(gl: WebGL2RenderingContext, modelViewMatrix: mat4) {
-        gl.uniformMatrix4fv(this.modelViewMatrix, false, modelViewMatrix)
+        gl.uniformMatrix4fv(this.modelViewMatrix, false,  mat42float32array(modelViewMatrix))
     }
     setNormal(gl: WebGL2RenderingContext, normalMatrix: mat4) {
-        gl.uniformMatrix4fv(this.normalMatrix, false, normalMatrix)
+        gl.uniformMatrix4fv(this.normalMatrix, false,  mat42float32array(normalMatrix))
     }
     setColor(gl: WebGL2RenderingContext, color: number[]) {
         gl.uniform4fv(this.color, color)

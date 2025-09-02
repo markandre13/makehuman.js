@@ -104,13 +104,8 @@ export class ChordataSkeleton {
             if (joint.pre === undefined || joint.post === undefined) {
                 return
             }
-            const pre: number[] = [], post: number[] = [];
-            for(const [i, v] of joint.pre.entries()) {
-                pre.push(v)
-            }
-            for(const [i, v] of joint.post.entries()) {
-                post.push(v)
-            }
+            const pre = Array.from(joint.pre)
+            const post = Array.from(joint.post)
             data[name] = { pre, post}
         }
         const json = JSON.stringify(data)
@@ -157,7 +152,7 @@ export class ChordataSkeleton {
             } else {
                 joint.m0 = mat4.create()
             }
-            joint.i0 = mat4.invert(mat4.create(), joint.m0)
+            joint.i0 = mat4.invert(mat4.create(), joint.m0)!
             joint.post = joint.i0
         })
     }

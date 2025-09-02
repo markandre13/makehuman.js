@@ -3,6 +3,7 @@ import type { ShaderHasColors } from "../interfaces/ShaderHasColors"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
 import type { ShaderHasNormals } from "../interfaces/ShaderHasNormals"
 import { initShaderProgram } from "../lib/initShaderProgram"
+import { mat42float32array } from "./ShaderColored"
 
 export class ShaderShadedColored implements ShaderHasPositions, ShaderHasNormals, ShaderHasColors {
     private program: WebGLProgram
@@ -42,13 +43,13 @@ export class ShaderShadedColored implements ShaderHasPositions, ShaderHasNormals
     }
     setProjection(gl: WebGL2RenderingContext, projectionMatrix: mat4) {
         // Set the shader uniforms
-        gl.uniformMatrix4fv(this.projectionMatrix, false, projectionMatrix)
+        gl.uniformMatrix4fv(this.projectionMatrix, false, mat42float32array(projectionMatrix))
     }
     setNormal(gl: WebGL2RenderingContext, normalMatrix: mat4) {
-        gl.uniformMatrix4fv(this.normalMatrix, false, normalMatrix)
+        gl.uniformMatrix4fv(this.normalMatrix, false,  mat42float32array(normalMatrix))
     }
     setModelView(gl: WebGL2RenderingContext, modelViewMatrix: mat4) {
-        gl.uniformMatrix4fv(this.modelViewMatrix, false, modelViewMatrix)
+        gl.uniformMatrix4fv(this.modelViewMatrix, false,  mat42float32array(modelViewMatrix))
     }
     use(gl: WebGL2RenderingContext) {
         gl.useProgram(this.program)

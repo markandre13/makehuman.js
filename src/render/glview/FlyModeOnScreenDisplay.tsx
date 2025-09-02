@@ -52,7 +52,7 @@ export class FlyModeOnScreenDisplay {
 
         const cam = glview.ctx.camera
         const v = vec3.create()
-        const ic = mat4.invert(mat4.create(), cam)
+        const ic = mat4.invert(mat4.create(), cam)!
         vec3.transformMat4(v, v, ic)
         let text = document.createElementNS(
             'http://www.w3.org/2000/svg',
@@ -106,7 +106,7 @@ export class FlyModeOnScreenDisplay {
 
         const cam = this._glview.ctx.camera
         const v = vec3.create()
-        const ic = mat4.invert(mat4.create(), cam)
+        const ic = mat4.invert(mat4.create(), cam)!
         vec3.transformMat4(v, v, ic); (
             this._caret.children[4] as SVGTextElement
         ).innerHTML = `POS: ${v[0].toFixed(2)}, ${v[1].toFixed(

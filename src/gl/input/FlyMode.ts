@@ -230,7 +230,7 @@ export class FlyMode extends InputHandler {
             const d = mat4.create()
             mat4.translate(d, d, dir)
 
-            const iM = mat4.invert(mat4.create(), this._rotate)
+            const iM = mat4.invert(mat4.create(), this._rotate)!
 
             const j = mat4.create()
             mat4.mul(j, j, iM)

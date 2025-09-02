@@ -211,7 +211,7 @@ export class Skeleton {
     getPose(): mat4[] {
         return this.boneslist!.map((bone) => {
             // convert relative pose to global pose
-            const m = mat4.invert(mat4.create(), bone.matRestGlobal!)
+            const m = mat4.invert(mat4.create(), bone.matRestGlobal!)!
             mat4.mul(m, bone.matUserPoseRelative!, m)
             mat4.mul(m, bone.matRestGlobal!, m)
             return m
@@ -292,7 +292,7 @@ export class Skeleton {
             const bone = this.boneslist![boneIdx + frame * this.boneslist!.length]
 
             // TODO: I have no idea what this formula is doing...
-            const m = mat4.invert(mat4.create(), bone.matRestGlobal!)
+            const m = mat4.invert(mat4.create(), bone.matRestGlobal!)!
             mat4.mul(m, m, anim.data[offset + boneIdx])
             mat4.mul(m, m, bone.matRestGlobal!) // WTF? in the original it's mat4.mul(m, m, bone.matPoseGlobal!)
             // const m = mat4.copy(mat4.create(), anim.data[offset + boneIdx])

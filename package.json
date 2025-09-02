@@ -31,26 +31,26 @@
   "dependencies": {
     "corba.js": "^0.1.18",
     "fflate": "^0.8.2",
-    "gl-matrix": "^3.4.3",
-    "toad.js": "^0.2.2"
+    "gl-matrix": "^3.4.4",
+    "toad.js": "^0.2.3"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
-    "@types/chai": "^5.2.1",
+    "@types/chai": "^5.2.2",
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.14.1",
+    "@types/node": "^24.3.0",
     "@web/dev-server": "^0.4.6",
-    "@web/test-runner": "^0.20.1",
-    "chai": "^5.2.0",
-    "mocha": "^11.1.0",
-    "rollup": "^4.40.0",
+    "@web/test-runner": "^0.20.2",
+    "chai": "^6.0.1",
+    "mocha": "^11.7.2",
+    "rollup": "^4.50.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

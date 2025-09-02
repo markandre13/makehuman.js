@@ -18,6 +18,7 @@ import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
 
 import { anim as run01_anmin, joints as run01_joints } from "../testdata/run01_anim"
 import { euler_from_matrix, euler_matrix } from "../../src/lib/euler_matrix"
+import {  mat42float32array  } from "../../src/gl/shaders/ShaderColored"
 
 describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {
@@ -593,8 +594,8 @@ Frame Time: 0.041667
         const anim1 = skeleton.getPose()
 
         for (let boneIdx = 0; boneIdx < humanMesh.skeleton.boneslist!.length; ++boneIdx) {
-            const expected = anim0.data[boneIdx]
-            const given = anim1[boneIdx]
+            const expected =  mat42float32array(anim0.data[boneIdx])
+            const given =  mat42float32array(anim1[boneIdx])
             // TODO: this skips the offset... is it important?
             expect(expected.slice(0, 12), `bone ${boneIdx} ${skeleton.boneslist![boneIdx].name}`).to.deep.almost.equal(
                 given.slice(0, 12)
@@ -640,10 +641,10 @@ Frame Time: 0.041667
         // mat4.rotateZ(matRestGlobal, matRestGlobal, 0.9)
 
         // m1 := matRestGlobal-1 * m0 * matPoseGlobal
-        const invRest = mat4.invert(mat4.create(), matRestGlobal)
+        const invRest = mat4.invert(mat4.create(), matRestGlobal)!
         const m1 = mat4.mul(mat4.create(), mat4.mul(mat4.create(), invRest, m0), matPoseGlobal)
 
-        const invPose = mat4.invert(mat4.create(), matPoseGlobal)
+        const invPose = mat4.invert(mat4.create(), matPoseGlobal)!
         const m2 = mat4.mul(mat4.create(), mat4.mul(mat4.create(), matRestGlobal, m1), invPose)
 
         // const invPose = mat4.invert(mat4.create(), matPoseGlobal)

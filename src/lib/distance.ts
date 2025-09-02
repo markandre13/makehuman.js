@@ -42,7 +42,7 @@ export function findVertex(
 
     const l0 = vec4.fromValues(0, 0, 0, 1)
     const l1 = vec4.fromValues(x, y, -1, 1)
-    const inv = mat4.invert(mat4.create(), modelViewMatrix)
+    const inv = mat4.invert(mat4.create(), modelViewMatrix)!
     vec4.transformMat4(l0, l0, inv)
     vec4.transformMat4(l1, l1, inv)
 

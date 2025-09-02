@@ -85,7 +85,7 @@ export class Joint {
         if (this.parent === undefined) {
             this.relative = this.absolute
         } else {
-            const m = mat4.invert(mat4.create(), this.parent!.absolute!)
+            const m = mat4.invert(mat4.create(), this.parent!.absolute!)!
             this.relative = mat4.multiply(m, m, this.absolute)
         }
         this.children?.forEach(it => it.update())

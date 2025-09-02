@@ -144,7 +144,7 @@ export class BlazePoseConverter {
         let upper = this.getLeftUpperArm(pose)
 
         const pose2 = pose.clone()
-        pose2.mul(mat4.invert(mat4.create(), upper))
+        pose2.mul(mat4.invert(mat4.create(), upper)!)
 
         // X & Z of lower leg
         const top = pose2.getVec(Blaze.LEFT_SHOULDER)
@@ -257,7 +257,7 @@ export class BlazePoseConverter {
         let upper = this.getRightUpperArm(pose)
 
         const pose2 = pose.clone()
-        pose2.mul(mat4.invert(mat4.create(), upper))
+        pose2.mul(mat4.invert(mat4.create(), upper)!)
 
         // X & Z of lower leg
         const top = pose2.getVec(Blaze.RIGHT_SHOULDER)
@@ -409,7 +409,7 @@ export class BlazePoseConverter {
         let upperLeg = this.getLeftUpperLeg(pose)
 
         const pose2 = pose.clone()
-        pose2.mul(mat4.invert(mat4.create(), upperLeg))
+        pose2.mul(mat4.invert(mat4.create(), upperLeg)!)
 
         // X & Z of lower leg
         const hip = pose2.getVec(Blaze.LEFT_HIP)
@@ -470,7 +470,7 @@ export class BlazePoseConverter {
         let upperLeg = this.getRightUpperLeg(pose)
 
         const pose2 = pose.clone()
-        pose2.mul(mat4.invert(mat4.create(), upperLeg))
+        pose2.mul(mat4.invert(mat4.create(), upperLeg)!)
 
         // X & Z of lower leg
         const hip = pose2.getVec(Blaze.RIGHT_HIP)

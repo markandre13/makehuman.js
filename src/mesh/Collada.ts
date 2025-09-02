@@ -630,7 +630,7 @@ function bsm(bone: Bone) {
 
 // create the "inverse bind pose matrix" from the collada spec
 export function ibm(bone: Bone) {
-    return mat2txt(mat4.invert(mat4.create(), bone.matRestGlobal!))
+    return mat2txt(mat4.invert(mat4.create(), bone.matRestGlobal!)!)
 }
 
 // output mat4 in collada format (translation on the right instead of bottom)
