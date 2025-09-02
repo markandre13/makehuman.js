@@ -82,9 +82,13 @@ export class BasicMode extends InputHandler {
                 break
             case 'Numpad0':
                 // camera view
-                mat4.identity(ctx.camera)
-                mat4.translate(ctx.camera, ctx.camera, [0.0, 0.0, -6.0])
-                this._view.invalidate()
+                const defaultCamera = this._view.ctx.defaultCamera?.()
+                if (defaultCamera) {
+                    // mat4.identity(ctx.camera)
+                    // mat4.translate(ctx.camera, ctx.camera, [0.0, 0.0, -6.0])
+                    mat4.copy(this._view.ctx.camera, defaultCamera)
+                    this._view.invalidate()
+                }
                 break
             case 'NumpadDecimal':
                 // focus selected

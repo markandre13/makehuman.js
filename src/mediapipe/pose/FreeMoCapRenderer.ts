@@ -16,6 +16,7 @@ import {
 import { renderAxes } from "./renderAxes"
 import { renderReconstructedBlaze } from "./renderReconstructedBlaze"
 import { RenderView } from "render/glview/RenderView"
+import { di } from "lib/di"
 
 export class FreeMoCapRenderer extends RenderHandler {
     mesh0?: RenderMesh
@@ -34,7 +35,9 @@ export class FreeMoCapRenderer extends RenderHandler {
 
         8, 7, 7, 0, 0, 8,
     ]
-
+    override defaultCamera() {
+        return di.get(Application).bodyCamera()
+    }
     override paint(app: Application, view: RenderView): void {
         if (view.overlay.children.length !== 0) {
             view.overlay.replaceChildren()

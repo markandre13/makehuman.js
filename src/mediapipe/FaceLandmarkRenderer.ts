@@ -5,6 +5,7 @@ import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "../net/Frontend_impl"
 import { mat4 } from "gl-matrix"
 import { RenderView } from "render/glview/RenderView"
+import { di } from "lib/di"
 
 /**
  * Render MediaPipe's 3d face landmarks
@@ -19,6 +20,9 @@ export class FaceLandmarkRenderer extends RenderHandler {
         this.frontend = frontend
         this.neutral = new WavefrontObj("data/3dobjs/mediapipe_canonical_face_model.obj")
     }
+    override defaultCamera() {
+        return di.get(Application).headCamera()
+    }
     override paint(app: Application, view: RenderView): void {
         if (this.frontend.landmarks === undefined) {
             return
@@ -31,7 +35,7 @@ export class FaceLandmarkRenderer extends RenderHandler {
 
         const shaderShadedMono = view.shaderShadedMono
         view.prepareCanvas()
-        const {projectionMatrix, modelViewMatrix, normalMatrix} = view.prepare()
+        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
         // prepareCanvas(view.canvas)
         // prepareViewport(gl, view.canvas)
         // const projectionMatrix = createProjectionMatrix(view.canvas)

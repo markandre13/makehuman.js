@@ -30,7 +30,7 @@
     },
     "include": [
         "src/**/*.ts",
-        "src/**/*.tsx",
+        "src/**/*.tsx", "test/lib/di.spec.tsx", "test/lib/Logger.spec.tsx",
     ],
     "exclude": [
         "data",

@@ -31,9 +31,11 @@ import { Connector } from "net/Connector"
 import { TextModel } from "toad.js"
 import { GLView } from "gl/GLView"
 import { RenderView } from "render/glview/RenderView"
+import { mat4 } from "gl-matrix"
+import { di } from "lib/di"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
-// smooth my crappy API design for now
+// this smoothes my crappy API design for now
 export function setRenderer(app: Application, renderer: RenderHandler, classic: boolean = true) {
     return (state: "visible" | "hidden") => {
         console.log(`setRenderer(state=${state}, renderer='${renderer.constructor.name})`)
@@ -61,6 +63,7 @@ export class Application {
     skeleton: Skeleton
 
     glview!: RenderView
+    /** classic MakeHuman: convert pose unit to matPose after blending all pose units */
     classic = true
 
     // application
@@ -80,6 +83,9 @@ export class Application {
     }
 
     constructor() {
+        di.single(Application, () => this)
+        // TODO: replace most properties with di instances, one after another
+
         console.log("loading assets...")
         this.human = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
@@ -129,7 +135,7 @@ export class Application {
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty
         this.human.modifiers.forEach((modifer) => {
-            modifer.getModel().signal.emit({type: VALUE})
+            modifer.getModel().signal.emit({ type: VALUE })
         })
 
         this.renderView = {} as any
@@ -179,11 +185,29 @@ export class Application {
 
     renderer?: RenderHandler
 
+    /**
+     * 
+     * @param renderer 
+     * @param classic classic MakeHuman: convert pose unit to matPose after blending all pose units
+     */
     setRenderer(renderer: RenderHandler, classic: boolean = true) {
         this.renderer = renderer
         this.classic = classic
         if (this.glview) {
             this.glview.draw = () => renderer.paint(this, this.glview)
+            this.glview.ctx.defaultCamera = () => renderer.defaultCamera()
         }
     }
+
+    headCamera(): mat4 {
+        const camera = mat4.create()
+        mat4.translate(camera, camera, [0, -7, -5])
+        return camera
+    }
+    bodyCamera(): mat4 {
+        const camera = mat4.create()
+        mat4.translate(camera, camera, [0, 0, -25])
+        return camera
+    }
+
 }

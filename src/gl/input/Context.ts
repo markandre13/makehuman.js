@@ -15,6 +15,7 @@ export class Context {
      * moves the world around the camera
      */
     camera: mat4 = mat4.create()
+    defaultCamera?: () => mat4
     projection: Projection = Projection.PERSPECTIVE
     /**
      * background clear color (default's to blender default gray)

@@ -18,25 +18,6 @@ export interface RenderViewProps extends HTMLElementProps {
     app: Application
 }
 
-/**
- * class GLView
-  paint()
-    this.app.renderer.paint(this.app, this)
-    this.inputHandler.paint()
-  onpointerdown()
-    this.inputHandler.onpointerdown(ev)
-    this.renderHandler.onpointerdown(ev)
-  onpointermove()
-    this.inputHandler.onpointermove(ev)
-    this.renderHandler.onpointermove(ev)
-  onpointerup()
-    this.inputHandler.onpointerup(ev)
-    this.renderHandler.onpointerup(ev)
-  onkeyup()
-    this.inputHandler.keyup(ev)
-  onkeydown()
-    this.inputHandler.keydown(ev)
- */
 export class RenderView extends GLView {
     renderHandler?: RenderHandler
     app: Application
@@ -52,7 +33,11 @@ export class RenderView extends GLView {
         const glprops = (props as any) as GLViewProps
         glprops.ctx = new Context()
         // move up by 7, move backwards by 5
-        mat4.translate(glprops.ctx.camera, glprops.ctx.camera, [0, -7, -5])
+        
+        mat4.translate(glprops.ctx.camera, glprops.ctx.camera, [0, 0, -25]) // head
+        const copy = mat4.clone(glprops.ctx.camera)
+        glprops.ctx.defaultCamera = () => copy
+
         glprops.ctx.background = [0, 0, 0, 1]
         super(glprops)
 

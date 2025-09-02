@@ -209,6 +209,10 @@ export class BlendShapeEditor extends RenderHandler {
         })
     }
 
+    override defaultCamera(): mat4 {
+        return this.app.bodyCamera()
+    }
+
     override paint(app: Application, view: RenderView): void {
         // console.log(`paint with scale ${this.scale.value}`)
         if (!this.initialized) {

@@ -22,6 +22,8 @@ import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
 import { RenderHandler } from 'render/glview/RenderHandler'
 import { RenderView } from "render/glview/RenderView"
+import { mat4 } from "gl-matrix"
+import { di } from "lib/di"
 
 class Notochord {
     processState = new TextModel("UNAVAILABLE", {
@@ -594,6 +596,9 @@ class ChordataRenderer extends RenderHandler {
         } else {
             this.rh.paint(app, view)
         }
+    }
+    override defaultCamera(): mat4 {
+        return di.get(Application).bodyCamera()
     }
 }
 

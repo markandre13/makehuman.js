@@ -4,6 +4,7 @@ import { RenderMesh } from "render/RenderMesh"
 import { FaceARKitLoader } from "./FaceARKitLoader"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { RenderView } from "render/glview/RenderView"
+import { di } from "lib/di"
 
 /**
  * Render MediaPipe's blendshape using Apples ARKit Mesh
@@ -17,7 +18,9 @@ export class FaceARKitRenderer extends RenderHandler {
         super()
         this.blendshapeModel = blendshapeModel
     }
-
+    override defaultCamera() {
+        return di.get(Application).headCamera()
+    }
     override paint(app: Application, view: RenderView): void {
         if (this.blendshapeSet === undefined) {
             this.blendshapeSet = FaceARKitLoader.getInstance().preload()
@@ -36,7 +39,7 @@ export class FaceARKitRenderer extends RenderHandler {
         }
 
         view.prepareCanvas()
-        const {projectionMatrix, modelViewMatrix, normalMatrix} = view.prepare()
+        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
 
         // const canvas = app.glview.canvas as HTMLCanvasElement
         // prepareCanvas(canvas)

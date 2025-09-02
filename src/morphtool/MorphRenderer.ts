@@ -1,25 +1,16 @@
 import { Application } from 'Application'
 import { RenderHandler } from 'render/glview/RenderHandler'
-// import {
-//     createModelViewMatrix,
-//     createNormalMatrix,
-//     createProjectionMatrix,
-//     prepareCanvas,
-//     prepareViewport,
-// } from 'render/util'
 import { ARKitFlat } from './ARKitFlat'
 import { MorphToolModel } from './MorphToolModel'
 import { MHFlat } from './MHFlat'
 import { RenderView } from 'render/glview/RenderView'
-import { Projection } from 'gl/Projection'
+import { di } from 'lib/di'
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
     private app: Application
     private model: MorphToolModel
-    
-    // indexOfSelectedVertex: number = 0
-    
+      
     arflat!: ARKitFlat
     mhflat!: MHFlat
 
@@ -34,28 +25,18 @@ export class MorphRenderer extends RenderHandler {
             this.app.updateManager.invalidateView()
         })
     }
-
+    override defaultCamera() {
+        return di.get(Application).headCamera()
+    }
     override paint(app: Application, view: RenderView): void {
-        console.log(`MorphRenderer::paint()`)
         // prepare
         const gl = view.gl
-        const ctx = view.ctx
         const shaderShadedMono = view.shaderShadedMono       
         if (this.arflat === undefined) {
             this.mhflat = new MHFlat(app, gl)
             this.arflat = new ARKitFlat(app, gl)
         }
         view.prepareCanvas()
-
-        // const canvas = app.glview.canvas as HTMLCanvasElement
-        // prepareCanvas(canvas)
-        // prepareViewport(gl, canvas)
-        // const projectionMatrix = createProjectionMatrix(
-        //     canvas,
-        //     ctx.projection === Projection.PERSPECTIVE
-        // )
-        // let modelViewMatrix = createModelViewMatrix(ctx, true)
-        // const normalMatrix = createNormalMatrix(modelViewMatrix)
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
   
         shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)

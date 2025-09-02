@@ -44,13 +44,10 @@ export class RenderMesh {
         this.quads = quads
 
         if (quads === false) {
-            // this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, fvertex)
             this.glIndices = new IndexBuffer(gl, fvertex)
-            // this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, vertex)
             this.glVertex = new VertexBuffer(gl, vertex)
             this.normal = new Float32Array(vertex.length)
             calculateNormalsTriangles(this.normal, vertex, fvertex)
-            // this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
             this.glNormal = new NormalBuffer(gl, this.normal)
             this.glData = {
                 indices: fvertex,
@@ -60,12 +57,9 @@ export class RenderMesh {
 
         const glData = decoupleXYZandUV(vertex, fvertex, uvs, fuvs)
         this.glData = glData
-        // this.glIndices = this.createBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW, Uint16Array, glData.indices)
         this.glIndices = new IndexBuffer(gl, glData.indices)
-        // this.glVertex = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.vertex)
         this.glVertex = new VertexBuffer(gl, glData.vertex)
         if (glData.texcoord) {
-            // this.glTexture = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, glData.texcoord)
             this.glTexture = new UVBuffer(gl, glData.texcoord)
         }
 
@@ -77,7 +71,6 @@ export class RenderMesh {
             this.normal[vertex.length + i * 3 + 2] = this.normal[v * 3 + 2]
         })
 
-        // this.glNormal = this.createBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW, Float32Array, this.normal)
         this.glNormal = new NormalBuffer(gl, this.normal)
     }
 

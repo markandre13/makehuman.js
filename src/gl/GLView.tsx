@@ -153,7 +153,7 @@ export class GLView extends View {
         requestAnimationFrame(this.paint)
     }
 
-    selectionCenter(): vec3 | undefined {
+    selectionCenter(): vec3 {
         for (let i = this._inputHandlerStack.length - 1; i >= 0; --i) {
             const center = this._inputHandlerStack[i]!.selectionCenter()
             if (center !== undefined) {

@@ -5,12 +5,17 @@ import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
 import { RenderView } from "./glview/RenderView"
 import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
+import { di } from "lib/di"
 
 export class RenderHuman extends RenderHandler {
     private viewHead: boolean
     constructor(viewHead: boolean = false) {
         super()
         this.viewHead = viewHead
+    }
+    override defaultCamera() {
+        const app = di.get(Application)
+        return this.viewHead ? app.headCamera() : app.bodyCamera()
     }
     override paint(app: Application, view: RenderView): void {
         if (view.overlay.children.length !== 0) {
@@ -39,14 +44,14 @@ export class RenderHuman extends RenderHandler {
             }
             humanMesh.changedProxy = undefined
         }
-     
+
         const gl = view.gl
         const shaderShadedMono = view.shaderShadedMono
         const shaderShadedTexture = view.shaderShadedTexture
-    
+
         view.prepareCanvas()
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
-    
+
         shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         shaderShadedTexture.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
@@ -62,7 +67,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
     const shaderShadedMono = view.shaderShadedMono
     const shaderShadedTexture = view.shaderShadedTexture
     const wireframe = app.humanMesh.wireframe.value
-    
+
     const WORD_LENGTH = 2
 
     gl.enable(gl.CULL_FACE)
@@ -95,7 +100,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
         renderList.skeleton.draw(shaderShadedMono, gl.LINES)
     }
-    
+
     //
     // BASEMESH
     //
@@ -172,7 +177,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
                 break
             case ProxyType.Eyes:
                 return
-            //     rgba = [0, 0.5, 1, alpha]
+                //     rgba = [0, 0.5, 1, alpha]
                 break
             case ProxyType.Eyebrows:
                 rgba = [0, 0, 0, alpha]
@@ -206,7 +211,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
     }
 
     {
-    // // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
+        // // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
         gl.depthMask(false) // must be false, otherwise the texture ain't visible
         const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
         // programTex.texture(view.eyeTexture!, alpha)           

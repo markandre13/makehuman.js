@@ -17,6 +17,7 @@ import { simulatedModel } from "./PoseTab"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
 import { html } from "toad.js"
 import { RenderView } from "render/glview/RenderView"
+import { di } from "lib/di"
 
 let a = 0
 
@@ -39,7 +40,9 @@ export class MPPoseRenderer extends RenderHandler {
 
         8, 7, 7, 0, 0, 8,
     ]
-
+    override defaultCamera() {
+        return di.get(Application).bodyCamera()
+    }
     override paint(app: Application, view: RenderView): void {
         if (this.arrowMesh === undefined) {
             this.arrowMesh = new ArrowMesh(view.gl, 0.1)

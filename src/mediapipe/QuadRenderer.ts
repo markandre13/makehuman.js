@@ -16,6 +16,7 @@ import { BlendShapeEditor } from "blendshapes/BlendShapeEditor"
 import { ArrowMesh } from "./ArrowMesh"
 import { RenderView } from "render/glview/RenderView"
 import { Projection } from "gl/Projection"
+import { di } from "lib/di"
 
 /**
  * Renders 4 views: 2x MakeHuman Head, 2x Blendshape
@@ -31,7 +32,9 @@ export class QuadRenderer extends RenderHandler {
         super()
         this.editor = editor
     }
-
+    override defaultCamera() {
+        return di.get(Application).bodyCamera()
+    }
     override paint(app: Application, view: RenderView): void {
         if (this.arkit === undefined) {
             this.arkit = FaceARKitLoader.getInstance().preload()

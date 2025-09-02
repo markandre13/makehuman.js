@@ -15,6 +15,7 @@ import { mat4, vec3 } from "gl-matrix"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { RenderView } from "render/glview/RenderView"
 import { Projection } from "gl/Projection"
+import { di } from "lib/di"
 
 /**
  * Render MediaPipe's blendshape using ICT's FaceKit Mesh
@@ -28,7 +29,9 @@ export class FaceICTKitRenderer extends RenderHandler {
         super()
         this.blendshapeModel = blendshapeModel
     }
-
+    override defaultCamera() {
+        return di.get(Application).headCamera()
+    }
     override paint(app: Application, view: RenderView): void {
         if (this.blendshapeSet === undefined) {
             this.blendshapeSet = FaceICTKitLoader.getInstance() // .preload()

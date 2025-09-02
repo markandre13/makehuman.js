@@ -6,6 +6,7 @@ import { MorphToolModel } from './MorphToolModel'
 import { Form } from 'toad.js/view/Form'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
 import { MorphToolMode } from './MorphToolMode'
+import { mat4 } from 'gl-matrix'
 
 /**
  * Tool to morph face meshes.
