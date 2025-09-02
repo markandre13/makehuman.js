@@ -1,9 +1,8 @@
 import { Application } from 'Application'
-import { mat4, vec2, vec4 } from 'gl-matrix'
+import { mat4, vec2, vec3, vec4 } from 'gl-matrix'
 import { createModelViewMatrix, createProjectionMatrix } from 'render/util'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphToolModel } from './MorphToolModel'
-import { D } from 'render/glview/RenderView'
 import { InputHandler } from 'gl/input/InputHandler'
 import { MouseButton } from 'gl/input/MouseButton'
 import { Projection } from 'gl/Projection'
@@ -109,37 +108,16 @@ export class MorphToolMode extends InputHandler {
     override info(): string | undefined {
         return 'Select Vertex'
     }
+    override selectionCenter() {
+        return vec3.fromValues(0,7,0)
+    }
     override pointerdown(ev: PointerEvent): void {
-        ev.preventDefault()
         switch (ev.button) {
             case MouseButton.LEFT:
                 this.selectVertex(ev)
-                break
-            case MouseButton.MIDDLE:
-                this._buttonDown = true
-                this._downX = ev.x
-                this._downY = ev.y
-                this._origCamera = mat4.clone(this._app.glview.ctx.camera)
+                ev.preventDefault()
                 break
         }
-    }
-    override pointermove(ev: PointerEvent): void {
-        ev.preventDefault()
-        if (this._buttonDown) {
-            this.rotate(ev)
-        }
-    }
-    override pointerup(ev: PointerEvent): void {
-        ev.preventDefault()
-        switch (ev.button) {
-            case MouseButton.MIDDLE:
-                if (this._buttonDown) {
-                    this._buttonDown = false
-                    this.rotate(ev)
-                }
-                break
-        }
-        // console.log(`pointerup`)
     }
 
     /**
@@ -201,43 +179,5 @@ export class MorphToolMode extends InputHandler {
             element.setAttributeNS(null, 'cx', `${pixelX}`)
             element.setAttributeNS(null, 'cy', `${pixelY}`)
         })
-    }
-
-    /**
-     *
-     */
-    rotate(ev: PointerEvent) {
-        const x = ev.x - this._downX
-        const y = ev.y - this._downY
-        if (x !== 0 || y !== 0) {
-            const cameraRotation = mat4.clone(this._origCamera)
-            cameraRotation[12] = cameraRotation[13] = cameraRotation[14] = 0
-            const invCameraRotation = mat4.invert(mat4.create(), cameraRotation)!
-
-            const moveToRotationCenter = mat4.create()
-            mat4.translate(
-                moveToRotationCenter,
-                moveToRotationCenter,
-                [0, 7, 0]
-            )
-
-            const backFromRotationCenter = mat4.invert(
-                mat4.create(),
-                moveToRotationCenter
-            )!
-
-            const m = mat4.create()
-
-            mat4.mul(m, m, moveToRotationCenter)
-            mat4.mul(m, m, invCameraRotation)
-            mat4.rotateX(m, m, y / D)
-            mat4.mul(m, m, cameraRotation)
-            mat4.rotateY(m, m, x / D)
-            mat4.mul(m, m, backFromRotationCenter)
-
-            mat4.mul(this._app.glview.ctx.camera, this._origCamera, m)
-
-            this._app.glview.invalidate()
-        }
     }
 }
