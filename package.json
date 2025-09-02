@@ -49,6 +49,7 @@
     "mocha": "^11.7.2",
     "rollup": "^4.50.0",
     "rollup-plugin-typescript2": "^0.36.0",
+    "temporal-polyfill": "^0.3.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
     "typescript": "^5.9.2"
