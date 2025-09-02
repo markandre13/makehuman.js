@@ -36,7 +36,7 @@ export class FreeMoCapRenderer extends RenderHandler {
         8, 7, 7, 0, 0, 8,
     ]
     override defaultCamera() {
-        return di.get(Application).bodyCamera()
+        return di.get(Application).bodyCamera
     }
     override paint(app: Application, view: RenderView): void {
         if (view.overlay.children.length !== 0) {

@@ -21,7 +21,7 @@ export class FaceLandmarkRenderer extends RenderHandler {
         this.neutral = new WavefrontObj("data/3dobjs/mediapipe_canonical_face_model.obj")
     }
     override defaultCamera() {
-        return di.get(Application).headCamera()
+        return di.get(Application).headCamera
     }
     override paint(app: Application, view: RenderView): void {
         if (this.frontend.landmarks === undefined) {

@@ -4,7 +4,7 @@ import { mat4 } from 'gl-matrix'
 
 export abstract class RenderHandler {
     abstract paint(app: Application, view: RenderView): void
-    abstract defaultCamera(): mat4
+    abstract defaultCamera(): () => mat4
     onpointerdown(ev: PointerEvent): boolean {
         return true
     }

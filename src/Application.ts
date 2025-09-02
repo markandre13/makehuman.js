@@ -83,6 +83,9 @@ export class Application {
     }
 
     constructor() {
+        this.bodyCamera = this.bodyCamera.bind(this)
+        this.headCamera = this.headCamera.bind(this)
+
         di.single(Application, () => this)
         // TODO: replace most properties with di instances, one after another
 
@@ -195,7 +198,11 @@ export class Application {
         this.classic = classic
         if (this.glview) {
             this.glview.draw = () => renderer.paint(this, this.glview)
-            this.glview.ctx.defaultCamera = () => renderer.defaultCamera()
+            const defaultCamera = renderer.defaultCamera()
+            if (this.glview.ctx.defaultCamera !== defaultCamera) {
+                this.glview.ctx.defaultCamera = defaultCamera
+                this.glview.ctx.camera = defaultCamera()
+            }
         }
     }
 

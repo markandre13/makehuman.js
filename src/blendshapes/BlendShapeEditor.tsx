@@ -209,8 +209,8 @@ export class BlendShapeEditor extends RenderHandler {
         })
     }
 
-    override defaultCamera(): mat4 {
-        return this.app.bodyCamera()
+    override defaultCamera() {
+        return this.app.bodyCamera
     }
 
     override paint(app: Application, view: RenderView): void {

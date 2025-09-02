@@ -30,7 +30,7 @@ export class FaceICTKitRenderer extends RenderHandler {
         this.blendshapeModel = blendshapeModel
     }
     override defaultCamera() {
-        return di.get(Application).headCamera()
+        return di.get(Application).headCamera
     }
     override paint(app: Application, view: RenderView): void {
         if (this.blendshapeSet === undefined) {

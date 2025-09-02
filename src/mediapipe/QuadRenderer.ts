@@ -33,7 +33,7 @@ export class QuadRenderer extends RenderHandler {
         this.editor = editor
     }
     override defaultCamera() {
-        return di.get(Application).bodyCamera()
+        return di.get(Application).bodyCamera
     }
     override paint(app: Application, view: RenderView): void {
         if (this.arkit === undefined) {

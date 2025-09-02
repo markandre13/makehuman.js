@@ -597,8 +597,8 @@ class ChordataRenderer extends RenderHandler {
             this.rh.paint(app, view)
         }
     }
-    override defaultCamera(): mat4 {
-        return di.get(Application).bodyCamera()
+    override defaultCamera() {
+        return di.get(Application).bodyCamera
     }
 }
 

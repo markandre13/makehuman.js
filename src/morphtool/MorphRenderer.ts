@@ -26,7 +26,7 @@ export class MorphRenderer extends RenderHandler {
         })
     }
     override defaultCamera() {
-        return di.get(Application).headCamera()
+        return di.get(Application).headCamera
     }
     override paint(app: Application, view: RenderView): void {
         // prepare

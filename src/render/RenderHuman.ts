@@ -15,7 +15,7 @@ export class RenderHuman extends RenderHandler {
     }
     override defaultCamera() {
         const app = di.get(Application)
-        return this.viewHead ? app.headCamera() : app.bodyCamera()
+        return this.viewHead ? app.headCamera : app.bodyCamera
     }
     override paint(app: Application, view: RenderView): void {
         if (view.overlay.children.length !== 0) {
