@@ -1,5 +1,5 @@
 import { vec2, mat4, vec4 } from 'gl-matrix'
-import { ShaderShaded } from 'gl/shaders/ShaderShaded'
+import { ShaderShadedMono } from 'gl/shaders/ShaderShadedMono'
 import { findVertex } from 'lib/distance'
 import { RenderMesh } from 'render/RenderMesh'
 
@@ -9,7 +9,7 @@ export class FlatMesh {
     protected facesFlat!: number[]
     protected renderMesh!: RenderMesh
 
-    bind(shader: ShaderShaded): void {
+    bind(shader: ShaderShadedMono): void {
         this.renderMesh.bind(shader)
     }
     draw(gl: WebGL2RenderingContext): void {

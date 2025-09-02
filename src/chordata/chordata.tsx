@@ -31,7 +31,7 @@ class Notochord {
     calibrationState = new TextModel("", {
         label: "Calibration State",
     })
-    calibration = new Action(() => {})
+    calibration = new Action(() => { })
     hasCalibrationData = false
 
     configs = new RemoteOptionModel("", [], {
@@ -676,11 +676,10 @@ export default function ChordataTab(props: { app: Application }) {
                     >
                         Calibrate
                     </Button>{" "}
-                    <Button
-                        action={() => {
-                            resetCalibration()
-                            updateManager.invalidateView()
-                        }}
+                    <Button action={() => {
+                        resetCalibration()
+                        updateManager.invalidateView()
+                    }}
                     >
                         Reset
                     </Button>

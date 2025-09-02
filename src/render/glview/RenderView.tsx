@@ -7,7 +7,7 @@ import { ShaderShadedColored } from 'gl/shaders/ShaderShadedColored'
 import { GLView, GLViewProps } from 'gl/GLView'
 import { BasicMode } from 'gl/input/BasicMode'
 import { Context } from 'gl/input/Context'
-import { ShaderShaded } from 'gl/shaders/ShaderShaded'
+import { ShaderShadedMono } from 'gl/shaders/ShaderShadedMono'
 import { Texture } from 'gl/Texture'
 import { InputHandler } from 'gl/input/InputHandler'
 import { HTMLElementProps } from 'toad.jsx/lib/jsx-runtime'
@@ -41,7 +41,7 @@ export class RenderView extends GLView {
     renderHandler?: RenderHandler
     app: Application
 
-    programRGBA!: ShaderShaded
+    programRGBA!: ShaderShadedMono
     programTex!: ShaderShadedTextured
     programColor!: ShaderShadedColored
     renderList!: RenderList
@@ -121,7 +121,7 @@ export class RenderView extends GLView {
         // flip texture pixels into the bottom-to-top order that WebGL expects.
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true)
 
-        this.programRGBA = new ShaderShaded(this.gl)
+        this.programRGBA = new ShaderShadedMono(this.gl)
         this.programTex = new ShaderShadedTextured(this.gl)
         this.programColor = new ShaderShadedColored(this.gl)
 

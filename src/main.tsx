@@ -52,6 +52,7 @@ import { ConnectButton } from 'net/ConnectButton'
 import { PoseTab } from 'mediapipe/pose/PoseTab'
 import { MorphTool } from 'morphtool/MorphTool'
 import { RenderView } from 'render/glview/RenderView'
+import { FormSwitch } from 'toad.js/view/FormSwitch'
 
 export async function main() {
     try {
@@ -181,16 +182,12 @@ function ProxyTab(props: { app: Application }) {
                     <>
                         <FormLabel>{ProxyType[pid]}</FormLabel>
                         <FormField>
-                            <Select
-                                id={ProxyType[pid]}
-                                model={props.app.proxyManager.list.get(pid)}
-                            />
+                            <Select id={ProxyType[pid]} model={props.app.proxyManager.list.get(pid)} />
                         </FormField>
-                        <FormHelp
-                            model={props.app.proxyManager.list.get(pid) as any}
-                        />
+                        <FormHelp model={props.app.proxyManager.list.get(pid) as any} />
                     </>
                 ))}
+                <FormSwitch model={props.app.humanMesh.wireframe} />
             </Form>
             <div id="debug">DEBUG</div>
         </Tab>

@@ -12,7 +12,7 @@ import { Frontend_impl } from "../net/Frontend_impl"
 import { mat4 } from "gl-matrix"
 import { RenderView } from "render/glview/RenderView"
 import { ShaderShadedColored } from "gl/shaders/ShaderShadedColored"
-import { ShaderShaded } from "gl/shaders/ShaderShaded"
+import { ShaderShadedMono } from "gl/shaders/ShaderShadedMono"
 
 /**
  * Render MediaPipe's 3d face landmarks
@@ -37,7 +37,7 @@ export class FaceLandmarkRenderer extends RenderHandler {
             throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
         }
 
-        const programRGBA = new ShaderShaded(gl)
+        const programRGBA = new ShaderShadedMono(gl)
         prepareCanvas(view.canvas)
         prepareViewport(gl, view.canvas)
         const projectionMatrix = createProjectionMatrix(view.canvas)

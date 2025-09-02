@@ -22,18 +22,14 @@ export class IndexBuffer {
             this._glbuffer = this._gl.createBuffer()
             this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._glbuffer)
             this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._data, this._gl.STATIC_DRAW)
+        } else {
+            this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._glbuffer)
         }
-        this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._glbuffer)
     }
     drawTriangles() {
         const type = this._gl!.UNSIGNED_SHORT
         const offset = 0
-        this._gl!.drawElements(
-            this._gl.TRIANGLES,
-            this._data.length,
-            type,
-            offset
-        )
+        this._gl!.drawElements(this._gl.TRIANGLES, this._data.length, type, offset)
     }
     drawLines() {
         const type = this._gl.UNSIGNED_SHORT

@@ -4,7 +4,7 @@ import { RenderHandler } from './glview/RenderHandler'
 import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
 import { RenderView } from "./glview/RenderView"
-import { Projection } from "gl/Projection"
+import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
 
 export class RenderHuman extends RenderHandler {
     private viewHead: boolean
@@ -39,13 +39,10 @@ export class RenderHuman extends RenderHandler {
             }
             humanMesh.changedProxy = undefined
         }
-
      
-        const ctx = view.ctx
         const gl = view.gl
         const programRGBA = view.programRGBA
         const programTex = view.programTex
-        const viewHead = this.viewHead
     
         view.prepareCanvas()
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
@@ -83,11 +80,12 @@ export function drawHumanCore(app: Application, view: RenderView) {
     }
 
     programRGBA.use(gl)
-
     //
     // JOINTS AND SKELETON
     //
     if (wireframe) {
+        renderList.base.bind(programRGBA)
+
         const NUMBER_OF_JOINTS = 124
         const offset = humanMesh.baseMesh.groups[2].startIndex * WORD_LENGTH
         const count = humanMesh.baseMesh.groups[2].length * NUMBER_OF_JOINTS

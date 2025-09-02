@@ -1,7 +1,7 @@
 import { mat4 } from "gl-matrix"
 import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./util"
 import { RenderMesh } from "./RenderMesh"
-import { ShaderShaded } from "gl/shaders/ShaderShaded"
+import { ShaderShadedMono } from "gl/shaders/ShaderShadedMono"
 
 let lastXYZ: Float32Array | undefined
 
@@ -15,7 +15,7 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: n
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
-    const programRGBA = new ShaderShaded(gl)
+    const programRGBA = new ShaderShadedMono(gl)
 
     prepareCanvas(canvas)
     prepareViewport(gl, canvas)
@@ -67,7 +67,7 @@ function center(xyz: Float32Array) {
     }
 }
 
-function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: ShaderShaded, xyz: Float32Array) {
+function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: ShaderShadedMono, xyz: Float32Array) {
     const fxyz = new Array<number>(xyz.length / 3)
     for (let i = 0; i < fxyz.length; ++i) {
         fxyz[i] = i
@@ -78,7 +78,7 @@ function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: ShaderShaded, x
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 }
 
-function drawLineArt(gl: WebGL2RenderingContext, programRGBA: ShaderShaded, xyz: Float32Array, fxyz: number[]) {
+function drawLineArt(gl: WebGL2RenderingContext, programRGBA: ShaderShadedMono, xyz: Float32Array, fxyz: number[]) {
     // DRAW LINE ART
     // programRGBA.setColor([0.0, 1.8, 0.0, 1])
     programRGBA.setColor(gl, [0.0, 5.0, 10.0, 1])

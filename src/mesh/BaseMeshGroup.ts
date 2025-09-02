@@ -1,7 +1,7 @@
 export enum BaseMeshGroup {
     SKIN = 0,
     PANTS_HELPER = 1,
-    // 2 to 124 are the joints
+    // 2 to 124 are the cubes for the joints
     SKIRT = 126,
     HAIR = 127,
     EYEBALL0 = 128,

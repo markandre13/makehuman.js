@@ -3,7 +3,7 @@ import { calculateNormalsQuads, calculateNormalsTriangles } from "../lib/calcula
 import { VertexBuffer } from "gl/buffers/VertexBuffer"
 import { NormalBuffer } from "gl/buffers/NormalBuffer"
 import { UVBuffer } from "gl/buffers/UVBuffer"
-import { ShaderShaded } from "gl/shaders/ShaderShaded"
+import { ShaderShadedMono } from "gl/shaders/ShaderShadedMono"
 import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
 
 interface GLXYZUV {
@@ -105,18 +105,18 @@ export class RenderMesh {
         }
     }
 
-    draw(programInfo: ShaderShaded | ShaderShadedTextured, mode: number) {
+    draw(programInfo: ShaderShadedMono | ShaderShadedTextured, mode: number) {
         this.bind(programInfo)
         this.gl.drawElements(mode, this.glData.indices.length, this.gl.UNSIGNED_SHORT, 0)
     }
 
-    bind(programInfo: ShaderShaded | ShaderShadedTextured): void {
+    bind(shader: ShaderShadedMono | ShaderShadedTextured): void {
         // programInfo.bind(this.glIndices, this.glVertex, this.glNormal, this.glTexture)
         this.glIndices.bind()
-        this.glVertex.bind(programInfo)
-        this.glNormal.bind(programInfo)
-        if (this.glTexture && programInfo instanceof ShaderShadedTextured) {
-            this.glTexture.bind(programInfo)
+        this.glVertex.bind(shader)
+        this.glNormal.bind(shader)
+        if (this.glTexture && shader instanceof ShaderShadedTextured) {
+            this.glTexture.bind(shader)
         }
     }
 
