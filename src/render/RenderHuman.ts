@@ -78,6 +78,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
         gl.disable(gl.BLEND)
         alpha = 1
     }
+    shaderShadedTexture.setAlpha(alpha)
 
     shaderShadedMono.use(gl)
     //
