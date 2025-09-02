@@ -231,7 +231,7 @@ export class BlendShapeEditor extends RenderHandler {
 
         const gl = view.gl
         const ctx = view.ctx
-        const programRGBA = view.programRGBA
+        const shaderShadedMono = view.shaderShadedMono
 
         if (this.xyz === undefined) {
             this.update = true
@@ -274,28 +274,28 @@ export class BlendShapeEditor extends RenderHandler {
         const modelViewMatrix = createModelViewMatrix(ctx, true)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
 
         gl.enable(gl.BLEND)
-        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
+        shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
         const WORD_LENGTH = 2
         let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
         let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-        view.renderList.base.bind(programRGBA)
+        view.renderList.base.bind(shaderShadedMono)
         view.renderList.base.drawSubset(gl.TRIANGLES, offset, length)
 
         gl.enable(gl.BLEND)
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
         const alpha = 0.5
 
-        programRGBA.setColor(gl, [0, 0.5, 1, alpha])
+        shaderShadedMono.setColor(gl, [0, 0.5, 1, alpha])
         // this.renderMeshBS.bind(programRGBA)
         // gl.drawElements(gl.TRIANGLES, 100, gl.UNSIGNED_SHORT, 0)
-        this.renderMeshBS.draw(programRGBA, gl.TRIANGLES)
+        this.renderMeshBS.draw(shaderShadedMono, gl.TRIANGLES)
 
         // programRGBA.setColor([1, 0.8, 0.7, alpha])
         // const WORD_LENGTH = 2

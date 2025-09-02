@@ -56,15 +56,15 @@ export class FreeMoCapRenderer extends RenderHandler {
         gl.disable(gl.CULL_FACE)
         gl.depthMask(true)
 
-        const programRGBA = view.programRGBA
-        const programColor = view.programColor
+        const shaderShadedMono = view.shaderShadedMono
+        const shaderShadedColored = view.shaderShadedColored
 
         const projectionMatrix = createProjectionMatrix(canvas)
         const modelViewMatrix = createModelViewMatrix(view.ctx)
         const normalMatrix = createNormalMatrix(modelViewMatrix)
-        programRGBA.setProjection(gl, projectionMatrix)
-        programRGBA.setModelView(gl, modelViewMatrix)
-        programRGBA.setNormal(gl, normalMatrix)
+        shaderShadedMono.setProjection(gl, projectionMatrix)
+        shaderShadedMono.setModelView(gl, modelViewMatrix)
+        shaderShadedMono.setNormal(gl, normalMatrix)
 
         // adjust freemocap data to opengl screen space
         const landmarks = app.frontend._poseLandmarks
@@ -90,13 +90,13 @@ export class FreeMoCapRenderer extends RenderHandler {
         }
 
         // draw blaze
-        programRGBA.setColor(gl, [0, 0.5, 1, 1])
-        this.mesh0.bind(programRGBA)
-        this.mesh0.draw(programRGBA, gl.LINES)
+        shaderShadedMono.setColor(gl, [0, 0.5, 1, 1])
+        this.mesh0.bind(shaderShadedMono)
+        this.mesh0.draw(shaderShadedMono, gl.LINES)
 
         // draw rotations
-        programColor.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
-        renderAxes(gl, programColor, this.arrowMesh, modelViewMatrix, this.bpl, this.bpc)
+        shaderShadedColored.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        renderAxes(gl, shaderShadedColored, this.arrowMesh, modelViewMatrix, this.bpl, this.bpc)
 
         renderReconstructedBlaze(this, view)
     }

@@ -5,7 +5,6 @@ import { MorphRenderer } from './MorphRenderer'
 import { MorphToolModel } from './MorphToolModel'
 import { D } from 'render/glview/RenderView'
 import { InputHandler } from 'gl/input/InputHandler'
-import { ButtonVariant } from 'toad.js/view/Button'
 import { MouseButton } from 'gl/input/MouseButton'
 import { Projection } from 'gl/Projection'
 

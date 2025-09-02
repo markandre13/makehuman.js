@@ -1,17 +1,9 @@
 import { Application } from "Application"
 import { RenderHandler } from 'render/glview/RenderHandler'
-import {
-    createModelViewMatrix,
-    createNormalMatrix,
-    createProjectionMatrix,
-    prepareCanvas,
-    prepareViewport,
-} from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { FaceARKitLoader } from "./FaceARKitLoader"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { RenderView } from "render/glview/RenderView"
-import { Projection } from "gl/Projection"
 
 /**
  * Render MediaPipe's blendshape using Apples ARKit Mesh
@@ -32,7 +24,7 @@ export class FaceARKitRenderer extends RenderHandler {
         }
         const gl = view.gl
         const ctx = view.ctx
-        const programRGBA = view.programRGBA
+        const shaderShadedMono = view.shaderShadedMono
 
         const vertex = this.blendshapeSet.getVertex(this.blendshapeModel)
         const neutral = this.blendshapeSet.neutral!
@@ -43,22 +35,25 @@ export class FaceARKitRenderer extends RenderHandler {
             this.mesh = new RenderMesh(gl, vertex, neutral!.fxyz, undefined, undefined, false)
         }
 
-        const canvas = app.glview.canvas as HTMLCanvasElement
-        prepareCanvas(canvas)
-        prepareViewport(gl, canvas)
-        const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        const modelViewMatrix = createModelViewMatrix(ctx)
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
+        view.prepareCanvas()
+        const {projectionMatrix, modelViewMatrix, normalMatrix} = view.prepare()
 
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        // const canvas = app.glview.canvas as HTMLCanvasElement
+        // prepareCanvas(canvas)
+        // prepareViewport(gl, canvas)
+        // const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+        // const modelViewMatrix = createModelViewMatrix(ctx)
+        // const normalMatrix = createNormalMatrix(modelViewMatrix)
+
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
         gl.disable(gl.BLEND)
 
-        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
-        this.mesh.bind(programRGBA)
+        shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
+        this.mesh.bind(shaderShadedMono)
         gl.drawElements(gl.TRIANGLES, neutral!.fxyz.length, gl.UNSIGNED_SHORT, 0)
     }
 }

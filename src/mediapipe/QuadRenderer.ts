@@ -1,12 +1,12 @@
 import { Application } from "Application"
 import { RenderHandler } from 'render/glview/RenderHandler'
-import {
-    createModelViewMatrix,
-    createNormalMatrix,
-    createProjectionMatrix,
-    prepareCanvas,
-    prepareViewport,
-} from "render/util"
+// import {
+//     createModelViewMatrix,
+//     createNormalMatrix,
+//     createProjectionMatrix,
+//     prepareCanvas,
+//     prepareViewport,
+// } from "render/util"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "../net/Frontend_impl"
 import { FaceARKitLoader } from "./FaceARKitLoader"
@@ -41,8 +41,8 @@ export class QuadRenderer extends RenderHandler {
         }
         const gl = view.gl
         const ctx = view.ctx
-        const programRGBA = view.programRGBA
-        const programTex = view.programTex
+        const shaderShadedMono = view.shaderShadedMono
+        const shaderShadedTexture = view.shaderShadedTexture
         const neutral = this.arkit.neutral!
 
         const vertex = this.arkit.getVertex(app.updateManager.getBlendshapeModel()!)
@@ -52,26 +52,28 @@ export class QuadRenderer extends RenderHandler {
             this.mesh.update(vertex)
         }
 
-        const canvas = app.glview.canvas as HTMLCanvasElement
-        prepareCanvas(canvas)
-        prepareViewport(gl, canvas)
-        const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
-        let modelViewMatrix = createModelViewMatrix(ctx)
-        const normalMatrix = createNormalMatrix(modelViewMatrix)
+                view.prepareCanvas()
+        const {projectionMatrix, modelViewMatrix, normalMatrix} = view.prepare()
+        // const canvas = app.glview.canvas as HTMLCanvasElement
+        // prepareCanvas(canvas)
+        // prepareViewport(gl, canvas)
+        // const projectionMatrix = createProjectionMatrix(canvas, ctx.projection === Projection.PERSPECTIVE)
+        // let modelViewMatrix = createModelViewMatrix(ctx)
+        // const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programTex.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedTexture.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.depthMask(true)
         gl.disable(gl.BLEND)
 
-        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
-        this.mesh.bind(programRGBA)
+        shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
+        this.mesh.bind(shaderShadedMono)
 
-        const w = canvas.width / 2
-        const h = canvas.height / 2
+        const w = view.canvas.width / 2
+        const h = view.canvas.height / 2
 
         // draw arkit blendshape
         gl.viewport(w, h, w, h)
@@ -79,7 +81,7 @@ export class QuadRenderer extends RenderHandler {
 
         gl.viewport(w, 0, w, h)
         // FIXME: ctx.rotateY -= 45
-        programRGBA.setModelView(gl, createModelViewMatrix(ctx))
+        shaderShadedMono.setModelView(gl, ctx.camera)
         // FIXME: ctx.rotateY += 45
         gl.drawElements(gl.TRIANGLES, neutral.fxyz.length, gl.UNSIGNED_SHORT, 0)
 
@@ -87,22 +89,22 @@ export class QuadRenderer extends RenderHandler {
         app.updateManager.updateIt()
 
         gl.viewport(0, h, w, h)
-        modelViewMatrix = createModelViewMatrix(ctx, true)
-        programRGBA.setModelView(gl, modelViewMatrix)
-        programTex.use(gl)
-        programTex.setModelView(gl, modelViewMatrix)
+        // modelViewMatrix = createModelViewMatrix(ctx, true)
+        shaderShadedMono.setModelView(gl, ctx.camera)
+        shaderShadedTexture.use(gl)
+        shaderShadedTexture.setModelView(gl, ctx.camera)
         // programRGBA.useProgram()
         app.updateManager.updateIt()
         drawHumanCore(app, view)
 
         gl.viewport(0, 0, w, h)
         // FIXME: ctx.rotateY -= 45
-        modelViewMatrix = createModelViewMatrix(ctx, true)
+        // modelViewMatrix = createModelViewMatrix(ctx, true)
         // FIXME: ctx.rotateY += 45
         // programTex.use(gl)
-        programTex.setModelView(gl, modelViewMatrix)
-        programRGBA.use(gl)
-        programRGBA.setModelView(gl, modelViewMatrix)
+        shaderShadedTexture.setModelView(gl, ctx.camera)
+        shaderShadedMono.use(gl)
+        shaderShadedMono.setModelView(gl, ctx.camera)
 
         drawHumanCore(app, view)
 
@@ -116,9 +118,9 @@ export class QuadRenderer extends RenderHandler {
             const bone = app.skeleton.getBone(this.editor.currentBone.value)
             mat4.mul(modelViewMatrix, modelViewMatrix, bone.matPoseGlobal!)
 
-            const colorShader = view.programColor
+            const colorShader = view.shaderShadedColored
             colorShader.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
-            this.arrowMesh.draw(view.programColor)
+            this.arrowMesh.draw(view.shaderShadedColored)
         }
     }
 }

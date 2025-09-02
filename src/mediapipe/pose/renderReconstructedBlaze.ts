@@ -11,7 +11,7 @@ import { RenderView } from "render/glview/RenderView"
  * @param view 
  */
 export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: RenderView) {
-    const programRGBA = view.programRGBA
+    const shaderShadedMono = view.shaderShadedMono
     const gl = view.gl
     const bpc = t.bpc
     const bpl = t.bpl
@@ -133,10 +133,10 @@ export function renderReconstructedBlaze(t: FreeMoCapRenderer, view: RenderView)
     } else {
         t.mesh1.update(data1)
     }
-    programRGBA.use(gl)
-    programRGBA.setColor(gl, [1, 0.5, 0, 1])
-    t.mesh1.bind(programRGBA)
-    t.mesh1.draw(programRGBA, gl.LINES)
+    shaderShadedMono.use(gl)
+    shaderShadedMono.setColor(gl, [1, 0.5, 0, 1])
+    t.mesh1.bind(shaderShadedMono)
+    t.mesh1.draw(shaderShadedMono, gl.LINES)
 }
 
 function length(p0: vec3, p1: vec3) {

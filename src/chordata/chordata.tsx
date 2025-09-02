@@ -590,7 +590,7 @@ class ChordataRenderer extends RenderHandler {
     override paint(app: Application, view: RenderView): void {
         // throw new Error("Method not implemented.")
         if (app.chordataSettings.mountKCeptorView.value) {
-            renderChordata(view.ctx, view.gl, view.programColor, view.overlay, app.humanMesh, app.chordataSettings)
+            renderChordata(view.ctx, view.gl, view.shaderShadedColored, view.overlay, app.humanMesh, app.chordataSettings)
         } else {
             this.rh.paint(app, view)
         }

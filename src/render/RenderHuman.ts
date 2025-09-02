@@ -41,14 +41,14 @@ export class RenderHuman extends RenderHandler {
         }
      
         const gl = view.gl
-        const programRGBA = view.programRGBA
-        const programTex = view.programTex
+        const shaderShadedMono = view.shaderShadedMono
+        const shaderShadedTexture = view.shaderShadedTexture
     
         view.prepareCanvas()
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
     
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
-        programTex.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedTexture.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         app.updateManager.updateIt()
         drawHumanCore(app, view)
@@ -59,8 +59,8 @@ export function drawHumanCore(app: Application, view: RenderView) {
     const humanMesh = app.humanMesh
     const renderList = view.renderList
     const gl = view.gl
-    const programRGBA = view.programRGBA
-    const programTex = view.programTex
+    const shaderShadedMono = view.shaderShadedMono
+    const shaderShadedTexture = view.shaderShadedTexture
     const wireframe = app.humanMesh.wireframe.value
     
     const WORD_LENGTH = 2
@@ -79,26 +79,26 @@ export function drawHumanCore(app: Application, view: RenderView) {
         alpha = 1
     }
 
-    programRGBA.use(gl)
+    shaderShadedMono.use(gl)
     //
     // JOINTS AND SKELETON
     //
     if (wireframe) {
-        renderList.base.bind(programRGBA)
+        renderList.base.bind(shaderShadedMono)
 
         const NUMBER_OF_JOINTS = 124
         const offset = humanMesh.baseMesh.groups[2].startIndex * WORD_LENGTH
         const count = humanMesh.baseMesh.groups[2].length * NUMBER_OF_JOINTS
 
-        programRGBA.setColor(gl, [1, 1, 1, 1])
+        shaderShadedMono.setColor(gl, [1, 1, 1, 1])
         renderList.base.drawSubset(gl.TRIANGLES, offset, count)
-        renderList.skeleton.draw(programRGBA, gl.LINES)
+        renderList.skeleton.draw(shaderShadedMono, gl.LINES)
     }
     
     //
     // BASEMESH
     //
-    renderList.base.bind(programRGBA)
+    renderList.base.bind(shaderShadedMono)
 
     const MESH_GROUP_INDEX = 0
     const COLOR_INDEX = 1
@@ -140,7 +140,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
 
         // render
         const rgba = x[COLOR_INDEX] as number[]
-        programRGBA.setColor(gl, rgba)
+        shaderShadedMono.setColor(gl, rgba)
         let offset = humanMesh.baseMesh.groups[idx].startIndex * WORD_LENGTH
         let length = humanMesh.baseMesh.groups[idx].length
 
@@ -186,21 +186,21 @@ export function drawHumanCore(app: Application, view: RenderView) {
                 rgba = [1, 0, 0, alpha]
                 break
         }
-        programRGBA.setColor(gl, rgba)
-        renderMesh.draw(programRGBA, gl.TRIANGLES)
+        shaderShadedMono.setColor(gl, rgba)
+        renderMesh.draw(shaderShadedMono, gl.TRIANGLES)
     })
 
     //
     // TEXTURED SKIN
     //
 
-    programTex.use(gl)
+    shaderShadedTexture.use(gl)
     // programTex.texture(view.bodyTexture!, alpha)
     view.bodyTexture.bind()
     if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
         let offset = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
         let length = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-        renderList.base.bind(programTex)
+        renderList.base.bind(shaderShadedTexture)
         renderList.base.drawSubset(gl.TRIANGLES, offset, length)
     }
 
@@ -210,8 +210,8 @@ export function drawHumanCore(app: Application, view: RenderView) {
         const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
         // programTex.texture(view.eyeTexture!, alpha)           
         view.eyeTexture.bind()
-        renderMesh.bind(programTex)
-        renderMesh.draw(programTex, gl.TRIANGLES)
+        renderMesh.bind(shaderShadedTexture)
+        renderMesh.draw(shaderShadedTexture, gl.TRIANGLES)
     }
 
     // renderList.base.bind(programTex)

@@ -1,30 +1,32 @@
-import { mat4 } from "gl-matrix"
-import { createNormalMatrix, createProjectionMatrix, prepareCanvas, prepareViewport } from "./util"
 import { RenderMesh } from "./RenderMesh"
 import { ShaderShadedMono } from "gl/shaders/ShaderShadedMono"
+import { RenderView } from "./glview/RenderView"
 
 let lastXYZ: Float32Array | undefined
 
-export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: number[]) {
+export function renderFace(view: RenderView, xyz: Float32Array, fxyz: number[]) {
     // console.log("render face")
-    const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
-    if (gl == null) {
-        throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
-    }
+    // const gl = (canvas.getContext('webgl2') || canvas.getContext('experimental-webgl')) as WebGL2RenderingContext
+    // if (gl == null) {
+    //     throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
+    // }
 
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
 
-    const programRGBA = new ShaderShadedMono(gl)
+    const shaderShadedMono = view.shaderShadedMono
 
-    prepareCanvas(canvas)
-    prepareViewport(gl, canvas)
-    const projectionMatrix = createProjectionMatrix(canvas)
-    const modelViewMatrix = mat4.create()
-    mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -0.5]) // obj file face centered
-    const normalMatrix = createNormalMatrix(modelViewMatrix)
+    view.prepareCanvas()
+    const {projectionMatrix, modelViewMatrix, normalMatrix} = view.prepare()
 
-    programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+    // prepareCanvas(canvas)
+    // prepareViewport(gl, canvas)
+    // const projectionMatrix = createProjectionMatrix(canvas)
+    // const modelViewMatrix = mat4.create()
+    // mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0, -0.5]) // obj file face centered
+    // const normalMatrix = createNormalMatrix(modelViewMatrix)
+
+    shaderShadedMono.init(view.gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
     if (xyz !== lastXYZ) {
         center(xyz)
@@ -34,7 +36,7 @@ export function renderFace(canvas: HTMLCanvasElement, xyz: Float32Array, fxyz: n
     // DRAW POINT CLOUD
 
     // drawPointCloud(gl, programRGBA, xyz)
-    drawLineArt(gl, programRGBA, xyz, fxyz)
+    drawLineArt(view.gl, shaderShadedMono, xyz, fxyz)
 }
 
 function center(xyz: Float32Array) {
@@ -67,21 +69,21 @@ function center(xyz: Float32Array) {
     }
 }
 
-function drawPointCloud(gl: WebGL2RenderingContext, programRGBA: ShaderShadedMono, xyz: Float32Array) {
+function drawPointCloud(gl: WebGL2RenderingContext, shader: ShaderShadedMono, xyz: Float32Array) {
     const fxyz = new Array<number>(xyz.length / 3)
     for (let i = 0; i < fxyz.length; ++i) {
         fxyz[i] = i
     }
     const mesh = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
-    programRGBA.setColor(gl, [10.0, 8, 7, 1])
-    mesh.bind(programRGBA)
+    shader.setColor(gl, [10.0, 8, 7, 1])
+    mesh.bind(shader)
     gl.drawElements(gl.POINTS, fxyz.length, gl.UNSIGNED_SHORT, 0)
 }
 
-function drawLineArt(gl: WebGL2RenderingContext, programRGBA: ShaderShadedMono, xyz: Float32Array, fxyz: number[]) {
+function drawLineArt(gl: WebGL2RenderingContext, shader: ShaderShadedMono, xyz: Float32Array, fxyz: number[]) {
     // DRAW LINE ART
     // programRGBA.setColor([0.0, 1.8, 0.0, 1])
-    programRGBA.setColor(gl, [0.0, 5.0, 10.0, 1])
+    shader.setColor(gl, [0.0, 5.0, 10.0, 1])
     const lineStrips = [[
         // RING 0
         10, 338, 297, 332, 284, 251, 389, 356,
@@ -248,16 +250,16 @@ function drawLineArt(gl: WebGL2RenderingContext, programRGBA: ShaderShadedMono, 
         //     programRGBA.color([0.0, 0.0, 10.0, 1])
         // }
         const mesh0 = new RenderMesh(gl, xyz, line, undefined, undefined, false)
-        mesh0.bind(programRGBA)
+        mesh0.bind(shader)
         gl.drawElements(gl.LINE_STRIP, line.length, gl.UNSIGNED_SHORT, 0)
         if (line[0] === 34) {
-            programRGBA.setColor(gl, [8.0, 0.0, 0.0, 1])
+            shader.setColor(gl, [8.0, 0.0, 0.0, 1])
         }
     }
 
     // draw solid face
-    programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
+    shader.setColor(gl, [1, 0.8, 0.7, 1])
     const mesh0 = new RenderMesh(gl, xyz, fxyz, undefined, undefined, false)
-    mesh0.bind(programRGBA)
+    mesh0.bind(shader)
     gl.drawElements(gl.TRIANGLES, fxyz.length, gl.UNSIGNED_SHORT, 0)
 }

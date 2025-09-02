@@ -58,8 +58,8 @@ export class MPPoseRenderer extends RenderHandler {
         gl.disable(gl.CULL_FACE)
         gl.depthMask(true)
 
-        const programRGBA = view.programRGBA
-        const programColor = view.programColor
+        const shaderShadedMono = view.shaderShadedMono
+        const shaderShadedColored = view.shaderShadedColored
 
         const projectionMatrix = createProjectionMatrix(canvas)
         const modelViewMatrix = mat4.create()
@@ -76,7 +76,7 @@ export class MPPoseRenderer extends RenderHandler {
         mat4.translate(modelViewMatrix, modelViewMatrix, v) // obj file face centered
         const normalMatrix = createNormalMatrix(modelViewMatrix)
 
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
         if (this.mesh0 === undefined) {
             this.mesh0 = new RenderMesh(gl, landmarks, this.line0, undefined, undefined, false)
@@ -94,8 +94,8 @@ export class MPPoseRenderer extends RenderHandler {
         //
         // draw blaze skeleton
         //
-        programRGBA.setColor(gl, [1, 1, 1, 1])
-        this.mesh0.bind(programRGBA)
+        shaderShadedMono.setColor(gl, [1, 1, 1, 1])
+        this.mesh0.bind(shaderShadedMono)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
 
         //
@@ -110,13 +110,13 @@ export class MPPoseRenderer extends RenderHandler {
         const kneeLeft = this.bpl.getVec(Blaze.LEFT_KNEE)
         const kneeRight = this.bpl.getVec(Blaze.RIGHT_KNEE)
 
-        programColor.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedColored.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
 
 
         // HIP
         const hipMatrix = this.bpc.getHipWithAdjustment(this.bpl)
-        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
-        this.arrowMesh.draw(view.programColor)
+        shaderShadedColored.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, hipMatrix))
+        this.arrowMesh.draw(view.shaderShadedColored)
 
         // CENTER OF SHOULDER
         const middleOfShoulder = vec3.add(vec3.create(), shoulderLeft, shoulderRight)
@@ -126,22 +126,22 @@ export class MPPoseRenderer extends RenderHandler {
         // SHOULDER
         const shoulderMatrix = this.bpc.getShoulder(this.bpl)
         mat4.mul(shoulderMatrix, middleOfShoulderMat, shoulderMatrix)
-        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
-        this.arrowMesh.draw(view.programColor)
+        shaderShadedColored.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, shoulderMatrix))
+        this.arrowMesh.draw(view.shaderShadedColored)
 
         // LEFT UPPER LEG
         const leftUpperLegGlobal = this.bpc.getLeftUpperLegWithAdjustment(this.bpl)
         const leftUpperLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), hipLeft), leftUpperLegGlobal)
 
-        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, leftUpperLeg))
-        this.arrowMesh.draw(view.programColor)
+        shaderShadedColored.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, leftUpperLeg))
+        this.arrowMesh.draw(view.shaderShadedColored)
 
         // LEFT LOWER LEG
         const leftLowerLegGlobal = this.bpc.getLeftLowerLeg(this.bpl)
         const leftLowerLeg = mat4.mul(mat4.create(), mat4.fromTranslation(mat4.create(), kneeLeft), leftLowerLegGlobal)
 
-        programColor.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, leftLowerLeg))
-        this.arrowMesh.draw(view.programColor)
+        shaderShadedColored.setModelView(gl, mat4.mul(mat4.create(), modelViewMatrix, leftLowerLeg))
+        this.arrowMesh.draw(view.shaderShadedColored)
 
         // DRAW SIDE VIEW
 
@@ -161,9 +161,9 @@ export class MPPoseRenderer extends RenderHandler {
             this.bpl.setVec(i, v)
         }
 
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
-        programRGBA.setColor(gl, [1.0, 0.0, 0.0, 1])
-        this.mesh0.bind(programRGBA)
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedMono.setColor(gl, [1.0, 0.0, 0.0, 1])
+        this.mesh0.bind(shaderShadedMono)
         this.mesh0.update(vertices)
         gl.drawElements(gl.LINES, this.line0.length, gl.UNSIGNED_SHORT, 0)
     }

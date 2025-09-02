@@ -41,9 +41,9 @@ export class RenderView extends GLView {
     renderHandler?: RenderHandler
     app: Application
 
-    programRGBA!: ShaderShadedMono
-    programTex!: ShaderShadedTextured
-    programColor!: ShaderShadedColored
+    shaderShadedMono!: ShaderShadedMono
+    shaderShadedTexture!: ShaderShadedTextured
+    shaderShadedColored!: ShaderShadedColored
     renderList!: RenderList
     bodyTexture!: Texture
     eyeTexture!: Texture
@@ -121,9 +121,9 @@ export class RenderView extends GLView {
         // flip texture pixels into the bottom-to-top order that WebGL expects.
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true)
 
-        this.programRGBA = new ShaderShadedMono(this.gl)
-        this.programTex = new ShaderShadedTextured(this.gl)
-        this.programColor = new ShaderShadedColored(this.gl)
+        this.shaderShadedMono = new ShaderShadedMono(this.gl)
+        this.shaderShadedTexture = new ShaderShadedTextured(this.gl)
+        this.shaderShadedColored = new ShaderShadedColored(this.gl)
 
         this.renderList = new RenderList(this.gl, this.app.humanMesh)
         this.app.updateManager.setRenderList(this.renderList)

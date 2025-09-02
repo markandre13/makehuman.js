@@ -105,8 +105,8 @@ export class RenderMesh {
         }
     }
 
-    draw(programInfo: ShaderShadedMono | ShaderShadedTextured, mode: number) {
-        this.bind(programInfo)
+    draw(shader: ShaderShadedMono | ShaderShadedTextured, mode: number) {
+        this.bind(shader)
         this.gl.drawElements(mode, this.glData.indices.length, this.gl.UNSIGNED_SHORT, 0)
     }
 

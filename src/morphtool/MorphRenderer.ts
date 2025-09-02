@@ -1,12 +1,12 @@
 import { Application } from 'Application'
 import { RenderHandler } from 'render/glview/RenderHandler'
-import {
-    createModelViewMatrix,
-    createNormalMatrix,
-    createProjectionMatrix,
-    prepareCanvas,
-    prepareViewport,
-} from 'render/util'
+// import {
+//     createModelViewMatrix,
+//     createNormalMatrix,
+//     createProjectionMatrix,
+//     prepareCanvas,
+//     prepareViewport,
+// } from 'render/util'
 import { ARKitFlat } from './ARKitFlat'
 import { MorphToolModel } from './MorphToolModel'
 import { MHFlat } from './MHFlat'
@@ -40,7 +40,7 @@ export class MorphRenderer extends RenderHandler {
         // prepare
         const gl = view.gl
         const ctx = view.ctx
-        const programRGBA = view.programRGBA       
+        const shaderShadedMono = view.shaderShadedMono       
         if (this.arflat === undefined) {
             this.mhflat = new MHFlat(app, gl)
             this.arflat = new ARKitFlat(app, gl)
@@ -58,7 +58,7 @@ export class MorphRenderer extends RenderHandler {
         // const normalMatrix = createNormalMatrix(modelViewMatrix)
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
   
-        programRGBA.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
         const alpha = 0.25
 
@@ -69,8 +69,8 @@ export class MorphRenderer extends RenderHandler {
         gl.cullFace(gl.BACK)
         gl.disable(gl.BLEND)
 
-        programRGBA.setColor(gl, [1, 0.8, 0.7, 1])
-        mesh[0].bind(programRGBA)
+        shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
+        mesh[0].bind(shaderShadedMono)
         mesh[0].draw(gl)
 
         // draw transparent mesh
@@ -79,8 +79,8 @@ export class MorphRenderer extends RenderHandler {
             gl.enable(gl.BLEND)
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-            programRGBA.setColor(gl, [0, 0.5, 1, alpha])
-            mesh[1].bind(programRGBA)
+            shaderShadedMono.setColor(gl, [0, 0.5, 1, alpha])
+            mesh[1].bind(shaderShadedMono)
             mesh[1].draw(gl)
         }      
     }
