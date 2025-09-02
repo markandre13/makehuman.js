@@ -6,16 +6,20 @@ const D = 360 / (2.0 * Math.PI)
 export function rad2deg(r: number) { return r * D }
 export function deg2rad(d: number) { return d / D }
 
+/**
+ * View parameters shared by all views
+ */
 export class Context {
     /**
      * opengl's camera is always at (0, 0, 0) hence the camera matrix
      * moves the world around the camera
      */
     camera: mat4 = mat4.create()
-
-    // rotateX: number = 0
-    // rotateY: number = 0
     projection: Projection = Projection.PERSPECTIVE
+    /**
+     * background clear color (default's to blender default gray)
+     */
+    background: number[] = [0.247, 0.247, 0.247, 1.0]
 
     /**
      * set new absolute camera rotation in degrees without changing translation

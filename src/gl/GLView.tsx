@@ -83,7 +83,8 @@ export class GLView extends View {
     prepare() {
         const gl = this.gl
         gl.viewport(0, 0, this.canvas.width, this.canvas.height)
-        // gl.clearColor(0.247, 0.247, 0.247, 1.0);
+        const bg = this.ctx.background
+        gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
         gl.clearDepth(1.0)
         gl.enable(gl.DEPTH_TEST)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)

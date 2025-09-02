@@ -53,6 +53,7 @@ export class RenderView extends GLView {
         glprops.ctx = new Context()
         // move up by 7, move backwards by 5
         mat4.translate(glprops.ctx.camera, glprops.ctx.camera, [0, -7, -5])
+        glprops.ctx.background = [0, 0, 0, 1]
         super(glprops)
 
         this.app = props.app
