@@ -11,6 +11,8 @@ import { ShaderShadedMono } from 'gl/shaders/ShaderShadedMono'
 import { Texture } from 'gl/Texture'
 import { InputHandler } from 'gl/input/InputHandler'
 import { HTMLElementProps } from 'toad.jsx/lib/jsx-runtime'
+import { ShaderColored } from 'gl/shaders/ShaderColored'
+import { ShaderMono } from 'gl/shaders/ShaderMono'
 
 export const D = 180 / Math.PI
 
@@ -22,6 +24,8 @@ export class RenderView extends GLView {
     renderHandler?: RenderHandler
     app: Application
 
+    shaderMono!: ShaderMono
+    shaderColored!: ShaderColored
     shaderShadedMono!: ShaderShadedMono
     shaderShadedTexture!: ShaderShadedTextured
     shaderShadedColored!: ShaderShadedColored
@@ -33,7 +37,7 @@ export class RenderView extends GLView {
         const glprops = (props as any) as GLViewProps
         glprops.ctx = new Context()
         // move up by 7, move backwards by 5
-        
+
         mat4.translate(glprops.ctx.camera, glprops.ctx.camera, [0, 0, -25]) // head
         const copy = mat4.clone(glprops.ctx.camera)
         glprops.ctx.defaultCamera = () => copy
@@ -62,29 +66,11 @@ export class RenderView extends GLView {
         // this belongs here but...
         this.app.updateManager.render = this.paint
         // ...this does not
-        this.app.humanMesh.human.signal.add(() => {
-            this.app.updateManager.invalidateView()
-        })
-        this.app.humanMesh.wireframe.signal.add(() => {
-            this.app.updateManager.invalidateView()
-        })
+        this.app.humanMesh.human.signal.add(() => this.app.updateManager.invalidateView())
+        this.app.humanMesh.wireframe.signal.add(() => this.app.updateManager.invalidateView())
 
-        // load texture and repaint once loaded
-        // this.bodyTexture = loadTexture(
-        //     this.gl,
-        //     'data/skins/textures/young_caucasian_female_special_suit.png',
-        //     this.paint
-        // )!
-        // this.eyeTexture = loadTexture(
-        //     this.gl,
-        //     'data/eyes/materials/green_eye.png',
-        //     this.paint
-        // )!
         this.bodyTexture = new Texture(this, "data/skins/textures/young_caucasian_female_special_suit.png")
         this.eyeTexture = new Texture(this, "data/eyes/materials/green_eye.png")
-
-        // schedule initial paint
-        this.paint()
     }
 
     private initRender() {
@@ -94,19 +80,16 @@ export class RenderView extends GLView {
         }
 
         this.gl = (this.canvas.getContext('webgl2', opt) ||
-            this.canvas.getContext(
-                'experimental-webgl',
-                opt
-            )) as WebGL2RenderingContext
+            this.canvas.getContext('experimental-webgl', opt)) as WebGL2RenderingContext
         if (this.gl == null) {
-            throw Error(
-                'Unable to initialize WebGL. Your browser or machine may not support it.'
-            )
+            throw Error('Unable to initialize WebGL. Your browser or machine may not support it.')
         }
 
         // flip texture pixels into the bottom-to-top order that WebGL expects.
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true)
 
+        this.shaderMono = new ShaderMono(this.gl)
+        this.shaderColored = new ShaderColored(this.gl)
         this.shaderShadedMono = new ShaderShadedMono(this.gl)
         this.shaderShadedTexture = new ShaderShadedTextured(this.gl)
         this.shaderShadedColored = new ShaderShadedColored(this.gl)

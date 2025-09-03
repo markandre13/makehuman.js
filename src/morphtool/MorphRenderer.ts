@@ -5,27 +5,37 @@ import { MorphToolModel } from './MorphToolModel'
 import { MHFlat } from './MHFlat'
 import { RenderView } from 'render/RenderView'
 import { di } from 'lib/di'
-import { ShaderMono } from 'gl/shaders/ShaderMono'
-import { ShaderColored } from 'gl/shaders/ShaderColored'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { IndexBuffer } from 'gl/buffers/IndexBuffer'
+import { PickColorBuffer } from 'gl/buffers/PickColorBuffer'
+import { SelectionColorBuffer } from 'gl/buffers/SelectionColorBuffer'
+import { FlatMesh } from './FlatMesh'
+
+interface X {
+    flat: FlatMesh
+    indicesPerVertex: IndexBuffer
+    vertices: VertexBuffer
+    pickColors: PickColorBuffer
+    selectionColors: SelectionColorBuffer
+}
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
     private app: Application
     private model: MorphToolModel
-      
-    arflat!: ARKitFlat
-    mhflat!: MHFlat
+
+    x!: X[]
+    // arflat!: ARKitFlat
+    // mhflat!: MHFlat
 
     constructor(app: Application, model: MorphToolModel) {
         super()
         this.app = app
         this.model = model
-        this.model.isARKitActive.signal.add( () => {
+        this.model.isARKitActive.signal.add(() => {
             this.app.updateManager.invalidateView()
         })
-        this.model.showBothMeshes.signal.add( () => {
+        this.model.showBothMeshes.signal.add(() => {
             this.app.updateManager.invalidateView()
         })
     }
@@ -35,19 +45,36 @@ export class MorphRenderer extends RenderHandler {
     override paint(app: Application, view: RenderView): void {
         // prepare
         const gl = view.gl
-        const shaderShadedMono = view.shaderShadedMono       
-        if (this.arflat === undefined) {
-            this.mhflat = new MHFlat(app, gl)
-            this.arflat = new ARKitFlat(app, gl)
+        const shaderShadedMono = view.shaderShadedMono
+
+        const mh = new MHFlat(app, gl)
+        const ak = new ARKitFlat(app, gl)
+
+        if (this.x === undefined) {
+            this.x = [{
+                flat: mh,
+                vertices: mh.vertices,
+                indicesPerVertex: indicesForAllVertices(mh.vertices),
+                pickColors: new PickColorBuffer(mh.vertices),
+                selectionColors: new SelectionColorBuffer(mh.vertices)
+            }, {
+                flat: ak,
+                vertices: ak.vertices,
+                indicesPerVertex: indicesForAllVertices(ak.vertices),
+                pickColors: new PickColorBuffer(ak.vertices),
+                selectionColors: new SelectionColorBuffer(mh.vertices)
+            }]
         }
         view.prepareCanvas()
+
+        // this.drawVerticesToPick(view)
+        // return
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
-  
         shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
         const alpha = 0.25
 
-        const mesh = this.model.isARKitActive.value ? [this.arflat, this.mhflat] : [this.mhflat, this.arflat]
+        const mesh = this.model.isARKitActive.value ? [this.x[1].flat, this.x[0].flat] : [this.x[0].flat, this.x[1].flat]
 
         // draw solid mesh
         gl.enable(gl.CULL_FACE)
@@ -67,38 +94,46 @@ export class MorphRenderer extends RenderHandler {
             shaderShadedMono.setColor(gl, [0, 0.5, 1, alpha])
             mesh[1].bind(shaderShadedMono)
             mesh[1].draw(gl)
-        }      
+        }
+
+        // draw selection colors
     }
 
-    drawVerticesToPick(shader: ShaderMono, shaderWithColors: ShaderColored) {
-        const mesh = this.model.isARKitActive.value ? this.arflat : this.mhflat
-
+    drawVerticesToPick(view: RenderView) {
         const gl = this.app.glview.gl
-        gl.clearColor(0, 0, 0, 1)
+        // gl.clearColor(1, 0, 0, 1)
+        const oldBg = view.ctx.background
+        view.ctx.background = [0, 0, 0, 1]
         const { projectionMatrix, modelViewMatrix } = this.app.glview.prepare()
+        view.ctx.background = oldBg
 
-        // paint mesh
-        shader.use(gl)
-        shader.setProjection(gl, projectionMatrix)
-        shader.setModelView(gl, modelViewMatrix)
-        shader.setColor(gl, [0, 0, 0, 1])
+        const x = this.model.isARKitActive.value ? this.x[1] : this.x[0]
+        const mesh = this.model.isARKitActive.value ? this.x[1].flat : this.x[0].flat
 
-        mesh.bind(shader)
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
+        gl.disable(gl.BLEND)
+
+        // paint mesh in black
+        const shaderMono = view.shaderMono
+        shaderMono.use(gl)
+        shaderMono.setProjection(gl, projectionMatrix)
+        shaderMono.setModelView(gl, modelViewMatrix)
+        shaderMono.setColor(gl, [0, 0, 0, 1])
+
+        mesh.bind(shaderMono)
         mesh.draw(gl)
 
-        // this.vertices.bind(shader)
-        // this.indicesFaces.bind()
-        // this.indicesFaces.drawTriangles()
+        const shaderColored = view.shaderColored
 
-        // paint vertices
-        shaderWithColors.use(gl)
-        shaderWithColors.setPointSize(gl, 4.5)
-        shaderWithColors.setProjection(gl, projectionMatrix)
-        shaderWithColors.setModelView(gl, modelViewMatrix)
-        // this.vertices.bind(shaderWithColors)
-        // this.pickColors.bind(shaderWithColors)
-        // this.indicesVertices.bind()
-        // this.indicesVertices.drawPoints()
+        shaderColored.use(gl)
+        shaderColored.setPointSize(gl, 4.5)
+        shaderColored.setProjection(gl, projectionMatrix)
+        shaderColored.setModelView(gl, modelViewMatrix)
+        x.indicesPerVertex.bind()
+        x.vertices.bind(shaderColored)
+        x.pickColors.bind(shaderColored)
+        x.indicesPerVertex.drawPoints()
     }
 }
 

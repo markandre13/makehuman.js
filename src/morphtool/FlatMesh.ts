@@ -1,4 +1,5 @@
 import { vec2, mat4, vec4 } from 'gl-matrix'
+import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { ShaderMono } from 'gl/shaders/ShaderMono'
 import { ShaderShadedMono } from 'gl/shaders/ShaderShadedMono'
 import { ShaderShadedTextured } from 'gl/shaders/ShaderShadedTextured'
@@ -22,5 +23,8 @@ export class FlatMesh {
     }
     getVec4(vertexIdx: number) {
         return vec4.fromValues(this.vertexOrig[vertexIdx], this.vertexOrig[vertexIdx + 1], this.vertexOrig[vertexIdx + 2], 1)
+    }
+    get vertices(): VertexBuffer {
+        return this.renderMesh.glVertex
     }
 }
