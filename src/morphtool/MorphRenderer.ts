@@ -1,10 +1,14 @@
 import { Application } from 'Application'
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 import { ARKitFlat } from './ARKitFlat'
 import { MorphToolModel } from './MorphToolModel'
 import { MHFlat } from './MHFlat'
-import { RenderView } from 'render/glview/RenderView'
+import { RenderView } from 'render/RenderView'
 import { di } from 'lib/di'
+import { ShaderMono } from 'gl/shaders/ShaderMono'
+import { ShaderColored } from 'gl/shaders/ShaderColored'
+import { VertexBuffer } from 'gl/buffers/VertexBuffer'
+import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
@@ -65,4 +69,43 @@ export class MorphRenderer extends RenderHandler {
             mesh[1].draw(gl)
         }      
     }
+
+    drawVerticesToPick(shader: ShaderMono, shaderWithColors: ShaderColored) {
+        const mesh = this.model.isARKitActive.value ? this.arflat : this.mhflat
+
+        const gl = this.app.glview.gl
+        gl.clearColor(0, 0, 0, 1)
+        const { projectionMatrix, modelViewMatrix } = this.app.glview.prepare()
+
+        // paint mesh
+        shader.use(gl)
+        shader.setProjection(gl, projectionMatrix)
+        shader.setModelView(gl, modelViewMatrix)
+        shader.setColor(gl, [0, 0, 0, 1])
+
+        mesh.bind(shader)
+        mesh.draw(gl)
+
+        // this.vertices.bind(shader)
+        // this.indicesFaces.bind()
+        // this.indicesFaces.drawTriangles()
+
+        // paint vertices
+        shaderWithColors.use(gl)
+        shaderWithColors.setPointSize(gl, 4.5)
+        shaderWithColors.setProjection(gl, projectionMatrix)
+        shaderWithColors.setModelView(gl, modelViewMatrix)
+        // this.vertices.bind(shaderWithColors)
+        // this.pickColors.bind(shaderWithColors)
+        // this.indicesVertices.bind()
+        // this.indicesVertices.drawPoints()
+    }
+}
+
+export function indicesForAllVertices(verts: VertexBuffer) {
+    const buffer = new Uint16Array(verts.data.length / 3)
+    for (let i = 0; i < buffer.length; ++i) {
+        buffer[i] = i
+    }
+    return new IndexBuffer(verts.gl, buffer)
 }

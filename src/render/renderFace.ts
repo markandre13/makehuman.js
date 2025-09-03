@@ -1,6 +1,6 @@
 import { RenderMesh } from "./RenderMesh"
 import { ShaderShadedMono } from "gl/shaders/ShaderShadedMono"
-import { RenderView } from "./glview/RenderView"
+import { RenderView } from "./RenderView"
 
 let lastXYZ: Float32Array | undefined
 

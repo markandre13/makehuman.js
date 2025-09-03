@@ -1,10 +1,9 @@
 import { Application } from "Application"
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { RenderMesh } from "render/RenderMesh"
 import { Frontend_impl } from "../net/Frontend_impl"
-import { mat4 } from "gl-matrix"
-import { RenderView } from "render/glview/RenderView"
+import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
 
 /**

@@ -1,20 +1,12 @@
 import { Application } from "Application"
-import { RenderHandler } from 'render/glview/RenderHandler'
-// import {
-//     createModelViewMatrix,
-//     createNormalMatrix,
-//     createProjectionMatrix,
-//     prepareCanvas,
-//     prepareViewport,
-// } from "render/util"
+import { RenderHandler } from 'render/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import { isZero } from "mesh/HumanMesh"
 import { blendshapeNames } from "./blendshapeNames"
 import { FaceICTKitLoader } from "./FaceICTKitLoader"
 import { mat4, vec3 } from "gl-matrix"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
-import { RenderView } from "render/glview/RenderView"
-import { Projection } from "gl/Projection"
+import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
 
 /**

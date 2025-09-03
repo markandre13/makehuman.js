@@ -1,5 +1,5 @@
 import { Application } from "Application"
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 // import {
 //     createModelViewMatrix,
 //     createNormalMatrix,
@@ -14,8 +14,7 @@ import { drawHumanCore } from "render/RenderHuman"
 import { mat4 } from "gl-matrix"
 import { BlendShapeEditor } from "blendshapes/BlendShapeEditor"
 import { ArrowMesh } from "./ArrowMesh"
-import { RenderView } from "render/glview/RenderView"
-import { Projection } from "gl/Projection"
+import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
 
 /**

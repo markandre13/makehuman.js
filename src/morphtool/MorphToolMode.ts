@@ -6,6 +6,7 @@ import { MorphToolModel } from './MorphToolModel'
 import { InputHandler } from 'gl/input/InputHandler'
 import { MouseButton } from 'gl/input/MouseButton'
 import { Projection } from 'gl/Projection'
+import { renderIntoTexture } from 'gl/renderIntoTexture'
 
 // some notes on blender's mesh editor
 // * Preferences > Viewport > Selection > GPU Depth Picking > yes
@@ -17,6 +18,7 @@ import { Projection } from 'gl/Projection'
 //   gpu_shader_3D_point_varying_size_varying_color
 
 class Selection {
+    // selections for the the two meshes: makehuman and arkit
     mhvertex = new Map<number, SVGCircleElement>()
     arvertex = new Map<number, SVGCircleElement>()
 
@@ -137,6 +139,14 @@ export class MorphToolMode extends InputHandler {
             this._selection.toggle(this._model.isARKitActive.value, index, this._overlay)
             this._app.glview.invalidate()
         }
+
+        // const gl = this._app.glview.gl
+        // const { index } = renderIntoTexture(gl, () => scene.drawVerticesToPick(), ev.offsetX, gl.canvas.height - ev.offsetY)
+        // if (index !== undefined) {
+        //     scene.toggleIndex(index - 1)
+        //     glview.invalidate()
+        //     ev.preventDefault()
+        // }
     }
 
     /**

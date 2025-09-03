@@ -1,7 +1,7 @@
 import { Application } from "Application"
 import { vec3 } from "gl-matrix"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import { BlazePoseConverter } from "./BlazePoseConverter"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
@@ -15,7 +15,7 @@ import {
 } from "render/util"
 import { renderAxes } from "./renderAxes"
 import { renderReconstructedBlaze } from "./renderReconstructedBlaze"
-import { RenderView } from "render/glview/RenderView"
+import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
 
 export class FreeMoCapRenderer extends RenderHandler {

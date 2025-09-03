@@ -1,9 +1,9 @@
 import { Application } from "Application"
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import { FaceARKitLoader } from "./FaceARKitLoader"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
-import { RenderView } from "render/glview/RenderView"
+import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
 
 /**

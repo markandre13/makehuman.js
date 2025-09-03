@@ -1,9 +1,9 @@
 import { BaseMeshGroup } from "../mesh/BaseMeshGroup"
 import { ProxyType } from "proxy/Proxy"
-import { RenderHandler } from './glview/RenderHandler'
+import { RenderHandler } from './RenderHandler'
 import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
-import { RenderView } from "./glview/RenderView"
+import { RenderView } from "./RenderView"
 import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
 import { di } from "lib/di"
 

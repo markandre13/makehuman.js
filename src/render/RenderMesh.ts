@@ -5,6 +5,7 @@ import { NormalBuffer } from "gl/buffers/NormalBuffer"
 import { UVBuffer } from "gl/buffers/UVBuffer"
 import { ShaderShadedMono } from "gl/shaders/ShaderShadedMono"
 import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
+import { ShaderMono } from "gl/shaders/ShaderMono"
 
 interface GLXYZUV {
     idxExtra: number[]
@@ -103,11 +104,13 @@ export class RenderMesh {
         this.gl.drawElements(mode, this.glData.indices.length, this.gl.UNSIGNED_SHORT, 0)
     }
 
-    bind(shader: ShaderShadedMono | ShaderShadedTextured): void {
+    bind(shader: ShaderMono | ShaderShadedMono | ShaderShadedTextured): void {
         // programInfo.bind(this.glIndices, this.glVertex, this.glNormal, this.glTexture)
         this.glIndices.bind()
         this.glVertex.bind(shader)
-        this.glNormal.bind(shader)
+        if (shader instanceof ShaderShadedMono || shader instanceof ShaderShadedTextured) {
+            this.glNormal.bind(shader)
+        }
         if (this.glTexture && shader instanceof ShaderShadedTextured) {
             this.glTexture.bind(shader)
         }

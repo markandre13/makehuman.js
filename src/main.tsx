@@ -51,7 +51,7 @@ import { BlendShapeTab } from 'blendshapes/BlendShapeTab'
 import { ConnectButton } from 'net/ConnectButton'
 import { PoseTab } from 'mediapipe/pose/PoseTab'
 import { MorphTool } from 'morphtool/MorphTool'
-import { RenderView } from 'render/glview/RenderView'
+import { RenderView } from 'render/RenderView'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
 
 export async function main() {

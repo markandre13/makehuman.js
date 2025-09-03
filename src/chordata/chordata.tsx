@@ -17,12 +17,10 @@ import { FormSelect } from "toad.js/view/FormSelect"
 import { FormSwitch } from "toad.js/view/FormSwitch"
 import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
-import { HumanMesh } from "mesh/HumanMesh"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
-import { RenderHandler } from 'render/glview/RenderHandler'
-import { RenderView } from "render/glview/RenderView"
-import { mat4 } from "gl-matrix"
+import { RenderHandler } from 'render/RenderHandler'
+import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
 
 class Notochord {

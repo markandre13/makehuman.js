@@ -1,6 +1,6 @@
 import { Application } from "Application"
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
 import {
     createModelViewMatrix,
@@ -20,7 +20,7 @@ import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
 import { isZero } from "mesh/HumanMesh"
 import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, quat2, vec3 } from "gl-matrix"
-import { RenderView } from "render/glview/RenderView"
+import { RenderView } from "render/RenderView"
 import { Projection } from "gl/Projection"
 
 export class BlendShapeEditor extends RenderHandler {

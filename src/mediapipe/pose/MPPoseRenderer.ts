@@ -1,7 +1,7 @@
 import { Application } from "Application"
-import { mat4, vec3 } from "gl-matrix"
-import { RenderHandler } from 'render/glview/RenderHandler'
+import { RenderHandler } from 'render/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
+import { RenderView } from "render/RenderView"
 import {
     prepareCanvas,
     prepareViewport,
@@ -14,9 +14,7 @@ import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
 import { Blaze } from "./Blaze"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
 import { simulatedModel } from "./PoseTab"
-import { deg2rad, rad2deg } from "lib/calculateNormals"
-import { html } from "toad.js"
-import { RenderView } from "render/glview/RenderView"
+import { mat4, vec3 } from "gl-matrix"
 import { di } from "lib/di"
 
 let a = 0

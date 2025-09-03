@@ -2,7 +2,7 @@ import { vec3 } from "gl-matrix"
 import { RenderMesh } from "render/RenderMesh"
 import { Blaze } from "./Blaze"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
-import { RenderView } from "render/glview/RenderView"
+import { RenderView } from "render/RenderView"
 
 /**
  * re-create blaze pose skeleton from blaze pose converter
