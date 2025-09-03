@@ -1,4 +1,5 @@
 import { vec2, mat4, vec4 } from 'gl-matrix'
+import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { ShaderMono } from 'gl/shaders/ShaderMono'
 import { ShaderShadedMono } from 'gl/shaders/ShaderShadedMono'
@@ -23,6 +24,9 @@ export class FlatMesh {
     }
     getVec4(vertexIdx: number) {
         return vec4.fromValues(this.vertexOrig[vertexIdx], this.vertexOrig[vertexIdx + 1], this.vertexOrig[vertexIdx + 2], 1)
+    }
+    get indices(): IndexBuffer {
+        return this.renderMesh.glIndices
     }
     get vertices(): VertexBuffer {
         return this.renderMesh.glVertex

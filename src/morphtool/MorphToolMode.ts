@@ -126,19 +126,19 @@ export class MorphToolMode extends InputHandler {
      * select vertex at pointer position
      */
     selectVertex(ev: PointerEvent) {
-        const canvas = this._app.glview.canvas as HTMLCanvasElement
-        const ctx = this._app.glview.ctx
-        let modelViewMatrix = createModelViewMatrix(ctx, true)
-        const mesh = this._model.isARKitActive.value ? this._renderer.arflat : this._renderer.mhflat
-        const index = mesh.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
+        // const canvas = this._app.glview.canvas as HTMLCanvasElement
+        // const ctx = this._app.glview.ctx
+        // let modelViewMatrix = createModelViewMatrix(ctx, true)
+        // const mesh = this._model.isARKitActive.value ? this._renderer.arflat : this._renderer.mhflat
+        // const index = mesh.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
 
-        if (index !== undefined) {
-            if (!ev.shiftKey) {
-                this._selection.clear(this._model.isARKitActive.value)
-            }
-            this._selection.toggle(this._model.isARKitActive.value, index, this._overlay)
-            this._app.glview.invalidate()
-        }
+        // if (index !== undefined) {
+        //     if (!ev.shiftKey) {
+        //         this._selection.clear(this._model.isARKitActive.value)
+        //     }
+        //     this._selection.toggle(this._model.isARKitActive.value, index, this._overlay)
+        //     this._app.glview.invalidate()
+        // }
 
         // const gl = this._app.glview.gl
         // const { index } = renderIntoTexture(gl, () => scene.drawVerticesToPick(), ev.offsetX, gl.canvas.height - ev.offsetY)
@@ -152,42 +152,42 @@ export class MorphToolMode extends InputHandler {
     /**
      * paint selected vertices
      */
-    override paint() {
-        // console.log(`MorphToolMode.paint()`)
-        const canvas = this._app.glview.canvas
-        const ctx = this._app.glview.ctx
-        const projectionMatrix = createProjectionMatrix(
-            canvas,
-            ctx.projection === Projection.PERSPECTIVE
-        )
-        let modelViewMatrix = createModelViewMatrix(ctx, true)
-        const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
+    // override paint() {
+    //     // console.log(`MorphToolMode.paint()`)
+    //     const canvas = this._app.glview.canvas
+    //     const ctx = this._app.glview.ctx
+    //     const projectionMatrix = createProjectionMatrix(
+    //         canvas,
+    //         ctx.projection === Projection.PERSPECTIVE
+    //     )
+    //     let modelViewMatrix = createModelViewMatrix(ctx, true)
+    //     const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
 
-        // update markers
-        this._selection.mhvertex.forEach( (element, index) => {
-            const pointInWorld = this._renderer.mhflat.getVec4(index)
-            const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
-            // clipXY := point mapped to 2d??
-            const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-            const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-            // pixelXY := clipspace mapped to canvas
-            const pixelX = (clipX * 0.5 + 0.5) * canvas.width
-            const pixelY = (clipY * -0.5 + 0.5) * canvas.height
-            element.setAttributeNS(null, 'cx', `${pixelX}`)
-            element.setAttributeNS(null, 'cy', `${pixelY}`)
-        })
+    //     // update markers
+    //     this._selection.mhvertex.forEach( (element, index) => {
+    //         const pointInWorld = this._renderer.mhflat.getVec4(index)
+    //         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
+    //         // clipXY := point mapped to 2d??
+    //         const clipX = pointInClipSpace[0] / pointInClipSpace[3]
+    //         const clipY = pointInClipSpace[1] / pointInClipSpace[3]
+    //         // pixelXY := clipspace mapped to canvas
+    //         const pixelX = (clipX * 0.5 + 0.5) * canvas.width
+    //         const pixelY = (clipY * -0.5 + 0.5) * canvas.height
+    //         element.setAttributeNS(null, 'cx', `${pixelX}`)
+    //         element.setAttributeNS(null, 'cy', `${pixelY}`)
+    //     })
 
-        this._selection.arvertex.forEach( (element, index) => {
-            const pointInWorld = this._renderer.arflat.getVec4(index)
-            const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
-            // clipXY := point mapped to 2d??
-            const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-            const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-            // pixelXY := clipspace mapped to canvas
-            const pixelX = (clipX * 0.5 + 0.5) * canvas.width
-            const pixelY = (clipY * -0.5 + 0.5) * canvas.height
-            element.setAttributeNS(null, 'cx', `${pixelX}`)
-            element.setAttributeNS(null, 'cy', `${pixelY}`)
-        })
-    }
+    //     this._selection.arvertex.forEach( (element, index) => {
+    //         const pointInWorld = this._renderer.arflat.getVec4(index)
+    //         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
+    //         // clipXY := point mapped to 2d??
+    //         const clipX = pointInClipSpace[0] / pointInClipSpace[3]
+    //         const clipY = pointInClipSpace[1] / pointInClipSpace[3]
+    //         // pixelXY := clipspace mapped to canvas
+    //         const pixelX = (clipX * 0.5 + 0.5) * canvas.width
+    //         const pixelY = (clipY * -0.5 + 0.5) * canvas.height
+    //         element.setAttributeNS(null, 'cx', `${pixelX}`)
+    //         element.setAttributeNS(null, 'cy', `${pixelY}`)
+    //     })
+    // }
 }

@@ -10,10 +10,12 @@ import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { PickColorBuffer } from 'gl/buffers/PickColorBuffer'
 import { SelectionColorBuffer } from 'gl/buffers/SelectionColorBuffer'
 import { FlatMesh } from './FlatMesh'
+import { quadsToEdges } from 'gl/algorithms'
 
 interface X {
     flat: FlatMesh
-    indicesPerVertex: IndexBuffer
+    indicesAllPoints: IndexBuffer
+    indicesAllEdges: IndexBuffer
     vertices: VertexBuffer
     pickColors: PickColorBuffer
     selectionColors: SelectionColorBuffer
@@ -54,13 +56,15 @@ export class MorphRenderer extends RenderHandler {
             this.x = [{
                 flat: mh,
                 vertices: mh.vertices,
-                indicesPerVertex: indicesForAllVertices(mh.vertices),
+                indicesAllPoints: indicesForAllVertices(mh.vertices),
+                indicesAllEdges: mh.indices, // quadsToEdges(mh.indices),
                 pickColors: new PickColorBuffer(mh.vertices),
                 selectionColors: new SelectionColorBuffer(mh.vertices)
             }, {
                 flat: ak,
                 vertices: ak.vertices,
-                indicesPerVertex: indicesForAllVertices(ak.vertices),
+                indicesAllPoints: indicesForAllVertices(ak.vertices),
+                indicesAllEdges: ak.indices,
                 pickColors: new PickColorBuffer(ak.vertices),
                 selectionColors: new SelectionColorBuffer(mh.vertices)
             }]
@@ -97,6 +101,20 @@ export class MorphRenderer extends RenderHandler {
         }
 
         // draw selection colors
+        const x = this.model.isARKitActive.value ? this.x[1] : this.x[0]
+        const shaderColored = view.shaderColored
+        shaderColored.use(gl)
+        shaderColored.setPointSize(gl, 4.5)
+        shaderColored.setProjection(gl, projectionMatrix)
+        shaderColored.setModelView(gl, modelViewMatrix)
+        x.vertices.bind(shaderColored)
+        x.selectionColors.bind(shaderColored)
+
+        x.indicesAllPoints.bind()
+        x.indicesAllPoints.drawPoints()
+
+        x.indicesAllEdges.bind()
+        x.indicesAllEdges.drawLines()
     }
 
     drawVerticesToPick(view: RenderView) {
@@ -130,10 +148,10 @@ export class MorphRenderer extends RenderHandler {
         shaderColored.setPointSize(gl, 4.5)
         shaderColored.setProjection(gl, projectionMatrix)
         shaderColored.setModelView(gl, modelViewMatrix)
-        x.indicesPerVertex.bind()
+        x.indicesAllPoints.bind()
         x.vertices.bind(shaderColored)
         x.pickColors.bind(shaderColored)
-        x.indicesPerVertex.drawPoints()
+        x.indicesAllPoints.drawPoints()
     }
 }
 
