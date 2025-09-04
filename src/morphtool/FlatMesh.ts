@@ -8,7 +8,7 @@ import { findVertex } from 'lib/distance'
 import { RenderMesh } from 'render/RenderMesh'
 
 export class FlatMesh {
-    protected vertexOrig!: Float32Array
+    vertexOrig!: Float32Array
     protected vertexFlat!: Float32Array
     protected facesFlat!: number[]
     protected renderMesh!: RenderMesh

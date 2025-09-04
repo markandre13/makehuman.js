@@ -93,7 +93,7 @@ export class FaceARKitLoader {
                 t[0],  t[1],  t[2], 0,
                 t[4],  t[5],  t[6], 0,
                 t[8],  t[9], t[10], 0,
-                    0,     0,     0, 1
+                   0,     0,     0, 1
             )
         } else {
             m = mat4.create()

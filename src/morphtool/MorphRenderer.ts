@@ -10,8 +10,9 @@ import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { PickColorBuffer } from 'gl/buffers/PickColorBuffer'
 import { SelectionColorBuffer } from 'gl/buffers/SelectionColorBuffer'
 import { FlatMesh } from './FlatMesh'
-import { quadsToEdges } from 'gl/algorithms'
+import { quadsToEdges, trianglesToEdges } from 'gl/algorithms'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
+import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 
 interface PickMesh {
     flat: FlatMesh
@@ -48,10 +49,11 @@ export class MorphRenderer extends RenderHandler {
         const gl = view.gl
         const shaderShadedMono = view.shaderShadedMono
 
-        const mh = new MHFlat(app, gl)
-        const ak = new ARKitFlat(app, gl)
-
         if (this.pickMeshes === undefined) {
+            // TODO: don't let them use RenderMesh and re-use data for the picking
+            const mh = new MHFlat(app, gl)
+            const ak = new ARKitFlat(app, gl)
+
             // makehuman verticed, not morphed, not rigged
             const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
             // get all the quads for the skin mesh
@@ -64,6 +66,10 @@ export class MorphRenderer extends RenderHandler {
                 mhUniqueIndexSet.add(index)
             }
             // TODO: optimize ARKit
+            const arobj = FaceARKitLoader.getInstance().neutral!
+
+            const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
+            
             this.pickMeshes = [{
                 flat: mh,
                 vertices: mhVertices,
@@ -73,11 +79,11 @@ export class MorphRenderer extends RenderHandler {
                 selectionColors: new SelectionColorBuffer(mhVertices)
             }, {
                 flat: ak,
-                vertices: ak.vertices,
-                indicesAllPoints: indicesForAllVertices(ak.vertices),
-                indicesAllEdges: ak.indices,
-                pickColors: new PickColorBuffer(ak.vertices),
-                selectionColors: new SelectionColorBuffer(mh.vertices)
+                vertices: arVertices,
+                indicesAllPoints: indicesForAllVertices(arVertices),
+                indicesAllEdges: trianglesToEdges(gl, arobj.fxyz), // this is too much
+                pickColors: new PickColorBuffer(arVertices),
+                selectionColors: new SelectionColorBuffer(arVertices)
             }]
         }
         view.prepareCanvas()
