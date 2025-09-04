@@ -116,7 +116,7 @@ export function indicesForAllVertices(verts: VertexBuffer) {
 
 export function trianglesToFlatTriangles() { }
 
-export function quadsToEdges(quads: IndexBuffer): IndexBuffer {
+export function quadsToEdges(gl: WebGL2RenderingContext, quads: number[]): IndexBuffer {
     const edges: number[] = []
     const knownEdges = new Map<number, Set<number>>()
 
@@ -138,7 +138,7 @@ export function quadsToEdges(quads: IndexBuffer): IndexBuffer {
         m0!.add(e1)
         edges.push(e0, e1)
     }
-    const data = quads.data
+    const data = quads
     for (let i = 0; i < data.length;) {
         const e0 = data[i++]!
         const e1 = data[i++]!
@@ -149,5 +149,5 @@ export function quadsToEdges(quads: IndexBuffer): IndexBuffer {
         edge(e2, e3)
         edge(e3, e0)
     }
-    return new IndexBuffer(quads.gl, edges)
+    return new IndexBuffer(gl, edges)
 }

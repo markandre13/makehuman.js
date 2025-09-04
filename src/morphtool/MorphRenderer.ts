@@ -11,8 +11,9 @@ import { PickColorBuffer } from 'gl/buffers/PickColorBuffer'
 import { SelectionColorBuffer } from 'gl/buffers/SelectionColorBuffer'
 import { FlatMesh } from './FlatMesh'
 import { quadsToEdges } from 'gl/algorithms'
+import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 
-interface X {
+interface PickMesh {
     flat: FlatMesh
     indicesAllPoints: IndexBuffer
     indicesAllEdges: IndexBuffer
@@ -26,9 +27,7 @@ export class MorphRenderer extends RenderHandler {
     private app: Application
     private model: MorphToolModel
 
-    x!: X[]
-    // arflat!: ARKitFlat
-    // mhflat!: MHFlat
+    pickMeshes!: PickMesh[]
 
     constructor(app: Application, model: MorphToolModel) {
         super()
@@ -52,14 +51,26 @@ export class MorphRenderer extends RenderHandler {
         const mh = new MHFlat(app, gl)
         const ak = new ARKitFlat(app, gl)
 
-        if (this.x === undefined) {
-            this.x = [{
+        if (this.pickMeshes === undefined) {
+            // makehuman verticed, not morphed, not rigged
+            const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
+            // get all the quads for the skin mesh
+            const mhSkinQuadIndices = app.humanMesh.baseMesh.fxyz.slice(
+                app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
+                app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+            )
+            const mhUniqueIndexSet = new Set<number>
+            for (const index of mhSkinQuadIndices) {
+                mhUniqueIndexSet.add(index)
+            }
+            // TODO: optimize ARKit
+            this.pickMeshes = [{
                 flat: mh,
-                vertices: mh.vertices,
-                indicesAllPoints: indicesForAllVertices(mh.vertices),
-                indicesAllEdges: mh.indices, // quadsToEdges(mh.indices),
-                pickColors: new PickColorBuffer(mh.vertices),
-                selectionColors: new SelectionColorBuffer(mh.vertices)
+                vertices: mhVertices,
+                indicesAllPoints: new IndexBuffer(gl, Array.from(mhUniqueIndexSet)),
+                indicesAllEdges: quadsToEdges(gl, mhSkinQuadIndices),
+                pickColors: new PickColorBuffer(mhVertices),
+                selectionColors: new SelectionColorBuffer(mhVertices)
             }, {
                 flat: ak,
                 vertices: ak.vertices,
@@ -78,7 +89,7 @@ export class MorphRenderer extends RenderHandler {
         gl.depthMask(true)
         const alpha = 0.25
 
-        const mesh = this.model.isARKitActive.value ? [this.x[1].flat, this.x[0].flat] : [this.x[0].flat, this.x[1].flat]
+        const mesh = this.model.isARKitActive.value ? [this.pickMeshes[1].flat, this.pickMeshes[0].flat] : [this.pickMeshes[0].flat, this.pickMeshes[1].flat]
 
         // draw solid mesh
         gl.enable(gl.CULL_FACE)
@@ -91,6 +102,8 @@ export class MorphRenderer extends RenderHandler {
 
         // draw transparent mesh
         if (this.model.showBothMeshes.value) {
+            // disable writing to z-buffer so that it does not hide the selection
+            gl.depthMask(false)
             gl.disable(gl.CULL_FACE)
             gl.enable(gl.BLEND)
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -98,23 +111,25 @@ export class MorphRenderer extends RenderHandler {
             shaderShadedMono.setColor(gl, [0, 0.5, 1, alpha])
             mesh[1].bind(shaderShadedMono)
             mesh[1].draw(gl)
+            gl.depthMask(true)
         }
 
-        // draw selection colors
-        const x = this.model.isARKitActive.value ? this.x[1] : this.x[0]
+        // draw selection (edges and vertices)
+        const activeMesh = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
         const shaderColored = view.shaderColored
         shaderColored.use(gl)
         shaderColored.setPointSize(gl, 4.5)
         shaderColored.setProjection(gl, projectionMatrix)
         shaderColored.setModelView(gl, modelViewMatrix)
-        x.vertices.bind(shaderColored)
-        x.selectionColors.bind(shaderColored)
 
-        x.indicesAllPoints.bind()
-        x.indicesAllPoints.drawPoints()
+        activeMesh.vertices.bind(shaderColored)
+        activeMesh.selectionColors.bind(shaderColored)
 
-        x.indicesAllEdges.bind()
-        x.indicesAllEdges.drawLines()
+        activeMesh.indicesAllPoints.bind()
+        activeMesh.indicesAllPoints.drawPoints()
+
+        activeMesh.indicesAllEdges.bind()
+        activeMesh.indicesAllEdges.drawLines()
     }
 
     drawVerticesToPick(view: RenderView) {
@@ -125,8 +140,8 @@ export class MorphRenderer extends RenderHandler {
         const { projectionMatrix, modelViewMatrix } = this.app.glview.prepare()
         view.ctx.background = oldBg
 
-        const x = this.model.isARKitActive.value ? this.x[1] : this.x[0]
-        const mesh = this.model.isARKitActive.value ? this.x[1].flat : this.x[0].flat
+        const x = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
+        const mesh = this.model.isARKitActive.value ? this.pickMeshes[1].flat : this.pickMeshes[0].flat
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
@@ -138,12 +153,11 @@ export class MorphRenderer extends RenderHandler {
         shaderMono.setProjection(gl, projectionMatrix)
         shaderMono.setModelView(gl, modelViewMatrix)
         shaderMono.setColor(gl, [0, 0, 0, 1])
-
         mesh.bind(shaderMono)
         mesh.draw(gl)
 
+        // paint vertices
         const shaderColored = view.shaderColored
-
         shaderColored.use(gl)
         shaderColored.setPointSize(gl, 4.5)
         shaderColored.setProjection(gl, projectionMatrix)

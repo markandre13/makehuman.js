@@ -13,6 +13,7 @@ export function isZero(a: number): boolean {
 
 export class HumanMesh {
     human: MorphManager
+    // data/3dobjs/base.obj
     baseMesh: WavefrontObj
     vertexMorphed: Float32Array
     vertexRigged: Float32Array
@@ -32,6 +33,9 @@ export class HumanMesh {
         return this.vertexMorphed
     }
 
+    /**
+     * this.vertexMorphed := this.baseMesh.xyz + morph
+     */
     calculateVertexMorphed() {
         // console.log(`HumanMesh.calculateVertexMorphed()`)
         this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
@@ -48,6 +52,9 @@ export class HumanMesh {
         })
     }
 
+    /**
+     * this.vertexRigged := this.vertexMorphed + pose
+     */
     calculateVertexRigged() {
         this.vertexRigged = this.skeleton.skinMesh(this.vertexMorphed, this.skeleton.vertexWeights!._data)
     }
