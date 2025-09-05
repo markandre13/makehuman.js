@@ -56,7 +56,8 @@ export class MorphToolMode extends InputHandler {
         if (index !== undefined) {
             console.log(`PICKED INDEX ${index}`)
             // scene.toggleIndex(index - 1)
-            // glview.invalidate()
+            this._renderer.toggle(index-1)
+            this._app.glview.invalidate()
             ev.preventDefault()
         } else {
             console.log(`picked nothing`)

@@ -144,6 +144,12 @@ export class MorphRenderer extends RenderHandler {
             selectionColors: new SelectionColorBuffer(arVertices)
         }]
     }
+    toggle(index: number) {
+        const [activeMesh, inactiveMesh] = this.model.isARKitActive.value
+            ? [this.pickMeshes[1], this.pickMeshes[0]]
+            : [this.pickMeshes[0], this.pickMeshes[1]]
+        activeMesh.selectionColors.toggle(index)
+    }
 
     drawVerticesToPick(view: RenderView) {
         const gl = this.app.glview.gl

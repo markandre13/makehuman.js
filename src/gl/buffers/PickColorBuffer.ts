@@ -3,11 +3,11 @@ import type { VertexBuffer } from "./VertexBuffer"
 
 export class PickColorBuffer extends ColorBuffer {
     constructor(vertices: VertexBuffer) {
-        const rgb = new Float32Array(vertices.data.length / 3 * 4)
+        const rgb = new Float32Array(vertices.data.length)
         for (let i = 1, o = 0; o < rgb.length; ++i) {
-            const r = (i % 255) / 255
-            const g = ((i >> 8) % 255) / 255
-            const b = ((i >> 16) % 255) / 255
+            const r = (i % 256) / 255
+            const g = ((i >> 8) % 256) / 255
+            const b = ((i >> 16) % 256) / 255
             rgb[o++] = r
             rgb[o++] = g
             rgb[o++] = b

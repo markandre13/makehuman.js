@@ -9,7 +9,7 @@ export class SelectionColorBuffer extends ColorBuffer {
     toggle(index: number): boolean {
         index *= 3
         const value = this._data[index] ? 0 : 1
-        // console.log(`toggle ${index} to ${value}`)
+        console.log(`toggle ${index} to ${value}`)
         this._data[index++] = value
         this._data[index++] = value
         this._data[index] = value
