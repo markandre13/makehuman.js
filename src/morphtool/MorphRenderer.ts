@@ -50,41 +50,7 @@ export class MorphRenderer extends RenderHandler {
         const shaderShadedMono = view.shaderShadedMono
 
         if (this.pickMeshes === undefined) {
-            // TODO: don't let them use RenderMesh and re-use data for the picking
-            const mh = new MHFlat(app, gl)
-            const ak = new ARKitFlat(app, gl)
-
-            // makehuman verticed, not morphed, not rigged
-            const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
-            // get all the quads for the skin mesh
-            const mhSkinQuadIndices = app.humanMesh.baseMesh.fxyz.slice(
-                app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
-                app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-            )
-            const mhUniqueIndexSet = new Set<number>
-            for (const index of mhSkinQuadIndices) {
-                mhUniqueIndexSet.add(index)
-            }
-            // TODO: optimize ARKit
-            const arobj = FaceARKitLoader.getInstance().neutral!
-
-            const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
-            
-            this.pickMeshes = [{
-                flat: mh,
-                vertices: mhVertices,
-                indicesAllPoints: new IndexBuffer(gl, Array.from(mhUniqueIndexSet)),
-                indicesAllEdges: quadsToEdges(gl, mhSkinQuadIndices),
-                pickColors: new PickColorBuffer(mhVertices),
-                selectionColors: new SelectionColorBuffer(mhVertices)
-            }, {
-                flat: ak,
-                vertices: arVertices,
-                indicesAllPoints: indicesForAllVertices(arVertices),
-                indicesAllEdges: trianglesToEdges(gl, arobj.fxyz), // this is too much
-                pickColors: new PickColorBuffer(arVertices),
-                selectionColors: new SelectionColorBuffer(arVertices)
-            }]
+            this.initPickMeshes(app, view)
         }
         view.prepareCanvas()
 
@@ -95,18 +61,20 @@ export class MorphRenderer extends RenderHandler {
         gl.depthMask(true)
         const alpha = 0.25
 
-        const mesh = this.model.isARKitActive.value ? [this.pickMeshes[1].flat, this.pickMeshes[0].flat] : [this.pickMeshes[0].flat, this.pickMeshes[1].flat]
+        const [activeMesh, inactiveMesh] = this.model.isARKitActive.value
+            ? [this.pickMeshes[1], this.pickMeshes[0]]
+            : [this.pickMeshes[0], this.pickMeshes[1]]
 
-        // draw solid mesh
+        // draw the active mesh as solid
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)
         gl.disable(gl.BLEND)
 
         shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
-        mesh[0].bind(shaderShadedMono)
-        mesh[0].draw(gl)
+        activeMesh.flat.bind(shaderShadedMono)
+        activeMesh.flat.draw(gl)
 
-        // draw transparent mesh
+        // draw inactive mesh as transparent
         if (this.model.showBothMeshes.value) {
             // disable writing to z-buffer so that it does not hide the selection
             gl.depthMask(false)
@@ -115,13 +83,13 @@ export class MorphRenderer extends RenderHandler {
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
             shaderShadedMono.setColor(gl, [0, 0.5, 1, alpha])
-            mesh[1].bind(shaderShadedMono)
-            mesh[1].draw(gl)
+            inactiveMesh.flat.bind(shaderShadedMono)
+            inactiveMesh.flat.draw(gl)
             gl.depthMask(true)
         }
 
         // draw selection (edges and vertices)
-        const activeMesh = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
+        // const activeMesh = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
         const shaderColored = view.shaderColored
         shaderColored.use(gl)
         shaderColored.setPointSize(gl, 4.5)
@@ -136,6 +104,45 @@ export class MorphRenderer extends RenderHandler {
 
         activeMesh.indicesAllEdges.bind()
         activeMesh.indicesAllEdges.drawLines()
+    }
+
+    private initPickMeshes(app: Application, view: RenderView) {
+        const gl = view.gl
+        // TODO: don't let them use RenderMesh and re-use data for the picking
+        const mh = new MHFlat(app, gl)
+        const ak = new ARKitFlat(app, gl)
+
+        // makehuman verticed, not morphed, not rigged
+        const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
+        // get all the quads for the skin mesh
+        const mhSkinQuadIndices = app.humanMesh.baseMesh.fxyz.slice(
+            app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
+            app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+        )
+        const mhUniqueIndexSet = new Set<number>
+        for (const index of mhSkinQuadIndices) {
+            mhUniqueIndexSet.add(index)
+        }
+        // TODO: optimize ARKit
+        const arobj = FaceARKitLoader.getInstance().neutral!
+
+        const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
+
+        this.pickMeshes = [{
+            flat: mh,
+            vertices: mhVertices,
+            indicesAllPoints: new IndexBuffer(gl, Array.from(mhUniqueIndexSet)),
+            indicesAllEdges: quadsToEdges(gl, mhSkinQuadIndices),
+            pickColors: new PickColorBuffer(mhVertices),
+            selectionColors: new SelectionColorBuffer(mhVertices)
+        }, {
+            flat: ak,
+            vertices: arVertices,
+            indicesAllPoints: indicesForAllVertices(arVertices),
+            indicesAllEdges: trianglesToEdges(gl, arobj.fxyz), // this is too much
+            pickColors: new PickColorBuffer(arVertices),
+            selectionColors: new SelectionColorBuffer(arVertices)
+        }]
     }
 
     drawVerticesToPick(view: RenderView) {
@@ -175,7 +182,7 @@ export class MorphRenderer extends RenderHandler {
     }
 }
 
-export function indicesForAllVertices(verts: VertexBuffer) {
+function indicesForAllVertices(verts: VertexBuffer) {
     const buffer = new Uint16Array(verts.data.length / 3)
     for (let i = 0; i < buffer.length; ++i) {
         buffer[i] = i

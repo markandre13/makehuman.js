@@ -1,11 +1,9 @@
 import { Application } from 'Application'
-import { mat4, vec2, vec3, vec4 } from 'gl-matrix'
-import { createModelViewMatrix, createProjectionMatrix } from 'render/util'
+import { vec3 } from 'gl-matrix'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphToolModel } from './MorphToolModel'
 import { InputHandler } from 'gl/input/InputHandler'
 import { MouseButton } from 'gl/input/MouseButton'
-import { Projection } from 'gl/Projection'
 import { renderIntoTexture } from 'gl/renderIntoTexture'
 
 // some notes on blender's mesh editor
@@ -17,80 +15,10 @@ import { renderIntoTexture } from 'gl/renderIntoTexture'
 //.  GPU_SHADER_3D_POINT_VARYING_SIZE_VARYING_COLOR
 //   gpu_shader_3D_point_varying_size_varying_color
 
-class Selection {
-    // selections for the the two meshes: makehuman and arkit
-    mhvertex = new Map<number, SVGCircleElement>()
-    arvertex = new Map<number, SVGCircleElement>()
-
-    clear(arkit: boolean) {
-        if (arkit) {
-            this.arvertex.forEach( element => element.remove())
-            this.arvertex.clear()
-        } else {
-            this.mhvertex.forEach( element => element.remove())
-            this.mhvertex.clear()
-        }
-    }
-    add(arkit: boolean, index: number, overlay: SVGGElement) {
-        if (this.has(arkit, index)) {
-            return
-        }
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-        circle.setAttributeNS(null, 'r', `3`)
-        circle.setAttributeNS(null, 'stroke', `#f80`)
-        circle.setAttributeNS(null, 'fill', `#f80`)
-        overlay.appendChild(circle)
-        if (arkit) {
-            this.arvertex.set(index, circle)
-        } else {
-            this.mhvertex.set(index, circle)
-        }
-    }
-    remove(arkit: boolean, index: number) {
-        if (arkit) {
-            const element = this.arvertex.get(index)
-            if (element) {
-                element.remove()
-                this.arvertex.delete(index)
-            }
-        } else {
-            const element = this.mhvertex.get(index)
-            if (element) {
-                element.remove()
-                this.arvertex.delete(index)
-            }
-        }
-    }
-    toggle(arkit: boolean, index: number, overlay: SVGGElement) {
-        if (this.has(arkit, index)) {
-            this.remove(arkit, index)
-        } else {
-            this.add(arkit, index, overlay)
-        }
-    }
-    has(arkit: boolean, index: number) {
-        if (arkit) {
-            return this.arvertex.has(index)
-        } else {
-            return this.mhvertex.has(index)
-        }
-    }
-}
-
 export class MorphToolMode extends InputHandler {
     _app: Application
     _model: MorphToolModel
     _renderer: MorphRenderer
-
-    _selection = new Selection()
-
-    // for rotation
-    _downX = 0
-    _downY = 0
-    _buttonDown = false
-    _origCamera!: mat4
-
-    _overlay: SVGGElement
 
     constructor(
         app: Application,
@@ -101,11 +29,8 @@ export class MorphToolMode extends InputHandler {
         this._app = app
         this._model = model
         this._renderer = renderer
-        this._overlay = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-        this._app.glview.overlaySVG.appendChild(this._overlay)
     }
     override destructor(): void {
-        this._app.glview.overlaySVG.removeChild(this._overlay)
     }
     override info(): string | undefined {
         return 'Select Vertex'
@@ -126,68 +51,15 @@ export class MorphToolMode extends InputHandler {
      * select vertex at pointer position
      */
     selectVertex(ev: PointerEvent) {
-        // const canvas = this._app.glview.canvas as HTMLCanvasElement
-        // const ctx = this._app.glview.ctx
-        // let modelViewMatrix = createModelViewMatrix(ctx, true)
-        // const mesh = this._model.isARKitActive.value ? this._renderer.arflat : this._renderer.mhflat
-        // const index = mesh.findVertex(vec2.fromValues(ev.offsetX, ev.offsetY), canvas, modelViewMatrix)
-
-        // if (index !== undefined) {
-        //     if (!ev.shiftKey) {
-        //         this._selection.clear(this._model.isARKitActive.value)
-        //     }
-        //     this._selection.toggle(this._model.isARKitActive.value, index, this._overlay)
-        //     this._app.glview.invalidate()
-        // }
-
-        // const gl = this._app.glview.gl
-        // const { index } = renderIntoTexture(gl, () => scene.drawVerticesToPick(), ev.offsetX, gl.canvas.height - ev.offsetY)
-        // if (index !== undefined) {
-        //     scene.toggleIndex(index - 1)
-        //     glview.invalidate()
-        //     ev.preventDefault()
-        // }
+        const gl = this._app.glview.gl
+        const { index } = renderIntoTexture(gl, () => this._renderer.drawVerticesToPick(this._app.glview), ev.offsetX, gl.canvas.height - ev.offsetY)
+        if (index !== undefined) {
+            console.log(`PICKED INDEX ${index}`)
+            // scene.toggleIndex(index - 1)
+            // glview.invalidate()
+            ev.preventDefault()
+        } else {
+            console.log(`picked nothing`)
+        }
     }
-
-    /**
-     * paint selected vertices
-     */
-    // override paint() {
-    //     // console.log(`MorphToolMode.paint()`)
-    //     const canvas = this._app.glview.canvas
-    //     const ctx = this._app.glview.ctx
-    //     const projectionMatrix = createProjectionMatrix(
-    //         canvas,
-    //         ctx.projection === Projection.PERSPECTIVE
-    //     )
-    //     let modelViewMatrix = createModelViewMatrix(ctx, true)
-    //     const m0 = mat4.multiply(mat4.create(), projectionMatrix, modelViewMatrix)
-
-    //     // update markers
-    //     this._selection.mhvertex.forEach( (element, index) => {
-    //         const pointInWorld = this._renderer.mhflat.getVec4(index)
-    //         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
-    //         // clipXY := point mapped to 2d??
-    //         const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-    //         const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-    //         // pixelXY := clipspace mapped to canvas
-    //         const pixelX = (clipX * 0.5 + 0.5) * canvas.width
-    //         const pixelY = (clipY * -0.5 + 0.5) * canvas.height
-    //         element.setAttributeNS(null, 'cx', `${pixelX}`)
-    //         element.setAttributeNS(null, 'cy', `${pixelY}`)
-    //     })
-
-    //     this._selection.arvertex.forEach( (element, index) => {
-    //         const pointInWorld = this._renderer.arflat.getVec4(index)
-    //         const pointInClipSpace = vec4.transformMat4(vec4.create(), pointInWorld, m0)
-    //         // clipXY := point mapped to 2d??
-    //         const clipX = pointInClipSpace[0] / pointInClipSpace[3]
-    //         const clipY = pointInClipSpace[1] / pointInClipSpace[3]
-    //         // pixelXY := clipspace mapped to canvas
-    //         const pixelX = (clipX * 0.5 + 0.5) * canvas.width
-    //         const pixelY = (clipY * -0.5 + 0.5) * canvas.height
-    //         element.setAttributeNS(null, 'cx', `${pixelX}`)
-    //         element.setAttributeNS(null, 'cy', `${pixelY}`)
-    //     })
-    // }
 }
