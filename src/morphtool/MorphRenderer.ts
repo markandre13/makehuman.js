@@ -153,18 +153,17 @@ export class MorphRenderer extends RenderHandler {
 
     drawVerticesToPick(view: RenderView) {
         const gl = this.app.glview.gl
-        // gl.clearColor(1, 0, 0, 1)
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
+        gl.disable(gl.BLEND)
+
+        // prepare with black background
         const oldBg = view.ctx.background
         view.ctx.background = [0, 0, 0, 1]
         const { projectionMatrix, modelViewMatrix } = this.app.glview.prepare()
         view.ctx.background = oldBg
 
-        const x = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
-        const mesh = this.model.isARKitActive.value ? this.pickMeshes[1].flat : this.pickMeshes[0].flat
-
-        gl.enable(gl.CULL_FACE)
-        gl.cullFace(gl.BACK)
-        gl.disable(gl.BLEND)
+        const mesh = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
 
         // paint mesh in black
         const shaderMono = view.shaderMono
@@ -172,8 +171,8 @@ export class MorphRenderer extends RenderHandler {
         shaderMono.setProjection(gl, projectionMatrix)
         shaderMono.setModelView(gl, modelViewMatrix)
         shaderMono.setColor(gl, [0, 0, 0, 1])
-        mesh.bind(shaderMono)
-        mesh.draw(gl)
+        mesh.flat.bind(shaderMono)
+        mesh.flat.draw(gl)
 
         // paint vertices
         const shaderColored = view.shaderColored
@@ -181,10 +180,10 @@ export class MorphRenderer extends RenderHandler {
         shaderColored.setPointSize(gl, 4.5)
         shaderColored.setProjection(gl, projectionMatrix)
         shaderColored.setModelView(gl, modelViewMatrix)
-        x.indicesAllPoints.bind()
-        x.vertices.bind(shaderColored)
-        x.pickColors.bind(shaderColored)
-        x.indicesAllPoints.drawPoints()
+        mesh.indicesAllPoints.bind()
+        mesh.vertices.bind(shaderColored)
+        mesh.pickColors.bind(shaderColored)
+        mesh.indicesAllPoints.drawPoints()
     }
 }
 

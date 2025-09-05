@@ -254,7 +254,7 @@ export class GLView extends View {
                     break
                 }
             }
-            ev.preventDefault()
+            // ev.preventDefault()
         }
 
         window.onkeydown = (ev: KeyboardEvent) => {
@@ -264,7 +264,7 @@ export class GLView extends View {
                     break
                 }
             }
-            ev.preventDefault()
+            // ev.preventDefault()
         }
     }
 }
