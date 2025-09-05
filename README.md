@@ -2,17 +2,28 @@
 
 A [Makehuman](http://www.makehumancommunity.org) variant with different features.
 
-<div style="text-align:npm center">
+<figure style="text-align:npm center">
   <img src="screenshot.png" />
-</div>
+  <figcaption>currently writing a tool to create morph targets for face animation from the blend shapes in ARKit / ICT FaceKit</figcaption>
+</figure>
 
 ## Currently Working On
 
 Animation!
 
 * Face animation with
-[MediaPipe](https://developers.google.com/mediapipe)'s Face Landmarker
-* Body animation with [Chordata](https://chordata.cc)
+[MediaPipe](https://developers.google.com/mediapipe)/[Live Link Face App](https://dev.epicgames.com/documentation/en-us/metahuman/live-link-face-app)
+  * data is provided as Apple ARKit Blendshape parameters
+  * MH's default face rig is not expressive enough to mimic the ARKit blendshapes
+  * current approach is to create morph targets by mapping ARKit and ICT FaceKit meshes to the MH mesh (see screenshot above)
+  * if that isn't good enough, i'll try to use MH's rigigy face rig
+
+* Body animation with [MediaPipe](https://developers.google.com/mediapipe)/[FreeMoCap](https://freemocap.org)
+  * data is provided as BlazePose landmarks
+  * there's no user interface yet for this
+  * demo videos
+    * input: [FreeMoCap with 3 cameras](https://youtu.be/m8U--4QNYL0?si=CKIcZYHuEuu2quhQ)
+    * result: [makehuman.js' animation](https://youtu.be/PGwLraJAm_I)
 
 This needs the [makehuman.js backend](https://github.com/markandre13/makehuman.js-backend) to be running locally.
 

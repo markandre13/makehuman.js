@@ -144,6 +144,18 @@ export class MorphRenderer extends RenderHandler {
             selectionColors: new SelectionColorBuffer(arVertices)
         }]
     }
+
+    // we need to do the following
+    // * when a mesh group is selected
+    //   set the selection colors
+    // * when a point is toggled
+    //   ...
+    // THIS CLASS:
+    //   get/set selected indices.
+    //   the rest is handled by the MorphTool
+    //   SelectionColorBuffer should track the indices on it's own in a set
+    //   and allow to set a single color for all selected vertices
+
     toggle(index: number) {
         const [activeMesh, inactiveMesh] = this.model.isARKitActive.value
             ? [this.pickMeshes[1], this.pickMeshes[0]]
