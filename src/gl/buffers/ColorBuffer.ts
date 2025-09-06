@@ -1,9 +1,12 @@
 import type { ShaderHasColors } from "../interfaces/ShaderHasColors"
 import { Float32Buffer } from "./Float32Buffer"
 
+// gl.UNSIGNED_BYTE
+// Uint8Array
+
 export class ColorBuffer extends Float32Buffer {
     bind(shader: ShaderHasColors) {
-        const numComponents = 3
+        const numComponents = 3 // RGB
         const type = this._gl.FLOAT
         const normalize = false
         const stride = 0

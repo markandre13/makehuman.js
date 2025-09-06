@@ -28,6 +28,7 @@ export class SelectionColorBuffer extends ColorBuffer {
     get(index: number): boolean {
         return this._set.has(index)
     }
+
     get rgb() {
         return this._rgb
     }
@@ -43,14 +44,21 @@ export class SelectionColorBuffer extends ColorBuffer {
             const di = index * 3;
             [this._data[di], this._data[di + 1], this._data[di + 2]] = this._rgb
         }
+        this.update()
     }
-    clear() {
+
+    private _clear() {
         for (const index of this._set) {
             const di = index * 3;
             [this._data[di], this._data[di + 1], this._data[di + 2]] = [0, 0, 0]
         }
         this._set.clear()
     }
+    clear() {
+        this._clear()
+        this.update()
+    }
+
     get array() {
         return Array.from(this._set)
     }
@@ -58,11 +66,12 @@ export class SelectionColorBuffer extends ColorBuffer {
         if (data === undefined) {
             data = []
         }
-        this.clear()
+        this._clear()
         this._set = new Set(data)
         for (const index of this._set) {
             const di = index * 3;
             [this._data[di], this._data[di + 1], this._data[di + 2]] = this._rgb
         }
+        this.update()
     }
 }

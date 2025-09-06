@@ -1,5 +1,7 @@
 import { Action, BooleanModel, OptionModel, TextModel } from 'toad.js'
 import { MorphRenderer } from './MorphRenderer'
+import { di } from 'lib/di'
+import { Application } from 'Application'
 
 export class MorphToolModel {
     renderer?: MorphRenderer
@@ -40,11 +42,8 @@ export class MorphToolModel {
     store = () => {
         if (this.mapping.find(it => it === this.morphGroups.value.trim())) {
             const nextgroup = this.morphGroups.value.trim()
-            console.log(`store to ${this.lastgroup}, load from ${nextgroup}`)
             if (this.renderer) {
                 const old = this.renderer.selection
-                console.log(`store old %o`, old)
-                console.log(this.renderer.selection)
                 this.morphGroupData.set(this.lastgroup, old!)
                 this.renderer.selection = this.morphGroupData.get(nextgroup)
             }

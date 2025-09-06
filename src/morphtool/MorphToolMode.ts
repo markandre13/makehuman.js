@@ -36,7 +36,7 @@ export class MorphToolMode extends InputHandler {
         return 'Select Vertex'
     }
     override selectionCenter() {
-        return vec3.fromValues(0,7,0)
+        return vec3.fromValues(0, 7, 0)
     }
     override pointerdown(ev: PointerEvent): void {
         switch (ev.button) {
@@ -54,13 +54,9 @@ export class MorphToolMode extends InputHandler {
         const gl = this._app.glview.gl
         const { index } = renderIntoTexture(gl, () => this._renderer.drawVerticesToPick(this._app.glview), ev.offsetX, gl.canvas.height - ev.offsetY)
         if (index !== undefined) {
-            console.log(`PICKED INDEX ${index}`)
-            // scene.toggleIndex(index - 1)
-            this._renderer.toggle(index-1)
+            this._renderer.toggle(index - 1)
             this._app.glview.invalidate()
             ev.preventDefault()
-        } else {
-            console.log(`picked nothing`)
         }
     }
 }
