@@ -16,6 +16,7 @@ import { ButtonVariant } from 'toad.js/view/Button'
 export function MorphTool(props: { app: Application }) {
     const model = new MorphToolModel()
     const renderer = new MorphRenderer(props.app, model)
+    model.renderer = renderer
     return (
         <Tab
             label="Morph"

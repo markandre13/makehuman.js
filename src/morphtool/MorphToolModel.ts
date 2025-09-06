@@ -1,12 +1,15 @@
 import { Action, BooleanModel, OptionModel, TextModel } from 'toad.js'
+import { MorphRenderer } from './MorphRenderer'
 
 export class MorphToolModel {
+    renderer?: MorphRenderer
     isARKitActive = new BooleanModel(false, { label: "MH / ARKit" });
     showBothMeshes = new BooleanModel(true, { label: "Show both meshes" });
 
-    morphGroupData = new Map<string, {mh: number[], extern: number[]}>()
-    
-    mapping = ["none"]
+    morphGroupData = new Map<string, { mh: number[], extern: number[] }>()
+
+    private lastgroup = "none"
+    private mapping = ["none", "zick", "zack"]
     morphGroups = new OptionModel("none", this.mapping, { label: "Morph Groups" })
     newMorphGroup = new TextModel("none")
     addMorphGroup = new Action(() => {
@@ -34,9 +37,22 @@ export class MorphToolModel {
         }
         this.addMorphGroup.enabled = this.mapping.find(it => it === this.morphGroups.value.trim()) === undefined
     }
-    // store = () => {}
+    store = () => {
+        if (this.mapping.find(it => it === this.morphGroups.value.trim())) {
+            const nextgroup = this.morphGroups.value.trim()
+            console.log(`store to ${this.lastgroup}, load from ${nextgroup}`)
+            if (this.renderer) {
+                const old = this.renderer.selection
+                console.log(`store old %o`, old)
+                console.log(this.renderer.selection)
+                this.morphGroupData.set(this.lastgroup, old!)
+                this.renderer.selection = this.morphGroupData.get(nextgroup)
+            }
+            this.lastgroup = nextgroup
+        }
+    }
     constructor() {
-        // this.morphGroups.signal.add(this.store)
+        this.morphGroups.signal.add(this.store)
         this.morphGroups.signal.add(this.deleteEnabled)
         this.morphGroups.signal.add(this.addEnabled)
         this.addEnabled()

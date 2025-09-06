@@ -15,13 +15,12 @@ export class SelectionColorBuffer extends ColorBuffer {
         return v
     }
     set(index: number, selected: boolean) {
-        index *= 3
+        const di = index * 3
         if (selected) {
-            [this._data[index], this._data[index + 1], this._data[index + 2]] = this._rgb
-            console.log(`set %o = %o`, index, this._rgb)
+            [this._data[di], this._data[di + 1], this._data[di + 2]] = this._rgb
             this._set.add(index)
         } else {
-            [this._data[index], this._data[index + 1], this._data[index + 2]] = [0, 0, 0]
+            [this._data[di], this._data[di + 1], this._data[di + 2]] = [0, 0, 0]
             this._set.delete(index)
         }
         this.update()
@@ -41,12 +40,14 @@ export class SelectionColorBuffer extends ColorBuffer {
         }
         this._rgb = rgb
         for (const index of this._set) {
-            [this._data[index], this._data[index + 1], this._data[index + 2]] = this._rgb
+            const di = index * 3;
+            [this._data[di], this._data[di + 1], this._data[di + 2]] = this._rgb
         }
     }
     clear() {
         for (const index of this._set) {
-            [this._data[index], this._data[index + 1], this._data[index + 2]] = [0, 0, 0]
+            const di = index * 3;
+            [this._data[di], this._data[di + 1], this._data[di + 2]] = [0, 0, 0]
         }
         this._set.clear()
     }
@@ -54,10 +55,14 @@ export class SelectionColorBuffer extends ColorBuffer {
         return Array.from(this._set)
     }
     set array(data: number[]) {
+        if (data === undefined) {
+            data = []
+        }
         this.clear()
         this._set = new Set(data)
         for (const index of this._set) {
-            [this._data[index], this._data[index + 1], this._data[index + 2]] = this._rgb
+            const di = index * 3;
+            [this._data[di], this._data[di + 1], this._data[di + 2]] = this._rgb
         }
     }
 }

@@ -165,14 +165,22 @@ export class MorphRenderer extends RenderHandler {
         activeMesh.selectionColors.toggle(index)
     }
     get selection() {
-        return {
+        const result = {
             mh: this.pickMeshes[0].selectionColors.array,
             extern: this.pickMeshes[1].selectionColors.array,
         }
+        console.log(`get %o`, result)
+        return result
     }
-    set selection(selection: { mh: number[], extern: number[] }) {
-        this.pickMeshes[0].selectionColors.array = selection.mh
-        this.pickMeshes[1].selectionColors.array = selection.extern
+    set selection(selection: { mh: number[], extern: number[] } | undefined) {
+        console.log(`set %o`, selection)
+        if (selection === undefined) { 
+            this.pickMeshes[0].selectionColors.clear()
+            this.pickMeshes[1].selectionColors.clear()
+        } else {
+            this.pickMeshes[0].selectionColors.array = selection.mh
+            this.pickMeshes[1].selectionColors.array = selection.extern
+        }
         this.app.glview.invalidate()
     }
     drawVerticesToPick(view: RenderView) {
