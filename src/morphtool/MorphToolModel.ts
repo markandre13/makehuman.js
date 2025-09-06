@@ -4,6 +4,8 @@ export class MorphToolModel {
     isARKitActive = new BooleanModel(false, { label: "MH / ARKit" });
     showBothMeshes = new BooleanModel(true, { label: "Show both meshes" });
 
+    morphGroupData = new Map<string, {mh: number[], extern: number[]}>()
+    
     mapping = ["none"]
     morphGroups = new OptionModel("none", this.mapping, { label: "Morph Groups" })
     newMorphGroup = new TextModel("none")
@@ -32,7 +34,9 @@ export class MorphToolModel {
         }
         this.addMorphGroup.enabled = this.mapping.find(it => it === this.morphGroups.value.trim()) === undefined
     }
+    // store = () => {}
     constructor() {
+        // this.morphGroups.signal.add(this.store)
         this.morphGroups.signal.add(this.deleteEnabled)
         this.morphGroups.signal.add(this.addEnabled)
         this.addEnabled()

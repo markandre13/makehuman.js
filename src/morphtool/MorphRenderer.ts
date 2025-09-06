@@ -143,6 +143,8 @@ export class MorphRenderer extends RenderHandler {
             pickColors: new PickColorBuffer(arVertices),
             selectionColors: new SelectionColorBuffer(arVertices)
         }]
+        this.pickMeshes[0].selectionColors.rgb = [1, 0.75, 0]
+        this.pickMeshes[1].selectionColors.rgb = [0, 1, 1]
     }
 
     // we need to do the following
@@ -162,7 +164,17 @@ export class MorphRenderer extends RenderHandler {
             : [this.pickMeshes[0], this.pickMeshes[1]]
         activeMesh.selectionColors.toggle(index)
     }
-
+    get selection() {
+        return {
+            mh: this.pickMeshes[0].selectionColors.array,
+            extern: this.pickMeshes[1].selectionColors.array,
+        }
+    }
+    set selection(selection: { mh: number[], extern: number[] }) {
+        this.pickMeshes[0].selectionColors.array = selection.mh
+        this.pickMeshes[1].selectionColors.array = selection.extern
+        this.app.glview.invalidate()
+    }
     drawVerticesToPick(view: RenderView) {
         const gl = this.app.glview.gl
         gl.enable(gl.CULL_FACE)
