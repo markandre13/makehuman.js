@@ -1,6 +1,8 @@
 import { Action, BooleanModel, OptionModel, TextModel } from 'toad.js'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphGroupDB } from './MorphGroupDB'
+import { di } from 'lib/di'
+import { Application } from 'Application'
 
 export class MorphToolModel {
     renderer?: MorphRenderer
@@ -50,6 +52,7 @@ export class MorphToolModel {
                         name: this.currentGroup,
                         ...old!
                     })
+                    this.saveToBackend()
                 }
                 this.renderer.selection = await this.morphGroupData.get(nextgroup)
             }
@@ -63,6 +66,16 @@ export class MorphToolModel {
                 name: this.currentGroup,
                 ...old!
             })
+            this.saveToBackend()
+        }
+    }
+    private async saveToBackend() {
+        const fs = di.get(Application).frontend.filesystem
+        if (fs !== undefined) {
+            const all = await this.morphGroupData.all()
+            const encoder = new TextEncoder();
+            const uint8Array = encoder.encode(JSON.stringify(all));
+            await fs.write("morphgroup.json", uint8Array)
         }
     }
     constructor() {
@@ -75,10 +88,9 @@ export class MorphToolModel {
         this.addEnabled()
         this.deleteEnabled()
 
-        this.morphGroupData.all().then( data => {
-            const x = data.map(it => it.name)
-            console.log(`restored groups %o`, x)
-            this.mapping = ["none", ...x]
+        this.morphGroupData.all().then(data => {
+            const morphGroupNames = data.map(it => it.name)
+            this.mapping = ["none", ...morphGroupNames]
             this.morphGroups.setMapping(this.mapping)
         })
     }
