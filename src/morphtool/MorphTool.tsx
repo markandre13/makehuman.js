@@ -46,6 +46,7 @@ export function MorphTool(props: { app: Application }) {
             Tool to morph face meshes onto each other.
             <Form>
                 <FormSwitch model={model.isARKitActive} />
+                <FormSwitch model={model.isTransparentActiveMesh} />
                 <FormSwitch model={model.showBothMeshes} />
 
                 <FormLabel model={model.morphGroups} />
