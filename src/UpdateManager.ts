@@ -73,18 +73,8 @@ export class UpdateManager {
 
     render?: () => void
 
-    private invalidated = false
     invalidateView() {
-        if (this.invalidated) {
-            return
-        }
-        this.invalidated = true
-        requestAnimationFrame(() => {
-            this.invalidated = false
-            if (this.render !== undefined) {
-                this.render()
-            }
-        })
+        this.app.glview?.invalidate()
     }
 
     constructor(app: Application) {

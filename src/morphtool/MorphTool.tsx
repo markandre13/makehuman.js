@@ -9,6 +9,7 @@ import { MorphToolMode } from './MorphToolMode'
 import { Action, Button, OptionModel, TextModel } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
+import { FormSlider } from 'blendshapes/BlendShapeTab'
 
 /**
  * Tool to morph face meshes.
@@ -58,6 +59,9 @@ export function MorphTool(props: { app: Application }) {
                     <Button action={model.deleteMorphGroup} variant={ButtonVariant.NEGATIVE} />
                 </FormField>
                 <FormHelp model={model.morphGroups} />
+
+                <FormSlider model={model.mhJawOpen}/>
+                <FormSlider model={model.externJawOpen}/>
             </Form>
         </Tab>
     )

@@ -34,12 +34,9 @@ export class MorphRenderer extends RenderHandler {
         super()
         this.app = app
         this.model = model
-        this.model.isARKitActive.signal.add(() => {
-            this.app.updateManager.invalidateView()
-        })
-        this.model.showBothMeshes.signal.add(() => {
-            this.app.updateManager.invalidateView()
-        })
+        model.isARKitActive.signal.add(app.glview.invalidate)
+        model.showBothMeshes.signal.add(app.glview.invalidate)
+        model.isTransparentActiveMesh.signal.add(app.glview.invalidate)
     }
     override defaultCamera() {
         return di.get(Application).headCamera
@@ -66,13 +63,25 @@ export class MorphRenderer extends RenderHandler {
             : [this.pickMeshes[0], this.pickMeshes[1]]
 
         // draw the active mesh as solid
-        gl.enable(gl.CULL_FACE)
-        gl.cullFace(gl.BACK)
-        gl.disable(gl.BLEND)
+        if (this.model.isTransparentActiveMesh.value) {
+            gl.depthMask(false)
+            gl.disable(gl.CULL_FACE)
+            gl.enable(gl.BLEND)
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-        shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
-        activeMesh.flat.bind(shaderShadedMono)
-        activeMesh.flat.draw(gl)
+            shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 0.75])
+            activeMesh.flat.bind(shaderShadedMono)
+            activeMesh.flat.draw(gl)
+            gl.depthMask(true)
+        } else {
+            gl.enable(gl.CULL_FACE)
+            gl.cullFace(gl.BACK)
+            gl.disable(gl.BLEND)
+
+            shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
+            activeMesh.flat.bind(shaderShadedMono)
+            activeMesh.flat.draw(gl)
+        }
 
         // draw inactive mesh as transparent
         if (this.model.showBothMeshes.value) {
@@ -172,7 +181,7 @@ export class MorphRenderer extends RenderHandler {
         return result
     }
     set selection(selection: { mh: number[], extern: number[] } | undefined) {
-        if (selection === undefined) { 
+        if (selection === undefined) {
             this.pickMeshes[0].selectionColors.clear()
             this.pickMeshes[1].selectionColors.clear()
         } else {
