@@ -1,10 +1,9 @@
-import { Application } from 'Application'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { RenderMesh } from 'render/RenderMesh'
 import { NumberModel } from 'toad.js'
 import { FlatMesh } from './FlatMesh'
 import { Blendshape } from 'mediapipe/blendshapeNames'
-import { Target } from 'target/Target'
+import { MorphTarget } from 'target/MorphTarget'
 import { di } from 'lib/di'
 
 export class ARKitFlat extends FlatMesh {
@@ -44,15 +43,15 @@ export class ARKitFlat extends FlatMesh {
 
         // duplicate triangles to achieve flat shading
         const v2 = new Float32Array(this.facesFlat.length * 3)
-        const f2 = new Array<number>(this.facesFlat.length * 3)
+        const f2 = new Array<number>(this.facesFlat.length)
         for (let i = 0, vo = 0, fo = 0; i < this.facesFlat.length;) {
             let i0 = this.facesFlat[i++] * 3
             let i1 = this.facesFlat[i++] * 3
             let i2 = this.facesFlat[i++] * 3
 
-            add(i0, vo / 3)
-            add(i1, vo / 3 + 1)
-            add(i2, vo / 3 + 2)
+            add(i0/3, vo / 3)
+            add(i1/3, vo / 3 + 1)
+            add(i2/3, vo / 3 + 2)
 
             v2[vo++] = this.vertexFlat[i0++]
             v2[vo++] = this.vertexFlat[i0++]
@@ -73,6 +72,7 @@ export class ARKitFlat extends FlatMesh {
         this.facesFlat = f2
         this.vertexFlat = v2
 
+        // RenderMesh takes care of calculating the normals
         this.renderMesh = new RenderMesh(
             gl,
             this.vertexFlat,
@@ -86,56 +86,29 @@ export class ARKitFlat extends FlatMesh {
     getTarget(blendshape: Blendshape) {
         const arkit = di.get(FaceARKitLoader)
         const orig = arkit.getTarget(blendshape)!
-        const t = new Target()
-        // t.data = new Uint16Array(0)
-        // t.verts = new Float32Array(0)
-        t.data = new Uint16Array(orig.data.length * 3)
-        t.verts = new Float32Array(orig.verts.length * 3)
+        const t = new MorphTarget()
+        const indices = new Array(orig.indices.length * 3)
+        const dxyz = new Array(orig.dxyz.length * 3)
 
-        // for (let i = 0, vo = 0, fo = 0; i < this.facesFlat.length;) {
-        //     let i0 = this.facesFlat[i++] * 3
-        //     let i1 = this.facesFlat[i++] * 3
-        //     let i2 = this.facesFlat[i++] * 3
-    
-        //     v2[vo++] = this.vertexFlat[i0++]
-        //     v2[vo++] = this.vertexFlat[i0++]
-        //     v2[vo++] = this.vertexFlat[i0++]
-        //     v2[vo++] = this.vertexFlat[i1++]
-        //     v2[vo++] = this.vertexFlat[i1++]
-        //     v2[vo++] = this.vertexFlat[i1++]
-        //     v2[vo++] = this.vertexFlat[i2++]
-        //     v2[vo++] = this.vertexFlat[i2++]
-        //     v2[vo++] = this.vertexFlat[i2++]
-        //     f2[fo] = fo
-        //     ++fo
-        //     f2[fo] = fo
-        //     ++fo
-        //     f2[fo] = fo
-        //     ++fo
-        // }
-        // this.facesFlat = f2
-        // this.vertexFlat = v2
-
-
-        // for(let i=0; i<t.data.length; ++i) {
-        //     t.data[i] = i
-        // }
-
-        // let indexOut = 0, vertexOut = 0, indexIn = 0
-        // for (const index of orig.data) {
-        //     const newIndices = this.map.get(index)!
-        //     const v = [
-        //         orig.verts[indexIn++] * this.scale.value,
-        //         orig.verts[indexIn++] * this.scale.value + this.dy.value,
-        //         orig.verts[indexIn++] * this.scale.value + this.dz.value
-        //     ]
-        //     for (const x of newIndices) {
-        //         t.data[indexOut++] = x
-        //         t.verts[vertexOut++] = v[0]
-        //         t.verts[vertexOut++] = v[1]
-        //         t.verts[vertexOut++] = v[2]
-        //     }
-        // }
+        let indexOut = 0, vertexOut = 0, indexIn = 0
+        for (const index of orig.indices) {
+            const newIndices = this.map.get(index)!
+            const v = [
+                orig.dxyz[indexIn++] * this.scale.value,
+                orig.dxyz[indexIn++] * this.scale.value, //+ this.dy.value,
+                orig.dxyz[indexIn++] * this.scale.value //+ this.dz.value
+            ]
+            for (const x of newIndices) {
+                indices[indexOut++] = x
+                dxyz[vertexOut++] = v[0]
+                dxyz[vertexOut++] = v[1]
+                dxyz[vertexOut++] = v[2]
+            }
+        }
+        indices.length = indexOut
+        t.indices = new Uint16Array(indices)
+        dxyz.length = vertexOut
+        t.dxyz = new Float32Array(dxyz)
         return t
     }
 }

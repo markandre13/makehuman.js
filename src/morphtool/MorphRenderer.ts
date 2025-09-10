@@ -124,10 +124,10 @@ export class MorphRenderer extends RenderHandler {
         
         const copy = new Float32Array(ak.vertexFlat)
         const t = ak.getTarget(Blendshape.jawOpen)!
-        t.apply(copy, 1)
+        t.apply(copy, 0.5)
         ak.renderMesh.update(copy)
         
-        // makehuman verticed, not morphed, not rigged
+        // makehuman vertices, not morphed, not rigged
         const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
         // get all the quads for the skin mesh
         const mhSkinQuadIndices = app.humanMesh.baseMesh.fxyz.slice(

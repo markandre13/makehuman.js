@@ -1,4 +1,4 @@
-import { Target } from './Target'
+import { MorphTarget } from './MorphTarget'
 import { Component} from './Component'
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 
@@ -144,13 +144,13 @@ export class TargetFactory {
 
 // FROM: core/algos3d.py
 // filename to target?
-const targetBuffer = new Map<string, Target>()
+const targetBuffer = new Map<string, MorphTarget>()
 
 export function getTarget(filename: string) {
     let target = targetBuffer.get(filename)
     if (target !== undefined)
         return target
-    target = new Target() // Target(3DObject, filename)
+    target = new MorphTarget() // Target(3DObject, filename)
     target.load(filename)
     targetBuffer.set(filename, target)
     return target

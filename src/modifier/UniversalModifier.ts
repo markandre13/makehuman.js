@@ -1,5 +1,5 @@
 import { ManagedTargetModifier } from './ManagedTargetModifier'
-import { Target } from '../target/Target'
+import { MorphTarget } from '../target/MorphTarget'
 import { Component } from '../target/Component'
 import { findTargets } from './findTargets'
 

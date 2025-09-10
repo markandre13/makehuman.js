@@ -5,9 +5,15 @@ import { isZero } from "mesh/HumanMesh"
 /**
  * morph target
  */
-export class Target {
-    data!: Uint16Array // index
-    verts!: Float32Array // x, y, z
+export class MorphTarget {
+    /**
+     * indices modified by the morph target
+     */
+    indices!: Uint16Array
+    /**
+     * delta translation for indices stored in 'indices'
+     */
+    dxyz!: Float32Array
 
     /**
      * load morph target from MakeHuman *.target file
@@ -31,8 +37,8 @@ export class Target {
             idx.push(parseInt(tokens[0], 10))
             vtx.push(parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3]))
         }
-        this.data = new Uint16Array(idx)
-        this.verts = new Float32Array(vtx)
+        this.indices = new Uint16Array(idx)
+        this.dxyz = new Float32Array(vtx)
     }
 
     /**
@@ -40,12 +46,12 @@ export class Target {
      *
      * @param src
      * @param dst
-     * @parem size an optional size
+     * @param size an optional size
      */
     diff(src: Float32Array, dst: Float32Array, size?: number) {
         if (src.length !== dst.length) {
             throw Error(
-                `Target.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`
+                `MorphTarget.diff(src, dst): src and dst must have the same length but they are ${src.length} and ${dst.length}`
             )
         }
         let length: number
@@ -54,8 +60,8 @@ export class Target {
         } else {
             length = size * 3
         }
-        const idx: number[] = []
-        const vtx: number[] = []
+        const indices: number[] = []
+        const dxyz: number[] = []
         for (let v = 0, i = 0; v < length; ++i) {
             const sx = src[v]
             const dx = dst[v++]
@@ -67,29 +73,29 @@ export class Target {
                 y = dy - sy,
                 z = dz - sz
             if (!isZero(x) || !isZero(y) || !isZero(z)) {
-                idx.push(i)
-                vtx.push(x, y, z)
+                indices.push(i)
+                dxyz.push(x, y, z)
             }
         }
-        this.data = new Uint16Array(idx)
-        this.verts = new Float32Array(vtx)
+        this.indices = new Uint16Array(indices)
+        this.dxyz = new Float32Array(dxyz)
     }
 
     /**
      * apply morph target to vertices
      *
      * @param verts destination
-     * @param scale a value between 0 and 1
+     * @param scale scale morp target by (value between 0 and 1)
      */
     apply(verts: Float32Array, scale: number) {
         // console.log(`morphing ${this.data.length} vertices by ${scale}`)
         let dataIndex = 0,
             vertexIndex = 0
-        while (dataIndex < this.data.length) {
-            let index = this.data[dataIndex++] * 3
-            verts[index++] += this.verts[vertexIndex++] * scale
-            verts[index++] += this.verts[vertexIndex++] * scale
-            verts[index++] += this.verts[vertexIndex++] * scale
+        while (dataIndex < this.indices.length) {
+            let index = this.indices[dataIndex++] * 3
+            verts[index++] += this.dxyz[vertexIndex++] * scale
+            verts[index++] += this.dxyz[vertexIndex++] * scale
+            verts[index++] += this.dxyz[vertexIndex++] * scale
         }
     }
 }

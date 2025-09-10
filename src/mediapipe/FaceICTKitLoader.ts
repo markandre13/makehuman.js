@@ -1,5 +1,5 @@
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { Target } from "target/Target"
+import { MorphTarget } from "target/MorphTarget"
 import { blendshapeNames } from "./blendshapeNames"
 
 export class FaceICTKitLoader {
@@ -12,7 +12,7 @@ export class FaceICTKitLoader {
     }
 
     neutral: WavefrontObj
-    targets = new Array<Target>(blendshapeNames.length);
+    targets = new Array<MorphTarget>(blendshapeNames.length);
 
     constructor() {
         this.neutral = new WavefrontObj("data/blendshapes/ict/_neutral.obj")
@@ -31,7 +31,7 @@ export class FaceICTKitLoader {
                     break
             }
             let dst = new WavefrontObj(`data/blendshapes/ict/${name}.obj`)
-            const target = new Target()
+            const target = new MorphTarget()
             target.diff(this.neutral.xyz, dst.xyz, indices)
             if (name === "browInnerUp_L") {
                 dst = new WavefrontObj(`data/blendshapes/ict/browInnerUp_R.obj`)

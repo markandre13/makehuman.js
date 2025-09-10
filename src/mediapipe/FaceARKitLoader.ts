@@ -1,5 +1,5 @@
 import { WavefrontObj } from "mesh/WavefrontObj"
-import { Target } from "target/Target"
+import { MorphTarget } from "target/MorphTarget"
 import { blendshapeNames, Blendshape } from "./blendshapeNames"
 import { isZero } from "mesh/HumanMesh"
 import { mat4, vec3 } from "gl-matrix"
@@ -10,12 +10,12 @@ import { BlendshapeModel } from "blendshapes/BlendshapeModel"
  */
 export class FaceARKitLoader {
     // private scale = 1;
-    private targets: Target[]
+    private targets: MorphTarget[]
     private name2index: Map<string, number>
     neutral?: WavefrontObj
 
     constructor() {
-        this.targets = new Array<Target>(blendshapeNames.length)
+        this.targets = new Array<MorphTarget>(blendshapeNames.length)
         this.name2index = new Map<string, number>()
         blendshapeNames.forEach((name, index) => this.name2index.set(name, index))
     }
@@ -37,7 +37,7 @@ export class FaceARKitLoader {
         return this.neutral
     }
 
-    getTarget(blendshape: Blendshape | string): Target | undefined {
+    getTarget(blendshape: Blendshape | string): MorphTarget | undefined {
         this.getNeutral()
         if (typeof blendshape === "string") {
             blendshape = this.name2index.get(blendshape)!
@@ -53,7 +53,7 @@ export class FaceARKitLoader {
         // for (let i = 0; i < this.neutral.xyz.length; ++i) {
         //     dst.xyz[i] = dst.xyz[i] * this.scale
         // }
-        const target = new Target()
+        const target = new MorphTarget()
         target.diff(this.neutral!.xyz, dst.xyz)
         this.targets[blendshape] = target
         return target
