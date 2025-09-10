@@ -60,8 +60,8 @@ export function MorphTool(props: { app: Application }) {
                 </FormField>
                 <FormHelp model={model.morphGroups} />
 
-                <FormSlider model={model.mhJawOpen}/>
-                <FormSlider model={model.externJawOpen}/>
+                {/* <FormSlider model={model.mhJawOpen}/>
+                <FormSlider model={model.externJawOpen}/> */}
             </Form>
         </Tab>
     )

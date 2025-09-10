@@ -10,14 +10,14 @@ export class MorphToolModel {
     isARKitActive = new BooleanModel(true, { label: "MH / ARKit" })
     isTransparentActiveMesh = new BooleanModel(false, { label: "Transparent active mesh" })
     showBothMeshes = new BooleanModel(true, { label: "Show both meshes" })
-    mhJawOpen = new NumberModel(0, {
-        min: 0, max: 1, step: 0.01,
-        label: "MH Jaw Open (pose)"
-    })
-    externJawOpen = new NumberModel(0, {
-        min: 0, max: 1, step: 0.01,
-        label: "ArKit Jaw Open (blendshape)"
-    })
+    // mhJawOpen = new NumberModel(0, {
+    //     min: 0, max: 1, step: 0.01,
+    //     label: "MH Jaw Open (pose)"
+    // })
+    // externJawOpen = new NumberModel(0, {
+    //     min: 0, max: 1, step: 0.01,
+    //     label: "ArKit Jaw Open (blendshape)"
+    // })
 
     morphGroupData = new MorphGroupDB()
 
