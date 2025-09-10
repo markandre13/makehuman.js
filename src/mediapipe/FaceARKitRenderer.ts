@@ -23,7 +23,7 @@ export class FaceARKitRenderer extends RenderHandler {
     }
     override paint(app: Application, view: RenderView): void {
         if (this.blendshapeSet === undefined) {
-            this.blendshapeSet = FaceARKitLoader.getInstance().preload()
+            this.blendshapeSet = di.get(FaceARKitLoader).preload()
         }
         const gl = view.gl
         const ctx = view.ctx

@@ -36,7 +36,7 @@ export class QuadRenderer extends RenderHandler {
     }
     override paint(app: Application, view: RenderView): void {
         if (this.arkit === undefined) {
-            this.arkit = FaceARKitLoader.getInstance().preload()
+            this.arkit = di.get(FaceARKitLoader).preload()
         }
         if (this.arrowMesh === undefined) {
             this.arrowMesh = new ArrowMesh(view.gl)

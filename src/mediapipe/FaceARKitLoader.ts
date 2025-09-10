@@ -1,6 +1,6 @@
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { Target } from "target/Target"
-import { blendshapeNames } from "./blendshapeNames"
+import { blendshapeNames, Blendshape } from "./blendshapeNames"
 import { isZero } from "mesh/HumanMesh"
 import { mat4, vec3 } from "gl-matrix"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
@@ -9,14 +9,6 @@ import { BlendshapeModel } from "blendshapes/BlendshapeModel"
  * Load and cache ARKit Face Blendshapes
  */
 export class FaceARKitLoader {
-    private static _instance?: FaceARKitLoader
-    static getInstance() {
-        if (FaceARKitLoader._instance === undefined) {
-            FaceARKitLoader._instance = new FaceARKitLoader()
-        }
-        return FaceARKitLoader._instance
-    }
-
     // private scale = 1;
     private targets: Target[]
     private name2index: Map<string, number>
@@ -45,7 +37,7 @@ export class FaceARKitLoader {
         return this.neutral
     }
 
-    getTarget(blendshape: number | string): Target | undefined {
+    getTarget(blendshape: Blendshape | string): Target | undefined {
         this.getNeutral()
         if (typeof blendshape === "string") {
             blendshape = this.name2index.get(blendshape)!
@@ -67,12 +59,18 @@ export class FaceARKitLoader {
         return target
     }
 
-    // get blendshapemodel and transform from the frontend
+    /**
+     * get blended vertices
+     * 
+     * @param blendshapeModel 
+     * @returns 
+     */
     getVertex(blendshapeModel: BlendshapeModel): Float32Array {
+        // copy 'neutral' to 'vertex'
         const neutral = this.getNeutral()
         const vertex = new Float32Array(neutral.xyz.length)
         vertex.set(this.neutral!.xyz)
-        // apply blendshapes
+        // apply blendshapes to 'vertex'
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {
             if (blendshape === 0) {
                 continue
@@ -84,7 +82,7 @@ export class FaceARKitLoader {
             this.getTarget(blendshape)?.apply(vertex, weight)
         }
 
-        // scale and rotate
+        // scale and rotate 'vertex'
         let m: mat4
         if (blendshapeModel.transform) {
             const t = blendshapeModel.transform!!

@@ -10,11 +10,6 @@
             "DOM"
         ],
         "baseUrl": "src",
-        "paths": {
-            "src/*": [
-                "src/*"
-            ],
-        },
         "incremental": false,
         "jsx": "react-jsx",
         "jsxImportSource": "toad.jsx/lib",
@@ -29,8 +24,8 @@
         "sourceMap": true,
     },
     "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx", "test/lib/di.spec.tsx", "test/lib/Logger.spec.tsx",
+        "src/**/*",
+        "test/**/*",
     ],
     "exclude": [
         "data",

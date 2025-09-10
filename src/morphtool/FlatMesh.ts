@@ -9,9 +9,9 @@ import { RenderMesh } from 'render/RenderMesh'
 
 export class FlatMesh {
     vertexOrig!: Float32Array
-    protected vertexFlat!: Float32Array
+    vertexFlat!: Float32Array
     protected facesFlat!: number[]
-    protected renderMesh!: RenderMesh
+    renderMesh!: RenderMesh
 
     bind(shader: ShaderMono | ShaderShadedMono | ShaderShadedTextured): void {
         this.renderMesh.bind(shader)

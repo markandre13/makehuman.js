@@ -13,6 +13,7 @@ import { FlatMesh } from './FlatMesh'
 import { quadsToEdges, trianglesToEdges } from 'gl/algorithms'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
+import { Blendshape } from 'mediapipe/blendshapeNames'
 
 interface PickMesh {
     flat: FlatMesh
@@ -39,7 +40,7 @@ export class MorphRenderer extends RenderHandler {
         model.isTransparentActiveMesh.signal.add(app.glview.invalidate)
     }
     override defaultCamera() {
-        return di.get(Application).headCamera
+        return this.app.headCamera
     }
     override paint(app: Application, view: RenderView): void {
         // prepare
@@ -119,8 +120,13 @@ export class MorphRenderer extends RenderHandler {
         const gl = view.gl
         // TODO: don't let them use RenderMesh and re-use data for the picking
         const mh = new MHFlat(app, gl)
-        const ak = new ARKitFlat(app, gl)
-
+        const ak = new ARKitFlat(gl)
+        
+        const copy = new Float32Array(ak.vertexFlat)
+        const t = ak.getTarget(Blendshape.jawOpen)!
+        t.apply(copy, 1)
+        ak.renderMesh.update(copy)
+        
         // makehuman verticed, not morphed, not rigged
         const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
         // get all the quads for the skin mesh
@@ -133,7 +139,7 @@ export class MorphRenderer extends RenderHandler {
             mhUniqueIndexSet.add(index)
         }
         // TODO: optimize ARKit
-        const arobj = FaceARKitLoader.getInstance().neutral!
+        const arobj = di.get(FaceARKitLoader).neutral!
 
         const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
 

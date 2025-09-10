@@ -22,6 +22,7 @@ import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { mat4, quat2, vec3 } from "gl-matrix"
 import { RenderView } from "render/RenderView"
 import { Projection } from "gl/Projection"
+import { di } from "lib/di"
 
 export class BlendShapeEditor extends RenderHandler {
     private static _instance: BlendShapeEditor | undefined
@@ -77,7 +78,7 @@ export class BlendShapeEditor extends RenderHandler {
     constructor(app: Application) {
         super()
         this.app = app
-        this.blendshapeSet = FaceARKitLoader.getInstance()
+        this.blendshapeSet = di.get(FaceARKitLoader)
         this.neutral = this.blendshapeSet.getNeutral()
 
         const facePoseUnits = new MHFacePoseUnits(app.skeleton)

@@ -33,6 +33,7 @@ import { GLView } from "gl/GLView"
 import { RenderView } from "render/RenderView"
 import { mat4 } from "gl-matrix"
 import { di } from "lib/di"
+import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // this smoothes my crappy API design for now
@@ -58,7 +59,7 @@ export class Application {
     status = new TextModel("")
 
     // makehuman
-    human: MorphManager // MorphManager / MorphController
+    morphManager: MorphManager // MorphManager / MorphController
     humanMesh: HumanMesh // base mesh, morphed mesh, posed mesh
     skeleton: Skeleton
 
@@ -87,21 +88,22 @@ export class Application {
         this.headCamera = this.headCamera.bind(this)
 
         di.single(Application, () => this)
+        di.single(FaceARKitLoader, () => new FaceARKitLoader())
         // TODO: replace most properties with di instances, one after another
 
         console.log("loading assets...")
-        this.human = new MorphManager()
+        this.morphManager = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
-        this.humanMesh = new HumanMesh(this.human, obj)
-        this.human.humanMesh = this.humanMesh
+        this.humanMesh = new HumanMesh(this.morphManager, obj)
+        this.morphManager.humanMesh = this.humanMesh
         this.skeleton = loadSkeleton(this.humanMesh, "data/rigs/default.mhskel")
         this.humanMesh.skeleton = this.skeleton
-        loadModifiers(this.human, "data/modifiers/modeling_modifiers.json")
-        loadModifiers(this.human, "data/modifiers/measurement_modifiers.json")
+        loadModifiers(this.morphManager, "data/modifiers/modeling_modifiers.json")
+        loadModifiers(this.morphManager, "data/modifiers/measurement_modifiers.json")
 
         // setup application
         // morph controls
-        this.sliderNodes = loadSliders(this.human, "data/modifiers/modeling_sliders.json")
+        this.sliderNodes = loadSliders(this.morphManager, "data/modifiers/modeling_sliders.json")
         this.morphControls = new TreeNodeModel(SliderNode, this.sliderNodes)
 
         console.log("everything is loaded...")
@@ -137,7 +139,7 @@ export class Application {
         this.updateManager = new UpdateManager(this)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty
-        this.human.modifiers.forEach((modifer) => {
+        this.morphManager.modifiers.forEach((modifer) => {
             modifer.getModel().signal.emit({ type: VALUE })
         })
 
