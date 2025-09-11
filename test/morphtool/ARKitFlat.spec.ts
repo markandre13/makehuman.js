@@ -35,7 +35,7 @@ describe("ARKitFlat", function () {
         const loader: FaceARKitLoader = mock(FaceARKitLoader, {
             preload: () => loader,
             getNeutral: () => neutral,
-            getTarget: (blendshape: Blendshape) => target
+            getMorphTarget: (blendshape: Blendshape) => target
         })
         loader.neutral = neutral
         di.clear()

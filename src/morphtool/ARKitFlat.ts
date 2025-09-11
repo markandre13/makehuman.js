@@ -15,12 +15,16 @@ export class ARKitFlat extends FlatMesh {
 
     constructor(gl: WebGL2RenderingContext) {
         super()
-        const arkit = di.get(FaceARKitLoader).preload()
+        const loader = di.get(FaceARKitLoader).preload()
 
-        this.facesFlat = arkit.neutral!.fxyz
-        this.vertexOrig = this.vertexFlat = arkit.getNeutral().xyz
+        this.facesFlat = loader.neutral!.fxyz
+        this.vertexOrig = this.vertexFlat = loader.getNeutral().xyz
         const xyz = new Float32Array(this.vertexFlat)
+        // apply blendshape
         // this.blendshapeSet.getTarget(this.blendshape.value)?.apply(this.xyz, 1)
+        const target = loader.getMorphTarget(Blendshape.jawOpen)
+        target?.apply(xyz, 0.5)
+
         for (let i = 0; i < xyz.length; ++i) {
             xyz[i] *= this.scale.value
         }
@@ -85,7 +89,7 @@ export class ARKitFlat extends FlatMesh {
 
     getTarget(blendshape: Blendshape) {
         const arkit = di.get(FaceARKitLoader)
-        const orig = arkit.getTarget(blendshape)!
+        const orig = arkit.getMorphTarget(blendshape)!
         const t = new MorphTarget()
         const indices = new Array(orig.indices.length * 3)
         const dxyz = new Array(orig.dxyz.length * 3)

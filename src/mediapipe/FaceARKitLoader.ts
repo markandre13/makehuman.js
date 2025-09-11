@@ -25,7 +25,7 @@ export class FaceARKitLoader {
      */
     preload(): FaceARKitLoader {
         for (let blendshape = 1; blendshape < blendshapeNames.length; ++blendshape) {
-            this.getTarget(blendshape)
+            this.getMorphTarget(blendshape)
         }
         return this
     }
@@ -37,7 +37,7 @@ export class FaceARKitLoader {
         return this.neutral
     }
 
-    getTarget(blendshape: Blendshape | string): MorphTarget | undefined {
+    getMorphTarget(blendshape: Blendshape | string): MorphTarget | undefined {
         this.getNeutral()
         if (typeof blendshape === "string") {
             blendshape = this.name2index.get(blendshape)!
@@ -79,7 +79,7 @@ export class FaceARKitLoader {
             if (isZero(weight)) {
                 continue
             }
-            this.getTarget(blendshape)?.apply(vertex, weight)
+            this.getMorphTarget(blendshape)?.apply(vertex, weight)
         }
 
         // scale and rotate 'vertex'

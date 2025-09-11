@@ -243,7 +243,7 @@ export class BlendShapeEditor extends RenderHandler {
         }
         if (this.update) {
             this.xyz = new Float32Array(this.neutral.xyz)
-            this.blendshapeSet.getTarget(this.blendshape.value)?.apply(this.xyz, 1)
+            this.blendshapeSet.getMorphTarget(this.blendshape.value)?.apply(this.xyz, 1)
             for (let i = 0; i < this.neutral.xyz.length; ++i) {
                 this.xyz[i] = this.xyz[i] * this.scale.value
             }

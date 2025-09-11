@@ -123,9 +123,9 @@ export class MorphRenderer extends RenderHandler {
         const ak = new ARKitFlat(gl)
         
         const copy = new Float32Array(ak.vertexFlat)
-        const t = ak.getTarget(Blendshape.jawOpen)!
-        t.apply(copy, 0.5)
-        ak.renderMesh.update(copy)
+        // const t = ak.getTarget(Blendshape.jawOpen)!
+        // t.apply(copy, 0.5)
+        // ak.renderMesh.update(copy)
         
         // makehuman vertices, not morphed, not rigged
         const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
