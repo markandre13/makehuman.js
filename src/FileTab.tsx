@@ -87,7 +87,7 @@ function downloadCollada(humanMesh: HumanMesh) {
 function saveMHM(humanMesh: HumanMesh) {
     console.log(`saveMHM`)
     download.download = "makehuman.mhm"
-    download.href = URL.createObjectURL(new Blob([humanMesh.human.toMHM()], { type: "text/plain" }))
+    download.href = URL.createObjectURL(new Blob([humanMesh.morphManager.toMHM()], { type: "text/plain" }))
     download.dispatchEvent(new MouseEvent("click"))
 }
 
@@ -100,7 +100,7 @@ function loadMHM(humanMesh: HumanMesh) {
             const buffer = await file.arrayBuffer()
             const te = new TextDecoder()
             const content = te.decode(buffer)
-            humanMesh.human.fromMHM(content)
+            humanMesh.morphManager.fromMHM(content)
         }
     }
     upload.dispatchEvent(new MouseEvent("click"))

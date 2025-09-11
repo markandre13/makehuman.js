@@ -9,7 +9,6 @@ import { MorphToolMode } from './MorphToolMode'
 import { Action, Button, OptionModel, TextModel } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
-import { FormSlider } from 'blendshapes/BlendShapeTab'
 
 /**
  * Tool to morph face meshes.

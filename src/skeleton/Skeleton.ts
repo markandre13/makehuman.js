@@ -344,7 +344,7 @@ export class Skeleton {
             //
             let verts
             if (rest_coord) {
-                const meshCoords = this.humanMesh.getRestposeCoordinates()
+                const meshCoords = this.humanMesh.getVertexMorphed()
                 verts = v_idx.map((i) => {
                     i = i * 3
                     return vec3.fromValues(meshCoords[i], meshCoords[i + 1], meshCoords[i + 2])

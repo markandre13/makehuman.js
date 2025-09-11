@@ -12,7 +12,7 @@ export function isZero(a: number): boolean {
 }
 
 export class HumanMesh {
-    human: MorphManager
+    morphManager: MorphManager
     // data/3dobjs/base.obj
     baseMesh: WavefrontObj
     vertexMorphed: Float32Array
@@ -23,13 +23,13 @@ export class HumanMesh {
     changedProxy: ProxyType | undefined
     wireframe = new BooleanModel(false, { label: "Wireframe" })
 
-    constructor(human: MorphManager, obj: WavefrontObj) {
-        this.human = human
-        this.baseMesh = obj
-        this.vertexRigged = this.vertexMorphed = obj.xyz
+    constructor(morphManager: MorphManager, baseMesh: WavefrontObj) {
+        this.morphManager = morphManager
+        this.baseMesh = baseMesh
+        this.vertexRigged = this.vertexMorphed = baseMesh.xyz
     }
 
-    getRestposeCoordinates() {
+    getVertexMorphed() {
         return this.vertexMorphed
     }
 
@@ -39,7 +39,7 @@ export class HumanMesh {
     calculateVertexMorphed() {
         // console.log(`HumanMesh.calculateVertexMorphed()`)
         this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
-        this.human.targetsDetailStack.forEach((value, targetName) => {
+        this.morphManager.targetsDetailStack.forEach((value, targetName) => {
             if (isNaN(value)) {
                 // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)
                 return
