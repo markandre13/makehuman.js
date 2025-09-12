@@ -1,5 +1,5 @@
 import { euler2matrix } from "gl/algorithms/euler"
-import { deg2rad } from "lib/calculateNormals"
+import { deg2rad } from "gl/algorithms/deg2rad"
 import { Model, NumberModel } from "toad.js"
 import { ModelOptions } from "toad.js/model/Model"
 

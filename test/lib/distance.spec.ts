@@ -3,7 +3,8 @@ import { chaiAlmost } from '../chai/chaiAlmost'
 import { mat4, vec2, vec3, vec4 } from 'gl-matrix'
 use(chaiAlmost(0.0001))
 
-import { distancePointToLine, findVertex } from '../../src/lib/distance'
+import { findVertex } from '../../src/gl/algorithms/findVertex'
+import { distancePointToLine } from 'gl/algorithms/distancePointToLine'
 import {
     createModelViewMatrix,
     createProjectionMatrix,

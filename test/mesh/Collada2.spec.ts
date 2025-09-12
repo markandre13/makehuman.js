@@ -38,7 +38,7 @@ import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 import { mat4, vec4 } from 'gl-matrix'
 import { Bone } from '../../src/skeleton/Bone'
-import { toEuler } from '../../src/lib/toEuler'
+import { matrix2euler } from 'gl/algorithms/euler'
 
 const identity = mat4.identity(mat4.create())
 
@@ -721,7 +721,7 @@ function exportCollada2(humanMesh: HumanMesh, date: Date = new Date()) {
 }
 
 export function dumpBone(armatureName: string, bone: Bone, indent: number = 4, connectWithParent: boolean = false): Node[] {
-    const {x,y,z} = toEuler(bone.matRestRelative!)
+    const {x,y,z} = matrix2euler(bone.matRestRelative!)
     const childrenToConnectWith = new Set<Bone>()
     const tail = vec4.transformMat4(vec4.create(), bone.yvector4!, bone.matRestGlobal!)
     for (let child of bone.children) {

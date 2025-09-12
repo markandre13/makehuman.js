@@ -1,4 +1,4 @@
-import { deg2rad } from "lib/calculateNormals"
+import { deg2rad } from "gl/algorithms/deg2rad"
 import { BooleanModel } from "toad.js"
 import { Blaze } from "./Blaze"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"

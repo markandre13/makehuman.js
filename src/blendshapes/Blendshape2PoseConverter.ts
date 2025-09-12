@@ -1,5 +1,5 @@
 import { mat4, quat2, vec3 } from "gl-matrix"
-import { quaternion_slerp } from "lib/quaternion_slerp"
+import { quaternion_slerp } from "gl/algorithms/quaternion_slerp"
 import { isZero } from "mesh/HumanMesh"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"

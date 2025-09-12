@@ -3,7 +3,7 @@ import { Bone } from "../skeleton/Bone"
 import { Signal } from "toad.js/Signal"
 import { NumberRelModel } from "./NumberRelModel"
 import { euler2matrix } from "gl/algorithms/euler"
-import { deg2rad } from "gl/input/Context"
+import { deg2rad } from "gl/algorithms/deg2rad"
 
 export class PoseNode implements TreeNode {
     static count = 0

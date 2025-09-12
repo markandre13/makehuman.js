@@ -5,7 +5,8 @@ import { vec4, mat4 } from 'gl-matrix'
 import { zipForEach } from 'lib/zipForEach'
 import { VertexBoneWeights } from 'skeleton/VertexBoneWeights'
 import { ProxyType } from 'proxy/Proxy'
-import { toEuler } from 'lib/toEuler'
+import { matrix2euler } from 'gl/algorithms/euler'
+// import { toEuler } from 'lib/toEuler'
 
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
@@ -651,7 +652,7 @@ export function dumpBone(armatureName: string, bone: Bone, indent: number = 4, c
 
     // out += `${is}  <matrix sid="transform">${bsm(bone)}</matrix>\n`
 
-    const {x,y,z} = toEuler(bone.matRestRelative!)
+    const {x,y,z} = matrix2euler(bone.matRestRelative!)
     out += `${is}  <rotate sid="rotationX">1 0 0 ${x}</rotate>\n`
     out += `${is}  <rotate sid="rotationY">0 1 0 ${y}</rotate>\n`
     out += `${is}  <rotate sid="rotationZ">0 0 1 ${z}</rotate>\n`

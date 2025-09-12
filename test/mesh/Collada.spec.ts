@@ -19,15 +19,14 @@ import {
     prepareControllers,
     prepareMesh,
 } from "../../src/mesh/Collada"
-import {toEuler} from "../../src/lib/toEuler"
 import { testCube } from "../../src/mesh/testCube"
-
 
 import { parseXML, Tag, Text } from "./xml"
 import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 import { Bone } from '../../src/skeleton/Bone'
 import { mat4, vec3, vec4 } from 'gl-matrix'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
+import { matrix2euler } from 'gl/algorithms/euler'
 
 export function prepareGeometry(materials: Material[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
@@ -602,7 +601,7 @@ describe("Collada", function () {
             ]) {
                 const m = mat4.fromRotation(mat4.create(), 1, vec3.normalize(vec3.create(), vec3.fromValues(v[0], v[1], v[2])))
 
-                const { x, y, z } = toEuler(m)
+                const { x, y, z } = matrix2euler(m)
 
                 const m0 = mat4.create()
                 mat4.rotateX(m0, m0, x)

@@ -1,5 +1,6 @@
 import { IndexBuffer } from "gl/buffers/IndexBuffer"
-import { calculateNormalsQuads, calculateNormalsTriangles } from "../lib/calculateNormals"
+import { calculateNormalsTriangles } from "../gl/algorithms/calculateNormalsTriangles"
+import { calculateNormalsQuads } from "gl/algorithms/calculateNormalsQuads"
 import { VertexBuffer } from "gl/buffers/VertexBuffer"
 import { NormalBuffer } from "gl/buffers/NormalBuffer"
 import { UVBuffer } from "gl/buffers/UVBuffer"

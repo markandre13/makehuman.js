@@ -1,10 +1,7 @@
 import { mat4 } from "gl-matrix"
 import { euler2matrix } from "../algorithms/euler"
 import { Projection } from "../Projection"
-
-const D = 360 / (2.0 * Math.PI)
-export function rad2deg(r: number) { return r * D }
-export function deg2rad(d: number) { return d / D }
+import { deg2rad } from "gl/algorithms/deg2rad"
 
 /**
  * View parameters shared by all views

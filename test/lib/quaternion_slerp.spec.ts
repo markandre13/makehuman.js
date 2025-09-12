@@ -3,7 +3,7 @@ import { chaiAlmost } from "../chai/chaiAlmost"
 use(chaiAlmost(0.00001))
 
 import { mat4, quat2 } from "gl-matrix"
-import { quaternion_slerp } from "../../src/lib/quaternion_slerp"
+import { quaternion_slerp } from "../../src/gl/algorithms/quaternion_slerp"
 
 describe("lib", function () {
     it("slerp(quat2, quat2, number): quat2", function () {

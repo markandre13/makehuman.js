@@ -10,7 +10,8 @@ import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { PickColorBuffer } from 'gl/buffers/PickColorBuffer'
 import { SelectionColorBuffer } from 'gl/buffers/SelectionColorBuffer'
 import { FlatMesh } from './FlatMesh'
-import { quadsToEdges, trianglesToEdges } from 'gl/algorithms'
+import { trianglesToEdges } from "gl/algorithms/trianglesToEdges"
+import { quadsToEdges } from "gl/algorithms/quadsToEdges"
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 

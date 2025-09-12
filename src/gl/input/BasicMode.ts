@@ -1,10 +1,10 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { deg2rad } from './Context'
 import { Projection } from "../Projection"
 import { type GLView } from "../GLView"
 import { FlyMode } from './FlyMode'
 import { InputHandler } from './InputHandler'
 import { MouseButton } from './MouseButton'
+import { deg2rad } from 'gl/algorithms/deg2rad'
 
 interface Point {
     x: number,

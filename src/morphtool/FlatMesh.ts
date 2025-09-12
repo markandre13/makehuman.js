@@ -4,7 +4,7 @@ import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { ShaderMono } from 'gl/shaders/ShaderMono'
 import { ShaderShadedMono } from 'gl/shaders/ShaderShadedMono'
 import { ShaderShadedTextured } from 'gl/shaders/ShaderShadedTextured'
-import { findVertex } from 'lib/distance'
+import { findVertex } from 'gl/algorithms/findVertex'
 import { RenderMesh } from 'render/RenderMesh'
 
 export class FlatMesh {

@@ -1,5 +1,6 @@
 import { mat4, vec3 } from "gl-matrix"
-import { deg2rad, rad2deg } from "lib/calculateNormals"
+import { deg2rad } from "gl/algorithms/deg2rad"
+import { rad2deg } from "gl/algorithms/rad2deg"
 import { easeMedianAngle } from "lib/medianAngle"
 import { Blaze } from "./Blaze"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"

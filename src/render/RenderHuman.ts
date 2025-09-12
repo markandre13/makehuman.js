@@ -4,7 +4,6 @@ import { RenderHandler } from './RenderHandler'
 import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
 import { RenderView } from "./RenderView"
-import { ShaderShadedTextured } from "gl/shaders/ShaderShadedTextured"
 import { di } from "lib/di"
 
 export class RenderHuman extends RenderHandler {
