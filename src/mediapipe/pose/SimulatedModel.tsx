@@ -1,10 +1,10 @@
 import { deg2rad } from "lib/calculateNormals"
-import { euler_matrix } from "lib/euler_matrix"
 import { BooleanModel } from "toad.js"
 import { Blaze } from "./Blaze"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
 import { DrawStack } from "./DrawStack"
 import { XYZModel } from "./XYZModel"
+import { euler2matrix } from "gl/algorithms/euler"
 
 /**
  * Create BlazePoseLandmarks for testing
@@ -66,9 +66,9 @@ export class SimulatedModel {
             // to knee
             // stack.mul(this.leftLeg.toMatrix())
             const ll = this.leftLeg
-            stack.mul(euler_matrix(0, 0, deg2rad(ll.z.value)))
-            stack.mul(euler_matrix(deg2rad(ll.x.value), 0, 0))
-            stack.mul(euler_matrix(0, deg2rad(ll.y.value), 0))
+            stack.mul(euler2matrix(0, 0, deg2rad(ll.z.value)))
+            stack.mul(euler2matrix(deg2rad(ll.x.value), 0, 0))
+            stack.mul(euler2matrix(0, deg2rad(ll.y.value), 0))
 
             stack.translate(0, -0.4, 0)
             stack.set(this.pose, Blaze.LEFT_KNEE)

@@ -4,8 +4,8 @@
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
 import { mat4, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
-import { euler_from_matrix, euler_matrix } from "./euler_matrix"
 import { StringToLine } from "./StringToLine"
+import { euler2matrix, matrix2euler } from "gl/algorithms/euler"
 
 /**
  * defines from which joints we will take translation data
@@ -568,7 +568,7 @@ export class BiovisionHierarchy {
                         joint.frames.push(poseMat[12], poseMat[13], poseMat[14]) // tx, ty, tz
                     }
                     joint.rotOrder = "syxz" // not needed
-                    const { x, y, z } = euler_from_matrix(poseMat, "syxz")
+                    const { x, y, z } = matrix2euler(poseMat, "syxz")
                     // if (joint.name === "root") {
                     //     console.log(
                     //         `fromSkeleton(): euler_from_matrix(poseMat, "syxz") -> xyz = ${x / D}, ${y / D}, ${z / D}`
@@ -819,7 +819,7 @@ export class BVHJoint {
                     //         `calculateFrames(): euler_matrix(${rotAngles[2][frameIdx]}, ${rotAngles[1][frameIdx]}, ${rotAngles[0][frameIdx]}, ${rotOrder})`
                     //     )
                     // }
-                    this.matrixPoses[frameIdx] = euler_matrix(
+                    this.matrixPoses[frameIdx] = euler2matrix(
                         rotAngles[2][frameIdx],
                         rotAngles[1][frameIdx],
                         rotAngles[0][frameIdx],

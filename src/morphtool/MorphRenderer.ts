@@ -13,7 +13,6 @@ import { FlatMesh } from './FlatMesh'
 import { quadsToEdges, trianglesToEdges } from 'gl/algorithms'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
-import { Blendshape } from 'mediapipe/blendshapeNames'
 
 interface PickMesh {
     flat: FlatMesh
@@ -45,6 +44,8 @@ export class MorphRenderer extends RenderHandler {
     override paint(app: Application, view: RenderView): void {
         if (this.app.updateManager.updateFromLocalSettingsWithoutGL()) {
             console.log(`MH mesh has changed`)
+            this.pickMeshes[0].vertices.update(app.humanMesh.vertexRigged)
+            // this.pickMeshes[0].flat.update(app.humanMesh.vertexRigged)
         }
 
         // prepare
@@ -56,8 +57,10 @@ export class MorphRenderer extends RenderHandler {
         }
         view.prepareCanvas()
 
+        // TODO: make this a debug option
         // this.drawVerticesToPick(view)
         // return
+
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
         shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
@@ -131,8 +134,7 @@ export class MorphRenderer extends RenderHandler {
         // t.apply(copy, 0.5)
         // ak.renderMesh.update(copy)
         
-        // makehuman vertices, not morphed, not rigged
-        const mhVertices = new VertexBuffer(gl, app.humanMesh.baseMesh.xyz)
+        const mhVertices = new VertexBuffer(gl, app.humanMesh.vertexRigged)
         // get all the quads for the skin mesh
         const mhSkinQuadIndices = app.humanMesh.baseMesh.fxyz.slice(
             app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,

@@ -2,7 +2,8 @@ import { TreeNode } from "toad.js/table/model/TreeNode"
 import { Bone } from "../skeleton/Bone"
 import { Signal } from "toad.js/Signal"
 import { NumberRelModel } from "./NumberRelModel"
-import { euler_matrix } from "lib/euler_matrix"
+import { euler2matrix } from "gl/algorithms/euler"
+import { deg2rad } from "gl/input/Context"
 
 export class PoseNode implements TreeNode {
     static count = 0
@@ -41,10 +42,10 @@ export class PoseNode implements TreeNode {
     }
 
     copyEulerToBoneMatPose() {
-        this.bone.matUserPoseRelative = euler_matrix(
-            (this.x.value / 360) * 2 * Math.PI,
-            (this.y.value / 360) * 2 * Math.PI,
-            (this.z.value / 360) * 2 * Math.PI
+        this.bone.matUserPoseRelative = euler2matrix(
+            deg2rad(this.x.value),
+            deg2rad(this.y.value),
+            deg2rad(this.z.value),
         )
         // console.log(`PoseNode(${this.bone.name}) ${this.x.value}, ${this.y.value}, ${this.z.value} -> Bone.matPose`)
     }

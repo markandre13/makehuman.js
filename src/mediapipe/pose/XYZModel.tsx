@@ -1,5 +1,5 @@
+import { euler2matrix } from "gl/algorithms/euler"
 import { deg2rad } from "lib/calculateNormals"
-import { euler_matrix } from "lib/euler_matrix"
 import { Model, NumberModel } from "toad.js"
 import { ModelOptions } from "toad.js/model/Model"
 
@@ -17,6 +17,6 @@ export class XYZModel extends Model {
     }
 
     toMatrix() {
-        return euler_matrix(deg2rad(this.x.value), deg2rad(this.y.value), deg2rad(this.z.value))
+        return euler2matrix(deg2rad(this.x.value), deg2rad(this.y.value), deg2rad(this.z.value))
     }
 }

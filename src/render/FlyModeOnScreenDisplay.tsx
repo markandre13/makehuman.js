@@ -1,6 +1,6 @@
 import { vec3, mat4 } from 'gl-matrix'
+import { matrix2euler } from 'gl/algorithms/euler'
 import { GLView } from 'gl/GLView'
-import { euler_from_matrix } from 'lib/euler_matrix'
 
 /**
  * On Screen Display while the Fly Mode is active
@@ -70,7 +70,7 @@ export class FlyModeOnScreenDisplay {
         )
         this._caret.appendChild(text)
 
-        const r = euler_from_matrix(cam, 'syxz')
+        const r = matrix2euler(cam, 'syxz')
         const D = 360 / 2 / Math.PI
         r.x *= D
         r.y *= D
@@ -112,7 +112,7 @@ export class FlyModeOnScreenDisplay {
         ).innerHTML = `POS: ${v[0].toFixed(2)}, ${v[1].toFixed(
             2
         )}, ${v[2].toFixed(2)}`
-        const r = euler_from_matrix(cam, 'syxz')
+        const r = matrix2euler(cam, 'syxz')
         const D = 360 / 2 / Math.PI
         r.x *= D
         r.y *= D

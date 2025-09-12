@@ -1,7 +1,7 @@
 import { mat4, vec2, vec3 } from 'gl-matrix'
 import { InputHandler } from './InputHandler'
 import type { GLView } from "../GLView"
-import { euler_matrix } from '../lib/euler'
+import { euler2matrix } from '../algorithms/euler'
 
 export const D = 180 / Math.PI
 
@@ -242,7 +242,7 @@ export class FlyMode extends InputHandler {
 
         vec2.sub(this._rotate1, this._rotate1, this._drift)
 
-        this._rotate = euler_matrix(
+        this._rotate = euler2matrix(
             (this._rotate0[0] + this._rotate1[0]) / D / 10,
             (this._rotate0[1] + this._rotate1[1]) / D / 10,
             0,

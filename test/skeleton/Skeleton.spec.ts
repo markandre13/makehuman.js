@@ -9,10 +9,10 @@ import { HTTPFSAdapter } from "../../src/filesystem/HTTPFSAdapter"
 import { MorphManager } from "../../src/modifier/MorphManager"
 
 import { mat4, vec4 } from "gl-matrix"
-import { euler_from_matrix, euler_matrix } from "../../src/lib/euler_matrix"
 import { deg2rad, rad2deg } from "../../src/lib/calculateNormals"
 import { HumanMesh } from "../../src/mesh/HumanMesh"
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
+import { euler2matrix, matrix2euler } from "gl/algorithms/euler"
 
 describe("Skeleton", function () {
     let human: MorphManager
@@ -42,12 +42,12 @@ describe("Skeleton", function () {
     })
 
     function str(m: mat4): string {
-        const a = euler_from_matrix(m)
+        const a = matrix2euler(m)
         return `${rad2deg(a.x).toFixed(2)}, ${rad2deg(a.y).toFixed(2)}, ${rad2deg(a.z).toFixed(2)}`
     }
 
     function xyz(m: mat4): number[] {
-        const a = euler_from_matrix(m)
+        const a = matrix2euler(m)
         return [rad2deg(a.x), rad2deg(a.y), rad2deg(a.z)]
     }
 
@@ -64,7 +64,7 @@ describe("Skeleton", function () {
         expect(xyz(b2.matPoseGlobal!)).to.deep.almost.equal([19.80, 0, 0])
 
         // WHEN the skeleton is rotated 10 deg at 'root' around the x-axis
-        b0.matUserPoseRelative = euler_matrix(deg2rad(10), 0, 0)
+        b0.matUserPoseRelative = euler2matrix(deg2rad(10), 0, 0)
         skeleton.update()
 
         // console.log(`${b0.name}: global ${str(b0.matRestGlobal!)}. relative: ${str(b0.matRestRelative!)}, rest Global: ${str(b0.matPoseGlobal!)}`)
@@ -93,7 +93,7 @@ describe("Skeleton", function () {
         expect(xyz(b3.matPoseGlobal!)).to.deep.almost.equal([0.26, -8.24, -139.95])
         expect(xyz(b4.matPoseGlobal!)).to.deep.almost.equal([46.49, -8.24, -139.95])
 
-        b2.matUserPoseGlobal = euler_matrix(deg2rad(10), deg2rad(20), deg2rad(30)) 
+        b2.matUserPoseGlobal = euler2matrix(deg2rad(10), deg2rad(20), deg2rad(30)) 
         skeleton.update()
 
         expect(xyz(b0.matPoseGlobal!)).to.deep.almost.equal([-10.89, 5.57, -71.23])
@@ -102,7 +102,7 @@ describe("Skeleton", function () {
         expect(xyz(b3.matPoseGlobal!)).to.deep.almost.equal([10 + 2.94, 20 - 0.23, 30 + 1.35]) // there's some drift in here...
         expect(xyz(b4.matPoseGlobal!)).to.deep.almost.equal([10 + 49.17, 20 - 0.23, 30 + 1.35])
 
-        b4.matUserPoseGlobal = euler_matrix(deg2rad(35), deg2rad(25), deg2rad(15))
+        b4.matUserPoseGlobal = euler2matrix(deg2rad(35), deg2rad(25), deg2rad(15))
         skeleton.update()
 
         // console.log(`${b0.name}: global: ${str(b0.matRestGlobal!)}. relative: ${str(b0.matRestRelative!)}, pose global: ${str(b0.matPoseGlobal!)}`)
@@ -423,6 +423,6 @@ describe("Skeleton", function () {
     })
 })
 
-function eulerDeg2mat4(x: number, y: number, z: number) {
-    return euler_matrix(deg2rad(x), deg2rad(y), deg2rad(z))
+function degEuler2matrix(x: number, y: number, z: number) {
+    return euler2matrix(deg2rad(x), deg2rad(y), deg2rad(z))
 }

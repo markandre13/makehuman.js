@@ -1,5 +1,4 @@
 import { mat4, quat, vec3, vec4 } from "gl-matrix"
-import { RenderMesh } from "../render/RenderMesh"
 import {
     createModelViewMatrix,
     createNormalMatrix,
@@ -9,12 +8,9 @@ import {
 } from "../render/util"
 import { ChordataSettings } from "./ChordataSettings"
 import { HumanMesh } from "mesh/HumanMesh"
-import { SkeletonMesh } from "./SkeletonMesh"
 import { span, text } from "toad.js"
 import { ChordataSkeleton } from "./Skeleton"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
 import { Context } from "gl/input/Context"
-import { ShaderColored } from "gl/shaders/ShaderColored"
 import { Projection } from "gl/Projection"
 import { ShaderShadedColored } from "gl/shaders/ShaderShadedColored"
 import { VertexBuffer } from "gl/buffers/VertexBuffer"

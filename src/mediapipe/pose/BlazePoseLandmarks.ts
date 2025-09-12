@@ -1,6 +1,6 @@
 import { mat4, vec3 } from "gl-matrix"
-import { euler_matrix } from "lib/euler_matrix"
 import { Blaze } from "./Blaze"
+import { euler2matrix } from "gl/algorithms/euler"
 
 /**
  * Wrapper for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
@@ -18,7 +18,7 @@ export class BlazePoseLandmarks {
      * rotate all landmarks (used for testing)
      */
     rotate(x: number, y: number, z: number) {
-        this.mul(euler_matrix(x, y, z))
+        this.mul(euler2matrix(x, y, z))
     }
     mul(m: mat4) {
         for (let i = 0; i < 33; ++i) {

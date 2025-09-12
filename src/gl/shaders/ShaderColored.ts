@@ -1,7 +1,7 @@
 import { glMatrix, type mat4 } from "gl-matrix"
 import type { ShaderHasColors } from "../interfaces/ShaderHasColors"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
-import { initShaderProgram } from "../lib/initShaderProgram"
+import { initShaderProgram } from "../detail/initShaderProgram"
 
 export class ShaderColored implements ShaderHasPositions, ShaderHasColors {
     private program: WebGLProgram

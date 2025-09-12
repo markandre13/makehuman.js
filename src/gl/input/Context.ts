@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix"
-import { euler_matrix } from "../lib/euler"
+import { euler2matrix } from "../algorithms/euler"
 import { Projection } from "../Projection"
 
 const D = 360 / (2.0 * Math.PI)
@@ -34,7 +34,7 @@ export class Context {
         // just translation
         mat4.mul(justTranslation, justTranslation, this.camera)
 
-        const newRotation = euler_matrix(deg2rad(x), deg2rad(y), deg2rad(z))
+        const newRotation = euler2matrix(deg2rad(x), deg2rad(y), deg2rad(z))
 
         this.camera = mat4.mul(newRotation, newRotation, justTranslation)
     }

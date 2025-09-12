@@ -31,11 +31,14 @@ export class Float32Buffer {
         }
         return this._glbuffer
     }
-    update() {
+    update(data?: Float32Array) {
         if (this._glbuffer === undefined) {
             return
         }
         this._gl.bindBuffer(this._target, this._glbuffer)
+        if (data) {
+            this._data = data
+        }
         this._gl.bufferData(this._target, this._data, this._gl.STATIC_DRAW)
     }
 }

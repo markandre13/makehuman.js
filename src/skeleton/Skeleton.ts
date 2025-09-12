@@ -7,9 +7,8 @@ import { HumanMesh, isZero } from "../mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
 import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
-import { euler_from_matrix } from "lib/euler_matrix"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
-import { assert } from "lib/assert"
+import { matrix2euler } from "gl/algorithms/euler"
 
 export class Skeleton {
     poseNodes: PoseNode
@@ -297,7 +296,7 @@ export class Skeleton {
             mat4.mul(m, m, bone.matRestGlobal!) // WTF? in the original it's mat4.mul(m, m, bone.matPoseGlobal!)
             // const m = mat4.copy(mat4.create(), anim.data[offset + boneIdx])
 
-            let { x, y, z } = euler_from_matrix(m)
+            let { x, y, z } = matrix2euler(m)
             // enforce zero: looks nicer in the ui and also avoids the math going crazy in some situations
             if (isZero(x)) {
                 x = 0

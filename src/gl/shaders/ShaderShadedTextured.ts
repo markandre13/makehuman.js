@@ -2,7 +2,7 @@ import type { mat4 } from "gl-matrix"
 import type { ShaderHasNormals } from "../interfaces/ShaderHasNormals"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
 import type { ShaderHasTexture } from "../interfaces/ShaderHasTexture"
-import { initShaderProgram } from "../lib/initShaderProgram"
+import { initShaderProgram } from "../detail/initShaderProgram"
 import { mat42float32array } from "./ShaderColored"
 
 export class ShaderShadedTextured implements ShaderHasPositions, ShaderHasTexture, ShaderHasNormals {

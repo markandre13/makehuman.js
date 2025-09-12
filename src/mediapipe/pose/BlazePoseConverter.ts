@@ -1,9 +1,9 @@
 import { mat4, vec3 } from "gl-matrix"
 import { deg2rad, rad2deg } from "lib/calculateNormals"
-import { easeMedianAngle, medianAngle } from "lib/medianAngle"
+import { easeMedianAngle } from "lib/medianAngle"
 import { Blaze } from "./Blaze"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
-import { euler_from_matrix, euler_matrix } from "lib/euler_matrix"
+import { matrix2euler } from "gl/algorithms/euler"
 
 function vecFromTo(from: vec3, to: vec3) {
     return vec3.sub(vec3.create(), to, from)
@@ -574,6 +574,6 @@ function matFromDirection(direction: vec3, up: vec3 = _up) {
 }
 
 function str(m: mat4): string {
-    const a = euler_from_matrix(m)
+    const a = matrix2euler(m)
     return `${rad2deg(a.x).toFixed(2)}, ${rad2deg(a.y).toFixed(2)}, ${rad2deg(a.z).toFixed(2)}`
 }

@@ -7,7 +7,6 @@ use(chaiAlmost(0.00001))
 import { BlazePoseConverter } from "../../src/mediapipe/pose/BlazePoseConverter"
 import { SimulatedModel } from "../../src/mediapipe/pose/SimulatedModel"
 import { deg2rad, rad2deg } from "../../src/lib/calculateNormals"
-import { euler_from_matrix, euler_matrix } from "../../src/lib/euler_matrix"
 import { mat4, vec3 } from "gl-matrix"
 import { Blaze } from "../../src/mediapipe/pose/Blaze"
 

@@ -17,8 +17,8 @@ import { HumanMesh, isZero } from "../../src/mesh/HumanMesh"
 import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
 
 import { anim as run01_anmin, joints as run01_joints } from "../testdata/run01_anim"
-import { euler_from_matrix, euler_matrix } from "../../src/lib/euler_matrix"
 import {  mat42float32array  } from "../../src/gl/shaders/ShaderColored"
+import { matrix2euler } from "gl/algorithms/euler"
 
 describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {
@@ -241,7 +241,7 @@ Frame Time: ${1 / 24}
                 `${bvhSkel1}0 0 0 ${(rotX / Math.PI) * 180.0} 0 0 0 0 0\n`
             )
             const m0 = bvh.rootJoint.matrixPoses[0]
-            const rot = euler_from_matrix(m0)
+            const rot = matrix2euler(m0)
             expect(rot.x).to.almost.equal(rotX)
         })
 
@@ -255,7 +255,7 @@ Frame Time: ${1 / 24}
                 `${bvhSkel1}0 0 0 0 ${(rotY / Math.PI) * 180.0} 0 0 0 0\n`
             )
             const m0 = bvh.rootJoint.matrixPoses[0]
-            const rot = euler_from_matrix(m0)
+            const rot = matrix2euler(m0)
             expect(rot.y).to.almost.equal(rotY)
         })
 
@@ -269,7 +269,7 @@ Frame Time: ${1 / 24}
                 `${bvhSkel1}0 0 0 0 0 ${(rotZ / Math.PI) * 180.0} 0 0 0\n`
             )
             const m0 = bvh.rootJoint.matrixPoses[0]
-            const rot = euler_from_matrix(m0)
+            const rot = matrix2euler(m0)
             expect(rot.z).to.almost.equal(rotZ)
         })
     })

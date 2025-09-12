@@ -38,7 +38,7 @@ import { mat4 } from "gl-matrix"
  * ai, aj, ak : Euler's roll, pitch and yaw angles
  * axes : One of 24 axis sequences as string or encoded tuple
  */
-export function euler_matrix(ai: number, aj: number, ak: number, axes: string = "sxyz"): mat4 {
+export function euler2matrix(ai: number, aj: number, ak: number, axes: string = "sxyz"): mat4 {
     const tmp = _AXES2TUPLE.get(axes)
     if (tmp === undefined) {
         throw Error(`invalid axes of '${axes}'`)
@@ -98,7 +98,7 @@ export function euler_matrix(ai: number, aj: number, ak: number, axes: string = 
  * @param matrix
  * @param axes One of 24 axis sequences as string or encoded tuple
  */
-export function euler_from_matrix(M: mat4, axes = "sxyz") {
+export function matrix2euler(M: mat4, axes = "sxyz"): { x: number, y: number, z: number } {
     const tmp = _AXES2TUPLE.get(axes)
     if (tmp === undefined) {
         throw Error(`invalid axes of '${axes}'`)
