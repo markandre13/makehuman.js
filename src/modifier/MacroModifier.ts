@@ -56,42 +56,42 @@ export class MacroModifier extends ManagedTargetModifier {
         if (this.model !== undefined) {
             return this.model
         }
-        if (this.human === undefined) {
+        if (this.morphManager === undefined) {
             throw Error(`MacroModifier.getModel(): can only be called after human has been set`)
         }
         switch (this.name) {
             case "Gender":
-                this.model = this.human.gender
+                this.model = this.morphManager.gender
                 break
             case "Age":
-                this.model = this.human.age
+                this.model = this.morphManager.age
                 break
             case "Muscle":
-                this.model = this.human.muscle
+                this.model = this.morphManager.muscle
                 break
             case "Weight":
-                this.model = this.human.weight
+                this.model = this.morphManager.weight
                 break
             case "Height":
-                this.model = this.human.height
+                this.model = this.morphManager.height
                 break
             case "BodyProportions":
-                this.model = this.human.bodyProportions
+                this.model = this.morphManager.bodyProportions
                 break
             case "BreastSize":
-                this.model = this.human.breastSize
+                this.model = this.morphManager.breastSize
                 break
             case "BreastFirmness":
-                this.model = this.human.breastFirmness
+                this.model = this.morphManager.breastFirmness
                 break
             case "African":
-                this.model = this.human.africanVal
+                this.model = this.morphManager.africanVal
                 break
             case "Asian":
-                this.model = this.human.asianVal
+                this.model = this.morphManager.asianVal
                 break
             case "Caucasian":
-                this.model = this.human.caucasianVal
+                this.model = this.morphManager.caucasianVal
                 break
             default:
                 throw Error(`MacroModifier.getModel(): not implemented for name '${this.name}'`)

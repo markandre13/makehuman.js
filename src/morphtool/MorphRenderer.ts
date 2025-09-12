@@ -43,6 +43,10 @@ export class MorphRenderer extends RenderHandler {
         return this.app.headCamera
     }
     override paint(app: Application, view: RenderView): void {
+        if (this.app.updateManager.updateFromLocalSettingsWithoutGL()) {
+            console.log(`MH mesh has changed`)
+        }
+
         // prepare
         const gl = view.gl
         const shaderShadedMono = view.shaderShadedMono

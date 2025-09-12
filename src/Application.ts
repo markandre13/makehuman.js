@@ -137,6 +137,7 @@ export class Application {
 
         // needs skeleton, blendshapeModel, blendshapeConverter, 
         this.updateManager = new UpdateManager(this)
+        di.single(UpdateManager, () => this.updateManager)
 
         // some modifiers already have non-null values, hence we mark all modifiers as dirty
         this.morphManager.modifiers.forEach((modifer) => {

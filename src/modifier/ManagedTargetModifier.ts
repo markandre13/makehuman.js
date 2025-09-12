@@ -36,7 +36,7 @@ export class ManagedTargetModifier extends Modifier {
   
         for(const weight of targetWeights) {
             // console.log(`ManagedTargetModifier.setValue(${value}) -> human.setDetail(${weight[0]}, ${weight[1]})`)
-            this.human!.setDetail(weight[0], weight[1])
+            this.morphManager!.setDetail(weight[0], weight[1])
         }
 
         if (skipDependencies)
@@ -52,19 +52,19 @@ export class ManagedTargetModifier extends Modifier {
         if (this.rTargets) {
             let sum = 0
             for(let target of this.rTargets)
-                sum += this.human!.getDetail(target.targetPath) // FIXME: this is just a guess
+                sum += this.morphManager!.getDetail(target.targetPath) // FIXME: this is just a guess
             return sum
         }
         let sum = 0
         for(let target of this.lTargets!)
-            sum += this.human!.getDetail(target.targetPath) // FIXME: this is just a guess
+            sum += this.morphManager!.getDetail(target.targetPath) // FIXME: this is just a guess
         return sum
     }
 
     // return map of all Human's *Val attributes
     override getFactors(value: number): Map<string, number> {
         const result = new Map<string, number>()
-        const desc = Object.getOwnPropertyDescriptors(this.human)
+        const desc = Object.getOwnPropertyDescriptors(this.morphManager)
         for(const name in desc) {
             if (!name.endsWith("Val"))
                 continue

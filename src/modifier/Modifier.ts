@@ -6,7 +6,7 @@ import { NumberModel } from 'toad.js'
 
 // from apps/humanmodifier.py
 export abstract class Modifier {
-    human?: MorphManager
+    morphManager?: MorphManager
 
     groupName: string
     name: string
@@ -37,7 +37,7 @@ export abstract class Modifier {
 
     // set/add/link/assign modifier to human
     setHuman(human: MorphManager) {
-        this.human = human
+        this.morphManager = human
         human.addModifier(this)
     }
 
@@ -59,7 +59,7 @@ export abstract class Modifier {
         const factors = this.getFactors(clampedValue)
         const tWeights = getTargetWeights(this.targets, factors, clampedValue)
         for(let x of tWeights) {
-            this.human!.setDetail(x[0], x[1])
+            this.morphManager!.setDetail(x[0], x[1])
         }
 
         if (skipDependencies) {
@@ -102,7 +102,7 @@ export abstract class Modifier {
         // return sum([self.human.getDetail(target[0]) for target in self.targets])
         let sum = 0
         for(let target of this.targets)
-            sum += this.human!.getDetail(target.targetPath)
+            sum += this.morphManager!.getDetail(target.targetPath)
         return sum
     }
 

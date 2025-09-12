@@ -6,7 +6,7 @@ import { MorphToolModel } from './MorphToolModel'
 import { Form, FormField, FormHelp, FormLabel } from 'toad.js/view/Form'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
 import { MorphToolMode } from './MorphToolMode'
-import { Action, Button, OptionModel, TextModel } from 'toad.js'
+import { Action, Button, OptionModel, Table, TextModel } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
 
@@ -62,6 +62,11 @@ export function MorphTool(props: { app: Application }) {
                 {/* <FormSlider model={model.mhJawOpen}/>
                 <FormSlider model={model.externJawOpen}/> */}
             </Form>
+
+            <Table
+                model={props.app.morphControls}
+                style={{ width: '100%', height: '100%' }}
+            />
         </Tab>
     )
 }
