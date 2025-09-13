@@ -9,8 +9,14 @@ import { di } from 'lib/di'
 export class ARKitFlat extends FlatMesh {
 
     map = new Map<number, number[]>()
-    scale = new NumberModel(10.8, { min: 9, max: 11, step: 0.1, label: "scale" })
-    dy = new NumberModel(7.0312, { min: 0, max: 7.4, step: 0.01, label: "dy" })
+    // adjust to plain MH base mesh
+    // scale = new NumberModel(10.8, { min: 9, max: 11, step: 0.1, label: "scale" })
+    // dy = new NumberModel(7.0312, { min: 0, max: 7.4, step: 0.01, label: "dy" })
+    // dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
+
+    // adjust to morphed MH base mesh
+    scale = new NumberModel(9.4, { min: 9, max: 11, step: 0.1, label: "scale" })
+    dy = new NumberModel(7.08, { min: 0, max: 7.4, step: 0.01, label: "dy" })
     dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
 
     constructor(gl: WebGL2RenderingContext) {
@@ -53,9 +59,9 @@ export class ARKitFlat extends FlatMesh {
             let i1 = this.facesFlat[i++] * 3
             let i2 = this.facesFlat[i++] * 3
 
-            add(i0/3, vo / 3)
-            add(i1/3, vo / 3 + 1)
-            add(i2/3, vo / 3 + 2)
+            add(i0 / 3, vo / 3)
+            add(i1 / 3, vo / 3 + 1)
+            add(i2 / 3, vo / 3 + 2)
 
             v2[vo++] = this.vertexFlat[i0++]
             v2[vo++] = this.vertexFlat[i0++]

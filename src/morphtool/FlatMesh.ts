@@ -16,6 +16,7 @@ export class FlatMesh {
     bind(shader: ShaderMono | ShaderShadedMono | ShaderShadedTextured): void {
         this.renderMesh.bind(shader)
     }
+    update() {}
     draw(gl: WebGL2RenderingContext): void {
         gl.drawElements(gl.TRIANGLES, this.facesFlat.length, gl.UNSIGNED_SHORT, 0)
     }

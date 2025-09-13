@@ -14,6 +14,8 @@ import { trianglesToEdges } from "gl/algorithms/trianglesToEdges"
 import { quadsToEdges } from "gl/algorithms/quadsToEdges"
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
+import { mat4 } from 'gl-matrix'
+import { deg2rad } from 'gl/algorithms/deg2rad'
 
 interface PickMesh {
     flat: FlatMesh
@@ -38,15 +40,19 @@ export class MorphRenderer extends RenderHandler {
         model.isARKitActive.signal.add(app.glview.invalidate)
         model.showBothMeshes.signal.add(app.glview.invalidate)
         model.isTransparentActiveMesh.signal.add(app.glview.invalidate)
+
+        const jaw = this.app.skeleton.getBone("jaw")!
+        jaw.matUserPoseRelative = mat4.fromXRotation(mat4.create(), deg2rad(12))
+        this.app.updateManager.updateFromLocalSettingsWithoutGL()
     }
     override defaultCamera() {
         return this.app.headCamera
     }
     override paint(app: Application, view: RenderView): void {
         if (this.app.updateManager.updateFromLocalSettingsWithoutGL()) {
-            console.log(`MH mesh has changed`)
+
             this.pickMeshes[0].vertices.update(app.humanMesh.vertexRigged)
-            // this.pickMeshes[0].flat.update(app.humanMesh.vertexRigged)
+            this.pickMeshes[0].flat.update()
         }
 
         // prepare
