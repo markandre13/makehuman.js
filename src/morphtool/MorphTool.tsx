@@ -48,6 +48,7 @@ export function MorphTool(props: { app: Application }) {
                 <FormSwitch model={model.isARKitActive} />
                 <FormSwitch model={model.isTransparentActiveMesh} />
                 <FormSwitch model={model.showBothMeshes} />
+                <FormSwitch model={model.showMapping} />
 
                 <FormLabel model={model.morphGroups} />
                 <FormField>

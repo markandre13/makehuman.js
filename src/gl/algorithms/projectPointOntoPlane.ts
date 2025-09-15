@@ -60,5 +60,5 @@ export function projectPointOntoPlane(P: ReadonlyVec3, O: ReadonlyVec3, A: Reado
     const s = A[j] / A[i]
     b = (R[j] - O[j] - (R[i] - O[i]) * s) / B[j] / (1 - B[i] * s / B[j])
     a = (R[i] - O[i] - b * B[i]) / A[i]
-    return { a, b }
+    return { a, b, d, R }
 }

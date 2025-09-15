@@ -26,8 +26,22 @@ export class IndexBuffer {
             this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._glbuffer)
         }
     }
+    update(data?: number[] | Uint16Array) {
+        if (this._glbuffer === undefined) {
+            return
+        }
+        if (data) {
+            if (data instanceof Uint16Array) {
+                this._data = data
+            } else {
+                this._data = new Uint16Array(data)
+            }
+        }
+        this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._glbuffer)
+        this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._data, this._gl.STATIC_DRAW)
+    }
     drawTriangles() {
-        const type = this._gl!.UNSIGNED_SHORT
+        const type = this._gl.UNSIGNED_SHORT
         const offset = 0
         this._gl!.drawElements(this._gl.TRIANGLES, this._data.length, type, offset)
     }

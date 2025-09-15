@@ -7,9 +7,10 @@ import { Application } from 'Application'
 export class MorphToolModel {
     renderer?: MorphRenderer
 
-    isARKitActive = new BooleanModel(false, { label: "MH / ARKit" })
-    isTransparentActiveMesh = new BooleanModel(false, { label: "Transparent active mesh" })
+    isARKitActive = new BooleanModel(true, { label: "MH / ARKit" })
+    isTransparentActiveMesh = new BooleanModel(true, { label: "Transparent active mesh" })
     showBothMeshes = new BooleanModel(true, { label: "Show both meshes" })
+    showMapping = new BooleanModel(false, {label: "Show mapping"})
     // mhJawOpen = new NumberModel(0, {
     //     min: 0, max: 1, step: 0.01,
     //     label: "MH Jaw Open (pose)"
