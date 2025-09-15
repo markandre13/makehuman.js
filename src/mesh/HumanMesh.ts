@@ -4,12 +4,7 @@ import { getTarget } from "../target/TargetFactory"
 import { Skeleton } from "../skeleton/Skeleton"
 import { WavefrontObj } from "./WavefrontObj"
 import { BooleanModel } from "toad.js"
-
-let epsilon = 0.000000001
-
-export function isZero(a: number): boolean {
-    return Math.abs(a) <= epsilon
-}
+import { isZero } from "gl/algorithms/isZero"
 
 export class HumanMesh {
     morphManager: MorphManager

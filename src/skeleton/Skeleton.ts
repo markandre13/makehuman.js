@@ -3,12 +3,13 @@ import { FileInformation } from "./loadSkeleton"
 import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
 import { VertexBoneWeights, VertexBoneMapping } from "./VertexBoneWeights"
 import { mat4, vec3 } from "gl-matrix"
-import { HumanMesh, isZero } from "../mesh/HumanMesh"
+import { HumanMesh } from "../mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
 import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { matrix2euler } from "gl/algorithms/euler"
+import { isZero } from "gl/algorithms/isZero"
 
 export class Skeleton {
     poseNodes: PoseNode

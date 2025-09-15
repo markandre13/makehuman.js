@@ -13,7 +13,7 @@ import { Skeleton } from "../../src/skeleton/Skeleton"
 import { Bone } from "../../src/skeleton/Bone"
 import { MorphManager } from "../../src/modifier/MorphManager"
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
-import { HumanMesh, isZero } from "../../src/mesh/HumanMesh"
+import { HumanMesh } from "../../src/mesh/HumanMesh"
 import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
 
 import { anim as run01_anmin, joints as run01_joints } from "../testdata/run01_anim"

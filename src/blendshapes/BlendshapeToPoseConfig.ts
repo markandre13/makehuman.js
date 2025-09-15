@@ -1,13 +1,13 @@
 import { BoneQuat2 } from "blendshapes/BoneQuat2"
 import { MHFacePoseUnits } from "./MHFacePoseUnits"
 import { quat2 } from "gl-matrix"
-import { isZero } from "mesh/HumanMesh"
 import { Bone } from "skeleton/Bone"
 import { REST_QUAT } from "UpdateManager"
 import { quaternion_slerp } from "gl/algorithms/quaternion_slerp"
 import { BlendshapeToPose } from "./BlendshapeToPose"
 import { Skeleton } from "skeleton/Skeleton"
 import { Signal } from "toad.js/Signal"
+import { isZero } from "gl/algorithms/isZero"
 
 export class BlendshapePose {
     // face poseunit name to weight

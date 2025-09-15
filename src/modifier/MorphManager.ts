@@ -1,7 +1,8 @@
 import { Modifier } from "./Modifier"
 import { NumberModel } from "toad.js/model/NumberModel"
 import { Signal } from "toad.js/Signal"
-import { HumanMesh, isZero } from "mesh/HumanMesh"
+import { HumanMesh } from "mesh/HumanMesh"
+import { isZero } from "gl/algorithms/isZero"
 
 // apps/human.py class Human
 /**

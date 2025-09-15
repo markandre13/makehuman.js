@@ -1,7 +1,7 @@
 import { Application } from "Application"
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderMesh } from "render/RenderMesh"
-import { isZero } from "mesh/HumanMesh"
+import { isZero } from "gl/algorithms/isZero"
 import { blendshapeNames } from "./blendshapeNames"
 import { FaceICTKitLoader } from "./FaceICTKitLoader"
 import { mat4, vec3 } from "gl-matrix"

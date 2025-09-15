@@ -1,12 +1,11 @@
 import { mat4, quat2, vec3 } from "gl-matrix"
 import { quaternion_slerp } from "gl/algorithms/quaternion_slerp"
-import { isZero } from "mesh/HumanMesh"
 import { REST_QUAT } from "UpdateManager"
 import { BlendshapeModel } from "./BlendshapeModel"
-import { Skeleton } from "skeleton/Skeleton"
 import { IBlendshapeConverter } from "./IBlendshapeConverter"
 import { poseUnit2mapPose, PoseUnit2MatPose } from "./MHFacePoseUnits"
 import { Application } from "Application"
+import { isZero } from "gl/algorithms/isZero"
 
 export class Blendshape2PoseConverter implements IBlendshapeConverter {
     app: Application

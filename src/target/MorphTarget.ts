@@ -1,6 +1,6 @@
 import { StringToLine } from "../lib/StringToLine"
 import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
-import { isZero } from "mesh/HumanMesh"
+import { isZero } from "gl/algorithms/isZero"
 
 /**
  * morph target

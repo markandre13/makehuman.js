@@ -1,7 +1,7 @@
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { MorphTarget } from "target/MorphTarget"
 import { blendshapeNames, Blendshape } from "./blendshapeNames"
-import { isZero } from "mesh/HumanMesh"
+import { isZero } from "gl/algorithms/isZero"
 import { mat4, vec3 } from "gl-matrix"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 
