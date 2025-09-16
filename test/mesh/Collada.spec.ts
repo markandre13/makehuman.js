@@ -26,7 +26,7 @@ import { VertexBoneWeights } from '../../src/skeleton/VertexBoneWeights'
 import { Bone } from '../../src/skeleton/Bone'
 import { mat4, vec3, vec4 } from 'gl-matrix'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
-import { matrix2euler } from 'gl/algorithms/euler'
+import { matrix2euler } from '../../src/gl/algorithms/euler'
 
 export function prepareGeometry(materials: Material[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {

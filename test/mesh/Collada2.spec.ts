@@ -38,7 +38,7 @@ import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 import { mat4, vec4 } from 'gl-matrix'
 import { Bone } from '../../src/skeleton/Bone'
-import { matrix2euler } from 'gl/algorithms/euler'
+import { matrix2euler } from '../../src/gl/algorithms/euler'
 
 const identity = mat4.identity(mat4.create())
 

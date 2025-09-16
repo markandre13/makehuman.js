@@ -3,7 +3,7 @@ import { chaiAlmost } from "../../chai/chaiAlmost"
 use(chaiAlmost())
 
 import { mat4 } from "gl-matrix"
-import { euler2matrix, matrix2euler } from "gl/algorithms/euler"
+import { euler2matrix, matrix2euler } from "../../../src/gl/algorithms/euler"
 
 describe("gl/algorithms/euler", function () {
     it("matrix2euler(x,y,z,axis): mat4", function () {

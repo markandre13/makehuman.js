@@ -100,6 +100,6 @@ export class MHFlat extends FlatMesh {
         }
         this.vertexFlat = v2
         this.facesFlat = f2
-        this.renderMesh.glVertex.update(v2)
+        this.renderMesh.glVertex.update(v2) // this also take care of the normals
     }
 }

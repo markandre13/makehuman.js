@@ -1,13 +1,15 @@
-import { FileSystemAdapter } from "../src/filesystem/FileSystemAdapter"
-import { NodeJSFSAdapter } from "../src/filesystem/NodeJSFSAdapter"
+// console.log("BOOTSTRAP")
 
-import { use } from 'chai'
-import { chaiString } from './chai/chaiString'
-import { chaiAlmost } from "./chai/chaiAlmost"
+// import { FileSystemAdapter } from "../src/filesystem/FileSystemAdapter"
+// import { NodeJSFSAdapter } from "../src/filesystem/NodeJSFSAdapter"
 
-use(chaiString)
-use(chaiAlmost(0.00001))
+// import { use } from 'chai'
+// import { chaiString } from './chai/chaiString'
+// import { chaiAlmost } from "./chai/chaiAlmost"
 
-FileSystemAdapter.setInstance(
-    new NodeJSFSAdapter()
-)
+// use(chaiString)
+// use(chaiAlmost(0.00001))
+
+// FileSystemAdapter.setInstance(
+//     new NodeJSFSAdapter()
+// )

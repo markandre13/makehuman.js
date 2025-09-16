@@ -9,11 +9,11 @@ import { HTTPFSAdapter } from "../../src/filesystem/HTTPFSAdapter"
 import { MorphManager } from "../../src/modifier/MorphManager"
 
 import { mat4, vec4 } from "gl-matrix"
-import { deg2rad } from "gl/algorithms/deg2rad"
-import { rad2deg } from "gl/algorithms/rad2deg"
+import { deg2rad } from "../../src/gl/algorithms/deg2rad"
+import { rad2deg } from "../../src/gl/algorithms/rad2deg"
 import { HumanMesh } from "../../src/mesh/HumanMesh"
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
-import { euler2matrix, matrix2euler } from "gl/algorithms/euler"
+import { euler2matrix, matrix2euler } from "../../src/gl/algorithms/euler"
 
 describe("Skeleton", function () {
     let human: MorphManager

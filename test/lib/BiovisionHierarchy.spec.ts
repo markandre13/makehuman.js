@@ -18,7 +18,7 @@ import { loadSkeleton } from "../../src/skeleton/loadSkeleton"
 
 import { anim as run01_anmin, joints as run01_joints } from "../testdata/run01_anim"
 import {  mat42float32array  } from "../../src/gl/shaders/ShaderColored"
-import { matrix2euler } from "gl/algorithms/euler"
+import { matrix2euler } from "../../src/gl/algorithms/euler"
 
 describe("class BiovisionHierarchy", function () {
     this.beforeAll(function () {

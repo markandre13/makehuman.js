@@ -18,6 +18,10 @@ import { mat4, vec3 } from 'gl-matrix'
 import { deg2rad } from 'gl/algorithms/deg2rad'
 import { tr } from 'toad.js'
 import { projectPointOntoPlane } from 'gl/algorithms/projectPointOntoPlane'
+import { calculateNormalsTriangles } from 'gl/algorithms/calculateNormalsTriangles'
+import { calculateNormalsQuads } from 'gl/algorithms/calculateNormalsQuads'
+import { intersectLineAndPlane } from 'gl/algorithms/intersectLineAndPlane'
+import { projectLineOntoPlane } from 'gl/algorithms/projectLineOntoPlane'
 
 interface PickMesh {
     flat: FlatMesh
@@ -194,13 +198,76 @@ export class MorphRenderer extends RenderHandler {
         this.calculateDistance(gl)
     }
 
+    /**
+     * for each MH face vertex normal, find nearest ARKit intersection
+     */
     calculateDistance(gl: WebGL2RenderingContext) {
-        // this.distanceIndex = new IndexBuffer(gl, [0, 1, 2])
-        // this.distanceVertex = new VertexBuffer(gl, [
-        //     0, 0, 0,
-        //     0, 50, 0,
-        //     50, 50, 0
-        // ])
+        const loader = di.get(FaceARKitLoader).preload()
+        const triangles = loader.neutral!.fxyz
+
+        const outXYZ: number[] = []
+        const outFXYZ: number[] = []
+
+        const normalData = new Float32Array(this.pickMeshes[0].vertices.data.length)
+        calculateNormalsQuads(
+            normalData,
+            this.pickMeshes[0].vertices.data,
+            this.app.humanMesh.baseMesh.fxyz
+        )
+        const normals = new VertexBuffer(gl, normalData)
+
+        for (const mhFaceIndex of mhFaceIndices) {
+            let match
+            let arFaceIndex
+            const P = this.pickMeshes[0].vertices.get(mhFaceIndex)
+            const N = normals.get(mhFaceIndex)
+            for (let i = 0; i < triangles.length;) {
+                let i0 = triangles[i++]
+                let i1 = triangles[i++]
+                let i2 = triangles[i++]
+                const O = this.pickMeshes[1].vertices.get(i0)
+                const A = this.pickMeshes[1].vertices.get(i1)
+                const B = this.pickMeshes[1].vertices.get(i2)
+                vec3.sub(A, A, O)
+                vec3.sub(B, B, O)
+                const p = projectLineOntoPlane(P, N, O, A, B)
+                // if (p) {
+                //     maxD = Math.max(maxD, Math.abs(p.d))
+                // }
+                // NOTE: the Math.abs(p.d) < 0.1 is to suppress the most annoying errors
+                if (p && Math.abs(p.d) < 0.1 && p.a >= 0 && p.b >= 0 && p.a + p.b <= 1) {
+                    if (match) {
+                        if (Math.abs(p.d) < Math.abs(match.d)) {
+                            arFaceIndex = i
+                            match = p
+                        }
+                    } else {
+                        arFaceIndex = i
+                        match = p
+                    }
+                }
+            }
+            if (match) {
+                // line from P to match.R
+                outFXYZ.push(outXYZ.length / 3)
+                outXYZ.push(...P)
+                outFXYZ.push(outXYZ.length / 3)
+                outXYZ.push(...match.P)
+            }
+        }
+        if (this.distanceIndex) {
+            this.distanceIndex!.update(outFXYZ)
+            this.distanceVertex!.update(outXYZ)
+        } else {
+            this.distanceIndex = new IndexBuffer(gl, outFXYZ)
+            this.distanceVertex = new VertexBuffer(gl, outXYZ)
+        }
+    }
+
+    /**
+     * for each MH face vertex, find nearest ARKit intersection
+     */
+    calculateDistance2(gl: WebGL2RenderingContext) {
 
         let matchCount = 0
         const loader = di.get(FaceARKitLoader).preload()
@@ -244,9 +311,9 @@ export class MorphRenderer extends RenderHandler {
             if (match) {
                 ++matchCount
                 // line from P to match.R
-                outFXYZ.push(outXYZ.length/3)
+                outFXYZ.push(outXYZ.length / 3)
                 outXYZ.push(...P)
-                outFXYZ.push(outXYZ.length/3)
+                outFXYZ.push(outXYZ.length / 3)
                 outXYZ.push(...match.R)
             }
         }

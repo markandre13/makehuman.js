@@ -19,6 +19,7 @@ describe("projectPointOntoPlane()", () => {
         const inR = vec3.clone(P)
         // cross := right angle away from A & B
         const cross = vec3.cross(vec3.create(), A, B)
+        vec3.normalize(cross, cross)
         vec3.scale(cross, cross, -0.4)
         const inD = -vec3.len(cross)
         vec3.add(P, P, cross)
@@ -67,7 +68,7 @@ describe("projectPointOntoPlane()", () => {
         expect(b).to.almost.equal(in_b)
         expect(a).to.almost.equal(in_a)
         const projected = projectPointOntoPlane(P, O, A, B)
-        expect(projected).to.deep.almost.equal({ a: in_a, b: in_b })
+        expect(projected).to.deep.almost.equal({ a: in_a, b: in_b, d: -0.4, R: inR })
     })
 
     // the conditions for a triangle with an area > 0 are:
@@ -83,9 +84,9 @@ describe("projectPointOntoPlane()", () => {
             const a = 0.1
             const b = 0.2
             const d = 0.3
-            const P = makePforT(O, A, B, a, b, d)
+            const { P, R } = makePforT(O, A, B, a, b, d)
             const projected = projectPointOntoPlane(P, O, A, B)
-            expect(projected).to.deep.almost.equal({ a, b })
+            expect(projected).to.deep.almost.equal({ a, b, d, R })
         })
         it("A=(1,0,0), B=(0,0,1)", () => {
             const O = vec3.fromValues(4, 5, 6)
@@ -94,9 +95,9 @@ describe("projectPointOntoPlane()", () => {
             const a = 0.1
             const b = 0.2
             const d = 0.3
-            const P = makePforT(O, A, B, a, b, d)
+            const { P, R } = makePforT(O, A, B, a, b, d)
             const projected = projectPointOntoPlane(P, O, A, B)
-            expect(projected).to.deep.almost.equal({ a, b })
+            expect(projected).to.deep.almost.equal({ a, b, d, R })
         })
         it("A=(0,1,0), B=(1,0,0)", () => {
             const O = vec3.fromValues(4, 5, 6)
@@ -105,9 +106,9 @@ describe("projectPointOntoPlane()", () => {
             const a = 0.1
             const b = 0.2
             const d = 0.3
-            const P = makePforT(O, A, B, a, b, d)
+            const { P, R } = makePforT(O, A, B, a, b, d)
             const projected = projectPointOntoPlane(P, O, A, B)
-            expect(projected).to.deep.almost.equal({ a, b })
+            expect(projected).to.deep.almost.equal({ a, b, d, R })
         })
         it("A=(0,1,0), B=(0,0,1)", () => {
             const O = vec3.fromValues(4, 5, 6)
@@ -116,9 +117,9 @@ describe("projectPointOntoPlane()", () => {
             const a = 0.1
             const b = 0.2
             const d = 0.3
-            const P = makePforT(O, A, B, a, b, d)
+            const { P, R } = makePforT(O, A, B, a, b, d)
             const projected = projectPointOntoPlane(P, O, A, B)
-            expect(projected).to.deep.almost.equal({ a, b })
+            expect(projected).to.deep.almost.equal({ a, b, d, R })
         })
         it("A=(0,0,1), B=(1,0,0)", () => {
             const O = vec3.fromValues(4, 5, 6)
@@ -127,9 +128,9 @@ describe("projectPointOntoPlane()", () => {
             const a = 0.1
             const b = 0.2
             const d = 0.3
-            const P = makePforT(O, A, B, a, b, d)
+            const { P, R } = makePforT(O, A, B, a, b, d)
             const projected = projectPointOntoPlane(P, O, A, B)
-            expect(projected).to.deep.almost.equal({ a, b })
+            expect(projected).to.deep.almost.equal({ a, b, d, R })
         })
         it("A=(0,0,1), B=(0,1,0)", () => {
             const O = vec3.fromValues(4, 5, 6)
@@ -138,9 +139,9 @@ describe("projectPointOntoPlane()", () => {
             const a = 0.1
             const b = 0.2
             const d = 0.3
-            const P = makePforT(O, A, B, a, b, d)
+            const { P, R } = makePforT(O, A, B, a, b, d)
             const projected = projectPointOntoPlane(P, O, A, B)
-            expect(projected).to.deep.almost.equal({ a, b })
+            expect(projected).to.deep.almost.equal({ a, b, d, R })
         })
     })
 })
@@ -148,8 +149,9 @@ function makePforT(O: vec3, A: vec3, B: vec3, a: number, b: number, d: number) {
     const P = vec3.clone(O)
     vec3.add(P, P, vec3.scale(vec3.create(), A, a))
     vec3.add(P, P, vec3.scale(vec3.create(), B, b))
+    const R = vec3.clone(P)
     const cross = vec3.cross(vec3.create(), A, B)
-    vec3.scale(cross, cross, -0.4)
+    vec3.scale(cross, cross, d)
     vec3.add(P, P, cross)
-    return P
+    return { P, R }
 }

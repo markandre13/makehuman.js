@@ -2,15 +2,15 @@ import { vec3 } from "gl-matrix"
 
 /**
  * 
- * @param normals 
- * @param vertex 
- * @param indices 
+ * @param normals out: Float32Array with the same size as vertex
+ * @param vertex in: vertices
+ * @param indices in: triangles
  * @returns 
  */
 export function calculateNormalsTriangles(
     normals: Float32Array,
     vertex: Float32Array,
-    indices: number[]
+    indices: number[] | Uint16Array
 ): Float32Array {
     normals.fill(0)
     function addNormal(index: number, normal: vec3) {

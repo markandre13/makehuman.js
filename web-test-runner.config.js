@@ -10,5 +10,10 @@ module.exports = {
     reporters: [
         WTRSpecReporter({ reportTestResults: true, reportTestProgress: true }),
     ],
-    files: 'build/test/**/*.spec.js'
+    files: 'build/test/**/*.spec.js',
+    // testFramework: {
+    //     config: {
+    //         require: "build/test/bootstrap.js"
+    //     }
+    // }
 }
