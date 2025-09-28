@@ -22,12 +22,43 @@ interface Frontend {
     oneway void frame(in unsigned long frame);
 };
 
+enum CaptureDeviceType {
+    BODY,
+    FACE,
+    HAND
+};
+
+interface CaptureDevice {
+    readonly attribute CaptureDeviceType type;
+    readonly attribute string name;
+};
+
+interface ARKitFaceReceiver {
+    // send at the beginning or whenever that list of names changes
+    oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
+    oneway void faceLandmarks(
+        in sequence<float> landmarks,
+        in sequence<float> blendshapes,
+        in sequence<float> transform,
+        in unsigned long long timestamp_ms);
+};
+
+interface ARKitFaceDevice: CaptureDevice {
+    attribute ARKitFaceReceiver receiver;
+};
+
+/**
+ * video camera available on the host
+ */
 interface VideoCamera {
     readonly attribute string id;
     attribute string name;
     readonly attribute string features;
 };
 
+/**
+ * media pipe task use use the video camera
+ */
 interface MediaPipeTask {
     readonly attribute string name;
 };
@@ -37,6 +68,7 @@ struct VideoSize {
     unsigned long frames;
 };
 
+// Recorder, Transport, ...
 interface Recorder {
     VideoSize open(in string filename);
     void close();
@@ -52,11 +84,17 @@ interface Backend {
     // called by the frontend to register itself to receive data
     void setFrontend(in Frontend frontend);
 
+    readonly attribute sequence<CaptureDevice> captureDevices;
+
     readonly attribute Recorder recorder;
+ 
+    // list of available video cameras
+    sequence<VideoCamera> getVideoCameras(); // readonly attribute videoCameras
+    // current selected video camera
+    attribute VideoCamera camera; // activeCamera
 
-    sequence<VideoCamera> getVideoCameras();
-    attribute VideoCamera camera;
-
+    // list of available MediaPipe tasks
     sequence<MediaPipeTask> getMediaPipeTasks();
+    // current selected MediaPipe task
     attribute MediaPipeTask mediaPipeTask;
 };

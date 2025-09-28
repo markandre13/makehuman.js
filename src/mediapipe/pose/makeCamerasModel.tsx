@@ -3,6 +3,12 @@ import { ConnectionState } from "net/ConnectionState"
 import { VideoCamera } from "net/makehuman"
 import { OptionModel } from "toad.js"
 
+/**
+ * Get list of cameras available on the backend
+ * 
+ * @param app 
+ * @returns 
+ */
 export function makeCamerasModel(app: Application) {
     const cameras = new OptionModel<VideoCamera | undefined>(undefined, [[undefined, "None"]], { label: "Camera" })
 
@@ -24,6 +30,7 @@ export function makeCamerasModel(app: Application) {
             cameras.setMapping(mapping)
         }
     })
+    // update backend when camera changes
     cameras.signal.add(async () => {
         // [ ] can CORBA send a nil of VideoCamera to be used instead of null?
         //     test this with OmniORB

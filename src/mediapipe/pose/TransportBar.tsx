@@ -1,5 +1,5 @@
 import { Button, TextField } from "toad.js"
-import { PoseModel } from "./PoseTab"
+import { PoseModel } from "./PoseModel"
 import { Frontend_impl } from "net/Frontend_impl"
 
 // TODO: disable/enable buttons with constraints
@@ -7,21 +7,21 @@ import { Frontend_impl } from "net/Frontend_impl"
 export function TransportBar(props: { model: PoseModel, frontend: Frontend_impl }) {
     const recorder = props.frontend.recorder
     const model = props.model
-    recorder.signal.add( () => {
-        if (recorder.value !== undefined) {
-            recorder.value.open(props.model.videoFile.value)
-            .then( size => {
-                props.model.videoFile.error = undefined
-                model.setSize(size)
-            })
-            .catch( (e) => {
-                if (e instanceof Error) {
-                    props.model.videoFile.error = e.message
-                }
-                model.setSize({fps: 24, frames: 0})
-            })
-        }
-    } )
+    // recorder.signal.add( () => {
+    //     if (recorder.value !== undefined) {
+    //         recorder.value.open(props.model.videoFile.value)
+    //         .then( size => {
+    //             props.model.videoFile.error = undefined
+    //             model.setSize(size)
+    //         })
+    //         .catch( (e) => {
+    //             if (e instanceof Error) {
+    //                 props.model.videoFile.error = e.message
+    //             }
+    //             model.setSize({fps: 24, frames: 0})
+    //         })
+    //     }
+    // } )
 
     return (
         <>

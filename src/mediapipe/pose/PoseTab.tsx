@@ -1,105 +1,46 @@
 import { Application, setRenderer } from "Application"
 import { TAB } from "HistoryManager"
 import { Tab } from "toad.js/view/Tab"
-import { BooleanModel, Button, Display, OptionModel, Slider, TextModel } from "toad.js"
-import { IntegerModel } from "toad.js/model/IntegerModel"
+import { Button, Display, Slider } from "toad.js"
 import { FormCheckbox } from "toad.js/view/FormCheckbox"
 import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
 import { FreeMoCapRenderer } from "./FreeMoCapRenderer"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { SimulatedModel } from "./SimulatedModel"
 import { TransportBar } from "./TransportBar"
-import { makeMediaPipeTasksModel } from "./makeMediaPipeTasksModel"
-import { makeCamerasModel } from "./makeCamerasModel"
 import { selectFile } from "./selectFile"
-import { SMPTEConverter } from "lib/smpte"
 import { FormText } from "toad.js/view/FormText"
-import { MediaPipeTask, VideoCamera, VideoSize } from "net/makehuman"
+import { PoseModel } from "./PoseModel"
 
 export const simulatedModel = new SimulatedModel()
 
-export class PoseModel {
-    cameras: OptionModel<VideoCamera | undefined>
-    mediaPipeTasks: OptionModel<MediaPipeTask | undefined>
-    videoFile: TextModel
-    newFile: BooleanModel
-    delay: OptionModel<number>
+// adobe spectrum h1-h..,
+// font-sizes: xxs, xs, s, m, l, xl, xxl, xxxl
+//             100, 200, 300, 500, 700, 900, 1100, 1300
+// https://spectrum.adobe.com/page/heading/
+// default font size:
+//   M (content-based UI)
+//   S (application UI)
+// <h2 class=" spectrum-Heading spectrum-Heading--sizeXXL "
+// <Heading level={4}>Edit</Heading>
+//   level: 1-6, default 3
 
-    frame: {
-        duration: IntegerModel
-        position: IntegerModel
-        loopStart: IntegerModel
-        loopEnd: IntegerModel
-    }
-    timecode: {
-        duration: SMPTEConverter
-        position: SMPTEConverter
-        loopStart: SMPTEConverter
-        loopEnd: SMPTEConverter
-    }
-    fps: IntegerModel
+//  xxs: 14px
+//   xs: 16px
+//    s: 18px
+//    m: 22px
+//    l: 28px
+//   xl: 36px
+//  xxl: 58px
+// xxxl: 78px
 
-    constructor(app: Application) {
-        this.cameras = makeCamerasModel(app)
-        this.mediaPipeTasks = makeMediaPipeTasksModel(app)
-        this.videoFile = new TextModel("video.mp4", { label: "Filename" })
-        this.newFile = new BooleanModel(true, {
-            label: "Timestamp",
-            description: "Create new files by appending a timestamp to the file name.",
-        })
-        this.delay = new OptionModel(
-            0,
-            [
-                [0, "None"],
-                [5, "5s"],
-                [10, "10s"],
-            ],
-            {
-                label: "Timer",
-                description: "Delay between pressing Record button and actual recording.",
-            }
-        )
-        this.frame = {
-            duration: new IntegerModel(0, { label: "Duration" }),
-            position: new IntegerModel(0, { label: "Position", step: 1, min: 0 }),
-            loopStart: new IntegerModel(0, { label: "Loop Start", step: 1, min: 0, max: 0 }),
-            loopEnd: new IntegerModel(0, { label: "Loop End", step: 1, min: 0, max: 0 }),
-        }
-        this.fps = new IntegerModel(24, { label: "fps", step: 1, min: 1 })
+// f_i := f_0 * r ^ (i/n)
+// golden ratio (r = 1.618034)
 
-        this.timecode = {
-            duration: new SMPTEConverter(this.frame.duration, this.fps, { label: "Duration" }),
-            position: new SMPTEConverter(this.frame.position, this.fps, { label: "Position" }),
-            loopStart: new SMPTEConverter(this.frame.loopStart, this.fps, { label: "Loop Start" }),
-            loopEnd: new SMPTEConverter(this.frame.loopEnd, this.fps, { label: "Loop End" }),
-        }
-        this.frame.position.signal.add( () => {
-            if (app.frontend.recorder) {
-                app.frontend.recorder.value?.seek(this.frame.position.value)
-            }
-        })
-        // recorder.value?.seek(props.model.frame.position.value - props.model.fps.value)
-
-        app.frontend.frameHandler = (frame) => {
-            this.frame.position.value = frame
-        }
-    }
-
-    setSize(size: VideoSize) {
-        this.fps.value = size.fps
-
-        this.frame.position.max = size.frames
-        this.frame.position.value = 0
-
-        this.frame.loopStart.max = size.frames
-        this.frame.loopStart.value = 0
-
-        this.frame.loopEnd.max = size.frames
-        this.frame.loopEnd.value = size.frames
-
-        this.frame.duration.value = size.frames
-    }
-}
+// https://spencermortensen.com/articles/typographic-scale/
+// This is the classic typographic scale, as recorded by Mr. Bringhurst in The Elements of Typographic Style:
+// 6 7 8 9 10 11 12 14 16 18 21 24 30 36 48 60 72
+//            11                
 
 export function PoseTab(props: { app: Application }) {
     const poseModel = new PoseModel(props.app)
@@ -113,12 +54,17 @@ export function PoseTab(props: { app: Application }) {
                 // setRenderer(props.app, new MPPoseRenderer())
                 // setRenderer(props.app, new RenderHuman())
             }
-        >
-            <h3>Mediapipe Pose</h3>
+        >            
             <div>
                 <Form>
-                    <FormSelect model={poseModel.cameras} />
-                    <FormSelect model={poseModel.mediaPipeTasks} />
+                    <h6>Source</h6>
+                    <FormSelect model={poseModel.body} />
+                    <FormSelect model={poseModel.face} />
+                    <FormSelect model={poseModel.hand} />
+                    <h6>Mediapipe</h6>
+                    <FormSelect model={poseModel.camera} />
+                    <FormSelect model={poseModel.mediaPipeTask} />
+                    <h6>Recorder</h6>
                     <FormLabel model={poseModel.videoFile} />
                     <FormField>
                         <Display model={poseModel.videoFile} />
