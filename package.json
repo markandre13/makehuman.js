@@ -29,29 +29,29 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "corba.js": "^0.1.18",
+    "corba.js": "^0.1.19",
     "fflate": "^0.8.2",
     "gl-matrix": "^3.4.4",
-    "toad.js": "^0.2.3"
+    "toad.js": "^0.2.4"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-node-resolve": "^16.0.2",
     "@rollup/plugin-terser": "^0.4.4",
     "@types/chai": "^5.2.2",
     "@types/chai-almost": "^1.0.3",
     "@types/chai-string": "^1.4.5",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.6.2",
     "@web/dev-server": "^0.4.6",
     "@web/test-runner": "^0.20.2",
-    "chai": "^6.0.1",
-    "mocha": "^11.7.2",
-    "rollup": "^4.50.0",
+    "chai": "^6.2.0",
+    "mocha": "^11.7.4",
+    "rollup": "^4.52.4",
     "rollup-plugin-typescript2": "^0.36.0",
     "temporal-polyfill": "^0.3.0",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   }
 }
