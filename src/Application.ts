@@ -16,7 +16,7 @@ import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
 import { RenderHandler } from 'render/RenderHandler'
 import { ORB } from "corba.js"
-import { Backend, MediaPipeTask, Recorder, VideoCamera } from "net/makehuman_stub"
+import { ARKitFaceDevice, Backend, MediaPipeTask, Recorder, VideoCamera } from "net/makehuman_stub"
 import { FileSystem } from "net/fs_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
@@ -29,7 +29,6 @@ import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 import { VALUE } from "toad.js/model/ValueModel"
 import { Connector } from "net/Connector"
 import { TextModel } from "toad.js"
-import { GLView } from "gl/GLView"
 import { RenderView } from "render/RenderView"
 import { mat4 } from "gl-matrix"
 import { di } from "lib/di"
@@ -182,6 +181,7 @@ export class Application {
         this.orb.registerStubClass(VideoCamera)
         this.orb.registerStubClass(MediaPipeTask)
         this.orb.registerStubClass(Recorder)
+        this.orb.registerStubClass(ARKitFaceDevice)
         this.orb.addProtocol(new WsProtocol())
         this.frontend = new Frontend_impl(this.orb, this.updateManager, this.blendshapeModel)
 

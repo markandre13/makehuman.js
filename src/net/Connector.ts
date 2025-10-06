@@ -1,9 +1,20 @@
 import { NumberModel, Signal, TextModel } from "toad.js"
 import { ConnectionState } from "net/ConnectionState"
 import { Frontend_impl } from "./Frontend_impl"
-import { Backend } from "./makehuman_stub"
+import { ARKitFaceDevice, Backend } from "./makehuman_stub"
 import { FileSystem } from "./fs_stub"
-import { CORBAObject, ORB } from "corba.js"
+import { ORB } from "corba.js"
+import { CaptureDeviceType } from "./makehuman"
+import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "./makehuman_skel"
+
+class ARKitFaceReceiver_impl extends ARKitFaceReceiver_skel {
+    faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
+        console.log(`ARKitFaceReceiver_impl::faceBlendshapeNames([${faceBlendshapeNames.length}])`)
+    }
+    faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        console.log(`ARKitFaceReceiver_impl::faceLandmarks([${landmarks.length}], [${blendshapes.length}], [${transform.length}], ${timestamp_ms})`)
+    }
+}
 
 /**
  * handles connecting the frontend to the backend
@@ -44,8 +55,18 @@ export class Connector {
                 this.frontend.recorder.value = undefined
                 this.state = ConnectionState.NOT_CONNECTED
             })
-            backend.setFrontend(this.frontend)
+            await backend.setFrontend(this.frontend)
             this.state = ConnectionState.CONNECTED
+
+            console.log(`capture devices on backend:`)
+            for(const device of await backend.captureDevices()) {
+                console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
+                if (device.device instanceof ARKitFaceDevice) {
+                    console.log("FOUND ARKitFaceDevice -> set receiver")
+                    const receiver = new ARKitFaceReceiver_impl(this.frontend._orb)
+                    await device.device.receiver(receiver)
+                }
+            }
         } catch (e) {
             console.error(e)
             this.state = ConnectionState.NOT_CONNECTED

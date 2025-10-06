@@ -29,8 +29,13 @@ enum CaptureDeviceType {
 };
 
 interface CaptureDevice {
-    readonly attribute CaptureDeviceType type;
-    readonly attribute string name;
+};
+
+struct CaptureDeviceInfo {
+    CaptureDevice device;
+    CaptureDeviceType type;
+    string id;
+    string name;
 };
 
 interface ARKitFaceReceiver {
@@ -84,7 +89,7 @@ interface Backend {
     // called by the frontend to register itself to receive data
     void setFrontend(in Frontend frontend);
 
-    readonly attribute sequence<CaptureDevice> captureDevices;
+    readonly attribute sequence<CaptureDeviceInfo> captureDevices;
 
     readonly attribute Recorder recorder;
  
