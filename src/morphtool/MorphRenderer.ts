@@ -62,7 +62,9 @@ export class MorphRenderer extends RenderHandler {
         if (this.app.updateManager.updateFromLocalSettingsWithoutGL()) {
             this.pickMeshes[0].vertices.update(app.humanMesh.vertexRigged)
             this.pickMeshes[0].flat.update()
-            this.calculateDistance(gl)
+            if (this.model.showMapping.value) {
+                this.calculateDistance(gl)
+            }
         }
 
         // prepare
@@ -138,7 +140,7 @@ export class MorphRenderer extends RenderHandler {
         activeMesh.indicesAllEdges.bind()
         activeMesh.indicesAllEdges.drawLines()
 
-        if (this.distanceIndex !== undefined) {
+        if (this.model.showMapping.value && this.distanceIndex !== undefined) {
             const shaderMono = view.shaderMono
             shaderMono.use(gl)
             shaderMono.setProjection(gl, projectionMatrix)
@@ -267,7 +269,7 @@ export class MorphRenderer extends RenderHandler {
     /**
      * for each MH face vertex, find nearest ARKit intersection
      */
-    calculateDistance2(gl: WebGL2RenderingContext) {
+    calculateDistanceOld(gl: WebGL2RenderingContext) {
 
         let matchCount = 0
         const loader = di.get(FaceARKitLoader).preload()

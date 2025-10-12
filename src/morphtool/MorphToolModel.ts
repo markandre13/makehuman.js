@@ -1,8 +1,13 @@
-import { Action, BooleanModel, NumberModel, OptionModel, TextModel } from 'toad.js'
+import { Action, BooleanModel, OptionModel, TextModel } from 'toad.js'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphGroupDB } from './MorphGroupDB'
 import { di } from 'lib/di'
 import { Application } from 'Application'
+import { Connector } from 'net/Connector'
+import { ARKitFaceDevice, Backend } from 'net/makehuman_stub'
+import { CaptureDeviceType } from 'net/makehuman'
+import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
+import { ConnectionState } from 'net/ConnectionState'
 
 export class MorphToolModel {
     renderer?: MorphRenderer
@@ -10,7 +15,7 @@ export class MorphToolModel {
     isARKitActive = new BooleanModel(true, { label: "MH / ARKit" })
     isTransparentActiveMesh = new BooleanModel(true, { label: "Transparent active mesh" })
     showBothMeshes = new BooleanModel(true, { label: "Show both meshes" })
-    showMapping = new BooleanModel(false, {label: "Show mapping"})
+    showMapping = new BooleanModel(false, { label: "Show mapping" })
     // mhJawOpen = new NumberModel(0, {
     //     min: 0, max: 1, step: 0.01,
     //     label: "MH Jaw Open (pose)"
@@ -83,8 +88,8 @@ export class MorphToolModel {
         const fs = di.get(Application).frontend.filesystem
         if (fs !== undefined) {
             const all = await this.morphGroupData.all()
-            const encoder = new TextEncoder();
-            const uint8Array = encoder.encode(JSON.stringify(all));
+            const encoder = new TextEncoder()
+            const uint8Array = encoder.encode(JSON.stringify(all))
             await fs.write("morphgroup.json", uint8Array)
         }
     }
@@ -103,5 +108,35 @@ export class MorphToolModel {
             this.mapping = ["none", ...morphGroupNames]
             this.morphGroups.setMapping(this.mapping)
         })
+
+        const connector = di.get(Connector)
+        connector.signal.add(() => this.connect())
+        this.connect()
+    }
+    private connect() {
+        const connector = di.get(Connector)
+        if (connector.state !== ConnectionState.CONNECTED) {
+            return
+        }
+        const backend = di.get(Application).frontend.backend as Backend
+        backend?.captureDevices().then((devices) => {
+            console.log(`connecting: found ${devices.length} capture devices`)
+            for (const device of devices) {
+                console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
+                if (device.device instanceof ARKitFaceDevice) {
+                    console.log("FOUND ARKitFaceDevice -> set receiver")
+                    device.device.receiver(new ARKitFaceReceiver_impl(backend._orb))
+                }
+            }
+        })
+    }
+}
+
+class ARKitFaceReceiver_impl extends ARKitFaceReceiver_skel {
+    faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
+        console.log(`ARKitFaceReceiver_impl::faceBlendshapeNames([${faceBlendshapeNames.length}])`)
+    }
+    faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        console.log(`ARKitFaceReceiver_impl::faceLandmarks([${landmarks.length}], [${blendshapes.length}], [${transform.length}], ${timestamp_ms})`)
     }
 }

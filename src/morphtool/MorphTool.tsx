@@ -6,9 +6,23 @@ import { MorphToolModel } from './MorphToolModel'
 import { Form, FormField, FormHelp, FormLabel } from 'toad.js/view/Form'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
 import { MorphToolMode } from './MorphToolMode'
-import { Action, Button, OptionModel, Table, TextModel } from 'toad.js'
+import { Button, Table } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
+
+// showMapping: 
+// [ ] enable/disable mapping
+// [ ] disable when selecting vertices
+// animate
+// [ ] enable/disable animation
+
+// how to connect to backend
+// * we want most application logic in the frontend as it's platform independant
+// * that would mean that the app is responsible to reconnect to the backend
+
+// * installSystemExceptionHandler(object: CORBAObject, handler: () => void)
+//   one handler per object...
+//   will be called when the connection closes
 
 /**
  * Tool to morph face meshes.
