@@ -65,10 +65,12 @@ export class FaceARKitLoader {
      * @param blendshapeModel 
      * @returns 
      */
-    getVertex(blendshapeModel: BlendshapeModel): Float32Array {
+    getVertex(blendshapeModel: BlendshapeModel, vertex?: Float32Array): Float32Array {
         // copy 'neutral' to 'vertex'
         const neutral = this.getNeutral()
-        const vertex = new Float32Array(neutral.xyz.length)
+        if (vertex === undefined) {
+            vertex = new Float32Array(neutral.xyz.length)
+        }
         vertex.set(this.neutral!.xyz)
         // apply blendshapes to 'vertex'
         for (let blendshape = 0; blendshape < blendshapeNames.length; ++blendshape) {

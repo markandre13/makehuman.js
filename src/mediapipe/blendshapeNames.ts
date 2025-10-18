@@ -51,7 +51,8 @@ export enum Blendshape {
     mouthUpperUpRight, // 49
     noseSneerLeft, // 50
     noseSneerRight, // 51
-    tongueOut // 52
+    tongueOut, // 52
+    SIZE
 }
 
 export const blendshapeNames = [

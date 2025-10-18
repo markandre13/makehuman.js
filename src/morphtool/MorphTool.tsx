@@ -9,12 +9,33 @@ import { MorphToolMode } from './MorphToolMode'
 import { Button, Table } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
+import { RenderHandler } from 'render/RenderHandler'
+import { RenderView } from 'render/RenderView'
+import { mat4 } from 'gl-matrix'
+import { di } from 'lib/di'
+import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
+import { VertexBuffer } from 'gl/buffers/VertexBuffer'
+import { IndexBuffer } from 'gl/buffers/IndexBuffer'
+import { NormalBuffer } from 'gl/buffers/NormalBuffer'
+import { calculateNormalsTriangles } from 'gl/algorithms/calculateNormalsTriangles'
+import { BlendshapeModel } from 'blendshapes/BlendshapeModel'
+import { MorphTarget } from 'target/MorphTarget'
+import { Blendshape } from 'mediapipe/blendshapeNames'
+import { WavefrontObj } from 'mesh/WavefrontObj'
+import { isZero } from 'gl/algorithms/isZero'
+
+// TODO
+// [ ] Tab.visibilityChange: improve the APIb
+// animate
+// [ ] enable/disable animation
+//   [ ] get one of the following to work again
+//       FaceARKitRenderer / FaceARKitLoader
+//       FaceICTKitRenderer / FaceICTKitLoader
+//       BlendshapeModel
 
 // showMapping: 
 // [ ] enable/disable mapping
 // [ ] disable when selecting vertices
-// animate
-// [ ] enable/disable animation
 
 // how to connect to backend
 // * we want most application logic in the frontend as it's platform independant
@@ -29,6 +50,8 @@ import { ButtonVariant } from 'toad.js/view/Button'
  */
 export function MorphTool(props: { app: Application }) {
     const model = new MorphToolModel()
+    const faceRenderer = new FaceRenderer()
+
     const renderer = new MorphRenderer(props.app, model)
     model.renderer = renderer
     return (
@@ -38,17 +61,17 @@ export function MorphTool(props: { app: Application }) {
             visibilityChange={(state) => {
                 switch (state) {
                     case 'visible':
-                        props.app.setRenderer(renderer)
+                        props.app.setRenderer(faceRenderer)
                         if (props.app.glview) {
-                            props.app.glview.pushInputHandler(
-                                new MorphToolMode(props.app, model, renderer)
-                            )
+                            // props.app.glview.pushInputHandler(
+                            //     new MorphToolMode(props.app, model, renderer)
+                            // )
                         } else {
                             console.trace('NO GLVIEW')
                         }
                         break
                     case 'hidden':
-                        props.app.glview.popInputHandler()
+                        // props.ap~zsp.glview.popInputHandler()
                         // reset blendhape model
                         props.app.updateManager.setBlendshapeModel(
                             props.app.frontend.blendshapeModel
@@ -84,4 +107,173 @@ export function MorphTool(props: { app: Application }) {
             />
         </Tab>
     )
+}
+
+class FaceRenderer extends RenderHandler {
+    blendshapeSet: FaceARKitLoader2
+    blendshapeModel?: Float32Array
+
+    private vertices!: VertexBuffer
+    private normals!: NormalBuffer
+    private indices!: IndexBuffer
+
+    constructor() {
+        super()
+        // this.blendshapeSet = di.get(FaceARKitLoader2).preload()
+        this.blendshapeSet = new FaceARKitLoader2()
+        this.blendshapeSet.preload()
+
+        this.blendshapeModel = new Float32Array(Blendshape.SIZE)
+    }
+    override defaultCamera(): () => mat4 {
+        return di.get(Application).headCamera
+    }
+    override paint(app: Application, view: RenderView): void {
+        if (this.blendshapeModel === undefined) {
+            return
+        }
+        const gl = view.gl
+        const shaderShadedMono = view.shaderShadedMono
+        view.prepareCanvas()
+        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+
+        gl.enable(gl.CULL_FACE)
+        gl.cullFace(gl.BACK)
+        gl.depthMask(true)
+        gl.disable(gl.BLEND)
+
+        shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
+
+        if (this.vertices === undefined) {
+            const vertex = this.blendshapeSet.getVertex(this.blendshapeModel)
+            this.vertices = new VertexBuffer(gl, vertex)
+            this.indices = new IndexBuffer(gl, this.blendshapeSet.getNeutral().fxyz)
+            this.normals = new NormalBuffer(gl, calculateNormalsTriangles(
+                new Float32Array(vertex.length),
+                vertex,
+                this.blendshapeSet.getNeutral().fxyz
+            ))
+        } else {
+            this.blendshapeSet.getVertex(this.blendshapeModel, this.vertices.data)
+            this.vertices.update()
+            calculateNormalsTriangles(
+                this.normals.data,
+                this.vertices.data,
+                this.blendshapeSet.getNeutral().fxyz
+            )
+            this.normals.update()
+        }
+
+        this.vertices.bind(shaderShadedMono)
+        this.normals.bind(shaderShadedMono)
+        this.indices.bind()
+        this.indices.drawTriangles()
+    }
+}
+
+export class FaceARKitLoader2 {
+    _targets = new Array<MorphTarget>(Blendshape.SIZE)
+    _neutral?: WavefrontObj
+
+    /**
+     * Load all blendshapes. Useful when doing live animation.
+     */
+    preload(): FaceARKitLoader2 {
+        for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
+            this.getMorphTarget(blendshape)
+        }
+        return this
+    }
+
+    getNeutral(): WavefrontObj {
+        if (this._neutral === undefined) {
+            this._neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+            this.transformToMatchMakehumanFace(this._neutral.xyz)
+        }
+        return this._neutral
+    }
+
+    transformToMatchMakehumanFace(xyz: Float32Array | Array<number>) {
+        const scale = 9.4
+        const dy = 7.08
+        const dz = 0.93
+
+        for (let i = 0; i < xyz.length; ++i) {
+            xyz[i] *= scale
+        }
+        for (let i = 1; i < xyz.length; i += 3) {
+            xyz[i] += dy
+        }
+        for (let i = 2; i < xyz.length; i += 3) {
+            xyz[i] += dz
+        }
+    }
+
+    getMorphTarget(blendshape: Blendshape): MorphTarget | undefined {
+        this.getNeutral()
+        if (blendshape === Blendshape.neutral) {
+            return undefined
+        }
+        let target = this._targets[blendshape]
+        if (target !== undefined) {
+            return target
+        }
+
+        const name = Blendshape[blendshape]
+        const dst = new WavefrontObj(`data/blendshapes/arkit/${name}.obj`)
+
+        target = new MorphTarget()
+        this.transformToMatchMakehumanFace(dst.xyz)
+        target.diff(this._neutral!.xyz, dst.xyz)
+        this._targets[blendshape] = target
+        return target
+    }
+
+    /**
+     * get blended vertices
+     * 
+     * @param blendshapeModel 
+     * @returns 
+     */
+    getVertex(blendshapeModel: Float32Array, vertex?: Float32Array): Float32Array {
+        // copy 'neutral' to 'vertex'
+        const neutral = this.getNeutral()
+        if (vertex === undefined) {
+            vertex = new Float32Array(neutral.xyz.length)
+        }
+        vertex.set(this._neutral!.xyz)
+        // apply blendshapes to 'vertex'
+        for (let blendshape = 1; blendshape < Blendshape.SIZE; ++blendshape) {
+            const weight = blendshapeModel[blendshape]
+            if (isZero(weight)) {
+                continue
+            }
+            this.getMorphTarget(blendshape)?.apply(vertex, weight)
+        }
+
+        // scale and rotate 'vertex'
+        // if (blendshapeModel.transform) {
+        //     const t = blendshapeModel.transform!!
+        //     // prettier-ignore
+        //     const m = mat4.fromValues(
+        //         t[0],  t[1],  t[2], 0,
+        //         t[4],  t[5],  t[6], 0,
+        //         t[8],  t[9], t[10], 0,
+        //            0,     0,     0, 1
+        //     )
+        //     const v = vec3.create()
+        //     for (let i = 0; i < vertex.length; i += 3) {
+        //         v[0] = vertex[i]
+        //         v[1] = vertex[i + 1]
+        //         v[2] = vertex[i + 2]
+        //         vec3.transformMat4(v, v, m)
+        //         vertex[i] = v[0]
+        //         vertex[i + 1] = v[1]
+        //         vertex[i + 2] = v[2]
+        //     }
+        // }
+
+        return vertex
+    }
 }

@@ -26,7 +26,6 @@ export class FaceARKitRenderer extends RenderHandler {
             this.blendshapeSet = di.get(FaceARKitLoader).preload()
         }
         const gl = view.gl
-        const ctx = view.ctx
         const shaderShadedMono = view.shaderShadedMono
 
         const vertex = this.blendshapeSet.getVertex(this.blendshapeModel)
