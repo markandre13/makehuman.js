@@ -11,7 +11,7 @@ import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { di } from 'lib/di'
 import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
@@ -23,6 +23,8 @@ import { MorphTarget } from 'target/MorphTarget'
 import { Blendshape } from 'mediapipe/blendshapeNames'
 import { WavefrontObj } from 'mesh/WavefrontObj'
 import { isZero } from 'gl/algorithms/isZero'
+import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
+import { ORB } from 'corba.js'
 
 // TODO
 // [ ] Tab.visibilityChange: improve the APIb
@@ -49,11 +51,11 @@ import { isZero } from 'gl/algorithms/isZero'
  * Tool to morph face meshes.
  */
 export function MorphTool(props: { app: Application }) {
-    const model = new MorphToolModel()
     const faceRenderer = new FaceRenderer()
-
+    const model = new MorphToolModel()
     const renderer = new MorphRenderer(props.app, model)
     model.renderer = renderer
+    model.faceRenderer = faceRenderer
     return (
         <Tab
             label="Morph"
@@ -109,9 +111,24 @@ export function MorphTool(props: { app: Application }) {
     )
 }
 
-class FaceRenderer extends RenderHandler {
+export class ARKitFaceReceiver_impl extends ARKitFaceReceiver_skel {
+    faceRenderer: FaceRenderer
+    constructor(orb: ORB, faceRenderer: FaceRenderer) {
+        super(orb)
+        this.faceRenderer = faceRenderer
+    }
+    override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        // console.log(`ARKitFaceReceiver_impl::faceLandmarks([${landmarks.length}], [${blendshapes.length}], [${transform.length}], ${timestamp_ms})`)
+        // this.faceRenderer.blendshapeParams = blendshapes // MAKE SETTER WHICH INVALIDATES VIEW
+        this.faceRenderer.faceLandmarks(blendshapes, transform, timestamp_ms)
+    }
+}
+
+export class FaceRenderer extends RenderHandler {
     blendshapeSet: FaceARKitLoader2
-    blendshapeModel?: Float32Array
+
+    blendshapeParams?: Float32Array
+    blendshapeTransform?: Float32Array
 
     private vertices!: VertexBuffer
     private normals!: NormalBuffer
@@ -123,13 +140,19 @@ class FaceRenderer extends RenderHandler {
         this.blendshapeSet = new FaceARKitLoader2()
         this.blendshapeSet.preload()
 
-        this.blendshapeModel = new Float32Array(Blendshape.SIZE)
+        this.blendshapeParams = new Float32Array(Blendshape.SIZE)
+    }
+    faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        // console.log("FaceRenderer::faceLandmarks()")
+        this.blendshapeParams = blendshapes
+        this.blendshapeTransform = transform
+        di.get(Application).glview.invalidate()
     }
     override defaultCamera(): () => mat4 {
         return di.get(Application).headCamera
     }
     override paint(app: Application, view: RenderView): void {
-        if (this.blendshapeModel === undefined) {
+        if (this.blendshapeParams === undefined) {
             return
         }
         const gl = view.gl
@@ -146,7 +169,7 @@ class FaceRenderer extends RenderHandler {
         shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
 
         if (this.vertices === undefined) {
-            const vertex = this.blendshapeSet.getVertex(this.blendshapeModel)
+            const vertex = this.blendshapeSet.getVertex(this.blendshapeParams, this.blendshapeTransform!)
             this.vertices = new VertexBuffer(gl, vertex)
             this.indices = new IndexBuffer(gl, this.blendshapeSet.getNeutral().fxyz)
             this.normals = new NormalBuffer(gl, calculateNormalsTriangles(
@@ -155,7 +178,7 @@ class FaceRenderer extends RenderHandler {
                 this.blendshapeSet.getNeutral().fxyz
             ))
         } else {
-            this.blendshapeSet.getVertex(this.blendshapeModel, this.vertices.data)
+            this.blendshapeSet.getVertex(this.blendshapeParams, this.blendshapeTransform!, this.vertices.data)
             this.vertices.update()
             calculateNormalsTriangles(
                 this.normals.data,
@@ -233,10 +256,10 @@ export class FaceARKitLoader2 {
     /**
      * get blended vertices
      * 
-     * @param blendshapeModel 
+     * @param blendshapeParams 
      * @returns 
      */
-    getVertex(blendshapeModel: Float32Array, vertex?: Float32Array): Float32Array {
+    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array {
         // copy 'neutral' to 'vertex'
         const neutral = this.getNeutral()
         if (vertex === undefined) {
@@ -244,8 +267,8 @@ export class FaceARKitLoader2 {
         }
         vertex.set(this._neutral!.xyz)
         // apply blendshapes to 'vertex'
-        for (let blendshape = 1; blendshape < Blendshape.SIZE; ++blendshape) {
-            const weight = blendshapeModel[blendshape]
+        for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
+            const weight = blendshapeParams[blendshape]
             if (isZero(weight)) {
                 continue
             }
@@ -253,25 +276,30 @@ export class FaceARKitLoader2 {
         }
 
         // scale and rotate 'vertex'
-        // if (blendshapeModel.transform) {
-        //     const t = blendshapeModel.transform!!
-        //     // prettier-ignore
-        //     const m = mat4.fromValues(
-        //         t[0],  t[1],  t[2], 0,
-        //         t[4],  t[5],  t[6], 0,
-        //         t[8],  t[9], t[10], 0,
-        //            0,     0,     0, 1
-        //     )
-        //     const v = vec3.create()
-        //     for (let i = 0; i < vertex.length; i += 3) {
-        //         v[0] = vertex[i]
-        //         v[1] = vertex[i + 1]
-        //         v[2] = vertex[i + 2]
-        //         vec3.transformMat4(v, v, m)
-        //         vertex[i] = v[0]
-        //         vertex[i + 1] = v[1]
-        //         vertex[i + 2] = v[2]
-        //     }
+        // const t = blendshapeTransform
+        // const m = mat4.fromValues(
+        //     t[0], t[1], t[2], 0,
+        //     t[4], t[5], t[6], 0,
+        //     t[8], t[9], t[10], 0,
+        //     0, 0, 0, 1
+        // )
+
+        // // const camera = di.get(Application).glview.ctx.camera
+        // // const ic = mat4.clone(camera)
+        // // mat4.invert(m, camera)
+
+        // // mat4.multiply(m, ic, m)
+        // // mat4.multiply(m, m, camera)
+
+        // const v = vec3.create()
+        // for (let i = 0; i < vertex.length; i += 3) {
+        //     v[0] = vertex[i]
+        //     v[1] = vertex[i + 1]
+        //     v[2] = vertex[i + 2]
+        //     vec3.transformMat4(v, v, m)
+        //     vertex[i] = v[0]
+        //     vertex[i + 1] = v[1]
+        //     vertex[i + 2] = v[2]
         // }
 
         return vertex

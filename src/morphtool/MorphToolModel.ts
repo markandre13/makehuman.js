@@ -6,11 +6,13 @@ import { Application } from 'Application'
 import { Connector } from 'net/Connector'
 import { ARKitFaceDevice, Backend } from 'net/makehuman_stub'
 import { CaptureDeviceType } from 'net/makehuman'
-import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
+
 import { ConnectionState } from 'net/ConnectionState'
+import { ARKitFaceReceiver_impl, FaceRenderer } from './MorphTool'
 
 export class MorphToolModel {
     renderer?: MorphRenderer
+    faceRenderer?: FaceRenderer
 
     isARKitActive = new BooleanModel(true, { label: "MH / ARKit" })
     isTransparentActiveMesh = new BooleanModel(true, { label: "Transparent active mesh" })
@@ -125,18 +127,11 @@ export class MorphToolModel {
                 console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
                 if (device.device instanceof ARKitFaceDevice) {
                     console.log("FOUND ARKitFaceDevice -> set receiver")
-                    device.device.receiver(new ARKitFaceReceiver_impl(backend._orb))
+                    device.device.receiver(new ARKitFaceReceiver_impl(backend._orb, this.faceRenderer!))
                 }
             }
         })
     }
 }
 
-class ARKitFaceReceiver_impl extends ARKitFaceReceiver_skel {
-    faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
-        console.log(`ARKitFaceReceiver_impl::faceBlendshapeNames([${faceBlendshapeNames.length}])`)
-    }
-    faceLandmarks(landmarks: Float32Array, blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
-        console.log(`ARKitFaceReceiver_impl::faceLandmarks([${landmarks.length}], [${blendshapes.length}], [${transform.length}], ${timestamp_ms})`)
-    }
-}
+

@@ -355,6 +355,10 @@ export class MorphRenderer extends RenderHandler {
         return result
     }
     set selection(selection: { mh: number[], extern: number[] } | undefined) {
+        if (this.pickMeshes === undefined) {
+            return
+        }
+
         if (selection === undefined) {
             this.pickMeshes[0].selectionColors.clear()
             this.pickMeshes[1].selectionColors.clear()

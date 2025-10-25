@@ -39,10 +39,7 @@ struct CaptureDeviceInfo {
 };
 
 interface ARKitFaceReceiver {
-    // send at the beginning or whenever that list of names changes
-    oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
     oneway void faceLandmarks(
-        in sequence<float> landmarks,
         in sequence<float> blendshapes,
         in sequence<float> transform,
         in unsigned long long timestamp_ms);
