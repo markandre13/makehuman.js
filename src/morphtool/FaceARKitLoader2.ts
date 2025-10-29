@@ -3,7 +3,13 @@ import { Blendshape } from 'mediapipe/blendshapeNames'
 import { WavefrontObj } from 'mesh/WavefrontObj'
 import { MorphTarget } from 'target/MorphTarget'
 
-export class FaceARKitLoader2 {
+export interface BlendshapeMesh {
+    preload(): BlendshapeMesh
+    get fxyz(): number[]
+    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array
+}
+
+export class FaceARKitLoader2 implements BlendshapeMesh {
     _targets = new Array<MorphTarget>(Blendshape.SIZE);
     _neutral?: WavefrontObj
 
@@ -16,6 +22,8 @@ export class FaceARKitLoader2 {
         }
         return this
     }
+
+    get fxyz(): number[] { return this.getNeutral().fxyz }
 
     getNeutral(): WavefrontObj {
         if (this._neutral === undefined) {

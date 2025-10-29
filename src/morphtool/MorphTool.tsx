@@ -10,6 +10,8 @@ import { Button, Table } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
 import { FaceRenderer } from './FaceRenderer'
+import { FaceARKitLoader2 } from './FaceARKitLoader2'
+import { di } from 'lib/di'
 
 // TODO
 // [ ] Tab.visibilityChange: improve the APIb
@@ -36,7 +38,7 @@ import { FaceRenderer } from './FaceRenderer'
  * Tool to morph face meshes.
  */
 export function MorphTool(props: { app: Application }) {
-    const faceRenderer = new FaceRenderer()
+    const faceRenderer = new FaceRenderer(di.get(FaceARKitLoader2).preload())
     const model = new MorphToolModel()
     const renderer = new MorphRenderer(props.app, model)
     model.renderer = renderer

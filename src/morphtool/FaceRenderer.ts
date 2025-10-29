@@ -8,24 +8,33 @@ import { di } from 'lib/di'
 import { Blendshape } from 'mediapipe/blendshapeNames'
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
-import { FaceARKitLoader2 } from './FaceARKitLoader2'
+import { BlendshapeMesh } from './FaceARKitLoader2'
 
-
+/**
+ * render animated blendshape mesh
+ */
 export class FaceRenderer extends RenderHandler {
-    blendshapeSet: FaceARKitLoader2
+    private blendshapeMesh: BlendshapeMesh
 
-    blendshapeParams?: Float32Array
-    blendshapeTransform?: Float32Array
+    private blendshapeParams?: Float32Array
+    private blendshapeTransform?: Float32Array
 
     private vertices!: VertexBuffer
     private normals!: NormalBuffer
     private indices!: IndexBuffer
 
-    constructor() {
+    constructor(blendshapeMesh: BlendshapeMesh) {
         super()
-        this.blendshapeSet = di.get(FaceARKitLoader2).preload()
+        this.blendshapeMesh = blendshapeMesh
         this.blendshapeParams = new Float32Array(Blendshape.SIZE)
     }
+    /**
+     * set blendshape parameters
+     * 
+     * @param blendshapes 
+     * @param transform 
+     * @param timestamp_ms 
+     */
     faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
         // console.log("FaceRenderer::faceLandmarks()")
         this.blendshapeParams = blendshapes
@@ -35,7 +44,7 @@ export class FaceRenderer extends RenderHandler {
     override defaultCamera(): () => mat4 {
         return di.get(Application).headCamera
     }
-    override paint(app: Application, view: RenderView): void {
+    override paint(_app: Application, view: RenderView): void {
         if (this.blendshapeParams === undefined) {
             return
         }
@@ -53,21 +62,21 @@ export class FaceRenderer extends RenderHandler {
         shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
 
         if (this.vertices === undefined) {
-            const vertex = this.blendshapeSet.getVertex(this.blendshapeParams, this.blendshapeTransform!)
+            const vertex = this.blendshapeMesh.getVertex(this.blendshapeParams, this.blendshapeTransform!)
             this.vertices = new VertexBuffer(gl, vertex)
-            this.indices = new IndexBuffer(gl, this.blendshapeSet.getNeutral().fxyz)
+            this.indices = new IndexBuffer(gl, this.blendshapeMesh.fxyz)
             this.normals = new NormalBuffer(gl, calculateNormalsTriangles(
                 new Float32Array(vertex.length),
                 vertex,
-                this.blendshapeSet.getNeutral().fxyz
+                this.blendshapeMesh.fxyz
             ))
         } else {
-            this.blendshapeSet.getVertex(this.blendshapeParams, this.blendshapeTransform!, this.vertices.data)
+            this.blendshapeMesh.getVertex(this.blendshapeParams, this.blendshapeTransform!, this.vertices.data)
             this.vertices.update()
             calculateNormalsTriangles(
                 this.normals.data,
                 this.vertices.data,
-                this.blendshapeSet.getNeutral().fxyz
+                this.blendshapeMesh.fxyz
             )
             this.normals.update()
         }
