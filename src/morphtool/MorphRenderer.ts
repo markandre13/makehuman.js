@@ -22,6 +22,7 @@ import { calculateNormalsQuads } from 'gl/algorithms/calculateNormalsQuads'
 import { intersectLineAndPlane } from 'gl/algorithms/intersectLineAndPlane'
 import { projectLineOntoPlane } from 'gl/algorithms/projectLineOntoPlane'
 
+
 interface PickMesh {
     flat: FlatMesh
     indicesAllPoints: IndexBuffer

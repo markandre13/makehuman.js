@@ -8,7 +8,22 @@ import { ARKitFaceDevice, Backend } from 'net/makehuman_stub'
 import { CaptureDeviceType } from 'net/makehuman'
 
 import { ConnectionState } from 'net/ConnectionState'
-import { ARKitFaceReceiver_impl, FaceRenderer } from './MorphTool'
+import { FaceRenderer } from './FaceRenderer'
+import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
+import { ORB } from 'corba.js'
+
+export class ARKitFaceReceiver_impl extends ARKitFaceReceiver_skel {
+    faceRenderer: FaceRenderer
+    constructor(orb: ORB, faceRenderer: FaceRenderer) {
+        super(orb)
+        this.faceRenderer = faceRenderer
+    }
+    override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        // console.log(`ARKitFaceReceiver_impl::faceLandmarks([${landmarks.length}], [${blendshapes.length}], [${transform.length}], ${timestamp_ms})`)
+        // this.faceRenderer.blendshapeParams = blendshapes // MAKE SETTER WHICH INVALIDATES VIEW
+        this.faceRenderer.faceLandmarks(blendshapes, transform, timestamp_ms)
+    }
+}
 
 export class MorphToolModel {
     renderer?: MorphRenderer
@@ -18,6 +33,7 @@ export class MorphToolModel {
     isTransparentActiveMesh = new BooleanModel(true, { label: "Transparent active mesh" })
     showBothMeshes = new BooleanModel(true, { label: "Show both meshes" })
     showMapping = new BooleanModel(false, { label: "Show mapping" })
+    showAnimation = new BooleanModel(false, { label: "Animate"})
     // mhJawOpen = new NumberModel(0, {
     //     min: 0, max: 1, step: 0.01,
     //     label: "MH Jaw Open (pose)"
