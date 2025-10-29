@@ -32,6 +32,9 @@ interface PickMesh {
     selectionColors: SelectionColorBuffer
 }
 
+const MH_MESH = 0
+const AR_MESH = 1
+
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
     private app: Application
@@ -60,8 +63,8 @@ export class MorphRenderer extends RenderHandler {
     override paint(app: Application, view: RenderView): void {
         const gl = view.gl
         if (this.app.updateManager.updateFromLocalSettingsWithoutGL()) {
-            this.pickMeshes[0].vertices.update(app.humanMesh.vertexRigged)
-            this.pickMeshes[0].flat.update()
+            this.pickMeshes[MH_MESH].vertices.update(app.humanMesh.vertexRigged)
+            this.pickMeshes[MH_MESH].flat.update()
             if (this.model.showMapping.value) {
                 this.calculateDistance(gl)
             }
@@ -85,8 +88,8 @@ export class MorphRenderer extends RenderHandler {
         const alpha = 0.25
 
         const [activeMesh, inactiveMesh] = this.model.isARKitActive.value
-            ? [this.pickMeshes[1], this.pickMeshes[0]]
-            : [this.pickMeshes[0], this.pickMeshes[1]]
+            ? [this.pickMeshes[AR_MESH], this.pickMeshes[MH_MESH]]
+            : [this.pickMeshes[MH_MESH], this.pickMeshes[AR_MESH]]
 
         // draw the active mesh as solid
         if (this.model.isTransparentActiveMesh.value) {
@@ -194,8 +197,8 @@ export class MorphRenderer extends RenderHandler {
             pickColors: new PickColorBuffer(arVertices),
             selectionColors: new SelectionColorBuffer(arVertices)
         }]
-        this.pickMeshes[0].selectionColors.rgb = [1, 0.75, 0]
-        this.pickMeshes[1].selectionColors.rgb = [0, 1, 1]
+        this.pickMeshes[MH_MESH].selectionColors.rgb = [1, 0.75, 0]
+        this.pickMeshes[AR_MESH].selectionColors.rgb = [0, 1, 1]
 
         this.calculateDistance(gl)
     }
@@ -210,10 +213,10 @@ export class MorphRenderer extends RenderHandler {
         const outXYZ: number[] = []
         const outFXYZ: number[] = []
 
-        const normalData = new Float32Array(this.pickMeshes[0].vertices.data.length)
+        const normalData = new Float32Array(this.pickMeshes[MH_MESH].vertices.data.length)
         calculateNormalsQuads(
             normalData,
-            this.pickMeshes[0].vertices.data,
+            this.pickMeshes[MH_MESH].vertices.data,
             this.app.humanMesh.baseMesh.fxyz
         )
         const normals = new VertexBuffer(gl, normalData)
@@ -221,15 +224,15 @@ export class MorphRenderer extends RenderHandler {
         for (const mhFaceIndex of mhFaceIndices) {
             let match
             let arFaceIndex
-            const P = this.pickMeshes[0].vertices.get(mhFaceIndex)
+            const P = this.pickMeshes[MH_MESH].vertices.get(mhFaceIndex)
             const N = normals.get(mhFaceIndex)
             for (let i = 0; i < triangles.length;) {
                 let i0 = triangles[i++]
                 let i1 = triangles[i++]
                 let i2 = triangles[i++]
-                const O = this.pickMeshes[1].vertices.get(i0)
-                const A = this.pickMeshes[1].vertices.get(i1)
-                const B = this.pickMeshes[1].vertices.get(i2)
+                const O = this.pickMeshes[AR_MESH].vertices.get(i0)
+                const A = this.pickMeshes[AR_MESH].vertices.get(i1)
+                const B = this.pickMeshes[AR_MESH].vertices.get(i2)
                 vec3.sub(A, A, O)
                 vec3.sub(B, B, O)
                 const p = projectLineOntoPlane(P, N, O, A, B)
@@ -280,7 +283,7 @@ export class MorphRenderer extends RenderHandler {
         let maxD = 0
         // for all the vertices in MH ... just the face?
         for (const mhFaceIndex of mhFaceIndices) {
-            const P = this.pickMeshes[0].vertices.get(mhFaceIndex)
+            const P = this.pickMeshes[MH_MESH].vertices.get(mhFaceIndex)
             // find a point in ARKit
             let match
             let arFaceIndex
@@ -288,9 +291,9 @@ export class MorphRenderer extends RenderHandler {
                 let i0 = triangles[i++]
                 let i1 = triangles[i++]
                 let i2 = triangles[i++]
-                const O = this.pickMeshes[1].vertices.get(i0)
-                const A = this.pickMeshes[1].vertices.get(i1)
-                const B = this.pickMeshes[1].vertices.get(i2)
+                const O = this.pickMeshes[AR_MESH].vertices.get(i0)
+                const A = this.pickMeshes[AR_MESH].vertices.get(i1)
+                const B = this.pickMeshes[AR_MESH].vertices.get(i2)
                 vec3.sub(A, A, O)
                 vec3.sub(B, B, O)
                 const p = projectPointOntoPlane(P, O, A, B)
@@ -344,14 +347,14 @@ export class MorphRenderer extends RenderHandler {
 
     toggle(index: number) {
         const [activeMesh, inactiveMesh] = this.model.isARKitActive.value
-            ? [this.pickMeshes[1], this.pickMeshes[0]]
-            : [this.pickMeshes[0], this.pickMeshes[1]]
+            ? [this.pickMeshes[AR_MESH], this.pickMeshes[MH_MESH]]
+            : [this.pickMeshes[MH_MESH], this.pickMeshes[AR_MESH]]
         activeMesh.selectionColors.toggle(index)
     }
     get selection() {
         const result = {
-            mh: this.pickMeshes[0].selectionColors.array,
-            extern: this.pickMeshes[1].selectionColors.array,
+            mh: this.pickMeshes[MH_MESH].selectionColors.array,
+            extern: this.pickMeshes[AR_MESH].selectionColors.array,
         }
         return result
     }
@@ -361,11 +364,11 @@ export class MorphRenderer extends RenderHandler {
         }
 
         if (selection === undefined) {
-            this.pickMeshes[0].selectionColors.clear()
-            this.pickMeshes[1].selectionColors.clear()
+            this.pickMeshes[MH_MESH].selectionColors.clear()
+            this.pickMeshes[AR_MESH].selectionColors.clear()
         } else {
-            this.pickMeshes[0].selectionColors.array = selection.mh
-            this.pickMeshes[1].selectionColors.array = selection.extern
+            this.pickMeshes[MH_MESH].selectionColors.array = selection.mh
+            this.pickMeshes[AR_MESH].selectionColors.array = selection.extern
         }
         this.app.glview.invalidate()
     }
@@ -381,7 +384,7 @@ export class MorphRenderer extends RenderHandler {
         const { projectionMatrix, modelViewMatrix } = this.app.glview.prepare()
         view.ctx.background = oldBg
 
-        const mesh = this.model.isARKitActive.value ? this.pickMeshes[1] : this.pickMeshes[0]
+        const mesh = this.model.isARKitActive.value ? this.pickMeshes[AR_MESH] : this.pickMeshes[MH_MESH]
 
         // paint mesh in black
         const shaderMono = view.shaderMono
