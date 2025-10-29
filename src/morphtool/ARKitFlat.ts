@@ -1,10 +1,10 @@
-import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { RenderMesh } from 'render/RenderMesh'
 import { NumberModel } from 'toad.js'
 import { FlatMesh } from './FlatMesh'
 import { Blendshape } from 'mediapipe/blendshapeNames'
 import { MorphTarget } from 'target/MorphTarget'
 import { di } from 'lib/di'
+import { FaceARKitLoader2 } from './FaceARKitLoader2'
 
 export class ARKitFlat extends FlatMesh {
 
@@ -15,15 +15,15 @@ export class ARKitFlat extends FlatMesh {
     // dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
 
     // adjust to morphed MH base mesh
-    scale = new NumberModel(9.4, { min: 9, max: 11, step: 0.1, label: "scale" })
-    dy = new NumberModel(7.08, { min: 0, max: 7.4, step: 0.01, label: "dy" })
-    dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
+    // scale = new NumberModel(9.4, { min: 9, max: 11, step: 0.1, label: "scale" })
+    // dy = new NumberModel(7.08, { min: 0, max: 7.4, step: 0.01, label: "dy" })
+    // dz = new NumberModel(0.93, { min: 0, max: 2, step: 0.01, label: "dz" })
 
     constructor(gl: WebGL2RenderingContext) {
         super()
-        const loader = di.get(FaceARKitLoader).preload()
+        const loader = di.get(FaceARKitLoader2).preload()
 
-        this.facesFlat = loader.neutral!.fxyz
+        this.facesFlat = loader._neutral!.fxyz
         this.vertexOrig = this.vertexFlat = loader.getNeutral().xyz
         const xyz = new Float32Array(this.vertexFlat)
         // apply blendshape
@@ -31,15 +31,15 @@ export class ARKitFlat extends FlatMesh {
         const target = loader.getMorphTarget(Blendshape.jawOpen)
         target?.apply(xyz, 0.5)
 
-        for (let i = 0; i < xyz.length; ++i) {
-            xyz[i] *= this.scale.value
-        }
-        for (let i = 1; i < xyz.length; i += 3) {
-            xyz[i] += this.dy.value
-        }
-        for (let i = 2; i < xyz.length; i += 3) {
-            xyz[i] += this.dz.value
-        }
+        // for (let i = 0; i < xyz.length; ++i) {
+        //     xyz[i] *= this.scale.value
+        // }
+        // for (let i = 1; i < xyz.length; i += 3) {
+        //     xyz[i] += this.dy.value
+        // }
+        // for (let i = 2; i < xyz.length; i += 3) {
+        //     xyz[i] += this.dz.value
+        // }
         this.vertexOrig = this.vertexFlat = xyz
 
         const add = (indexIn: number, indexOut: number) => {
@@ -94,7 +94,7 @@ export class ARKitFlat extends FlatMesh {
     }
 
     getTarget(blendshape: Blendshape) {
-        const arkit = di.get(FaceARKitLoader)
+        const arkit = di.get(FaceARKitLoader2)
         const orig = arkit.getMorphTarget(blendshape)!
         const t = new MorphTarget()
         const indices = new Array(orig.indices.length * 3)
@@ -104,9 +104,9 @@ export class ARKitFlat extends FlatMesh {
         for (const index of orig.indices) {
             const newIndices = this.map.get(index)!
             const v = [
-                orig.dxyz[indexIn++] * this.scale.value,
-                orig.dxyz[indexIn++] * this.scale.value, //+ this.dy.value,
-                orig.dxyz[indexIn++] * this.scale.value //+ this.dz.value
+                orig.dxyz[indexIn++], //* this.scale.value,
+                orig.dxyz[indexIn++], //* this.scale.value, //+ this.dy.value,
+                orig.dxyz[indexIn++] //* this.scale.value //+ this.dz.value
             ]
             for (const x of newIndices) {
                 indices[indexOut++] = x

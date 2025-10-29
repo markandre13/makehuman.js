@@ -3,11 +3,11 @@ import { chaiAlmost } from "../chai/chaiAlmost"
 
 import { ARKitFlat } from "../../src/morphtool/ARKitFlat"
 import { di } from "../../src/lib/di"
-import { FaceARKitLoader } from "../../src/mediapipe/FaceARKitLoader"
 import { mock } from "../mock"
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
 import { Blendshape } from "../../src/mediapipe/blendshapeNames"
 import { MorphTarget } from "../../src/target/MorphTarget"
+import { FaceARKitLoader2 } from "morphtool/FaceARKitLoader2"
 
 use(chaiAlmost())
 
@@ -32,14 +32,14 @@ describe("ARKitFlat", function () {
             1, 2, 3,
             4, 5, 6
         ])
-        const loader: FaceARKitLoader = mock(FaceARKitLoader, {
+        const loader: FaceARKitLoader2 = mock(FaceARKitLoader2, {
             preload: () => loader,
             getNeutral: () => neutral,
             getMorphTarget: (blendshape: Blendshape) => target
         })
-        loader.neutral = neutral
+        loader._neutral = neutral
         di.clear()
-        di.single(FaceARKitLoader, () => loader)
+        di.single(FaceARKitLoader2, () => loader)
     })
     it("contains a mesh with triangles that share no vertices", () => {
         const gl = {} as WebGL2RenderingContext

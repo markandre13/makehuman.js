@@ -13,7 +13,6 @@ import { FlatMesh } from './FlatMesh'
 import { trianglesToEdges } from "gl/algorithms/trianglesToEdges"
 import { quadsToEdges } from "gl/algorithms/quadsToEdges"
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
-import { FaceARKitLoader } from 'mediapipe/FaceARKitLoader'
 import { mat4, vec3 } from 'gl-matrix'
 import { deg2rad } from 'gl/algorithms/deg2rad'
 import { projectPointOntoPlane } from 'gl/algorithms/projectPointOntoPlane'
@@ -21,6 +20,7 @@ import { calculateNormalsTriangles } from 'gl/algorithms/calculateNormalsTriangl
 import { calculateNormalsQuads } from 'gl/algorithms/calculateNormalsQuads'
 import { intersectLineAndPlane } from 'gl/algorithms/intersectLineAndPlane'
 import { projectLineOntoPlane } from 'gl/algorithms/projectLineOntoPlane'
+import { FaceARKitLoader2 } from './FaceARKitLoader2'
 
 
 interface PickMesh {
@@ -175,7 +175,7 @@ export class MorphRenderer extends RenderHandler {
             mhUniqueIndexSet.add(index)
         }
         // TODO: optimize ARKit
-        const arobj = di.get(FaceARKitLoader).neutral!
+        const arobj = di.get(FaceARKitLoader2)._neutral!
 
         const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
 
@@ -204,8 +204,8 @@ export class MorphRenderer extends RenderHandler {
      * for each MH face vertex normal, find nearest ARKit intersection
      */
     calculateDistance(gl: WebGL2RenderingContext) {
-        const loader = di.get(FaceARKitLoader).preload()
-        const triangles = loader.neutral!.fxyz
+        const loader = di.get(FaceARKitLoader2).preload()
+        const triangles = loader._neutral!.fxyz
 
         const outXYZ: number[] = []
         const outFXYZ: number[] = []
@@ -272,8 +272,8 @@ export class MorphRenderer extends RenderHandler {
     calculateDistanceOld(gl: WebGL2RenderingContext) {
 
         let matchCount = 0
-        const loader = di.get(FaceARKitLoader).preload()
-        const triangles = loader.neutral!.fxyz
+        const loader = di.get(FaceARKitLoader2).preload()
+        const triangles = loader._neutral!.fxyz
 
         const outXYZ: number[] = []
         const outFXYZ: number[] = []

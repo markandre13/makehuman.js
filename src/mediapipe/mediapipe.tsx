@@ -4,7 +4,6 @@ import { Application, setRenderer } from "Application"
 import { OptionModel } from "toad.js"
 import { Form } from "toad.js/view/Form"
 import { FaceLandmarkRenderer } from "./FaceLandmarkRenderer"
-import { FaceARKitRenderer } from "./FaceARKitRenderer"
 import { FaceICTKitRenderer } from "./FaceICTKitRenderer"
 import { FormSelect } from "toad.js/view/FormSelect"
 import { RenderHandler } from 'render/RenderHandler'
@@ -27,12 +26,12 @@ let renderEngine: OptionModel<RenderHandler>
 export function MediapipeTab(props: { app: Application }) {
     if (renderEngine === undefined) {
         const lm = new FaceLandmarkRenderer(props.app.frontend)
-        const ar = new FaceARKitRenderer(props.app.frontend.blendshapeModel)
+        // const ar = new FaceARKitRenderer(props.app.frontend.blendshapeModel)
         const ict = new FaceICTKitRenderer(props.app.frontend.blendshapeModel)
         const mh = new RenderHuman(true)
         renderEngine = new OptionModel<RenderHandler>(mh, [
             [mh, "MakeHuman"],
-            [ar, "ARKit Blendshape"],
+            // [ar, "ARKit Blendshape"],
             [ict, "ICTKit Blendshape"],
             [lm, "Mediapipe Landmarks"],
         ], {label: "Render Engine"})

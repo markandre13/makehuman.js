@@ -32,7 +32,7 @@ import { TextModel } from "toad.js"
 import { RenderView } from "render/RenderView"
 import { mat4 } from "gl-matrix"
 import { di } from "lib/di"
-import { FaceARKitLoader } from "mediapipe/FaceARKitLoader"
+import { FaceARKitLoader2 } from "morphtool/FaceARKitLoader2"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // this smoothes my crappy API design for now
@@ -87,7 +87,7 @@ export class Application {
         this.headCamera = this.headCamera.bind(this)
 
         di.single(Application, () => this)
-        di.single(FaceARKitLoader, () => new FaceARKitLoader())
+        di.single(FaceARKitLoader2, () => new FaceARKitLoader2())
         // TODO: replace most properties with di instances, one after another
 
         console.log("loading assets...")

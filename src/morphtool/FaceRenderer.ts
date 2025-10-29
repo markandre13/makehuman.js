@@ -23,10 +23,7 @@ export class FaceRenderer extends RenderHandler {
 
     constructor() {
         super()
-        // this.blendshapeSet = di.get(FaceARKitLoader2).preload()
-        this.blendshapeSet = new FaceARKitLoader2()
-        this.blendshapeSet.preload()
-
+        this.blendshapeSet = di.get(FaceARKitLoader2).preload()
         this.blendshapeParams = new Float32Array(Blendshape.SIZE)
     }
     faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
