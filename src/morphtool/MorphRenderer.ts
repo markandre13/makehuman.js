@@ -138,11 +138,43 @@ export class MorphRenderer extends RenderHandler {
         if (this.needToCalculateMHBlendshapes && this.model.showAnimation.value) {
             console.log("DEBUG 2")
             const facemh = new FaceMH()
-            facemh._fxyz = app.humanMesh.baseMesh.fxyz
+            const baseMesh = app.humanMesh.baseMesh
+
+            // convert skin quads to index of triangles
+            let fxyz = baseMesh.fxyz
+            const WORD_LENGTH = 2
+            let offset = baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+            let length = baseMesh.groups[BaseMeshGroup.SKIN].length
+
+            const x = new Set(mhFaceIndices)
+
+            const f2 = new Array<number>(length / 4 * 6)
+            for (let i = offset, fo = 0; i < length + offset;) {
+                let i0 = fxyz[i++]
+                let i1 = fxyz[i++]
+                let i2 = fxyz[i++]
+                let i3 = fxyz[i++]
+
+                // limit to faces used in morph
+                if (!x.has(i0) || !x.has(i1) || !x.has(i2) || !x.has(i3)) {
+                    continue
+                }
+
+                f2[fo++] = i0
+                f2[fo++] = i1
+                f2[fo++] = i2
+                f2[fo++] = i0
+                f2[fo++] = i2
+                f2[fo++] = i3
+            }
+            fxyz = f2
+
+            // BaseMeshGroup.SKIN
             facemh._xyz = app.humanMesh.baseMesh.xyz
+            facemh._fxyz = fxyz
 
             const arkit = di.get(FaceARKitLoader2).preload()
-            for (let blendshape = 1; blendshape < Blendshape.SIZE-1; ++blendshape) {
+            for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
 
                 const xyz0 = arkit.xyz(Blendshape.neutral)
                 const xyz1 = arkit.xyz(blendshape)
