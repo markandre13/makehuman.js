@@ -28,6 +28,11 @@ export class FaceRenderer extends RenderHandler {
         this.blendshapeMesh = blendshapeMesh
         this.blendshapeParams = new Float32Array(Blendshape.SIZE)
     }
+
+    setBlendshapeMesh(blendshapeMesh: BlendshapeMesh) {
+        this.blendshapeMesh = blendshapeMesh
+    }
+
     /**
      * set blendshape parameters
      * 

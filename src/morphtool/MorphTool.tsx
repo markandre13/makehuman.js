@@ -40,7 +40,7 @@ import { di } from 'lib/di'
 export function MorphTool(props: { app: Application }) {
     const faceRenderer = new FaceRenderer(di.get(FaceARKitLoader2).preload())
     const model = new MorphToolModel()
-    const renderer = new MorphRenderer(props.app, model)
+    const renderer = new MorphRenderer(props.app, model, faceRenderer)
     model.renderer = renderer
     model.faceRenderer = faceRenderer
 
@@ -51,12 +51,13 @@ export function MorphTool(props: { app: Application }) {
         props.app.glview.invalidate()
     })
     model.showAnimation.signal.add(() => {
-        if (model.showAnimation.value) {
-            props.app.setRenderer(faceRenderer)
-            model.showMapping.value = false
-        } else {
-            props.app.setRenderer(renderer)
-        }
+        // MorphRenderer does some multiplexing...
+        // if (model.showAnimation.value) {
+        //     props.app.setRenderer(faceRenderer)
+        //     model.showMapping.value = false
+        // } else {
+        //     props.app.setRenderer(renderer)
+        // }
         props.app.glview.invalidate()
     })
 

@@ -15,6 +15,24 @@ export class MorphTarget {
      */
     dxyz!: Float32Array
 
+    constructor()
+    constructor(indices: number[] | Uint16Array, dxyz: number[] | Float32Array)
+    constructor(indices?: number[] | Uint16Array, dxyz?: number[] | Float32Array) {
+        if (indices !== undefined) {
+            if (!(indices instanceof Uint16Array)) {
+                indices = new Uint16Array(indices)
+            }
+            this.indices = indices
+        }
+
+        if (dxyz !== undefined) {
+            if (!(dxyz instanceof Float32Array)) {
+                dxyz = new Float32Array(dxyz)
+            }
+            this.dxyz = dxyz
+        }
+    }
+
     /**
      * load morph target from MakeHuman *.target file
      */

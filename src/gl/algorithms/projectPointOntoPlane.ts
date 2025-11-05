@@ -1,5 +1,6 @@
 import { ReadonlyVec3, vec3 } from "gl-matrix"
 import { resolveParamsForPointInPlane } from "./resolveParamsForPointInPlane"
+import { Projection } from "./projectLineOntoPlane"
 
 /**
  * Project point P onto plane T := O + a * A + b * B and return {a, b} or
@@ -7,7 +8,7 @@ import { resolveParamsForPointInPlane } from "./resolveParamsForPointInPlane"
  * 
  * Originally intended to map point onto triangle, which is the case when a ≥ 0 ∧ b ≥ 0 ∧ a+b ≤ 1.
  */
-export function projectPointOntoPlane(P: ReadonlyVec3, O: ReadonlyVec3, A: ReadonlyVec3, B: ReadonlyVec3) {
+export function projectPointOntoPlane(P: ReadonlyVec3, O: ReadonlyVec3, A: ReadonlyVec3, B: ReadonlyVec3): Projection | undefined {
     // https://stackoverflow.com/questions/55189333/how-to-get-distance-from-point-to-plane-in-3d
     // n := cross( p1-p0 , p2-p0 )
     const n = vec3.cross(vec3.create(), A, B)
@@ -22,5 +23,5 @@ export function projectPointOntoPlane(P: ReadonlyVec3, O: ReadonlyVec3, A: Reado
     if (!param) {
         return param
     }
-    return { ...param, d, R }
+    return { ...param, P: R, d }
 }

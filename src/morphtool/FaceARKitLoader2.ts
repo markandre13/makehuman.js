@@ -11,6 +11,7 @@ export interface BlendshapeMesh {
 
 export class FaceARKitLoader2 implements BlendshapeMesh {
     _targets = new Array<MorphTarget>(Blendshape.SIZE);
+    _xyz = new Array<Float32Array>(Blendshape.SIZE);
     _neutral?: WavefrontObj
 
     /**
@@ -25,9 +26,19 @@ export class FaceARKitLoader2 implements BlendshapeMesh {
 
     get fxyz(): number[] { return this.getNeutral().fxyz }
 
+    xyz(blendshape: Blendshape): Float32Array {
+        let xyz = this._xyz[blendshape]
+        if (xyz !== undefined) {
+            return xyz
+        }
+        this.getMorphTarget(blendshape)
+        return this._xyz[blendshape]
+    }
+
     getNeutral(): WavefrontObj {
         if (this._neutral === undefined) {
             this._neutral = new WavefrontObj("data/blendshapes/arkit/Neutral.obj")
+            this._xyz[Blendshape.neutral] = this._neutral.xyz
             this.transformToMatchMakehumanFace(this._neutral.xyz)
         }
         return this._neutral
@@ -54,6 +65,7 @@ export class FaceARKitLoader2 implements BlendshapeMesh {
         if (blendshape === Blendshape.neutral) {
             return undefined
         }
+
         let target = this._targets[blendshape]
         if (target !== undefined) {
             return target
@@ -66,6 +78,7 @@ export class FaceARKitLoader2 implements BlendshapeMesh {
         this.transformToMatchMakehumanFace(dst.xyz)
         target.diff(this._neutral!.xyz, dst.xyz)
         this._targets[blendshape] = target
+        this._xyz[blendshape] = dst.xyz
         return target
     }
 
