@@ -30,7 +30,11 @@ export class FaceRenderer extends RenderHandler {
     }
 
     setBlendshapeMesh(blendshapeMesh: BlendshapeMesh) {
+        if (this.blendshapeMesh === blendshapeMesh) {
+            return
+        }
         this.blendshapeMesh = blendshapeMesh
+        this.vertices = undefined as any // new mesh, new data structures
     }
 
     /**

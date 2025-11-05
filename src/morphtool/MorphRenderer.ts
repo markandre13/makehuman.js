@@ -86,6 +86,7 @@ export class MorphRenderer extends RenderHandler {
 
     private mh2arProjection = new Map<number, ARKitProjection>()
     faceRenderer: FaceRenderer
+    facemh?: BlendshapeMesh
 
     pickMeshes!: PickMesh[]
 
@@ -135,9 +136,13 @@ export class MorphRenderer extends RenderHandler {
             this.calculateDistance(gl)
             this.needToCalculateDistance = false
         }
-        if (this.needToCalculateMHBlendshapes && this.model.showAnimation.value) {
+        if (this.needToCalculateMHBlendshapes && 
+            this.model.showAnimation.value &&
+            !this.model.isARKitActive.value
+        ) {
             console.log("DEBUG 2")
             const facemh = new FaceMH()
+            this.facemh = facemh
             const baseMesh = app.humanMesh.baseMesh
 
             // convert skin quads to index of triangles
@@ -156,6 +161,7 @@ export class MorphRenderer extends RenderHandler {
                 let i3 = fxyz[i++]
 
                 // limit to faces used in morph
+                // TODO: make it configurable
                 if (!x.has(i0) || !x.has(i1) || !x.has(i2) || !x.has(i3)) {
                     continue
                 }
@@ -202,7 +208,20 @@ export class MorphRenderer extends RenderHandler {
             this.needToCalculateMHBlendshapes = false
         }
 
+        // TODO: use fully rigged MH body: morph->blendshapes->rig
+        //   for this: 
+        //     [ ] add blendshapes into UpdateManager
+        //     [ ] make UpdateManager more modular
+        //     [ ] move jaw via bone rig
+        //     [ ] move eyes via bone rig
+
         if (this.model.showAnimation.value) {
+            if (this.model.isARKitActive.value) {
+                this.faceRenderer.setBlendshapeMesh(di.get(FaceARKitLoader2))
+            } else {
+                this.faceRenderer.setBlendshapeMesh(this.facemh!)
+            }
+
             // console.log(`MorphRenderer::paint(): this.faceRenderer.paint(app, view)`)
             // render facemh
             this.faceRenderer.paint(app, view)
