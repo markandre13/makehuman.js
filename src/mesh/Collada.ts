@@ -483,17 +483,29 @@ export class Geometry {
         dstIndices.fxyz.push(xyzIdx)
         dstIndices.fuv.push(uvIdx)
     }
+    /**
+     * starts a new mesh
+     */
     addMesh() {
         this.indices.push({
             fxyz: [],
             fuv: []
         })
     }
-    addQuad(xyz: Float32Array, uv: Float32Array, fxyz: number[], fuv: number[], start: number) {
-        this.addPoint(xyz, uv, fxyz[start], fuv[start])
-        this.addPoint(xyz, uv, fxyz[start + 1], fuv[start + 1])
-        this.addPoint(xyz, uv, fxyz[start + 2], fuv[start + 2])
-        this.addPoint(xyz, uv, fxyz[start + 3], fuv[start + 3])
+    /**
+     * add a quad for the current mesh
+     * 
+     * @param xyz point
+     * @param uv 
+     * @param fxyz indices of quads within xyz
+     * @param fuv 
+     * @param index 
+     */
+    addQuad(xyz: Float32Array, uv: Float32Array, fxyz: number[], fuv: number[], index: number) {
+        this.addPoint(xyz, uv, fxyz[index], fuv[index])
+        this.addPoint(xyz, uv, fxyz[index + 1], fuv[index + 1])
+        this.addPoint(xyz, uv, fxyz[index + 2], fuv[index + 2])
+        this.addPoint(xyz, uv, fxyz[index + 3], fuv[index + 3])
     }
     getQuadXYZ(mesh: number, quad: number) {
         const p0 = this.indices[mesh].fxyz[quad * 4] * 3
