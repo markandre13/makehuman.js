@@ -3,10 +3,11 @@ import { Button, Checkbox, BooleanModel } from "toad.js"
 import { TAB } from "HistoryManager"
 import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { HumanMesh } from "./mesh/HumanMesh"
-import { exportCollada } from "mesh/Collada"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
+import { exportUSDC } from "mesh/usdc"
+import { hexdump } from "lib/hexdump"
 
 const useBlenderProfile = new BooleanModel(true)
 const limitPrecision = new BooleanModel(false)
@@ -19,7 +20,7 @@ export default function (props: { app: Application }) {
     return (
         <Tab label="File" value={TAB.EXPORT} visibilityChange={setRenderer(props.app, new RenderHuman())}>
             <div style={{ padding: "10px" }}>
-                <h1>Morph</h1>
+                <h3>Morph</h3>
 
                 <p>
                     <u>NOTE</u>: Only MakeHuman 1.1 and 1.2 files are supported.
@@ -28,33 +29,13 @@ export default function (props: { app: Application }) {
                 <Button action={() => loadMHM(humanMesh)}>Load MHM</Button>
                 <Button action={() => saveMHM(humanMesh)}>Save MHM</Button>
 
-                <h1>Pose</h1>
+                <h3>Pose</h3>
                 <Button action={() => loadBVH(humanMesh)}>Load BVH</Button>
                 <Button action={() => saveBVH(humanMesh)}>Save BVH</Button>
 
-                <h1>Collada</h1>
+                <h3>Export USDC</h3>
 
-                <p>
-                    <Checkbox
-                        model={useBlenderProfile}
-                        title="Export additional Blender specific information (for material, shaders, bones, etc.)."
-                    />{" "}
-                    Use Blender Profile
-                </p>
-                <p>
-                    <Checkbox model={limitPrecision} title="Reduce the precision of the exported data to 6 digits." />{" "}
-                    Limit Precision
-                </p>
-                <p>
-                    <u>NOTE</u>: When importing into Blender, only the first material may look correct in the UV editor
-                    while rendering will still be okay. A workaround is to separate the mesh by material after import.
-                    (Edit Mode, P).
-                </p>
-                <p>
-                    <u>NOTE</u>: Exporting the pose is not implemented yet. There is just some hardcoded animation of
-                    the jaw.
-                </p>
-                <Button action={() => downloadCollada(humanMesh)}>Export Collada</Button>
+                <Button action={() => downloadUSDC(humanMesh)}>Export as USDC</Button>
             </div>
         </Tab>
     )
@@ -78,9 +59,31 @@ function makeUploadElement() {
 const download = makeDownloadElement()
 const upload = makeUploadElement()
 
-function downloadCollada(humanMesh: HumanMesh) {
-    download.download = "makehuman.dae"
-    download.href = URL.createObjectURL(new Blob([exportCollada(humanMesh)], { type: "text/plain" }))
+function downloadUSDC(humanMesh: HumanMesh) {
+    let data: ArrayBuffer
+    console.log(`----- 0`)
+    try {
+    data = exportUSDC(humanMesh)
+    } catch (e) {
+        console.log(e)
+        return
+    }
+
+    console.log(`----- 1`)
+
+    if (data.resizable) {
+        console.log(`----- 2`)
+        const nonresizeableArrayBuffer = new ArrayBuffer(data.byteLength)
+        new Uint8Array(nonresizeableArrayBuffer, 0, data.byteLength)
+            .set(new Uint8Array(data, 0, data.byteLength))
+        console.log(`----- 6`)
+        data = nonresizeableArrayBuffer
+    }
+
+    const blob = new Blob([data], { type: "application/stream" })
+    console.log(`----- 7`)
+    download.download = "makehuman.usdc"
+    download.href = URL.createObjectURL(blob)
     download.dispatchEvent(new MouseEvent("click"))
 }
 
