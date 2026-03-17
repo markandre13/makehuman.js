@@ -6,8 +6,8 @@ import { Xform } from "@markandre13/usd.js/nodes/geometry/Xform"
 import { HumanMesh } from "./HumanMesh"
 import { BaseMeshGroup } from "./BaseMeshGroup"
 
-import { Geometry, Material, prepareMesh } from "./Collada"
-import { ProxyType } from "../proxy/Proxy";
+import { Material } from "./Collada"
+import { ProxyType } from "../proxy/Proxy"
 
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
@@ -23,107 +23,46 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             start: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             length: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length,
             name: "skin", r: 1, g: 0.5, b: 0.5
-        }, {
-            xyz: humanMesh.vertexMorphed,
-            fxyz: humanMesh.baseMesh.fxyz,
-            uv: humanMesh.baseMesh.uv,
-            fuv: humanMesh.baseMesh.fuv,
-            vertexWeights: humanMesh.skeleton.vertexWeights!,
-            start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
-            length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
-            name: "eyeL", r: 0.0, g: 1.0, b: 0.5
-        }, {
-            xyz: humanMesh.vertexMorphed,
-            fxyz: humanMesh.baseMesh.fxyz,
-            uv: humanMesh.baseMesh.uv,
-            fuv: humanMesh.baseMesh.fuv,
-            vertexWeights: humanMesh.skeleton.vertexWeights!,
-            start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
-            length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
-            name: "eyeR", r: 1.0, g: 0.0, b: 0.0
-        }, {
-            xyz: proxy.getCoords(humanMesh.vertexMorphed),
-            fxyz: proxy.getMesh().fxyz,
-            uv: proxy.getMesh().uv,
-            fuv: proxy.getMesh().fuv,
-            vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
-            start: 0,
-            length: proxy.getMesh().fxyz.length,
-            name: "teeth", r: 1.0, g: 1.0, b: 1.0
-        }, {
-            xyz: humanMesh.vertexMorphed,
-            fxyz: humanMesh.baseMesh.fxyz,
-            uv: humanMesh.baseMesh.uv,
-            fuv: humanMesh.baseMesh.fuv,
-            vertexWeights: humanMesh.skeleton.vertexWeights!,
-            start: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
-            length: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
-            name: "tounge", r: 1, g: 0.0, b: 0.0
+        // }, {
+        //     xyz: humanMesh.vertexMorphed,
+        //     fxyz: humanMesh.baseMesh.fxyz,
+        //     uv: humanMesh.baseMesh.uv,
+        //     fuv: humanMesh.baseMesh.fuv,
+        //     vertexWeights: humanMesh.skeleton.vertexWeights!,
+        //     start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
+        //     length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
+        //     name: "eyeL", r: 0.0, g: 1.0, b: 0.5
+        // }, {
+        //     xyz: humanMesh.vertexMorphed,
+        //     fxyz: humanMesh.baseMesh.fxyz,
+        //     uv: humanMesh.baseMesh.uv,
+        //     fuv: humanMesh.baseMesh.fuv,
+        //     vertexWeights: humanMesh.skeleton.vertexWeights!,
+        //     start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
+        //     length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
+        //     name: "eyeR", r: 1.0, g: 0.0, b: 0.0
+        // }, {
+        //     xyz: proxy.getCoords(humanMesh.vertexMorphed),
+        //     fxyz: proxy.getMesh().fxyz,
+        //     uv: proxy.getMesh().uv,
+        //     fuv: proxy.getMesh().fuv,
+        //     vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
+        //     start: 0,
+        //     length: proxy.getMesh().fxyz.length,
+        //     name: "teeth", r: 1.0, g: 1.0, b: 1.0
+        // }, {
+        //     xyz: humanMesh.vertexMorphed,
+        //     fxyz: humanMesh.baseMesh.fxyz,
+        //     uv: humanMesh.baseMesh.uv,
+        //     fuv: humanMesh.baseMesh.fuv,
+        //     vertexWeights: humanMesh.skeleton.vertexWeights!,
+        //     start: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
+        //     length: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
+        //     name: "tounge", r: 1, g: 0.0, b: 0.0
         }
     ]
-    class UsdMeshPreparer {
-        // map to find already stored points
-        private pt2idx = new Map<string, number>()
-        // points
-        xyz: number[] = []
-        // quad indices into xyz
-        fxyz: number[] = []
-        // group indices into fxyz
-        groups: number[][] = []
-
-        constructor(materials: Material[]) {
-            for (let m of materials) {
-                this.addMaterial(m)
-            }
-        }
-        addMaterial(m: Material) {
-            const group: number[] = []
-            this.groups.push(group)
-            const end = m.start + m.length
-            for (let i = m.start; i < end; i += 4) {
-                group.push(this.addQuad(m, i))
-            }
-        }
-        addQuad(m: Material, index: number) {
-            const idx = this.fxyz.length / 4
-            this.fxyz.push(this.addPoint(m, 0))
-            this.fxyz.push(this.addPoint(m, 1))
-            this.fxyz.push(this.addPoint(m, 2))
-            this.fxyz.push(this.addPoint(m, 3))
-            return idx
-        }
-        addPoint(m: Material, index: number): number {
-            let i = index * 4
-            const x = m.xyz[i]
-            const y = m.xyz[i + 1]
-            const z = m.xyz[i + 2]
-            const key = `${x},${y},${z}`
-            let ptIndex = this.pt2idx.get(key)
-            if (ptIndex === undefined) {
-                ptIndex = this.xyz.length / 3
-                this.pt2idx.set(key, ptIndex)
-                this.xyz.push(x, y, z)
-            }
-            return ptIndex
-        }
-
-    }
     const preparer = new UsdMeshPreparer(materials)
-
-
-
-    // merge all the materials into geometry
-    const geometry = new Geometry()
-    for (let m of materials) {
-        prepareMesh(
-            m.xyz,
-            m.uv,
-            m.fxyz,
-            m.fuv,
-            m.start,
-            m.length,
-            geometry)
-    }
+    // preparer.addMaterial(materials[0])
 
     const crate = new Crate()
     const pseudoRoot = new PseudoRoot(crate)
@@ -161,17 +100,97 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     mesh.blenderDataName = "Mesh"
     mesh.extent = [-1, -1, -1, 1, 1, 1]
 
-    // mesh.faceVertexCounts = Array(humanMesh.baseMesh.fxyz.length / 4).fill(4)
-    mesh.faceVertexCounts = Array(geometry.indices[0].fxyz.length / 4).fill(4)
-    // mesh.faceVertexIndices = humanMesh.baseMesh.fxyz
-    mesh.faceVertexIndices = geometry.indices[0].fxyz
-    // mesh.normals 
-    // mesh.points = humanMesh.vertexMorphed
-    mesh.points = geometry.xyz
-    // mesh.texCoords
+    mesh.faceVertexCounts = Array(preparer.fxyz.length / 4).fill(4)
+    mesh.faceVertexIndices = preparer.fxyz
+    mesh.points = preparer.xyz
     mesh.subdivisionScheme = "none"
 
     crate.serialize(pseudoRoot)
     return crate.writer.buffer
 }
 
+export class UsdMeshPreparer {
+    // map to find duplicate points: key is hex of x,y,z concatenated, value is index in this.xyz
+    private pt2idx = new Map<string, number>()
+    // points
+    xyz: number[] = []
+    // quad indices into xyz
+    fxyz: number[] = []
+    // group indices into fxyz, one per material
+    groups: number[][] = []
+
+    constructor(materials: Material[]) {
+        for (let m of materials) {
+            this.addMaterial(m)
+        }
+    }
+    addMaterial(m: Material) {
+        // console.log(`addMaterial(${m.name})`)
+        const group: number[] = []
+        this.groups.push(group)
+        const end = m.start + m.length
+        for (let i = m.start; i < end; i += 4) {
+            group.push(this.addQuad(m, i))
+        }
+    }
+    /**
+     * 
+     * @param m 
+     * @param index index of quad as index in this.fxyz
+     * @returns 
+     */
+    addQuad(m: Material, index: number) {
+        // console.log(`addQuad(${m.name}, ${index})`)
+        const idx = this.fxyz.length / 4
+        this.fxyz.push(this.addPoint(m, m.fxyz[index]))
+        this.fxyz.push(this.addPoint(m, m.fxyz[index+1]))
+        this.fxyz.push(this.addPoint(m, m.fxyz[index+2]))
+        this.fxyz.push(this.addPoint(m, m.fxyz[index+3]))
+        return idx
+    }
+    /**
+     * 
+     * @param m 
+     * @param index index as stored in m.fxyz
+     * @returns 
+     */
+    addPoint(m: Material, index: number): number {
+        let i = index * 3
+        const x = m.xyz[i]
+        const y = m.xyz[i + 1]
+        const z = m.xyz[i + 2]
+        const key = `${float32ToHex(x)}${float32ToHex(y)}${float32ToHex(z)}`
+        let ptIndex = this.pt2idx.get(key)
+        if (ptIndex === undefined) {
+            ptIndex = this.xyz.length / 3
+            this.pt2idx.set(key, ptIndex)
+            this.xyz.push(x, y, z)
+        }
+        // console.log(`addPoint(${m.name}, ${index}): [${i}](${x}, ${y}, ${z}) -> ${ptIndex}`)
+        return ptIndex
+    }
+}
+
+const datad2h = new Uint8Array(8)
+const viewd2h = new DataView(datad2h.buffer)
+
+export function float64ToHex(value: number): string {
+    viewd2h.setFloat64(0, value, true)
+    let hex = ""
+    for (let c of datad2h) {
+        hex += c.toString(16).padStart(2, '0')
+    }
+    return hex
+}
+
+const dataf2h = new Uint8Array(4)
+const viewf2h = new DataView(dataf2h.buffer)
+
+export function float32ToHex(value: number): string {
+    viewf2h.setFloat32(0, value, true)
+    let hex = ""
+    for (let c of dataf2h) {
+        hex += c.toString(16).padStart(2, '0')
+    }
+    return hex
+}

@@ -12,10 +12,10 @@ import { matrix2euler } from 'gl/algorithms/euler'
 // https://en.wikipedia.org/wiki/COLLADA
 
 export interface Material {
-    xyz: Float32Array
-    fxyz: number[]
-    uv: Float32Array
-    fuv: number[]
+    xyz: ArrayLike<number>
+    fxyz: ArrayLike<number>
+    uv: ArrayLike<number>
+    fuv: ArrayLike<number>
     vertexWeights: VertexBoneWeights
     start: number
     length: number
@@ -444,13 +444,13 @@ export class Geometry {
     uv: number[] = []
 
     // geometry merges vertices from multiple meshes
-    private indexMap = new Map<Float32Array, PerSourceMappings>()
+    private indexMap = new Map<ArrayLike<number>, PerSourceMappings>()
 
-    getIndex(vertex: Float32Array, index: number) {
+    getIndex(vertex: ArrayLike<number>, index: number) {
         return this.indexMap.get(vertex)?.fxyz.get(index)
     }
 
-    protected addPoint(xyz: Float32Array, uv: Float32Array, fxyz: number, fuv: number) {
+    protected addPoint(xyz: ArrayLike<number>, uv: ArrayLike<number>, fxyz: number, fuv: number) {
         let indexMap = this.indexMap.get(xyz)
         if (indexMap === undefined) {
             indexMap = {
@@ -501,7 +501,7 @@ export class Geometry {
      * @param fuv 
      * @param index 
      */
-    addQuad(xyz: Float32Array, uv: Float32Array, fxyz: number[], fuv: number[], index: number) {
+    addQuad(xyz: ArrayLike<number>, uv: ArrayLike<number>, fxyz: ArrayLike<number>, fuv: ArrayLike<number>, index: number) {
         this.addPoint(xyz, uv, fxyz[index], fuv[index])
         this.addPoint(xyz, uv, fxyz[index + 1], fuv[index + 1])
         this.addPoint(xyz, uv, fxyz[index + 2], fuv[index + 2])
@@ -540,10 +540,10 @@ export class Geometry {
 // }
 
 export function prepareMesh(
-    xyz: Float32Array,
-    uv: Float32Array,
-    fxyz: number[],
-    fuv: number[],
+    xyz: ArrayLike<number>,
+    uv: ArrayLike<number>,
+    fxyz: ArrayLike<number>,
+    fuv: ArrayLike<number>,
     start: number,
     length: number,
     geometry: Geometry) {
@@ -590,7 +590,7 @@ export function prepareControllerInit(geometry: Geometry) {
 }
 
 export function prepareControllerAddBoneWeights(
-    vertex: Float32Array,
+    vertex: ArrayLike<number>,
     vertexWeights: VertexBoneWeights,
     boneMap: Map<string, Bone>,
     geometry: Geometry,
