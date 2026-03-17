@@ -100,43 +100,12 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     //
     const skelRoot = new SkelRoot(root, "Human")
     const skeleton = new Skeleton(skelRoot, "Skeleton")
-    // skeleton.bindTransforms = [
-    //   1, 0, 0, 0,
-    //   0, 0, 1, 0,
-    //   0,-1, 0, 0,
-    //   0, 0, 0, 1,
-    // 
-    //   1, 0, 0, 0,
-    //   0, 0, 1, 0,
-    //   0,-1, 0, 0,
-    //   0, 0, 1, 1]
-    // skeleton.joints = ["Bone", "Bone/Bone_001"]
-    // skeleton.blenderBoneLength = [1, 1]
-    // skeleton.restTransforms = [
-    //   1, 0, 0, 0,
-    //   0, 0, 1, 0,
-    //   0, -1, 0, 0,
-    //   0, 0, 0, 1,
-    //
-    //   1, 0, 0, 0,
-    //   0, 1, 0, 0,
-    //   0, 0, 1, 0,
-    //   0, 1, 0, 1]
 
-    // NEXT STEP: output joints!j
     const joints: string[] = []
     const bindTransforms: number[] = []
     const restTransforms: number[] = []
-    // 10 okay
-    // 20 okay
-    // 25 okay
-    // 26 okay
-    // 27 fail
-    // 28 fail
-    // 30 fail
-    // 35 fail
-    // 75 fail
-    // 162 fail
+    const blenderBoneLength: number[] = []
+
     for (const bone of humanMesh.skeleton.boneslist!) {
         let name = bone.name
         for (let parent = bone.parent; parent != undefined; parent = parent.parent) {
@@ -147,12 +116,13 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         joints.push(name)
         bindTransforms.push(...bone.matPoseGlobal!)
         restTransforms.push(...bone.matRestRelative!)
+        blenderBoneLength.push(bone.length)
     }
     // console.log(`joints = %o`, joints)
     skeleton.joints = joints
     skeleton.bindTransforms = bindTransforms
     skeleton.restTransforms = restTransforms
-
+    skeleton.blenderBoneLength = blenderBoneLength
 
     //
     // body/skin etc.
