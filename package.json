@@ -29,7 +29,7 @@
     "update": "npx npm-check-updates -u && npm install"
   },
   "dependencies": {
-    "@markandre13/usd.js": "^0.0.4",
+    "@markandre13/usd.js": "^0.0.5",
     "corba.js": "^0.1.20",
     "fflate": "^0.8.2",
     "gl-matrix": "^3.4.4",

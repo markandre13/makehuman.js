@@ -1,8 +1,7 @@
 import { expect, use } from "chai"
-import { chaiAlmost } from "./chai/chaiAlmost"
-import { float32ToHex, float64ToHex, UsdMeshPreparer } from "../src/mesh/usdc"
-import { Material } from "mesh/Collada"
-import { groups } from "./target/data"
+import { chaiAlmost } from "../chai/chaiAlmost"
+import { float32ToHex, float64ToHex, UsdMeshPreparer } from "../../src/mesh/usdc"
+import { Material } from "../../src/mesh/Collada"
 use(chaiAlmost(0.01))
 
 describe("float to hex", () => {

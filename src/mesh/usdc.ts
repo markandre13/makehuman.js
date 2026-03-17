@@ -2,7 +2,8 @@ import { Crate } from "@markandre13/usd.js/crate/Crate"
 import { PseudoRoot } from "@markandre13/usd.js/nodes/usd/PseudoRoot"
 import { Mesh } from "@markandre13/usd.js/nodes/geometry/Mesh"
 import { Xform } from "@markandre13/usd.js/nodes/geometry/Xform"
-
+import { SkelRoot } from "@markandre13/usd.js/nodes/skeleton/SkelRoot"
+import { Skeleton } from "@markandre13/usd.js/nodes/skeleton/Skeleton"
 import { HumanMesh } from "./HumanMesh"
 import { BaseMeshGroup } from "./BaseMeshGroup"
 
@@ -23,46 +24,44 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             start: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             length: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length,
             name: "skin", r: 1, g: 0.5, b: 0.5
-        // }, {
-        //     xyz: humanMesh.vertexMorphed,
-        //     fxyz: humanMesh.baseMesh.fxyz,
-        //     uv: humanMesh.baseMesh.uv,
-        //     fuv: humanMesh.baseMesh.fuv,
-        //     vertexWeights: humanMesh.skeleton.vertexWeights!,
-        //     start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
-        //     length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
-        //     name: "eyeL", r: 0.0, g: 1.0, b: 0.5
-        // }, {
-        //     xyz: humanMesh.vertexMorphed,
-        //     fxyz: humanMesh.baseMesh.fxyz,
-        //     uv: humanMesh.baseMesh.uv,
-        //     fuv: humanMesh.baseMesh.fuv,
-        //     vertexWeights: humanMesh.skeleton.vertexWeights!,
-        //     start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
-        //     length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
-        //     name: "eyeR", r: 1.0, g: 0.0, b: 0.0
-        // }, {
-        //     xyz: proxy.getCoords(humanMesh.vertexMorphed),
-        //     fxyz: proxy.getMesh().fxyz,
-        //     uv: proxy.getMesh().uv,
-        //     fuv: proxy.getMesh().fuv,
-        //     vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
-        //     start: 0,
-        //     length: proxy.getMesh().fxyz.length,
-        //     name: "teeth", r: 1.0, g: 1.0, b: 1.0
-        // }, {
-        //     xyz: humanMesh.vertexMorphed,
-        //     fxyz: humanMesh.baseMesh.fxyz,
-        //     uv: humanMesh.baseMesh.uv,
-        //     fuv: humanMesh.baseMesh.fuv,
-        //     vertexWeights: humanMesh.skeleton.vertexWeights!,
-        //     start: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
-        //     length: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
-        //     name: "tounge", r: 1, g: 0.0, b: 0.0
+            // }, {
+            //     xyz: humanMesh.vertexMorphed,
+            //     fxyz: humanMesh.baseMesh.fxyz,
+            //     uv: humanMesh.baseMesh.uv,
+            //     fuv: humanMesh.baseMesh.fuv,
+            //     vertexWeights: humanMesh.skeleton.vertexWeights!,
+            //     start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
+            //     length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
+            //     name: "eyeL", r: 0.0, g: 1.0, b: 0.5
+            // }, {
+            //     xyz: humanMesh.vertexMorphed,
+            //     fxyz: humanMesh.baseMesh.fxyz,
+            //     uv: humanMesh.baseMesh.uv,
+            //     fuv: humanMesh.baseMesh.fuv,
+            //     vertexWeights: humanMesh.skeleton.vertexWeights!,
+            //     start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
+            //     length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
+            //     name: "eyeR", r: 1.0, g: 0.0, b: 0.0
+            // }, {
+            //     xyz: proxy.getCoords(humanMesh.vertexMorphed),
+            //     fxyz: proxy.getMesh().fxyz,
+            //     uv: proxy.getMesh().uv,
+            //     fuv: proxy.getMesh().fuv,
+            //     vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
+            //     start: 0,
+            //     length: proxy.getMesh().fxyz.length,
+            //     name: "teeth", r: 1.0, g: 1.0, b: 1.0
+            // }, {
+            //     xyz: humanMesh.vertexMorphed,
+            //     fxyz: humanMesh.baseMesh.fxyz,
+            //     uv: humanMesh.baseMesh.uv,
+            //     fuv: humanMesh.baseMesh.fuv,
+            //     vertexWeights: humanMesh.skeleton.vertexWeights!,
+            //     start: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
+            //     length: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
+            //     name: "tounge", r: 1, g: 0.0, b: 0.0
         }
     ]
-    const preparer = new UsdMeshPreparer(materials)
-    // preparer.addMaterial(materials[0])
 
     const crate = new Crate()
     const pseudoRoot = new PseudoRoot(crate)
@@ -96,14 +95,79 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     // * find out how that would look in USD
     // because i have to learn it anyway...
 
-    const mesh = new Mesh(root, "Mesh")
-    mesh.blenderDataName = "Mesh"
-    mesh.extent = [-1, -1, -1, 1, 1, 1]
+    //
+    // skeleton/armature
+    //
+    const skelRoot = new SkelRoot(root, "Human")
+    const skeleton = new Skeleton(skelRoot, "Skeleton")
+    // skeleton.bindTransforms = [
+    //   1, 0, 0, 0,
+    //   0, 0, 1, 0,
+    //   0,-1, 0, 0,
+    //   0, 0, 0, 1,
+    // 
+    //   1, 0, 0, 0,
+    //   0, 0, 1, 0,
+    //   0,-1, 0, 0,
+    //   0, 0, 1, 1]
+    // skeleton.joints = ["Bone", "Bone/Bone_001"]
+    // skeleton.blenderBoneLength = [1, 1]
+    // skeleton.restTransforms = [
+    //   1, 0, 0, 0,
+    //   0, 0, 1, 0,
+    //   0, -1, 0, 0,
+    //   0, 0, 0, 1,
+    //
+    //   1, 0, 0, 0,
+    //   0, 1, 0, 0,
+    //   0, 0, 1, 0,
+    //   0, 1, 0, 1]
 
-    mesh.faceVertexCounts = Array(preparer.fxyz.length / 4).fill(4)
-    mesh.faceVertexIndices = preparer.fxyz
-    mesh.points = preparer.xyz
-    mesh.subdivisionScheme = "none"
+    // NEXT STEP: output joints!j
+    const joints: string[] = []
+    const bindTransforms: number[] = []
+    const restTransforms: number[] = []
+    // 10 okay
+    // 20 okay
+    // 25 okay
+    // 26 okay
+    // 27 fail
+    // 28 fail
+    // 30 fail
+    // 35 fail
+    // 75 fail
+    // 162 fail
+    for (const bone of humanMesh.skeleton.boneslist!) {
+        let name = bone.name
+        for (let parent = bone.parent; parent != undefined; parent = parent.parent) {
+            name = `${parent.name}/${name}`
+        }
+        // remove special characters which break import into Blender
+        name = name.replaceAll('.', '_').replaceAll('-', '_')
+        joints.push(name)
+        bindTransforms.push(...bone.matPoseGlobal!)
+        restTransforms.push(...bone.matRestRelative!)
+    }
+    // console.log(`joints = %o`, joints)
+    skeleton.joints = joints
+    skeleton.bindTransforms = bindTransforms
+    skeleton.restTransforms = restTransforms
+
+
+    //
+    // body/skin etc.
+    //
+    const preparer = new UsdMeshPreparer(materials)
+
+    const body = new Xform(skelRoot, "Body") // this node won't appear in blender
+
+    const bodyMesh = new Mesh(body, "Body")
+    bodyMesh.extent = [-1, -1, -1, 1, 1, 1]
+
+    bodyMesh.faceVertexCounts = Array(preparer.fxyz.length / 4).fill(4)
+    bodyMesh.faceVertexIndices = preparer.fxyz
+    bodyMesh.points = preparer.xyz
+    bodyMesh.subdivisionScheme = "none"
 
     crate.serialize(pseudoRoot)
     return crate.writer.buffer
@@ -143,9 +207,9 @@ export class UsdMeshPreparer {
         // console.log(`addQuad(${m.name}, ${index})`)
         const idx = this.fxyz.length / 4
         this.fxyz.push(this.addPoint(m, m.fxyz[index]))
-        this.fxyz.push(this.addPoint(m, m.fxyz[index+1]))
-        this.fxyz.push(this.addPoint(m, m.fxyz[index+2]))
-        this.fxyz.push(this.addPoint(m, m.fxyz[index+3]))
+        this.fxyz.push(this.addPoint(m, m.fxyz[index + 1]))
+        this.fxyz.push(this.addPoint(m, m.fxyz[index + 2]))
+        this.fxyz.push(this.addPoint(m, m.fxyz[index + 3]))
         return idx
     }
     /**

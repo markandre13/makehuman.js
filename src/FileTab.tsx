@@ -60,28 +60,16 @@ const download = makeDownloadElement()
 const upload = makeUploadElement()
 
 function downloadUSDC(humanMesh: HumanMesh) {
-    let data: ArrayBuffer
-    console.log(`----- 0`)
-    try {
-    data = exportUSDC(humanMesh)
-    } catch (e) {
-        console.log(e)
-        return
-    }
-
-    console.log(`----- 1`)
+    let data = exportUSDC(humanMesh)
 
     if (data.resizable) {
-        console.log(`----- 2`)
         const nonresizeableArrayBuffer = new ArrayBuffer(data.byteLength)
         new Uint8Array(nonresizeableArrayBuffer, 0, data.byteLength)
             .set(new Uint8Array(data, 0, data.byteLength))
-        console.log(`----- 6`)
         data = nonresizeableArrayBuffer
     }
 
     const blob = new Blob([data], { type: "application/stream" })
-    console.log(`----- 7`)
     download.download = "makehuman.usdc"
     download.href = URL.createObjectURL(blob)
     download.dispatchEvent(new MouseEvent("click"))
