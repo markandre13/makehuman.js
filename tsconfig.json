@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "build",
-        "target": "es2020",
+        "target": "es2024",
         "module": "commonjs",
         "moduleResolution": "node",
         "traceResolution": false,

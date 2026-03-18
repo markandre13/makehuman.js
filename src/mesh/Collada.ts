@@ -598,9 +598,9 @@ export function prepareControllerAddBoneWeights(
     weightMap: Map<number, number>
 ) {
     vertexWeights!._data.forEach((boneData, boneName) => {
-        const boneIndices = boneData[0] as number[]
-        const boneWeights = boneData[1] as number[]
-        zipForEach(boneIndices, boneWeights, (_index, weight) => {
+        const pointIndices = boneData[0]
+        const boneWeights = boneData[1]
+        zipForEach(pointIndices, boneWeights, (_index, weight) => {
             const index = geometry.getIndex(vertex, _index)
             if (index === undefined) {
                 // vertex is not used

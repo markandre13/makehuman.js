@@ -9,6 +9,7 @@ import { BaseMeshGroup } from "./BaseMeshGroup"
 
 import { Material } from "./Collada"
 import { ProxyType } from "../proxy/Proxy"
+import { zipForEach } from "lib/zipForEach"
 
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
@@ -139,6 +140,62 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     bodyMesh.points = preparer.xyz
     bodyMesh.subdivisionScheme = "none"
 
+    bodyMesh.geomBindTransform = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ]
+
+    // m.vertexWeights._data are organized as follows
+    //   boneName -> pointIndex[], weightIndex[]
+    // needed for USD
+    //   point -> boneIndex[], weightIndex[]
+    const m = materials[0]
+
+    // point -> ...
+    const boneWeightPairs = new Array<{ index: number[], weight: number[] }>(preparer.xyz.length)
+    for (let i = 0; i < boneWeightPairs.length; ++i) {
+        boneWeightPairs[i] = { index: [], weight: [] }
+    }
+    m.vertexWeights!._data.forEach((boneData, boneName) => {
+        const boneIndex = humanMesh.skeleton.getBone(boneName!).index
+        const pointIndices = boneData[0]
+        const boneWeights = boneData[1]
+        zipForEach(pointIndices, boneWeights, (oldPointIndex, weight) => {
+            const newPointIndex = preparer.getNewIndex(m, oldPointIndex)
+            if (newPointIndex === undefined) {
+                return
+            }
+            boneWeightPairs[newPointIndex].index.push(boneIndex)
+            boneWeightPairs[newPointIndex].weight.push(weight)
+        })
+    })
+
+    let elementSize = 0
+    for (const { index, weight } of boneWeightPairs) {
+        if (index.length > elementSize) {
+            elementSize = index.length
+        }
+    }
+
+    const jointIndices: number[] = []
+    const jointWeights: number[] = []
+    for (const { index, weight } of boneWeightPairs) {
+        if (index.length === 0) {
+            continue
+        }
+        jointIndices.push(...index)
+        jointWeights.push(...weight)
+        for (let i = index.length; i < elementSize; ++i) {
+            jointIndices.push(0)
+            jointWeights.push(0)
+        }
+    }
+    bodyMesh.jointIndices = { elementSize, indices: jointIndices }
+    bodyMesh.jointWeights = { elementSize, indices: jointWeights }
+    bodyMesh.skeleton = skeleton
+
     crate.serialize(pseudoRoot)
     return crate.writer.buffer
 }
@@ -194,7 +251,7 @@ export class UsdMeshPreparer {
         const y = m.xyz[i + 1]
         const z = m.xyz[i + 2]
         const key = `${float32ToHex(x)}${float32ToHex(y)}${float32ToHex(z)}`
-        let ptIndex = this.pt2idx.get(key)
+        let ptIndex = this.getNewIndex(m, index)
         if (ptIndex === undefined) {
             ptIndex = this.xyz.length / 3
             this.pt2idx.set(key, ptIndex)
@@ -202,6 +259,14 @@ export class UsdMeshPreparer {
         }
         // console.log(`addPoint(${m.name}, ${index}): [${i}](${x}, ${y}, ${z}) -> ${ptIndex}`)
         return ptIndex
+    }
+    getNewIndex(m: Material, index: number): number | undefined {
+        let i = index * 3
+        const x = m.xyz[i]
+        const y = m.xyz[i + 1]
+        const z = m.xyz[i + 2]
+        const key = `${float32ToHex(x)}${float32ToHex(y)}${float32ToHex(z)}`
+        return this.pt2idx.get(key)
     }
 }
 
