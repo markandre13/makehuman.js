@@ -146,52 +146,7 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         0, 0, 1, 0,
         0, 0, 0, 1
     ]
-
-    // m.vertexWeights._data are organized as follows
-    //   boneName -> pointIndex[], weightIndex[]
-    // needed for USD
-    //   point -> boneIndex[], weightIndex[]
-    const m = materials[0]
-
-    // point -> ...
-    const boneWeightPairs = new Array<{ index: number[], weight: number[] }>(preparer.xyz.length)
-    for (let i = 0; i < boneWeightPairs.length; ++i) {
-        boneWeightPairs[i] = { index: [], weight: [] }
-    }
-    m.vertexWeights!._data.forEach((boneData, boneName) => {
-        const boneIndex = humanMesh.skeleton.getBone(boneName!).index
-        const pointIndices = boneData[0]
-        const boneWeights = boneData[1]
-        zipForEach(pointIndices, boneWeights, (oldPointIndex, weight) => {
-            const newPointIndex = preparer.getNewIndex(m, oldPointIndex)
-            if (newPointIndex === undefined) {
-                return
-            }
-            boneWeightPairs[newPointIndex].index.push(boneIndex)
-            boneWeightPairs[newPointIndex].weight.push(weight)
-        })
-    })
-
-    let elementSize = 0
-    for (const { index, weight } of boneWeightPairs) {
-        if (index.length > elementSize) {
-            elementSize = index.length
-        }
-    }
-
-    const jointIndices: number[] = []
-    const jointWeights: number[] = []
-    for (const { index, weight } of boneWeightPairs) {
-        if (index.length === 0) {
-            continue
-        }
-        jointIndices.push(...index)
-        jointWeights.push(...weight)
-        for (let i = index.length; i < elementSize; ++i) {
-            jointIndices.push(0)
-            jointWeights.push(0)
-        }
-    }
+    const {elementSize, jointIndices, jointWeights} = prepareWeights(humanMesh, preparer, materials[0])
     bodyMesh.jointIndices = { elementSize, indices: jointIndices }
     bodyMesh.jointWeights = { elementSize, indices: jointWeights }
     bodyMesh.skeleton = skeleton
@@ -268,6 +223,55 @@ export class UsdMeshPreparer {
         const key = `${float32ToHex(x)}${float32ToHex(y)}${float32ToHex(z)}`
         return this.pt2idx.get(key)
     }
+}
+
+function prepareWeights(humanMesh: HumanMesh, preparer: UsdMeshPreparer, m: Material) {
+        // m.vertexWeights._data are organized as follows
+    //   boneName -> pointIndex[], weightIndex[]
+    // needed for USD
+    //   point -> boneIndex[], weightIndex[]
+
+    // point -> ...
+    const boneWeightPairs = new Array<{ index: number[], weight: number[] }>(preparer.xyz.length)
+    for (let i = 0; i < boneWeightPairs.length; ++i) {
+        boneWeightPairs[i] = { index: [], weight: [] }
+    }
+    m.vertexWeights!._data.forEach((boneData, boneName) => {
+        const boneIndex = humanMesh.skeleton.getBone(boneName!).index
+        const pointIndices = boneData[0]
+        const boneWeights = boneData[1]
+        zipForEach(pointIndices, boneWeights, (oldPointIndex, weight) => {
+            const newPointIndex = preparer.getNewIndex(m, oldPointIndex)
+            if (newPointIndex === undefined) {
+                return
+            }
+            boneWeightPairs[newPointIndex].index.push(boneIndex)
+            boneWeightPairs[newPointIndex].weight.push(weight)
+        })
+    })
+
+    let elementSize = 0
+    for (const { index, weight } of boneWeightPairs) {
+        if (index.length > elementSize) {
+            elementSize = index.length
+        }
+    }
+
+    const jointIndices: number[] = []
+    const jointWeights: number[] = []
+    for (const { index, weight } of boneWeightPairs) {
+        if (index.length === 0) {
+            continue
+        }
+        jointIndices.push(...index)
+        jointWeights.push(...weight)
+        for (let i = index.length; i < elementSize; ++i) {
+            jointIndices.push(0)
+            jointWeights.push(0)
+        }
+    }
+
+    return {elementSize, jointIndices, jointWeights}
 }
 
 const datad2h = new Uint8Array(8)
