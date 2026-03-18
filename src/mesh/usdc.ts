@@ -1,23 +1,31 @@
 import { Crate } from "@markandre13/usd.js/crate/Crate"
 import { PseudoRoot } from "@markandre13/usd.js/nodes/usd/PseudoRoot"
+import { makePrincipledBSDF } from "@markandre13/usd.js/nodes/shader/blender/PrincipledBSDF"
 import { Mesh } from "@markandre13/usd.js/nodes/geometry/Mesh"
 import { Xform } from "@markandre13/usd.js/nodes/geometry/Xform"
 import { SkelRoot } from "@markandre13/usd.js/nodes/skeleton/SkelRoot"
 import { Skeleton } from "@markandre13/usd.js/nodes/skeleton/Skeleton"
+import { Scope } from "@markandre13/usd.js/nodes/geometry/Scope"
+
 import { HumanMesh } from "./HumanMesh"
 import { BaseMeshGroup } from "./BaseMeshGroup"
 
-import { Material } from "./Collada"
+import { MeshExportDef } from "./Collada"
 import { ProxyType } from "../proxy/Proxy"
 import { zipForEach } from "lib/zipForEach"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { Skeleton as MHSkeleton } from "skeleton/Skeleton"
 
+// TODO
+// o export other meshes (teeth, tounge, eyes, ...)
+//   o update prepareWeights() to work with/without preparer
+// o export UV maps, same way as Blender 5.1 does
+
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
     const proxy = humanMesh.proxies.get(ProxyType.Teeth)!
 
-    const materials: Material[] = [
+    const materials: MeshExportDef[] = [
         {
             xyz: humanMesh.vertexMorphed,
             fxyz: humanMesh.baseMesh.fxyz,
@@ -79,24 +87,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         }
     }
 
-    // export options:
-    // * one mesh per material?
-    //   * this might be nicer for tweaking
-    //   * how to connect that with the armature and blendshapes?
-    //   * 
-    // * multiple materials, single mesh
-    //   * here we could offer additional materials for nails, the parts of the eye...
-    //   * how about space allocations
-    // * a combination of the above?
-    //   * YES
-    //     * clothes should be speparate objects
-    //     * eyes (lens, iris, ...), teeths (teeth, gum) should be one object but with separate materials
-    //       having all proxies as separate meshes/objects should examines the human easier when creating/teaking
-    //       animations, etc.
-
-    // NEXT STEPS:
-    // * find out how that would look in USD
-    // because i have to learn it anyway...
+    const materialScope = new Scope(root, "_materials")
+    const skin = makePrincipledBSDF(materialScope, "skin", [materials[0].r, materials[0].g, materials[0].b])
 
     //
     // skeleton/armature
@@ -156,6 +148,10 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     bodyMesh.jointIndices = { elementSize, indices: jointIndices }
     bodyMesh.jointWeights = { elementSize, indices: jointWeights }
     bodyMesh.skeleton = skeleton
+    bodyMesh.materialBinding = {
+        isExplicit: true,
+        explicit: [skin]
+    }
 
     crate.serialize(pseudoRoot)
     return crate.writer.buffer
@@ -173,12 +169,12 @@ export class UsdMeshPreparer {
     // group indices into fxyz, one per material
     groups: number[][] = []
 
-    constructor(materials: Material[]) {
+    constructor(materials: MeshExportDef[]) {
         for (let m of materials) {
             this.addMaterial(m)
         }
     }
-    addMaterial(m: Material) {
+    addMaterial(m: MeshExportDef) {
         // console.log(`addMaterial(${m.name})`)
         const group: number[] = []
         this.groups.push(group)
@@ -193,7 +189,7 @@ export class UsdMeshPreparer {
      * @param index index of quad as index in this.fxyz
      * @returns 
      */
-    addQuad(m: Material, index: number) {
+    addQuad(m: MeshExportDef, index: number) {
         // console.log(`addQuad(${m.name}, ${index})`)
         const idx = this.fxyz.length / 4
         this.fxyz.push(this.addPoint(m, m.fxyz[index]))
@@ -208,7 +204,7 @@ export class UsdMeshPreparer {
      * @param oldIndex index as stored in m.fxyz
      * @returns 
      */
-    addPoint(m: Material, oldIndex: number): number {
+    addPoint(m: MeshExportDef, oldIndex: number): number {
         let newIndex = this.idx2idx.get(oldIndex)
         if (newIndex === undefined) {
             newIndex = this.xyz.length / 3

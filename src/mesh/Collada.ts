@@ -11,7 +11,7 @@ import { matrix2euler } from 'gl/algorithms/euler'
 // Export the human as COLLAborative Design Activity (COLLADA) suitable for import in Blender
 // https://en.wikipedia.org/wiki/COLLADA
 
-export interface Material {
+export interface MeshExportDef {
     xyz: ArrayLike<number>
     fxyz: ArrayLike<number>
     uv: ArrayLike<number>
@@ -36,7 +36,7 @@ export function exportCollada(humanMesh: HumanMesh, date: Date = new Date()) {
     // [ ] combine this with the creation of RenderMesh!!!
     // [ ] also use fuv
     // [ ] the proxy mesh mostly be copied (but: we are merging them all into one list!)
-    const materials: Material[] = [
+    const materials: MeshExportDef[] = [
         {
             xyz: humanMesh.vertexMorphed,
             fxyz: humanMesh.baseMesh.fxyz,
@@ -135,7 +135,7 @@ function colladaHead(date: Date) {
 
 function colladaTail() { return `</COLLADA>` }
 
-function colladaEffects(materials: Material[]) {
+function colladaEffects(materials: MeshExportDef[]) {
     // instead of color:
     // <texture texture="teeth_png-sampler" texcoord="UVMap"/>
     let out = `  <library_effects>\n`
@@ -162,7 +162,7 @@ function colladaEffects(materials: Material[]) {
     return out
 }
 
-function colladaMaterials(materials: Material[]) {
+function colladaMaterials(materials: MeshExportDef[]) {
     let out = `  <library_materials>\n`
     materials.forEach(m => {
         out += `    <material id="${m.name}-material" name="${m.name}">
@@ -173,7 +173,7 @@ function colladaMaterials(materials: Material[]) {
     return out
 }
 
-function colladaGeometries(humanMesh: HumanMesh, geometry: Geometry, materials: Material[]) {
+function colladaGeometries(humanMesh: HumanMesh, geometry: Geometry, materials: MeshExportDef[]) {
 
     for (let m of materials) {
         prepareMesh(
@@ -231,7 +231,7 @@ function colladaGeometries(humanMesh: HumanMesh, geometry: Geometry, materials: 
     return out
 }
 
-function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials: Material[]) {
+function colladaControllers(humanMesh: HumanMesh, geometry: Geometry, materials: MeshExportDef[]) {
 
     const allBoneNames = humanMesh.skeleton.boneslist!.map(bone => bone.name)
 
@@ -378,7 +378,7 @@ function colladaAnimations() {
    </library_animations>\n`
 }
 
-function colladaVisualScenes(humanMesh: HumanMesh, materials: Material[]) {
+function colladaVisualScenes(humanMesh: HumanMesh, materials: MeshExportDef[]) {
     let out = `  <library_visual_scenes>
     <visual_scene id="${sceneName}" name="${sceneName}">
       <node id="${armatureName}" name="${armatureName}" type="NODE">

@@ -12,7 +12,7 @@ import { FileSystemAdapter } from '../../src/filesystem/FileSystemAdapter'
 import { HTTPFSAdapter } from '../../src/filesystem/HTTPFSAdapter'
 
 import {
-    exportCollada, Geometry, Material,
+    exportCollada, Geometry, MeshExportDef,
     prepareControllerAddBoneWeights,
     prepareControllerFlatWeightMap,
     prepareControllerInit,
@@ -28,7 +28,7 @@ import { mat4, vec3, vec4 } from 'gl-matrix'
 import { WavefrontObj } from '../../src/mesh/WavefrontObj'
 import { matrix2euler } from '../../src/gl/algorithms/euler'
 
-export function prepareGeometry(materials: Material[], geometry: Geometry) {
+export function prepareGeometry(materials: MeshExportDef[], geometry: Geometry) {
     for (let m = 0; m < materials.length; ++m) {
         prepareMesh(materials[m].xyz, materials[m].uv, materials[m].fxyz, materials[m].fuv, materials[m].start, materials[m].length, geometry)
     }
@@ -333,7 +333,7 @@ describe("Collada", function () {
         ]
 
         // TODO: replace with RenderMesh or it's base class
-        const materials: Material[] = [
+        const materials: MeshExportDef[] = [
             { xyz: xyz0, fxyz: fxyz0, uv: uv0, fuv: fuv0, vertexWeights: vertexWeights0, start: 0, length: 4, name: "ONE", r: 1, g: 0, b: 0 },
             { xyz: xyz0, fxyz: fxyz0, uv: uv0, fuv: fuv0, vertexWeights: vertexWeights0, start: 4, length: 4, name: "TWO", r: 0, g: 1, b: 0 }
         ]

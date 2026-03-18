@@ -13,7 +13,7 @@ import {
     Geometry,
     ibm,
     mat2txt,
-    Material,
+    MeshExportDef,
     prepareControllerAddBoneWeights,
     prepareControllerFlatBoneWeight,
     prepareControllerFlatWeightMap,
@@ -148,7 +148,7 @@ function exportCollada2(humanMesh: HumanMesh, date: Date = new Date()) {
     const proxy = humanMesh.proxies.get(ProxyType.Teeth)!
     // console.dir(proxy)
     expect(proxy).to.be.not.undefined
-    const materials: Material[] = [
+    const materials: MeshExportDef[] = [
         {
             xyz: humanMesh.vertexMorphed,
             fxyz: humanMesh.baseMesh.fxyz,

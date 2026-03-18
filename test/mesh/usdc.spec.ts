@@ -1,23 +1,14 @@
 import { expect, use } from "chai"
 import { chaiAlmost } from "../chai/chaiAlmost"
-import { float32ToHex, float64ToHex, UsdMeshPreparer } from "../../src/mesh/usdc"
-import { Material } from "../../src/mesh/Collada"
+import { UsdMeshPreparer } from "../../src/mesh/usdc"
+import { MeshExportDef } from "../../src/mesh/Collada"
 use(chaiAlmost(0.01))
-
-describe("float to hex", () => {
-    it("float64ToHex()", () => {
-        expect(float64ToHex(Math.PI)).to.equal("182d4454fb210940")
-    })
-    it("float32ToHex()", () => {
-        expect(float32ToHex(Math.PI)).to.equal("db0f4940")
-    })
-})
 
 describe.only("UsdMeshPreparer", () => {
     it("foo", () => {
         const xyz = [1,2,3, 4,5,6, 7,8,9, 10,11,12]
         const fxyz = [0,1,2,3, 1,0,3,2]
-        const materials: Material[] = [{
+        const materials: MeshExportDef[] = [{
             xyz,
             fxyz,
             uv: [],
