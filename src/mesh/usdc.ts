@@ -10,6 +10,8 @@ import { BaseMeshGroup } from "./BaseMeshGroup"
 import { Material } from "./Collada"
 import { ProxyType } from "../proxy/Proxy"
 import { zipForEach } from "lib/zipForEach"
+import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
+import { Skeleton as MHSkeleton } from "skeleton/Skeleton"
 
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
@@ -146,7 +148,11 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         0, 0, 1, 0,
         0, 0, 0, 1
     ]
-    const {elementSize, jointIndices, jointWeights} = prepareWeights(humanMesh, preparer, materials[0])
+    const { elementSize, jointIndices, jointWeights } = prepareWeights(
+        humanMesh.skeleton,
+        preparer,
+        materials[0].vertexWeights
+    )
     bodyMesh.jointIndices = { elementSize, indices: jointIndices }
     bodyMesh.jointWeights = { elementSize, indices: jointWeights }
     bodyMesh.skeleton = skeleton
@@ -155,9 +161,11 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     return crate.writer.buffer
 }
 
+/**
+ * extract subset mesh from material
+ */
 export class UsdMeshPreparer {
-    // map to find duplicate points: key is hex of x,y,z concatenated, value is index in this.xyz
-    private pt2idx = new Map<string, number>()
+    private idx2idx = new Map<number, number>()
     // points
     xyz: number[] = []
     // quad indices into xyz
@@ -197,103 +205,80 @@ export class UsdMeshPreparer {
     /**
      * 
      * @param m 
-     * @param index index as stored in m.fxyz
+     * @param oldIndex index as stored in m.fxyz
      * @returns 
      */
-    addPoint(m: Material, index: number): number {
-        let i = index * 3
-        const x = m.xyz[i]
-        const y = m.xyz[i + 1]
-        const z = m.xyz[i + 2]
-        const key = `${float32ToHex(x)}${float32ToHex(y)}${float32ToHex(z)}`
-        let ptIndex = this.getNewIndex(m, index)
-        if (ptIndex === undefined) {
-            ptIndex = this.xyz.length / 3
-            this.pt2idx.set(key, ptIndex)
-            this.xyz.push(x, y, z)
+    addPoint(m: Material, oldIndex: number): number {
+        let newIndex = this.idx2idx.get(oldIndex)
+        if (newIndex === undefined) {
+            newIndex = this.xyz.length / 3
+            this.idx2idx.set(oldIndex, newIndex)
+            let i = oldIndex * 3
+            this.xyz.push(m.xyz[i], m.xyz[i + 1], m.xyz[i + 2])
         }
         // console.log(`addPoint(${m.name}, ${index}): [${i}](${x}, ${y}, ${z}) -> ${ptIndex}`)
-        return ptIndex
+        return newIndex
     }
-    getNewIndex(m: Material, index: number): number | undefined {
-        let i = index * 3
-        const x = m.xyz[i]
-        const y = m.xyz[i + 1]
-        const z = m.xyz[i + 2]
-        const key = `${float32ToHex(x)}${float32ToHex(y)}${float32ToHex(z)}`
-        return this.pt2idx.get(key)
+    getNewIndex(index: number): number | undefined {
+        return this.idx2idx.get(index)
     }
 }
 
-function prepareWeights(humanMesh: HumanMesh, preparer: UsdMeshPreparer, m: Material) {
-        // m.vertexWeights._data are organized as follows
-    //   boneName -> pointIndex[], weightIndex[]
-    // needed for USD
-    //   point -> boneIndex[], weightIndex[]
-
-    // point -> ...
-    const boneWeightPairs = new Array<{ index: number[], weight: number[] }>(preparer.xyz.length)
+/**
+ * prepare vertex weights for USD export
+ * 
+ * m.vertexWeights._data is organized as
+ * 
+ * > boneName -> pointIndex[], weightIndex[]
+ * 
+ * which for USD needs to be converted into
+ * 
+ * > point -> boneIndex[], weightIndex[]
+ * 
+ * @param skeleton used to convert bone name in vertexWeights to bone index
+ * @param preparer use to map old point index to new point index
+ * @param vertexWeights the weights to prepare
+ */
+function prepareWeights(skeleton: MHSkeleton, preparer: UsdMeshPreparer, vertexWeights: VertexBoneWeights) {
+    // prepare intermediate data structure
+    const boneWeightPairs = new Array<{ index: number[], weight: number[] }>(preparer.xyz.length / 3)
     for (let i = 0; i < boneWeightPairs.length; ++i) {
         boneWeightPairs[i] = { index: [], weight: [] }
     }
-    m.vertexWeights!._data.forEach((boneData, boneName) => {
-        const boneIndex = humanMesh.skeleton.getBone(boneName!).index
+
+    // prepare weights
+    vertexWeights!._data.forEach((boneData, boneName) => {
+        const boneIndex = skeleton.getBone(boneName!).index
         const pointIndices = boneData[0]
         const boneWeights = boneData[1]
         zipForEach(pointIndices, boneWeights, (oldPointIndex, weight) => {
-            const newPointIndex = preparer.getNewIndex(m, oldPointIndex)
-            if (newPointIndex === undefined) {
-                return
+            const newPointIndex = preparer.getNewIndex(oldPointIndex)
+            if (newPointIndex !== undefined) {
+                boneWeightPairs[newPointIndex].index.push(boneIndex)
+                boneWeightPairs[newPointIndex].weight.push(weight)
             }
-            boneWeightPairs[newPointIndex].index.push(boneIndex)
-            boneWeightPairs[newPointIndex].weight.push(weight)
         })
     })
 
-    let elementSize = 0
-    for (const { index, weight } of boneWeightPairs) {
-        if (index.length > elementSize) {
-            elementSize = index.length
+    // copy boneWeightPairs into jointIndices and jointWeights
+
+    let maxJointsPerPoint = 0
+    for (const { index } of boneWeightPairs) {
+        if (index.length > maxJointsPerPoint) {
+            maxJointsPerPoint = index.length
         }
     }
 
     const jointIndices: number[] = []
     const jointWeights: number[] = []
     for (const { index, weight } of boneWeightPairs) {
-        if (index.length === 0) {
-            continue
-        }
         jointIndices.push(...index)
         jointWeights.push(...weight)
-        for (let i = index.length; i < elementSize; ++i) {
+        for (let i = index.length; i < maxJointsPerPoint; ++i) {
             jointIndices.push(0)
             jointWeights.push(0)
         }
     }
 
-    return {elementSize, jointIndices, jointWeights}
-}
-
-const datad2h = new Uint8Array(8)
-const viewd2h = new DataView(datad2h.buffer)
-
-export function float64ToHex(value: number): string {
-    viewd2h.setFloat64(0, value, true)
-    let hex = ""
-    for (let c of datad2h) {
-        hex += c.toString(16).padStart(2, '0')
-    }
-    return hex
-}
-
-const dataf2h = new Uint8Array(4)
-const viewf2h = new DataView(dataf2h.buffer)
-
-export function float32ToHex(value: number): string {
-    viewf2h.setFloat32(0, value, true)
-    let hex = ""
-    for (let c of dataf2h) {
-        hex += c.toString(16).padStart(2, '0')
-    }
-    return hex
+    return { elementSize: maxJointsPerPoint, jointIndices, jointWeights }
 }
