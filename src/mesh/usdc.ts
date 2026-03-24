@@ -1,8 +1,11 @@
 import { Crate } from "@markandre13/usd.js/crate/Crate"
 import { PseudoRoot } from "@markandre13/usd.js/nodes/usd/PseudoRoot"
-import { makePrincipledBSDF } from "@markandre13/usd.js/nodes/shader/blender/PrincipledBSDF"
 import { Mesh } from "@markandre13/usd.js/nodes/geometry/Mesh"
 import { Xform } from "@markandre13/usd.js/nodes/geometry/Xform"
+import { Material } from "@markandre13/usd.js/nodes/shader/Material"
+import { UVMap } from "@markandre13/usd.js/nodes/shader/blender/UVMap"
+import { ImageTexture } from "@markandre13/usd.js/nodes/shader/blender/ImageTexture"
+import { PrincipledBSDF } from "@markandre13/usd.js/nodes/shader/blender/PrincipledBSDF"
 import { SkelRoot } from "@markandre13/usd.js/nodes/skeleton/SkelRoot"
 import { Skeleton } from "@markandre13/usd.js/nodes/skeleton/Skeleton"
 import { Scope } from "@markandre13/usd.js/nodes/geometry/Scope"
@@ -36,8 +39,12 @@ export interface MeshExportDef {
     name: string
     r: number
     g: number
-    b: number
+    b: number,
+    texture: string
 }
+
+//         this.bodyTexture = new Texture(this, "data/skins/textures/young_caucasian_female_special_suit.png")
+// this.eyeTexture = new Texture(this, "data/eyes/materials/green_eye.png")
 
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
@@ -52,7 +59,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             vertexWeights: humanMesh.skeleton.vertexWeights!,
             start: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             length: humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length,
-            name: "skin", r: 1, g: 0.5, b: 0.5
+            name: "skin", r: 1, g: 0.5, b: 0.5,
+            texture: "data/skins/textures/young_caucasian_female_special_suit.png"
         }, {
             xyz: humanMesh.vertexMorphed,
             fxyz: humanMesh.baseMesh.fxyz,
@@ -61,7 +69,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             vertexWeights: humanMesh.skeleton.vertexWeights!,
             start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].startIndex,
             length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL0].length,
-            name: "eyeL", r: 0.0, g: 1.0, b: 0.5
+            name: "eyeL", r: 0.0, g: 1.0, b: 0.5,
+            texture: "data/skins/textures/young_caucasian_female_special_suit.png"
         }, {
             xyz: humanMesh.vertexMorphed,
             fxyz: humanMesh.baseMesh.fxyz,
@@ -70,7 +79,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             vertexWeights: humanMesh.skeleton.vertexWeights!,
             start: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].startIndex,
             length: humanMesh.baseMesh.groups[BaseMeshGroup.EYEBALL1].length,
-            name: "eyeR", r: 1.0, g: 0.0, b: 0.0
+            name: "eyeR", r: 1.0, g: 0.0, b: 0.0,
+            texture: "data/skins/textures/young_caucasian_female_special_suit.png"
         }, {
             xyz: proxy.getCoords(humanMesh.vertexMorphed),
             fxyz: proxy.getMesh().fxyz,
@@ -79,7 +89,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             vertexWeights: proxy.getVertexWeights(humanMesh.skeleton.vertexWeights!),
             start: 0,
             length: proxy.getMesh().fxyz.length,
-            name: "teeth", r: 1.0, g: 1.0, b: 1.0
+            name: "teeth", r: 1.0, g: 1.0, b: 1.0,
+            texture: "data/teeth/materials/teeth.png"
         }, {
             xyz: humanMesh.vertexMorphed,
             fxyz: humanMesh.baseMesh.fxyz,
@@ -88,7 +99,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
             vertexWeights: humanMesh.skeleton.vertexWeights!,
             start: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].startIndex,
             length: humanMesh.baseMesh.groups[BaseMeshGroup.TOUNGE].length,
-            name: "tounge", r: 1, g: 0.0, b: 0.0
+            name: "tounge", r: 1, g: 0.0, b: 0.0,
+            texture: "data/tongue/tongue01/tongue01_diffuse.png"
         }
     ]
 
@@ -169,10 +181,25 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         mesh.jointWeights = { elementSize, indices: jointWeights }
         mesh.skeleton = skeleton
 
-        const shader = makePrincipledBSDF(materialRoot, meshDef.name, [meshDef.r, meshDef.g, meshDef.b])
+        const material = new Material(materialRoot, meshDef.name)
+
+        const shader = new PrincipledBSDF(material, "Principled_BSDF")
+        shader.infoId = "UsdPreviewSurface"
+        shader.clearcoat = 0
+        shader.clearcoatRoughness = 0.03
+        shader.diffuseColor = [meshDef.r, meshDef.g, meshDef.b]
+        shader.ior = 1.5
+        shader.metallic = 0
+        shader.opacity = 1
+        shader.roughness = 0.5
+        shader.specular = 0.5
+
+        material.surface = shader.outputsSurface
+        material.blenderDataName = meshDef.name
+
         mesh.materialBinding = {
             isExplicit: true,
-            explicit: [shader]
+            explicit: [material]
         }
     }
 

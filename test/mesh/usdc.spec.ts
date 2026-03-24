@@ -15,7 +15,8 @@ describe.only("UsdMeshPreparer", () => {
             vertexWeights: undefined as any,
             start: 0,
             length: fxyz.length,
-            name: "skin", r: 1, g: 0.5, b: 0.5
+            name: "skin", r: 1, g: 0.5, b: 0.5,
+            texture: "texmex.png"
         }]
         const preparer = new UsdMeshPreparer(materials[0])
         // console.log(preparer.xyz)
