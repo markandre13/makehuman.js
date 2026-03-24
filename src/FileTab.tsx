@@ -60,19 +60,23 @@ const download = makeDownloadElement()
 const upload = makeUploadElement()
 
 function downloadUSDC(humanMesh: HumanMesh) {
-    let data = exportUSDC(humanMesh)
+    try { // FIXME: toad.js' signals should do the proper logging
+        let data = exportUSDC(humanMesh)
 
-    if (data.resizable) {
-        const nonresizeableArrayBuffer = new ArrayBuffer(data.byteLength)
-        new Uint8Array(nonresizeableArrayBuffer, 0, data.byteLength)
-            .set(new Uint8Array(data, 0, data.byteLength))
-        data = nonresizeableArrayBuffer
+        if (data.resizable) {
+            const nonresizeableArrayBuffer = new ArrayBuffer(data.byteLength)
+            new Uint8Array(nonresizeableArrayBuffer, 0, data.byteLength)
+                .set(new Uint8Array(data, 0, data.byteLength))
+            data = nonresizeableArrayBuffer
+        }
+
+        const blob = new Blob([data], { type: "application/stream" })
+        download.download = "makehuman.usdc"
+        download.href = URL.createObjectURL(blob)
+        download.dispatchEvent(new MouseEvent("click"))
+    } catch (e) {
+        console.log(e)
     }
-
-    const blob = new Blob([data], { type: "application/stream" })
-    download.download = "makehuman.usdc"
-    download.href = URL.createObjectURL(blob)
-    download.dispatchEvent(new MouseEvent("click"))
 }
 
 function saveMHM(humanMesh: HumanMesh) {

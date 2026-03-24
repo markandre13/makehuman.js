@@ -25,6 +25,8 @@ Animation!
     * input: [FreeMoCap with 3 cameras](https://youtu.be/m8U--4QNYL0?si=CKIcZYHuEuu2quhQ)
     * result: [makehuman.js' animation](https://youtu.be/PGwLraJAm_I)
 
+(also worth looking into: OpenPose, Apple VisionFramework, ...)
+
 This needs the [makehuman.js backend](https://github.com/markandre13/makehuman.js-backend) to be running locally.
 
 Once that is working, the next step will be to record animations and export them to Blender.

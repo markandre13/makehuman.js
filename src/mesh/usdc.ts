@@ -17,9 +17,14 @@ import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { Skeleton as MHSkeleton } from "skeleton/Skeleton"
 
 // TODO
-// o export other meshes (teeth, tounge, eyes, ...)
-//   o update prepareWeights() to work with/without preparer
-// o export UV maps, same way as Blender 5.1 does
+// [ ] export UV maps, same way as Blender 5.1 does (how is that done?)
+//   [ ] let material reference image file (how is that done?)
+// [X] export other meshes (teeth, tounge, eyes, ...)
+//   [ ] update prepareWeights() to work with/without preparer
+//   [ ] add function prepareMesh() because we already have prepareWeights()
+//   [ ] use the current proxy settings during export
+// [ ] adjust export orientation and scale
+// [ ] vertexMorphed has the jaw moved. why? that should only be in vertextRigged.
 
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
@@ -121,8 +126,6 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     skeleton.blenderBoneLength = blenderBoneLength
 
     for (const meshDef of meshesToExport) {
-
-
         const meshRoot = new Xform(skelRoot, meshDef.name) // this node won't appear in blender
 
         const mesh = new Mesh(meshRoot, meshDef.name)
@@ -134,6 +137,8 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         mesh.faceVertexCounts = Array(preparer.fxyz.length / 4).fill(4)
         mesh.faceVertexIndices = preparer.fxyz
         mesh.points = preparer.xyz
+        mesh.texCoords = preparer.uv
+        mesh.texIndices = preparer.fuv
         mesh.subdivisionScheme = "none"
 
         mesh.geomBindTransform = [
@@ -166,24 +171,30 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
  * extract subset mesh from material
  */
 export class UsdMeshPreparer {
-    private idx2idx = new Map<number, number>()
+    private xyz_idx2idx = new Map<number, number>()
+    private uv_idx2idx = new Map<number, number>()
     // points
     xyz: number[] = []
     // quad indices into xyz
     fxyz: number[] = []
+
+    uv: number[] = []
+    fuv: number[] = []
+
     // group indices into fxyz, one per material
-    groups: number[][] = []
+    // groups: number[][] = []
 
     constructor(material: MeshExportDef) {
         this.addMaterial(material)
     }
     addMaterial(m: MeshExportDef) {
         // console.log(`addMaterial(${m.name})`)
-        const group: number[] = []
-        this.groups.push(group)
+        // const group: number[] = []
+        // this.groups.push(group)
         const end = m.start + m.length
         for (let i = m.start; i < end; i += 4) {
-            group.push(this.addQuad(m, i))
+            // group.push(this.addQuad(m, i))
+            this.addQuad(m, i)
         }
     }
     /**
@@ -194,12 +205,17 @@ export class UsdMeshPreparer {
      */
     addQuad(m: MeshExportDef, index: number) {
         // console.log(`addQuad(${m.name}, ${index})`)
-        const idx = this.fxyz.length / 4
-        this.fxyz.push(this.addPoint(m, m.fxyz[index]))
-        this.fxyz.push(this.addPoint(m, m.fxyz[index + 1]))
-        this.fxyz.push(this.addPoint(m, m.fxyz[index + 2]))
-        this.fxyz.push(this.addPoint(m, m.fxyz[index + 3]))
-        return idx
+        // const idx = this.fxyz.length / 4
+        this.fxyz.push(this.addXYZ(m, m.fxyz[index]))
+        this.fxyz.push(this.addXYZ(m, m.fxyz[index + 1]))
+        this.fxyz.push(this.addXYZ(m, m.fxyz[index + 2]))
+        this.fxyz.push(this.addXYZ(m, m.fxyz[index + 3]))
+
+        this.fuv.push(this.addUV(m, m.fuv[index]))
+        this.fuv.push(this.addUV(m, m.fuv[index + 1]))
+        this.fuv.push(this.addUV(m, m.fuv[index + 2]))
+        this.fuv.push(this.addUV(m, m.fuv[index + 3]))
+        // return idx
     }
     /**
      * 
@@ -207,19 +223,36 @@ export class UsdMeshPreparer {
      * @param oldIndex index as stored in m.fxyz
      * @returns 
      */
-    addPoint(m: MeshExportDef, oldIndex: number): number {
-        let newIndex = this.idx2idx.get(oldIndex)
+    addXYZ(m: MeshExportDef, oldIndex: number): number {
+        let newIndex = this.xyz_idx2idx.get(oldIndex)
         if (newIndex === undefined) {
             newIndex = this.xyz.length / 3
-            this.idx2idx.set(oldIndex, newIndex)
+            this.xyz_idx2idx.set(oldIndex, newIndex)
             let i = oldIndex * 3
             this.xyz.push(m.xyz[i], m.xyz[i + 1], m.xyz[i + 2])
         }
         // console.log(`addPoint(${m.name}, ${index}): [${i}](${x}, ${y}, ${z}) -> ${ptIndex}`)
         return newIndex
     }
+    /**
+     * 
+     * @param m 
+     * @param oldIndex index as stored in m.fxyz
+     * @returns 
+     */
+    addUV(m: MeshExportDef, oldIndex: number): number {
+        let newIndex = this.uv_idx2idx.get(oldIndex)
+        if (newIndex === undefined) {
+            newIndex = this.uv.length / 2
+            this.uv_idx2idx.set(oldIndex, newIndex)
+            let i = oldIndex * 2
+            this.uv.push(m.uv[i], m.uv[i + 1])
+        }
+        // console.log(`addPoint(${m.name}, ${index}): [${i}](${x}, ${y}, ${z}) -> ${ptIndex}`)
+        return newIndex
+    }
     getNewIndex(index: number): number | undefined {
-        return this.idx2idx.get(index)
+        return this.xyz_idx2idx.get(index)
     }
 }
 
