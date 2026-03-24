@@ -183,18 +183,31 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 
         const material = new Material(materialRoot, meshDef.name)
 
-        const shader = new PrincipledBSDF(material, "Principled_BSDF")
-        shader.infoId = "UsdPreviewSurface"
-        shader.clearcoat = 0
-        shader.clearcoatRoughness = 0.03
-        shader.diffuseColor = [meshDef.r, meshDef.g, meshDef.b]
-        shader.ior = 1.5
-        shader.metallic = 0
-        shader.opacity = 1
-        shader.roughness = 0.5
-        shader.specular = 0.5
+                const uvmap = new UVMap(material, "uvmap")
+        uvmap.infoId = "UsdPrimvarReader_float2"
+        uvmap.inputsVarname = "st"
 
-        material.surface = shader.outputsSurface
+        const imageTexture = new ImageTexture(material, "Image_Texture")
+        imageTexture.infoId = "UsdUVTexture"
+        imageTexture.file = meshDef.texture
+        imageTexture.sourceColorSpace = "sRGB"
+        imageTexture.uvCoords = uvmap.outputsResult
+        imageTexture.wrapS = "repeat"
+        imageTexture.wrapT = "repeat"
+
+        const principledBSDF = new PrincipledBSDF(material, "Principled_BSDF")
+        principledBSDF.infoId = "UsdPreviewSurface"
+        principledBSDF.clearcoat = 0
+        principledBSDF.clearcoatRoughness = 0.03
+        // principledBSDF.diffuseColor = [meshDef.r, meshDef.g, meshDef.b]
+        principledBSDF.diffuseColor = imageTexture.outputsRGB
+        principledBSDF.ior = 1.5
+        principledBSDF.metallic = 0
+        principledBSDF.opacity = 1
+        principledBSDF.roughness = 0.5
+        principledBSDF.specular = 0.5
+
+        material.surface = principledBSDF.outputsSurface
         material.blenderDataName = meshDef.name
 
         mesh.materialBinding = {
