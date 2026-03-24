@@ -10,7 +10,6 @@ import { Scope } from "@markandre13/usd.js/nodes/geometry/Scope"
 import { HumanMesh } from "./HumanMesh"
 import { BaseMeshGroup } from "./BaseMeshGroup"
 
-import { MeshExportDef } from "./Collada"
 import { ProxyType } from "../proxy/Proxy"
 import { zipForEach } from "lib/zipForEach"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
@@ -25,6 +24,20 @@ import { Skeleton as MHSkeleton } from "skeleton/Skeleton"
 //   [ ] use the current proxy settings during export
 // [ ] adjust export orientation and scale
 // [ ] vertexMorphed has the jaw moved. why? that should only be in vertextRigged.
+
+export interface MeshExportDef {
+    xyz: ArrayLike<number>
+    fxyz: ArrayLike<number>
+    uv: ArrayLike<number>
+    fuv: ArrayLike<number>
+    vertexWeights: VertexBoneWeights
+    start: number
+    length: number
+    name: string
+    r: number
+    g: number
+    b: number
+}
 
 export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
 

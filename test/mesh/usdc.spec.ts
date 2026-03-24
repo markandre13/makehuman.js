@@ -1,7 +1,6 @@
 import { expect, use } from "chai"
 import { chaiAlmost } from "../chai/chaiAlmost"
-import { UsdMeshPreparer } from "../../src/mesh/usdc"
-import { MeshExportDef } from "../../src/mesh/Collada"
+import { MeshExportDef, UsdMeshPreparer } from "../../src/mesh/usdc"
 use(chaiAlmost(0.01))
 
 describe.only("UsdMeshPreparer", () => {
