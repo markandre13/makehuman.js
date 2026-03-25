@@ -4,6 +4,9 @@ import { RenderMesh } from 'render/RenderMesh'
 import { FlatMesh } from './FlatMesh'
 import { quadsToFlatQuads } from 'gl/algorithms/quadsToFlatQuads'
 
+/**
+ * a flat shaded variant of app.humanMesh.vertexRigged
+ */
 export class MHFlat extends FlatMesh {
     app: Application
     constructor(app: Application, gl: WebGL2RenderingContext) {

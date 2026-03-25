@@ -12,6 +12,8 @@ import { ButtonVariant } from 'toad.js/view/Button'
 import { FaceRenderer } from './FaceRenderer'
 import { FaceARKitLoader2 } from './FaceARKitLoader2'
 import { di } from 'lib/di'
+import { mat4 } from 'gl-matrix'
+import { deg2rad } from 'gl/algorithms/deg2rad'
 
 // TODO
 // [ ] Tab.visibilityChange: improve the APIb
@@ -68,6 +70,25 @@ export function MorphTool(props: { app: Application }) {
             visibilityChange={(state) => {
                 switch (state) {
                     case 'visible':
+                        // TODO: move this elsewhere
+                        props.app.morphManager.reset()
+                        props.app.skeleton.reset()
+
+                        const jaw = props.app.skeleton.getBone("jaw")!
+                        jaw.matUserPoseRelative = mat4.fromXRotation(mat4.create(), deg2rad(12))
+
+                        // move eye
+                        const leftEye = props.app.morphManager.getModifier("eyes/l-eye-trans-down|up")
+                        leftEye!.model!.value = -1
+                        const rightEye = props.app.morphManager.getModifier("eyes/r-eye-trans-down|up")
+                        rightEye!.model!.value = -1
+                        const forehead = props.app.morphManager.getModifier("forehead/forehead-trans-backward|forward")
+                        forehead!.model!.value = -0.5
+                        const mouth = props.app.morphManager.getModifier("mouth/mouth-trans-backward|forward")
+                        mouth!.model!.value = 0.1
+
+                        props.app.updateManager.updateFromLocalSettingsWithoutGL()
+
                         props.app.setRenderer(renderer)
                         if (props.app.glview) {
                             props.app.glview.pushInputHandler(
@@ -78,6 +99,10 @@ export function MorphTool(props: { app: Application }) {
                         }
                         break
                     case 'hidden':
+                        props.app.morphManager.reset()
+                        props.app.skeleton.reset()
+                        props.app.updateManager.updateFromLocalSettingsWithoutGL()
+
                         props.app.glview.popInputHandler()
                         // reset blendhape model
                         props.app.updateManager.setBlendshapeModel(

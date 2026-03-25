@@ -98,10 +98,6 @@ export class MorphRenderer extends RenderHandler {
         model.isARKitActive.signal.add(app.glview.invalidate)
         model.showBothMeshes.signal.add(app.glview.invalidate)
         model.isTransparentActiveMesh.signal.add(app.glview.invalidate)
-
-        const jaw = this.app.skeleton.getBone("jaw")!
-        jaw.matUserPoseRelative = mat4.fromXRotation(mat4.create(), deg2rad(12))
-        this.app.updateManager.updateFromLocalSettingsWithoutGL()
     }
     override defaultCamera() {
         return this.app.headCamera

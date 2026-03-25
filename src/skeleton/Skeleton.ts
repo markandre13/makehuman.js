@@ -227,67 +227,6 @@ export class Skeleton {
         }
         const offset = frame * anim.nBones
 
-        // from plugins/3_libraries_pose.py: loadBvh()
-
-        // const COMPARE_BONE = "upperleg02.L"
-        // if (!bvh_file.joints.has(COMPARE_BONE)) {
-        //     throw Error(`The pose file cannot be loaded. It uses a different rig then MakeHuman's default rig`)
-        // }
-
-        // let bvh_root_translation: vec3
-        // if (bvh_file.joints.has("root")) {
-        //     const root_bone = anim[0]
-        //     bvh_root_translation = vec3.fromValues(root_bone[12], root_bone[13], root_bone[14])
-        // } else {
-        //     bvh_root_translation = vec3.create()
-        // }
-
-        // function calculateBvhBoneLength(bvh_file: BiovisionHierarchy) {
-        //     const bvh_joint = bvh_file.joints.get(COMPARE_BONE)
-        //     const j0 = bvh_joint!.children[0].position
-        //     const j1 = bvh_joint!.position
-        //     const v0 = vec3.fromValues(j0[0], j0[1], j0[2])
-        //     const v1 = vec3.fromValues(j1[0], j1[1], j1[2])
-        //     const joint_length = vec3.len(vec3.sub(v0, v0, v1))
-        //     console.log(`joint_length = ${joint_length}`)
-        //     return joint_length
-        // }
-        // const bvh_bone_length = calculateBvhBoneLength(bvh_file)
-
-        /**
-         * Auto scale BVH translations by comparing upper leg length to make the
-         * human stand on the ground plane, independent of body length.
-         */
-        // function autoScaleAnim() {
-        //     const bone = humanMesh.skeleton.getBone(COMPARE_BONE)
-        //     console.log(`bone.length=${bone.length}, bvh_bone_length=${bvh_bone_length}`)
-        //     const scale_factor = bone.length / bvh_bone_length
-        //     const trans = vec3.scale(vec3.create(), bvh_root_translation, scale_factor)
-        //     console.log(`Scaling animation with factor ${scale_factor}`)
-        //     // It's possible to use anim.scale() as well, but by repeated scaling we accumulate error
-        //     // It's easier to simply set the translation, as poses only have a translation on
-        //     // root joint
-
-        //     // Set pose root bone translation
-        //     // root_bone_idx = 0
-        //     // posedata = anim.getAtFramePos(0, noBake=True)
-        //     // posedata[root_bone_idx, :3, 3] = trans
-        //     // anim.resetBaked()
-        // }
-        // autoScaleAnim()
-
-        // PYTHON
-        // joint_length = 3.228637218475342
-        // bone.length=3.415726664182774, bvh_bone_length=3.228637218475342
-        // Scaling animation run01 with factor 1.0579468775980292
-
-        // TYPESCRIPT (in the test setup the numbers are correct...)
-        // joint_length = 3.228636702652367 (main.js, line 317)
-        // bone.length=3.155047920856258, bvh_bone_length=3.228636702652367 (main.js, line 328)
-        // Scaling animation with factor 0.9772074752988917 (main.js, line 331)
-
-        // => bone length differs
-
         for (let boneIdx = 0; boneIdx < this.boneslist!.length; ++boneIdx) {
             const bone = this.boneslist![boneIdx + frame * this.boneslist!.length]
 
@@ -323,6 +262,14 @@ export class Skeleton {
             poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
             poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
         }
+    }
+
+    reset() {
+        this.poseNodes.forEach( node => {
+            node.x.value = 0
+            node.y.value = 0
+            node.z.value = 0
+        })
     }
 
     // line 122: toFile(self, filename, ref_weights=None)
