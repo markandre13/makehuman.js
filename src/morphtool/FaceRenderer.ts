@@ -8,13 +8,13 @@ import { di } from 'lib/di'
 import { Blendshape } from 'mediapipe/blendshapeNames'
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
-import { BlendshapeMesh } from './FaceARKitLoader2'
+import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
 
 /**
  * render animated blendshape mesh
  */
 export class FaceRenderer extends RenderHandler {
-    private blendshapeMesh: BlendshapeMesh
+    private blendshapeMesh: BlendshapeMeshAPI
 
     private blendshapeParams?: Float32Array
     private blendshapeTransform?: Float32Array
@@ -23,13 +23,13 @@ export class FaceRenderer extends RenderHandler {
     private normals!: NormalBuffer
     private indices!: IndexBuffer
 
-    constructor(blendshapeMesh: BlendshapeMesh) {
+    constructor(blendshapeMesh: BlendshapeMeshAPI) {
         super()
         this.blendshapeMesh = blendshapeMesh
         this.blendshapeParams = new Float32Array(Blendshape.SIZE)
     }
 
-    setBlendshapeMesh(blendshapeMesh: BlendshapeMesh) {
+    setBlendshapeMesh(blendshapeMesh: BlendshapeMeshAPI) {
         if (this.blendshapeMesh === blendshapeMesh) {
             return
         }

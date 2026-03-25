@@ -2,20 +2,9 @@ import { isZero } from 'gl/algorithms/isZero'
 import { Blendshape } from 'mediapipe/blendshapeNames'
 import { WavefrontObj } from 'mesh/WavefrontObj'
 import { MorphTarget } from 'target/MorphTarget'
+import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
 
-export interface BlendshapeMesh {
-    preload(): BlendshapeMesh
-    get fxyz(): number[]
-    /**
-     * xyz
-     * @param blendshapeParams 
-     * @param blendshapeTransform transform for head
-     * @param vertex destination
-     */
-    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array
-}
-
-export class FaceARKitLoader2 implements BlendshapeMesh {
+export class FaceARKitLoader2 implements BlendshapeMeshAPI {
     _targets = new Array<MorphTarget>(Blendshape.SIZE);
     _xyz = new Array<Float32Array>(Blendshape.SIZE);
     _neutral?: WavefrontObj
@@ -109,30 +98,6 @@ export class FaceARKitLoader2 implements BlendshapeMesh {
             }
             this.getMorphTarget(blendshape)?.apply(vertex, weight)
         }
-
-        // scale and rotate 'vertex'
-        // const t = blendshapeTransform
-        // const m = mat4.fromValues(
-        //     t[0], t[1], t[2], 0,
-        //     t[4], t[5], t[6], 0,
-        //     t[8], t[9], t[10], 0,
-        //     0, 0, 0, 1
-        // )
-        // // const camera = di.get(Application).glview.ctx.camera
-        // // const ic = mat4.clone(camera)
-        // // mat4.invert(m, camera)
-        // // mat4.multiply(m, ic, m)
-        // // mat4.multiply(m, m, camera)
-        // const v = vec3.create()
-        // for (let i = 0; i < vertex.length; i += 3) {
-        //     v[0] = vertex[i]
-        //     v[1] = vertex[i + 1]
-        //     v[2] = vertex[i + 2]
-        //     vec3.transformMat4(v, v, m)
-        //     vertex[i] = v[0]
-        //     vertex[i + 1] = v[1]
-        //     vertex[i + 2] = v[2]
-        // }
         return vertex
     }
 }
