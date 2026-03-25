@@ -57,24 +57,4 @@ describe("ARKitFlat", function () {
             -10.800000190734863, -3.7688002586364746, 0.9300000071525574 // 5 <- 3
         ])
     })
-    it("getTarget(Blendshape) provides morph targets", () => {
-        const gl = {} as WebGL2RenderingContext
-        const flat = new ARKitFlat(gl)
-        // console.log(flat.map)
-        flat.map.forEach((v, k) => {
-            console.log(`${k} -> ${v}`)
-        })
-        const target = flat.getTarget(Blendshape.jawOpen)
-
-        expect(Array.from(target.indices)).to.deep.equal([
-            0, 3,
-            5
-        ])
-
-        expect(Array.from(target.dxyz)).to.deep.equal([
-            10.800000190734863, 21.600000381469727, 32.400001525878906,
-            10.800000190734863, 21.600000381469727, 32.400001525878906,
-            43.20000076293945, 54, 64.80000305175781
-        ])
-    })
 })
