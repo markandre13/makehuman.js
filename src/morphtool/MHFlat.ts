@@ -2,61 +2,23 @@ import { Application } from 'Application'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { RenderMesh } from 'render/RenderMesh'
 import { FlatMesh } from './FlatMesh'
+import { quadsToFlatQuads } from 'gl/algorithms/quadsToFlatQuads'
 
 export class MHFlat extends FlatMesh {
     app: Application
     constructor(app: Application, gl: WebGL2RenderingContext) {
         super()
         this.app = app
-        const xyz = app.humanMesh.vertexRigged
-        const fxyz = app.humanMesh.baseMesh.fxyz
-
-        const WORD_LENGTH = 2
-        let offset = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        let length = app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-
-        this.vertexOrig = xyz
-
-        const f2 = new Array<number>(length * 4) // same number of faces
-        const v2 = new Float32Array(length * 4 * 3) // four times the number of vertices
-        for (let i = offset, vo = 0, fo = 0; i < length + offset;) {
-            let i0 = fxyz[i++] * 3
-            let i1 = fxyz[i++] * 3
-            let i2 = fxyz[i++] * 3
-            let i3 = fxyz[i++] * 3
-            v2[vo++] = xyz[i0++]
-            v2[vo++] = xyz[i0++]
-            v2[vo++] = xyz[i0++]
-
-            v2[vo++] = xyz[i1++]
-            v2[vo++] = xyz[i1++]
-            v2[vo++] = xyz[i1++]
-
-            v2[vo++] = xyz[i2++]
-            v2[vo++] = xyz[i2++]
-            v2[vo++] = xyz[i2++]
-
-            v2[vo++] = xyz[i3++]
-            v2[vo++] = xyz[i3++]
-            v2[vo++] = xyz[i3++]
-
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-        }
-        this.vertexFlat = v2
-        this.facesFlat = f2
-        // this.vertexMHFlat = xyz
-        // this.facesMHFlat = fxyz
-        this.renderMesh = new RenderMesh(gl, v2, f2)
+        this.calc()
+        this.renderMesh = new RenderMesh(gl, this.vertexFlat, this.facesFlat)
     }
 
     override update() {
+        this.calc()
+        this.renderMesh.glVertex.update(this.vertexFlat) // this also take care of the normals
+    }
+
+    private calc() {
         const xyz = this.app.humanMesh.vertexRigged
         const fxyz = this.app.humanMesh.baseMesh.fxyz
 
@@ -66,40 +28,8 @@ export class MHFlat extends FlatMesh {
 
         this.vertexOrig = xyz
 
-        const f2 = new Array<number>(length * 4) // same number of faces
-        const v2 = new Float32Array(length * 4 * 3) // four times the number of vertices
-        for (let i = offset, vo = 0, fo = 0; i < length + offset;) {
-            let i0 = fxyz[i++] * 3
-            let i1 = fxyz[i++] * 3
-            let i2 = fxyz[i++] * 3
-            let i3 = fxyz[i++] * 3
-            v2[vo++] = xyz[i0++]
-            v2[vo++] = xyz[i0++]
-            v2[vo++] = xyz[i0++]
-
-            v2[vo++] = xyz[i1++]
-            v2[vo++] = xyz[i1++]
-            v2[vo++] = xyz[i1++]
-
-            v2[vo++] = xyz[i2++]
-            v2[vo++] = xyz[i2++]
-            v2[vo++] = xyz[i2++]
-
-            v2[vo++] = xyz[i3++]
-            v2[vo++] = xyz[i3++]
-            v2[vo++] = xyz[i3++]
-
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-            f2[fo] = fo
-            ++fo
-        }
-        this.vertexFlat = v2
-        this.facesFlat = f2
-        this.renderMesh.glVertex.update(v2) // this also take care of the normals
+        const { xyzFlat, fxyzFlat } = quadsToFlatQuads(fxyz, xyz, offset, length)
+        this.facesFlat = fxyzFlat
+        this.vertexFlat = xyzFlat
     }
 }
