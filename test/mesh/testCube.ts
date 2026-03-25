@@ -1,5 +1,5 @@
-import { HumanMesh } from './HumanMesh'
 import { vec3, vec4, mat4 } from 'gl-matrix'
+import { HumanMesh } from 'mesh/HumanMesh'
 
 const parentGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, -1))
 const childGlobal = mat4.translate(mat4.create(), mat4.identity(mat4.create()), vec3.fromValues(0, 0, 0))

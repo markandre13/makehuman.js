@@ -44,7 +44,6 @@ import { Form, FormLabel, FormField, FormHelp } from 'toad.js/view/Form'
 import { Display, Select, TableAdapter } from 'toad.js'
 import { StringArrayAdapter } from 'toad.js/table/adapter/StringArrayAdapter'
 import { StringArrayModel } from 'toad.js/table/model/StringArrayModel'
-import { MediapipeTab } from 'mediapipe/mediapipe'
 import { Application, setRenderer } from 'Application'
 import { RenderHuman } from 'render/RenderHuman'
 // import { BlendShapeTab } from 'blendshapes/BlendShapeTab'
@@ -127,7 +126,6 @@ async function run() {
                     <MorphTool app={app} />
                     <PoseTab app={app} />
                     {/* <ExpressionTab app={app} /> */}
-                    {/* <MediapipeTab app={app} /> */}
                     <ChordataTab app={app} />
                 </Tabs>
                 {glview}
