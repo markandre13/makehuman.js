@@ -12,15 +12,13 @@ import { FaceRenderer } from './FaceRenderer'
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
 import { ORB } from 'corba.js'
 
-export class ARKitFaceReceiver_impl extends ARKitFaceReceiver_skel {
-    faceRenderer: FaceRenderer
+class ARKitFaceReceiver extends ARKitFaceReceiver_skel {
+    private faceRenderer: FaceRenderer
     constructor(orb: ORB, faceRenderer: FaceRenderer) {
         super(orb)
         this.faceRenderer = faceRenderer
     }
     override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
-        // console.log(`ARKitFaceReceiver_impl::faceLandmarks([${landmarks.length}], [${blendshapes.length}], [${transform.length}], ${timestamp_ms})`)
-        // this.faceRenderer.blendshapeParams = blendshapes // MAKE SETTER WHICH INVALIDATES VIEW
         this.faceRenderer.faceLandmarks(blendshapes, transform, timestamp_ms)
     }
 }
@@ -92,6 +90,27 @@ export class MorphToolModel {
             this.currentGroup = nextgroup
         }
     }
+
+    constructor() {
+        this.visibilitychange = this.visibilitychange.bind(this)
+        document.addEventListener("visibilitychange", this.visibilitychange)
+
+        this.morphGroups.signal.add(this.switchGroup)
+        this.morphGroups.signal.add(this.deleteEnabled)
+        this.morphGroups.signal.add(this.addEnabled)
+        this.addEnabled()
+        this.deleteEnabled()
+
+        this.morphGroupData.all().then(data => {
+            const morphGroupNames = data.map(it => it.name)
+            this.mapping = ["none", ...morphGroupNames]
+            this.morphGroups.setMapping(this.mapping)
+        })
+
+        const connector = di.get(Connector)
+        this.connect = this.connect.bind(this)
+        connector.signal.add(this.connect)
+    }
     private visibilitychange() {
         if (document.visibilityState === "hidden" && this.renderer) {
             const old = this.renderer.selection
@@ -111,26 +130,6 @@ export class MorphToolModel {
             await fs.write("morphgroup.json", uint8Array)
         }
     }
-    constructor() {
-        this.visibilitychange = this.visibilitychange.bind(this)
-        document.addEventListener("visibilitychange", this.visibilitychange)
-
-        this.morphGroups.signal.add(this.switchGroup)
-        this.morphGroups.signal.add(this.deleteEnabled)
-        this.morphGroups.signal.add(this.addEnabled)
-        this.addEnabled()
-        this.deleteEnabled()
-
-        this.morphGroupData.all().then(data => {
-            const morphGroupNames = data.map(it => it.name)
-            this.mapping = ["none", ...morphGroupNames]
-            this.morphGroups.setMapping(this.mapping)
-        })
-
-        const connector = di.get(Connector)
-        connector.signal.add(() => this.connect())
-        this.connect()
-    }
     private connect() {
         const connector = di.get(Connector)
         if (connector.state !== ConnectionState.CONNECTED) {
@@ -143,7 +142,7 @@ export class MorphToolModel {
                 console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
                 if (device.device instanceof ARKitFaceDevice) {
                     console.log("FOUND ARKitFaceDevice -> set receiver")
-                    device.device.receiver(new ARKitFaceReceiver_impl(backend._orb, this.faceRenderer!))
+                    device.device.receiver(new ARKitFaceReceiver(backend._orb, this.faceRenderer!))
                 }
             }
         })
