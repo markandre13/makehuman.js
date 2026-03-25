@@ -1,58 +1,59 @@
 {
-  "name": "makehuman.js",
-  "version": "0.0.1",
-  "description": "A MakeHuman variant with different features",
-  "author": "Mark-André Hopf <mhopf@mark13.org> based on work of the MakeHuman Team (www.makehumancommunity.org)",
-  "license": "AGPL-3.0-or-later",
-  "engines": {
-    "npm": ">=8.1.2",
-    "node": ">=16.10.0"
-  },
-  "main": "index.html",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/markandre13/makehuman.js.git"
-  },
-  "scripts": {
-    "build": "npm run build:data && npm run build:idl && npm run build:once && npm run build:chai",
-    "build:once": "rollup --config rollup.config.mjs",
-    "build:chai": "mkdir -p build/test/chai && cp test/chai/*\\.js test/chai/*\\.d\\.ts build/test/chai",
-    "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-data-dir.ts && mv -f dist/filesystem/build-data-dir.js dist/filesystem/build-data-dir.cjs && node dist/filesystem/build-data-dir.cjs ) ",
-    "build:idl": "corba-idl --ts-interface --ts-skeleton --ts-stub src/net/makehuman.idl src/net/fs.idl",
-    "rebuild:data": "rm -f data/directory.json && npm run build:data",
-    "build:watch": "rollup --config rollup.config.js --watch",
-    "build:client": "rollup --bundleConfigAsCjs --config rollup-client.config.js",
-    "dev:prepare": "npm run build:data && npm run build:chai && npm run build:idl",
-    "dev:build": "npm run build:idl && tspc -w -p tsconfig.dev.json",
-    "dev:test": "npm run build:chai && if test -z \"$npm_config_file\" ; then wtr --watch 'build/test/**/*.spec.js' ; else wtr --watch \"$npm_config_file\" ; fi",
-    "dev:serve": "wds --node-resolve --watch --open --app-index index.dev.html",
-    "update": "npx npm-check-updates -u && npm install"
-  },
-  "dependencies": {
-    "@markandre13/usd.js": "^0.0.5",
-    "corba.js": "^0.1.20",
-    "fflate": "^0.8.2",
-    "gl-matrix": "^3.4.4",
-    "toad.js": "^0.2.4"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^29.0.2",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-terser": "^1.0.0",
-    "@types/chai": "^5.2.3",
-    "@types/chai-almost": "^1.0.3",
-    "@types/chai-string": "^1.4.5",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^25.5.0",
-    "@web/dev-server": "^0.4.6",
-    "@web/test-runner": "^0.20.2",
-    "chai": "^6.2.2",
-    "mocha": "^11.7.5",
-    "rollup": "^4.59.0",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "temporal-polyfill": "^0.3.2",
-    "ts-node": "^10.9.2",
-    "ts-patch": "^3.3.0",
-    "typescript": "^5.9.3"
-  }
+    "name": "makehuman.js",
+    "version": "0.0.1",
+    "description": "A MakeHuman variant with different features",
+    "author": "Mark-André Hopf <mhopf@mark13.org> based on work of the MakeHuman Team (www.makehumancommunity.org)",
+    "license": "AGPL-3.0-or-later",
+    "engines": {
+        "npm": ">=8.1.2",
+        "node": ">=16.10.0"
+    },
+    "main": "index.html",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/markandre13/makehuman.js.git"
+    },
+    "scripts": {
+        "build": "npm run build:transformer && npm run build:data && npm run build:idl && npm run build:once && npm run build:chai",
+        "build:once": "rollup --config rollup.config.mjs",
+        "build:transformer": "tsc -types node m13-es-transformer.ts",
+        "build:chai": "mkdir -p build/test/chai && cp test/chai/*\\.js test/chai/*\\.d\\.ts build/test/chai",
+        "build:data": "test -f data/directory.json || ( tsc --outDir dist/filesystem src/filesystem/build-data-dir.ts && mv -f dist/filesystem/build-data-dir.js dist/filesystem/build-data-dir.cjs && node dist/filesystem/build-data-dir.cjs ) ",
+        "build:idl": "corba-idl --ts-interface --ts-skeleton --ts-stub src/net/makehuman.idl src/net/fs.idl",
+        "rebuild:data": "rm -f data/directory.json && npm run build:data",
+        "build:watch": "rollup --config rollup.config.js --watch",
+        "build:client": "rollup --bundleConfigAsCjs --config rollup-client.config.js",
+        "dev:prepare": "npm run build:data && npm run build:chai && npm run build:idl",
+        "dev:build": "npm run build:transformer && npm run build:idl && tspc -w -p tsconfig.dev.json",
+        "dev:test": "npm run build:chai && if test -z \"$npm_config_file\" ; then wtr --watch 'build/test/**/*.spec.js' ; else wtr --watch \"$npm_config_file\" ; fi",
+        "dev:serve": "wds --node-resolve --watch --open --app-index index.dev.html",
+        "update": "npx npm-check-updates -u && npm install"
+    },
+    "dependencies": {
+        "@markandre13/usd.js": "^0.0.6",
+        "corba.js": "^0.1.20",
+        "fflate": "^0.8.2",
+        "gl-matrix": "^3.4.4",
+        "toad.js": "^0.2.4"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^29.0.2",
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-terser": "^1.0.0",
+        "@types/chai": "^5.2.3",
+        "@types/chai-almost": "^1.0.3",
+        "@types/chai-string": "^1.4.5",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^25.5.0",
+        "@web/dev-server": "^0.4.6",
+        "@web/test-runner": "^0.20.2",
+        "chai": "^6.2.2",
+        "mocha": "^11.7.5",
+        "rollup": "^4.60.0",
+        "rollup-plugin-typescript2": "^0.36.0",
+        "temporal-polyfill": "^0.3.2",
+        "ts-node": "^10.9.2",
+        "ts-patch": "^3.3.0",
+        "typescript": "^5.9.3"
+    }
 }

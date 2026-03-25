@@ -9,6 +9,13 @@
             "ESNext",
             "DOM"
         ],
+        "types": [
+            "node",
+            "mocha",
+            "chai",
+            "chai-almost",
+            "chai-string"
+        ],
         "baseUrl": "src",
         "incremental": false,
         "jsx": "react-jsx",

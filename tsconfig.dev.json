@@ -6,7 +6,7 @@
         "esModuleInterop": true,
         "plugins": [
             {
-                "transform": "./m13-es-transformer.ts",
+                "transform": "./m13-es-transformer.js",
                 "after": true,
             }
         ],
