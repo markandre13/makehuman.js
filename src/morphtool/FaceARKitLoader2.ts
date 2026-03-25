@@ -6,6 +6,12 @@ import { MorphTarget } from 'target/MorphTarget'
 export interface BlendshapeMesh {
     preload(): BlendshapeMesh
     get fxyz(): number[]
+    /**
+     * xyz
+     * @param blendshapeParams 
+     * @param blendshapeTransform transform for head
+     * @param vertex destination
+     */
     getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array
 }
 

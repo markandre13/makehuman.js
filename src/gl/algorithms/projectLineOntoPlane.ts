@@ -2,6 +2,11 @@ import { ReadonlyVec3, vec3 } from "gl-matrix"
 import { intersectLineAndPlane } from "./intersectLineAndPlane"
 import { resolveParamsForPointInPlane } from "./resolveParamsForPointInPlane"
 
+/**
+ * intersection of line with plane at P := O + a * A + b * B
+ * 
+ * d: distance between line origin and plane
+ */
 export interface Projection {
     a: number
     b: number

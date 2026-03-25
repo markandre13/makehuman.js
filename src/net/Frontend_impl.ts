@@ -49,6 +49,7 @@ export class Frontend_impl extends Frontend_skel {
         transform: Float32Array,
         timestamp_ms: bigint
     ): void {
+        // console.log()
         this.landmarks = landmarks
         this.updateManager.invalidateView()
         this.blendshapeModel.setBlendshapeWeights(blendshapes, transform)
