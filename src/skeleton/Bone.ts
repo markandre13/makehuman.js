@@ -104,9 +104,9 @@ export class Bone {
     }
 
     // FIXME: WTF???
-    get planes(): Map<string, Array<string>> {
-        return this.skeleton.planes
-    }
+    // get planes(): Map<string, Array<string>> {
+    //     return this.skeleton.planes
+    // }
 
     getRestHeadPos(): vec3 {
         return vec3.fromValues(this.headPos[0], this.headPos[1], this.headPos[2])
@@ -226,7 +226,7 @@ export class Bone {
                 )
             } else {
                 this.matPoseGlobal = mat4.multiply(mat4.create(), this.matRestRelative!, this.matUserPoseRelative!)
-            }    
+            }
         }
 
         this.matPoseVerts = mat4.multiply(
@@ -305,7 +305,7 @@ export class Bone {
             //     normal = np.asarray([0.0, 1.0, 0.0], dtype=np.float32)
         } else if (typeof this.roll === "string") {
             const plane_name = this.roll // TODO ugly.. why not call this something else than "roll"?
-            normal = getNormal(this.skeleton, plane_name, this.planes)
+            normal = getNormal(this.skeleton, plane_name)
             // if np.allclose(normal, np.zeros(3), atol=1e-05):
             //     normal = np.asarray([0.0, 1.0, 0.0], dtype=np.float32)
         } else {
@@ -341,12 +341,12 @@ function a2vec3(a: number[] | undefined) {
 
 // Return the normal of a triangle plane defined between three joint positions,
 // using counter-clockwise winding order (right-handed).
-function getNormal(skel: Skeleton, plane_name: string, plane_defs: Map<string, Array<string>>) {
-    if (!plane_defs.has(plane_name)) {
+function getNormal(skel: Skeleton, plane_name: string) {
+    const joint_names = skel.getPlane(plane_name)
+    if (joint_names === undefined) {
         console.warn(`No plane with name ${plane_name} defined for skeleton.`)
-        vec3.fromValues(0, 1, 0)
+        return vec3.fromValues(0, 1, 0)
     }
-    const joint_names = plane_defs.get(plane_name)!
     const [j1, j2, j3] = joint_names
     const p1 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j1)), skel.scale)
     const p2 = vec3.scale(vec3.create(), a2vec3(skel.getJointPosition(j2)), skel.scale)

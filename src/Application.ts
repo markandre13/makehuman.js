@@ -33,6 +33,8 @@ import { RenderView } from "render/RenderView"
 import { mat4 } from "gl-matrix"
 import { di } from "lib/di"
 import { ARKitBlendshapeMesh } from "morphtool/ARKitBlendshapeMesh"
+import { computeBlendshapes } from "morphtool/MorphRenderer"
+import { ComputedBlendshapeMesh } from "morphtool/ComputedBlendshapeMesh"
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // this smoothes my crappy API design for now
@@ -56,6 +58,8 @@ export class Application {
     blendshape2pose: BlendshapeToPose
 
     status = new TextModel("")
+
+    computedBlendShapes?: ComputedBlendshapeMesh
 
     // makehuman
     morphManager: MorphManager // MorphManager / MorphController
@@ -145,6 +149,16 @@ export class Application {
         })
 
         this.renderView = {} as any
+
+        // console.log("COMPUTE BLENDSHAPE")
+        // try {
+        // this.computedBlendShapes = computeBlendshapes(this.morphManager, this.skeleton, this.humanMesh)
+        // } catch(e) {
+        //     console.log(e)
+        //     throw e
+        // }
+        // console.log("COMPUTED BLENDSHAPE")
+        // console.log(this.computedBlendShapes)
 
         // FIXME: OOP SMELL => replace ENUM with OBJECT
         this.tabModel = new EnumModel(TAB.PROXY, TAB)

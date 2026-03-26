@@ -24,8 +24,12 @@ export class Skeleton {
     roots: Bone[] = [] // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
 
     joint_pos_idxs = new Map<string, Array<number>>() // Lookup by joint name referencing vertex indices on the human, to determine joint position
-    planes = new Map<string, string[]>() // Named planes defined between joints, used for calculating bone roll angle
+    private planes = new Map<string, string[]>() // Named planes defined between joints, used for calculating bone roll angle
     plane_map_strategy?: number = 3 // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
+
+    getPlane(planeName: string) {
+        return this.planes.get(planeName)
+    }
 
     vertexWeights?: VertexBoneWeights
     // Source vertex weights, defined on the basemesh, for this skeleton
