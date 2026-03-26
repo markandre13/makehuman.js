@@ -6,7 +6,6 @@ import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
 import { Application } from "Application"
 import { mat4, quat2, vec3 } from "gl-matrix"
 import { Skeleton } from "skeleton/Skeleton"
-import { IBlendshapeConverter } from "blendshapes/IBlendshapeConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { quaternion_slerp } from "gl/algorithms/quaternion_slerp"
 import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
@@ -49,8 +48,6 @@ export class UpdateManager {
         return this.blendshapeModel
     }
 
-    blendshapeConverter?: IBlendshapeConverter
-
     //
     // flags for change detection
     //
@@ -86,7 +83,6 @@ export class UpdateManager {
         this.app = app
         this.skeleton = app.skeleton
         this.blendshapeModel = app.blendshapeModel
-        this.blendshapeConverter = app.blendshapeConverter
         const sliderNodes = app.sliderNodes
 
         // observe morph slider
@@ -148,9 +144,6 @@ export class UpdateManager {
             })
         })
 
-        this.app.blendshapeToPoseConfig.signal.add(() => {
-            this.blendshapeToPoseConfigChanged = true
-        }, this)
         this.setBlendshapeModel(app.blendshapeModel)
     }
 
@@ -262,16 +255,6 @@ export class UpdateManager {
         // the outcome isn't very convincing:
         // * because both are different
         // * MH's face rig can not mimic ARKits blendshapes as needed
-
-        if (this.blendshapeToPoseConfigChanged) {
-            this.app.blendshapeToPoseConfig.convert(this.app.makehumanFacePoseUnits, this.app.blendshape2pose)
-            this.blendshapeToPoseConfigChanged = false
-            this.blendshapeModelChanged = true
-        }
-
-        if (!this.blendshapeModelChanged) {
-            return
-        }
 
         // this.blendshapeConverter!.applyToSkeleton(this.blendshapeModel!, this.skeleton)
         this.blendshapeModelChanged = false
@@ -441,8 +424,6 @@ export class UpdateManager {
     }
 
 }
-
-
 
 // https://de.mathworks.com/matlabcentral/answers/2092961-how-to-calculate-the-angle-between-two-3d-vectors
 // % most robust, most accurate, recovers tiny angles very well, slowest

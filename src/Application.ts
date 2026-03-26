@@ -20,12 +20,7 @@ import { ARKitFaceDevice, Backend, MediaPipeTask, Recorder, VideoCamera } from "
 import { FileSystem } from "net/fs_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
-import { Blendshape2PoseConverter } from "blendshapes/Blendshape2PoseConverter"
 import { BlendshapeModel } from "blendshapes/BlendshapeModel"
-import { BlendshapeToPose } from "blendshapes/BlendshapeToPose"
-import { MHFacePoseUnits } from "blendshapes/MHFacePoseUnits"
-import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshapeToPoseConfig"
-import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 import { VALUE } from "toad.js/model/ValueModel"
 import { Connector } from "net/Connector"
 import { BooleanModel, TextModel } from "toad.js"
@@ -52,10 +47,6 @@ export class Application {
     frontend: Frontend_impl
     connector: Connector
     blendshapeModel: BlendshapeModel
-    blendshapeConverter: Blendshape2PoseConverter
-    blendshapeToPoseConfig: BlendshapeToPoseConfig
-    makehumanFacePoseUnits: MHFacePoseUnits
-    blendshape2pose: BlendshapeToPose
 
     status = new TextModel("")
 
@@ -130,20 +121,9 @@ export class Application {
         // blendshapes
         //
 
-        // load makehumans original face pose units
-        this.makehumanFacePoseUnits = new MHFacePoseUnits(this.skeleton)
-
-        // our own face poses on top of on makehuman's face pose units
-        this.blendshapeToPoseConfig = makeDefaultBlendshapeToPoseConfig(this.skeleton)
-
-        // blendshapeToPoseConfig + makehumanFacePoseUnits => blendshape2pose
-        this.blendshape2pose = new BlendshapeToPose()
-        this.blendshapeToPoseConfig.convert(this.makehumanFacePoseUnits, this.blendshape2pose)
 
         // blendshape weights from backend (e.g. mediapipe, live link)
         this.blendshapeModel = new BlendshapeModel()
-
-        this.blendshapeConverter = new Blendshape2PoseConverter(this)
 
         // needs skeleton, blendshapeModel, blendshapeConverter, 
         this.updateManager = new UpdateManager(this)
