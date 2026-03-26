@@ -659,7 +659,7 @@ export default function ChordataTab(props: { app: Application }) {
                 <FormHelp model={notochord.calibration} /> */}
 
                 <FormSwitch model={settings.mountKCeptorView} />
-                <FormSwitch model={humanMesh.wireframe} />
+                <FormSwitch model={props.app.wireframe} />
 
                 {/* <FormLabel>Custom Pre Calibrate</FormLabel>
                 <FormField>

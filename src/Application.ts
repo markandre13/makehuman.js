@@ -28,7 +28,7 @@ import { makeDefaultBlendshapeToPoseConfig } from "blendshapes/defaultBlendshape
 import { BlendshapeToPoseConfig } from "blendshapes/BlendshapeToPoseConfig"
 import { VALUE } from "toad.js/model/ValueModel"
 import { Connector } from "net/Connector"
-import { TextModel } from "toad.js"
+import { BooleanModel, TextModel } from "toad.js"
 import { RenderView } from "render/RenderView"
 import { mat4 } from "gl-matrix"
 import { di } from "lib/di"
@@ -65,6 +65,8 @@ export class Application {
     glview!: RenderView
     /** classic MakeHuman: convert pose unit to matPose after blending all pose units */
     classic = true
+
+    wireframe = new BooleanModel(false, { label: "Wireframe" })
 
     // application
     sliderNodes: SliderNode

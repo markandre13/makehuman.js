@@ -185,7 +185,7 @@ function ProxyTab(props: { app: Application }) {
                         <FormHelp model={props.app.proxyManager.list.get(pid) as any} />
                     </>
                 ))}
-                <FormSwitch model={props.app.humanMesh.wireframe} />
+                <FormSwitch model={props.app.wireframe} />
             </Form>
             <div id="debug">DEBUG</div>
         </Tab>

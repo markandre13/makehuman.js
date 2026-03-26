@@ -17,9 +17,7 @@ export class HumanMesh {
 
     proxies = new Map<ProxyType, Proxy>()
     changedProxy?: ProxyType
-    
-    wireframe = new BooleanModel(false, { label: "Wireframe" })
-
+  
     constructor(morphManager: MorphManager, baseMesh: WavefrontObj) {
         this.morphManager = morphManager
         this.baseMesh = baseMesh

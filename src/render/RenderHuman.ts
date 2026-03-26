@@ -65,7 +65,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
     const gl = view.gl
     const shaderShadedMono = view.shaderShadedMono
     const shaderShadedTexture = view.shaderShadedTexture
-    const wireframe = app.humanMesh.wireframe.value
+    const wireframe = app.wireframe.value
 
     const WORD_LENGTH = 2
 

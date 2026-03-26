@@ -67,7 +67,7 @@ export class RenderView extends GLView {
         this.app.updateManager.render = this.paint
         // ...this does not
         this.app.humanMesh.morphManager.signal.add(() => this.app.updateManager.invalidateView())
-        this.app.humanMesh.wireframe.signal.add(() => this.app.updateManager.invalidateView())
+        this.app.wireframe.signal.add(() => this.app.updateManager.invalidateView())
 
         this.bodyTexture = new Texture(this, "data/skins/textures/young_caucasian_female_special_suit.png")
         this.eyeTexture = new Texture(this, "data/eyes/materials/green_eye.png")
