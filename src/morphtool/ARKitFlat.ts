@@ -5,6 +5,8 @@ import { di } from 'lib/di'
 import { ARKitBlendshapeMesh } from './ARKitBlendshapeMesh'
 import { trianglesToFlatTriangles } from 'gl/algorithms/trianglesToFlatTriangles'
 
+// make this TriangleFlat?
+// get rid of RenderMesh (in all of makehuman.js)
 export class ARKitFlat extends FlatMesh {
     constructor(gl: WebGL2RenderingContext) {
         super()

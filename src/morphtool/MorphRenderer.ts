@@ -1,7 +1,7 @@
 import { Application } from 'Application'
 import { vec3 } from 'gl-matrix'
 import { calculateNormalsQuads } from 'gl/algorithms/calculateNormalsQuads'
-import { Projection, projectLineOntoPlane } from 'gl/algorithms/projectLineOntoPlane'
+import { isInTriangle, projectLineOntoPlane } from 'gl/algorithms/projectLineOntoPlane'
 import { quadsToEdges } from "gl/algorithms/quadsToEdges"
 import { trianglesToEdges } from "gl/algorithms/trianglesToEdges"
 import { IndexBuffer } from 'gl/buffers/IndexBuffer'
@@ -50,6 +50,8 @@ export class MorphRenderer extends RenderHandler {
     private distanceIndex?: IndexBuffer
     private distanceVertex?: VertexBuffer
 
+    private arkitNeutral: WavefrontObj
+
     /**
      * MakeHuman face index to projection with ARKit
      */
@@ -67,6 +69,8 @@ export class MorphRenderer extends RenderHandler {
         model.isARKitActive.signal.add(app.glview.invalidate)
         model.showBothMeshes.signal.add(app.glview.invalidate)
         model.isTransparentActiveMesh.signal.add(app.glview.invalidate)
+
+        this.arkitNeutral = di.get(ARKitBlendshapeMesh).getNeutral()!
     }
     override defaultCamera() {
         return this.app.headCamera
@@ -240,7 +244,6 @@ export class MorphRenderer extends RenderHandler {
             mhUniqueIndexSet.add(index)
         }
         // TODO: optimize ARKit
-        const arobj = di.get(ARKitBlendshapeMesh)._neutral!
 
         const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
 
@@ -255,7 +258,7 @@ export class MorphRenderer extends RenderHandler {
             flat: ak,
             vertices: arVertices,
             indicesAllPoints: indicesForAllVertices(arVertices),
-            indicesAllEdges: trianglesToEdges(gl, arobj.fxyz), // this is too much
+            indicesAllEdges: trianglesToEdges(gl, this.arkitNeutral.fxyz), // this is too much
             pickColors: new PickColorBuffer(arVertices),
             selectionColors: new SelectionColorBuffer(arVertices)
         }]
@@ -269,8 +272,12 @@ export class MorphRenderer extends RenderHandler {
         const outXYZ: number[] = []
         const outFXYZ: number[] = []
         calculateDistance(
-            this.app.humanMesh.baseMesh,
-            this.pickMeshes,
+            this.app.humanMesh.baseMesh.fxyz,
+            // this.pickMeshes[MH_MESH].vertices.data,
+            this.app.humanMesh.vertexRigged,
+            this.arkitNeutral.fxyz,
+            this.pickMeshes[AR_MESH].vertices.data,
+            // this.arobj.xyz,
             this.mh2arProjection,
             outXYZ, outFXYZ
         )
@@ -421,27 +428,36 @@ function vec3Project(out: vec3, fxyz: number[], xyz: Float32Array, proj: ARKitPr
 }
 
 /**
+ * project normals of MH onto AR
+ * 
  * for each MH face vertex normal, find nearest ARKit intersection
  * 
  * this.mh2arProjection
  * 
  * this.distanceIndex, this.distanceVertex: lines to draw the distance
+ * 
+ * @param fxyzMH quads
+ * @param xyzMH vertices for fxyzMH
+ * @param fxyzAR triangles
+ * @param xyzAR vertices for fxyzAR
+ * @param outMh2arProjection 
+ * @param outXYZ 
+ * @param outFXYZ 
  */
 function calculateDistance(
-    baseMesh: WavefrontObj,
-    pickMeshes: PickMesh[],
+    fxyzMH: ArrayLike<number>,
+    xyzMH: Float32Array,
+    fxyzAR: ArrayLike<number>,
+    xyzAR: Float32Array,
     outMh2arProjection: Map<number, ARKitProjection>,
     outXYZ?: number[],
     outFXYZ?: number[]
 ) {
-    const arkit = di.get(ARKitBlendshapeMesh).preload()
-    const arfxyz = arkit._neutral!.fxyz
-
-    const normalData = new Float32Array(pickMeshes[MH_MESH].vertices.data.length)
+    const normalsMH = new Float32Array(xyzMH.length)
     calculateNormalsQuads(
-        normalData,
-        pickMeshes[MH_MESH].vertices.data,
-        baseMesh.fxyz
+        normalsMH,
+        xyzMH,
+        fxyzMH
     )
 
     outMh2arProjection.clear()
@@ -450,16 +466,16 @@ function calculateDistance(
         // mh mesh point P with normal N
         let match
         let arFaceIndex
-        vec3FromArray(P, pickMeshes[MH_MESH].vertices.data, mhFaceIndex)
-        vec3FromArray(N, normalData, mhFaceIndex)
+        vec3FromArray(P, xyzMH, mhFaceIndex)
+        vec3FromArray(N, normalsMH, mhFaceIndex)
 
         // for all arkit triangles: project MH onto ARKIT and find closest
-        for (let i = 0; i < arfxyz.length;) {
+        for (let i = 0; i < fxyzAR.length;) {
             let _i = i
 
-            vec3FromArray(O, pickMeshes[AR_MESH].vertices.data, arfxyz[i++])
-            vec3FromArray(A, pickMeshes[AR_MESH].vertices.data, arfxyz[i++])
-            vec3FromArray(B, pickMeshes[AR_MESH].vertices.data, arfxyz[i++])
+            vec3FromArray(O, xyzAR, fxyzAR[i++])
+            vec3FromArray(A, xyzAR, fxyzAR[i++])
+            vec3FromArray(B, xyzAR, fxyzAR[i++])
 
             vec3.sub(A, A, O)
             vec3.sub(B, B, O)
@@ -468,9 +484,6 @@ function calculateDistance(
             //     maxD = Math.max(maxD, Math.abs(p.d))
             // }
             // NOTE: the Math.abs(p.d) < 0.1 is to suppress the most annoying errors
-            function isInTriangle(projection: Projection) {
-                return projection.a >= 0 && projection.b >= 0 && projection.a + projection.b <= 1
-            }
 
             if (projection
                 && Math.abs(projection.d) < 0.1
@@ -486,7 +499,12 @@ function calculateDistance(
                 }
             }
         }
+
         if (match) {
+            // and for the new blendmesh we need to store mhFaceIndex -> (arFaceIndex, a, b)
+            // from which we can calculate ...
+            outMh2arProjection.set(mhFaceIndex, { idx: arFaceIndex!, a: match.a, b: match.b })
+
             if (outXYZ !== undefined && outFXYZ !== undefined) {
                 // to draw the distance, add line from P to match.P
                 outFXYZ.push(outXYZ.length / 3)
@@ -494,9 +512,6 @@ function calculateDistance(
                 outFXYZ.push(outXYZ.length / 3)
                 outXYZ.push(...match.P)
             }
-            // and for the new blendmesh we need to store mhFaceIndex -> (arFaceIndex, a, b)
-            // from which we can calculate ...
-            outMh2arProjection.set(mhFaceIndex, { idx: arFaceIndex!, a: match.a, b: match.b })
         }
     }
 }
@@ -544,7 +559,7 @@ function computeBlendshapeMesh(baseMesh: WavefrontObj, mh2arProjection: Map<numb
     const neutralOnAr = vec3.create()
     const morphOnAr = vec3.create()
 
-    const targets = new Array<MorphTarget>(Blendshape.SIZE);
+    const targets = new Array<MorphTarget>(Blendshape.SIZE)
     const neutralXYZ = arkit.xyz(Blendshape.neutral)
     for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
         const morphXYZ = arkit.xyz(blendshape)

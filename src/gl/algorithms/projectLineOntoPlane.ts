@@ -14,6 +14,10 @@ export interface Projection {
     d: number
 }
 
+export function isInTriangle(projection: Projection) {
+    return projection.a >= 0 && projection.b >= 0 && projection.a + projection.b <= 1
+}
+
 const V = vec3.create()
 const T = vec3.create()
 
