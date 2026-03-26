@@ -8,14 +8,16 @@ import { isZero } from "gl/algorithms/isZero"
 
 export class HumanMesh {
     morphManager: MorphManager
+    skeleton!: Skeleton
+
     // data/3dobjs/base.obj
     baseMesh: WavefrontObj
     vertexMorphed: Float32Array
     vertexRigged: Float32Array
-    skeleton!: Skeleton
 
     proxies = new Map<ProxyType, Proxy>()
-    changedProxy: ProxyType | undefined
+    changedProxy?: ProxyType
+    
     wireframe = new BooleanModel(false, { label: "Wireframe" })
 
     constructor(morphManager: MorphManager, baseMesh: WavefrontObj) {
@@ -33,7 +35,11 @@ export class HumanMesh {
      */
     calculateVertexMorphed() {
         // console.log(`HumanMesh.calculateVertexMorphed()`)
-        this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
+        if (this.vertexMorphed === this.baseMesh.xyz) {
+            this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
+        } else {
+            this.vertexMorphed.set(this.baseMesh.xyz)
+        }
         this.morphManager.targetsDetailStack.forEach((value, targetName) => {
             if (isNaN(value)) {
                 // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)

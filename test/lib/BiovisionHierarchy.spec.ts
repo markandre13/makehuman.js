@@ -554,7 +554,6 @@ Frame Time: 0.041667
         const human = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         const humanMesh = new HumanMesh(human, obj)
-        human.humanMesh = humanMesh
         const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
         humanMesh.skeleton = skeleton
         skeleton.build()

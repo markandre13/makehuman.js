@@ -4,7 +4,7 @@ export class ProxyRefVert {
     _verts!: number[]
     _weights!: number[]
     _offset!: number[]
-    constructor(human: MorphManager) {
+    constructor() {
     }
     fromSingle(words: string[], vnum: number, vertWeights: Map<number, Array<Array<number>>>) {
         const v0 = parseInt(words[0])

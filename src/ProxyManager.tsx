@@ -64,7 +64,7 @@ export class ProxyManager {
                     const prefix = `data/${ProxyType[type].toLowerCase()}/${model.value}/${model.value}`
                     const suffix = exists(`${prefix}.mhclo`) ? "mhclo" : "proxy"
                     console.log(`load proxy mesh '${prefix}.${suffix}'`)
-                    humanMesh.proxies.set(type, loadProxy(humanMesh.morphManager, `${prefix}.${suffix}`, type))
+                    humanMesh.proxies.set(type, loadProxy(humanMesh, `${prefix}.${suffix}`, type))
                 }
                 humanMesh.changedProxy = type
                 humanMesh.morphManager.signal.emit()

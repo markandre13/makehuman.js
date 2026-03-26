@@ -94,7 +94,6 @@ export class Application {
         this.morphManager = new MorphManager()
         const obj = new WavefrontObj("data/3dobjs/base.obj")
         this.humanMesh = new HumanMesh(this.morphManager, obj)
-        this.morphManager.humanMesh = this.humanMesh
         this.skeleton = loadSkeleton(this.humanMesh, "data/rigs/default.mhskel")
         this.humanMesh.skeleton = this.skeleton
         loadModifiers(this.morphManager, "data/modifiers/modeling_modifiers.json")

@@ -28,13 +28,13 @@ describe("Proxy", function () {
         FileSystemAdapter.setInstance(new HTTPFSAdapter())
     })
 
-    const human = {} as any
+    const humanMesh = {} as HumanMesh
     // const filepath = "data/proxymeshes/female_generic/female_generic.proxy"
     const filepath = "data/proxymeshes/proxy741/proxy741.proxy"
     const type = ProxyType.Proxymeshes
 
     it("loading proxy741.proxy yields the same data as the python code from upstream", function () {
-        const proxy = loadProxy(human, "data/proxymeshes/proxy741/proxy741.proxy", type)
+        const proxy = loadProxy(humanMesh, "data/proxymeshes/proxy741/proxy741.proxy", type)
 
         expect(proxy.weights.length).to.equal(proxy741.weights.length)
         expect(proxy.ref_vIdxs.length).to.equal(proxy741.ref_vIdxs.length)
@@ -53,7 +53,7 @@ describe("Proxy", function () {
     })
 
     it("loading teeth_base.mhclo yields the same data as the python code from upstream", function () {
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Clothes)
+        const proxy = loadProxy(humanMesh, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Clothes)
 
         expect(proxy.weights.length).to.equal(proxy_teeth_base.weights.length)
         expect(proxy.ref_vIdxs.length).to.equal(proxy_teeth_base.ref_vIdxs.length)
@@ -70,7 +70,7 @@ describe("Proxy", function () {
 
     // okay, since this gives the same result, maybe either 
     xit("i feed makehuman.js basemesh into the teeth python proxy, check if makehuman.js gives the same result", function () {
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Clothes)
+        const proxy = loadProxy(humanMesh, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Clothes)
         const coords = proxy.getCoords(new Float32Array(jaw_open_base_mesh))
         expect(coords.length).to.equal(jaw_open_proxy_teeth_base.length)
         expect(coords).to.deep.almost.equal(new Float32Array(jaw_open_proxy_teeth_base))
@@ -83,9 +83,7 @@ describe("Proxy", function () {
         const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
-        human.humanMesh = humanMesh
-
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
+        const proxy = loadProxy(humanMesh, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
         humanMesh.proxies.set(ProxyType.Teeth, proxy)
 
         const skeleton = loadSkeleton(humanMesh, 'data/rigs/default.mhskel')
@@ -108,8 +106,7 @@ describe("Proxy", function () {
         const human = new MorphManager()
         const obj = new WavefrontObj('data/3dobjs/base.obj')
         const humanMesh = new HumanMesh(human, obj)
-        human.humanMesh = humanMesh
-        const proxy = loadProxy(human, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
+        const proxy = loadProxy(humanMesh, "data/teeth/teeth_base/teeth_base.mhclo", ProxyType.Teeth)
         humanMesh.proxies.set(ProxyType.Teeth, proxy)
         const skeleton = loadSkeleton(humanMesh, 'data/rigs/default.mhskel')
         humanMesh.skeleton = skeleton
@@ -119,7 +116,7 @@ describe("Proxy", function () {
     })
 
     it("constructor", function () {
-        const proxy = new Proxy(filepath, type, human)
+        const proxy = new Proxy(filepath, type, humanMesh)
 
         expect(proxy.file).to.equal(filepath)
         expect(proxy.type).to.equal(type)
@@ -152,7 +149,7 @@ describe("Proxy", function () {
     })
 
     it("loadTextProxy", function () {
-        const proxy = loadTextProxy(human, filepath, type, `
+        const proxy = loadTextProxy(humanMesh, filepath, type, `
             name Jan Hammer
             uuid maybe ed6b7c98-1272-45a5-934a-e2ac0b49af88
             description A Test
@@ -257,13 +254,11 @@ describe("Proxy", function () {
             16, 17, 18,
         ])
 
-        const human = {
-            humanMesh: {
+        const humanMesh = {
                 vertexMorphed: hcoord
-            }
-        } as MorphManager
+        } as HumanMesh
 
-        const proxy = loadTextProxy(human, filepath, type, `
+        const proxy = loadTextProxy(humanMesh, filepath, type, `
             x_scale 1 2 2.3
             y_scale 3 4 3.5
             z_scale 5 6 4.7
@@ -282,7 +277,7 @@ describe("Proxy", function () {
     })
     describe("ProxyRefVert", function () {
         it("fromSingle", function () {
-            const refVert = new ProxyRefVert(human)
+            const refVert = new ProxyRefVert()
             const vnum = 7
             const vertWeights = new Map<number, Array<Array<number>>>()
             refVert.fromSingle(["13"], vnum, vertWeights)
@@ -293,7 +288,7 @@ describe("Proxy", function () {
             expect(vertWeights.get(13)).to.deep.equal([[7, 1]])
         })
         it("fromTriple", function () {
-            const refVert = new ProxyRefVert(human)
+            const refVert = new ProxyRefVert()
             const vnum = 7
             const vertWeights = new Map<number, Array<Array<number>>>()
             refVert.fromTriple(["10654", "10641", "10642", "0.00839", "0.98499", "0.00661", "0.00009", "-0.00001", "-0.00002"], vnum, vertWeights)

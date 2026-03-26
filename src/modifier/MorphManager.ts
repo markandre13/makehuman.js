@@ -9,8 +9,6 @@ import { isZero } from "gl/algorithms/isZero"
  * Aggregate the morph modifiers
  */
 export class MorphManager {
-    humanMesh!: HumanMesh
-
     signal = new Signal()
 
     modifiers: Map<string, Modifier>

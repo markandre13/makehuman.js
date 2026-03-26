@@ -1,7 +1,6 @@
 // Human has setProxy, setHairProxy, setEyesProxy, ...
 
 import { FileSystemAdapter } from "filesystem/FileSystemAdapter"
-import { MorphManager } from "modifier/MorphManager"
 import { StringToLine } from "lib/StringToLine"
 import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { WavefrontObj } from "mesh/WavefrontObj"
@@ -11,6 +10,7 @@ import { TMatrix } from "./TMatrix"
 import { Skeleton } from "skeleton/Skeleton"
 import { zipForEach } from "lib/zipForEach"
 import { assert } from "lib/assert"
+import { HumanMesh } from "mesh/HumanMesh"
 
 // the lowercase version of ProxyType matches the directory
 export enum ProxyType {
@@ -69,15 +69,14 @@ export class Proxy {
     deleteVerts?: any
     weightsCache?: any
     cacheSkel?: any
-    human: MorphManager
+    humanMesh: HumanMesh
 
-    constructor(file: string, type: ProxyType, human: MorphManager) {
+    constructor(file: string, type: ProxyType, humanMesh: HumanMesh) {
         this.file = file
         this.type = type
         const name = basename(splitext(file))
         this.name = capitalize(name)
-
-        this.human = human
+        this.humanMesh = humanMesh
     }
 
     getMesh(): WavefrontObj {
@@ -103,10 +102,9 @@ export class Proxy {
      */
     getCoords(hcoord: Float32Array): Float32Array {
         assert(this.tmatrix !== undefined)
-        assert(this.human !== undefined)
-        assert(this.human.humanMesh !== undefined)
-        assert(this.human.humanMesh.vertexMorphed !== undefined)
-        const matrix = this.tmatrix.getMatrix(this.human.humanMesh.vertexMorphed)
+        assert(this.humanMesh !== undefined)
+        assert(this.humanMesh.vertexMorphed !== undefined)
+        const matrix = this.tmatrix.getMatrix(this.humanMesh.vertexMorphed)
 
         const ref_vIdxs = this.ref_vIdxs! // three vertices in the base mesh
         const weights = this.weights!     // three weights for each of those vertices
@@ -174,25 +172,23 @@ export class Proxy {
     }
 }
 
-export function loadProxy(human: MorphManager, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
+export function loadProxy(humanMesh: HumanMesh, path: string, type: ProxyType = ProxyType.Clothes): Proxy {
     const asciipath = path.substring(0, path.lastIndexOf(".")) + getAsciiFileExtension(type) + ".z"
-    const proxy = loadTextProxy(human, asciipath, type)
-    // proxy.loadMeshAndObject() // separate to be able to test loadTextProxy without Obj file
-    return proxy
+    return loadTextProxy(humanMesh, asciipath, type)
 }
 
 const doRefVerts = 1
 const doWeights = 2
 const doDeleteVerts = 3
 
-export function loadTextProxy(human: MorphManager, filepath: string, type: ProxyType = ProxyType.Clothes, data: string | undefined = undefined): Proxy {
+export function loadTextProxy(humanMesh: HumanMesh, filepath: string, type: ProxyType = ProxyType.Clothes, data: string | undefined = undefined): Proxy {
     let lineNumber = 0
     if (data === undefined) {
         data = FileSystemAdapter.readFile(filepath)
     }
     const reader = new StringToLine(data)
     const folder = filepath.substring(0, filepath.lastIndexOf("/"))
-    const proxy = new Proxy(filepath, type, human)
+    const proxy = new Proxy(filepath, type, humanMesh)
 
     const refVerts: ProxyRefVert[] = []
     // let weights: Array<Array<number>> | undefined = undefined
@@ -386,7 +382,7 @@ export function loadTextProxy(human: MorphManager, filepath: string, type: Proxy
         }
 
         if (status == doRefVerts) {
-            const refVert = new ProxyRefVert(human)
+            const refVert = new ProxyRefVert()
             refVerts.push(refVert)
             if (words.length == 0) {
                 refVert.fromSingle([key!], vnum, proxy.vertWeights)
