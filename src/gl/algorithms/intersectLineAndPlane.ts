@@ -10,9 +10,9 @@ import { isZero } from "./isZero"
  * @param n plane: normal
  * @returns vec3: point of intersection, null: no intersection, undefined: plane contains whole line
  */
-export function intersectLineAndPlane(l0: ReadonlyVec3, l: ReadonlyVec3, p0: ReadonlyVec3, n: ReadonlyVec3): vec3 | null | undefined {
+export function intersectLineAndPlane(out: vec3, l0: ReadonlyVec3, l: ReadonlyVec3, p0: ReadonlyVec3, n: ReadonlyVec3): vec3 | null | undefined {
     // https://en.wikipedia.org/wiki/Line–plane_intersection
-    const v = vec3.sub(vec3.create(), p0, l0)
+    const v = vec3.sub(out, p0, l0)
     const dividend = vec3.dot(v, n)
     const divisor = vec3.dot(l, n)
     if (isZero(divisor)) {
@@ -24,8 +24,8 @@ export function intersectLineAndPlane(l0: ReadonlyVec3, l: ReadonlyVec3, p0: Rea
             return null
         }
     }
-    const r = vec3.clone(l)
-    vec3.scale(r, r, dividend / divisor)
-    vec3.add(r, r, l0)
-    return r
+    // const r = vec3.clone(l)
+    vec3.scale(out, l, dividend / divisor)
+    vec3.add(out, out, l0)
+    return out
 }

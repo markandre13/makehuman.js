@@ -1,7 +1,6 @@
 import { Application } from 'Application'
 import { vec3 } from 'gl-matrix'
 import { calculateNormalsQuads } from 'gl/algorithms/calculateNormalsQuads'
-import { isZero } from 'gl/algorithms/isZero'
 import { Projection, projectLineOntoPlane } from 'gl/algorithms/projectLineOntoPlane'
 import { quadsToEdges } from "gl/algorithms/quadsToEdges"
 import { trianglesToEdges } from "gl/algorithms/trianglesToEdges"
@@ -17,12 +16,13 @@ import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
 import { MorphTarget } from 'target/MorphTarget'
 import { ARKitFlat } from './ARKitFlat'
-import { FaceARKitLoader2 } from './FaceARKitLoader2'
+import { ARKitBlendshapeMesh } from './ARKitBlendshapeMesh'
 import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
 import { FaceRenderer } from './FaceRenderer'
 import { FlatMesh } from './FlatMesh'
 import { MHFlat } from './MHFlat'
 import { MorphToolModel } from './MorphToolModel'
+import { ComputedBlendshapeMesh } from './ComputedBlendshapeMesh'
 
 interface PickMesh {
     flat: FlatMesh
@@ -42,39 +42,6 @@ interface ARKitProjection {
     a: number
 }
 
-class ComputedBlendshapeMesh implements BlendshapeMeshAPI {
-    private _targets: Array<MorphTarget>
-    private _xyz!: Float32Array
-    private _fxyz!: number[] // quads
-
-    constructor(xyz: Float32Array, fxyz: number[], targets: Array<MorphTarget>) {
-        this._xyz = xyz
-        this._fxyz = fxyz
-        this._targets = targets
-    }
-
-    preload(): BlendshapeMeshAPI {
-        return this
-    }
-    get fxyz(): number[] {
-        return this._fxyz
-    }
-    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array {
-        if (vertex === undefined) {
-            vertex = new Float32Array(this._xyz.length)
-        }
-        vertex.set(this._xyz)
-        for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
-            const weight = blendshapeParams[blendshape]
-            if (isZero(weight)) {
-                continue
-            }
-            this._targets[blendshape].apply(vertex, weight)
-        }
-        return vertex
-    }
-}
-
 export class MorphRenderer extends RenderHandler {
     // arkit?: FaceARKitLoader
     private app: Application
@@ -88,7 +55,7 @@ export class MorphRenderer extends RenderHandler {
      */
     private mh2arProjection = new Map<number, ARKitProjection>()
     faceRenderer: FaceRenderer
-    facemh?: BlendshapeMeshAPI
+    computedBlendshapeMesh?: BlendshapeMeshAPI
 
     pickMeshes!: PickMesh[]
 
@@ -141,10 +108,10 @@ export class MorphRenderer extends RenderHandler {
         ) {
             // calculate the blendshapes?
             console.log("DEBUG 2")
-            this.facemh = calculateBlendshapes(app.humanMesh.baseMesh, this.mh2arProjection)
+            this.computedBlendshapeMesh = computeBlendshapeMesh(app.humanMesh.baseMesh, this.mh2arProjection)
 
             console.log(`MorphRenderer::paint(): this.faceRenderer.setBlendshapeMesh(facemh)`)
-            this.faceRenderer.setBlendshapeMesh(this.facemh)
+            this.faceRenderer.setBlendshapeMesh(this.computedBlendshapeMesh)
             this.needToCalculateMHBlendshapes = false
         }
 
@@ -157,9 +124,9 @@ export class MorphRenderer extends RenderHandler {
 
         if (this.model.showAnimation.value) {
             if (this.model.isARKitActive.value) {
-                this.faceRenderer.setBlendshapeMesh(di.get(FaceARKitLoader2))
+                this.faceRenderer.setBlendshapeMesh(di.get(ARKitBlendshapeMesh))
             } else {
-                this.faceRenderer.setBlendshapeMesh(this.facemh!)
+                this.faceRenderer.setBlendshapeMesh(this.computedBlendshapeMesh!)
             }
 
             // console.log(`MorphRenderer::paint(): this.faceRenderer.paint(app, view)`)
@@ -268,12 +235,12 @@ export class MorphRenderer extends RenderHandler {
             app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
             app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
         )
-        const mhUniqueIndexSet = new Set<number>
+        const mhUniqueIndexSet = new Set<number>()
         for (const index of mhSkinQuadIndices) {
             mhUniqueIndexSet.add(index)
         }
         // TODO: optimize ARKit
-        const arobj = di.get(FaceARKitLoader2)._neutral!
+        const arobj = di.get(ARKitBlendshapeMesh)._neutral!
 
         const arVertices = new VertexBuffer(gl, ak.vertexOrig) // this version is already pre-scaled and translated
 
@@ -398,42 +365,59 @@ function indicesForAllVertices(verts: VertexBuffer) {
     return new IndexBuffer(verts.gl, buffer)
 }
 
-function getVec(data: Float32Array, index: number,): vec3 {
-    const i = index * 3
-    if (i >= data.length) {
-        throw RangeError(`VertexBuffer.get(${index}) is out of range ${data.length / 3}`)
-    }
-    return vec3.fromValues(data[i], data[i + 1], data[i + 2])
-}
-
 /**
- * return point of ar {a,b,i}
+ * get vec3 from xyz at index*3
  * 
- * @param fxyz face indices
- * @param xyz vertices
- * @param ar projection
+ * @param out  the receiving vector
+ * @param xyz 
+ * @param index 
  * @returns 
  */
-function getP(fxyz: number[], xyz: Float32Array, ar: ARKitProjection) {
+function vec3FromArray(out: vec3, xyz: ArrayLike<number>, index: number): vec3 {
+    const i = index * 3
+    if (i >= xyz.length) {
+        throw RangeError(`VertexBuffer.get(${index}) is out of range ${xyz.length / 3}`)
+    }
+    return vec3.set(out, xyz[i], xyz[i + 1], xyz[i + 2])
+}
+
+const P = vec3.create()
+const N = vec3.create()
+const O = vec3.create()
+const A = vec3.create()
+const B = vec3.create()
+
+/**
+ * get point within triangle
+ *
+ * proj idx: index of triangle in fxyz, xyz, (a,b) point within triangle
+ * 
+ * @param out the receiving vector
+ * @param fxyz triangle indices
+ * @param xyz vertices
+ * @param proj idx: index of triangle in fxyz, xyz, (a,b) point within triangle
+ * @returns 
+ */
+function vec3Project(out: vec3, fxyz: number[], xyz: Float32Array, proj: ARKitProjection) {
     if (fxyz === undefined) {
         throw Error()
     }
     if (xyz === undefined) {
         throw Error()
     }
-    if (ar.idx + 3 > fxyz.length) {
+    if (proj.idx + 3 > fxyz.length) {
         throw RangeError()
     }
-    const O0 = getVec(xyz, fxyz[ar.idx])
-    const A0 = getVec(xyz, fxyz[ar.idx + 1])
-    const B0 = getVec(xyz, fxyz[ar.idx + 2])
-    vec3.sub(A0, A0, O0)
-    vec3.sub(B0, B0, O0)
-    vec3.scale(A0, A0, ar.a)
-    vec3.scale(B0, B0, ar.b)
-    vec3.add(O0, O0, A0)
-    vec3.add(O0, O0, B0)
-    return O0
+    vec3FromArray(out, xyz, fxyz[proj.idx])
+    vec3FromArray(A, xyz, fxyz[proj.idx + 1])
+    vec3FromArray(B, xyz, fxyz[proj.idx + 2])
+    vec3.sub(A, A, out)
+    vec3.sub(B, B, out)
+    vec3.scale(A, A, proj.a)
+    vec3.scale(B, B, proj.b)
+    vec3.add(out, out, A)
+    vec3.add(out, out, B)
+    return out
 }
 
 /**
@@ -450,7 +434,7 @@ function calculateDistance(
     outXYZ?: number[],
     outFXYZ?: number[]
 ) {
-    const arkit = di.get(FaceARKitLoader2).preload()
+    const arkit = di.get(ARKitBlendshapeMesh).preload()
     const arfxyz = arkit._neutral!.fxyz
 
     const normalData = new Float32Array(pickMeshes[MH_MESH].vertices.data.length)
@@ -459,14 +443,6 @@ function calculateDistance(
         pickMeshes[MH_MESH].vertices.data,
         baseMesh.fxyz
     )
-    // const normals = new VertexBuffer(gl, normalData)
-    function get(index: number): vec3 {
-        const i = index * 3
-        if (i >= normalData.length) {
-            throw RangeError(`VertexBuffer.get(${index}) is out of range ${normalData.length / 3}`)
-        }
-        return vec3.fromValues(normalData[i], normalData[i + 1], normalData[i + 2])
-    }
 
     outMh2arProjection.clear()
 
@@ -474,14 +450,17 @@ function calculateDistance(
         // mh mesh point P with normal N
         let match
         let arFaceIndex
-        const P = pickMeshes[MH_MESH].vertices.get(mhFaceIndex)
-        const N = get(mhFaceIndex)
+        vec3FromArray(P, pickMeshes[MH_MESH].vertices.data, mhFaceIndex)
+        vec3FromArray(N, normalData, mhFaceIndex)
+
         // for all arkit triangles: project MH onto ARKIT and find closest
         for (let i = 0; i < arfxyz.length;) {
             let _i = i
-            const O = pickMeshes[AR_MESH].vertices.get(arfxyz[i++])
-            const A = pickMeshes[AR_MESH].vertices.get(arfxyz[i++])
-            const B = pickMeshes[AR_MESH].vertices.get(arfxyz[i++])
+
+            vec3FromArray(O, pickMeshes[AR_MESH].vertices.data, arfxyz[i++])
+            vec3FromArray(A, pickMeshes[AR_MESH].vertices.data, arfxyz[i++])
+            vec3FromArray(B, pickMeshes[AR_MESH].vertices.data, arfxyz[i++])
+
             vec3.sub(A, A, O)
             vec3.sub(B, B, O)
             const projection = projectLineOntoPlane(P, N, O, A, B)
@@ -528,7 +507,7 @@ function calculateDistance(
  * @param mh2arProjection MH points projected on the ARKit mesh
  * @returns MH basemesh and face blendshapes
  */
-function calculateBlendshapes(baseMesh: WavefrontObj, mh2arProjection: Map<number, ARKitProjection>) {
+function computeBlendshapeMesh(baseMesh: WavefrontObj, mh2arProjection: Map<number, ARKitProjection>) {
     // const baseMesh = app.humanMesh.baseMesh
 
     // convert skin quads to index of triangles
@@ -561,7 +540,9 @@ function calculateBlendshapes(baseMesh: WavefrontObj, mh2arProjection: Map<numbe
 
     // BaseMeshGroup.SKIN
 
-    const arkit = di.get(FaceARKitLoader2).preload()
+    const arkit = di.get(ARKitBlendshapeMesh).preload()
+    const neutralOnAr = vec3.create()
+    const morphOnAr = vec3.create()
 
     const targets = new Array<MorphTarget>(Blendshape.SIZE);
     const neutralXYZ = arkit.xyz(Blendshape.neutral)
@@ -575,8 +556,8 @@ function calculateBlendshapes(baseMesh: WavefrontObj, mh2arProjection: Map<numbe
             if (mhOnAr === undefined) {
                 continue
             }
-            const neutralOnAr = getP(arkit.fxyz, neutralXYZ, mhOnAr)
-            const morphOnAr = getP(arkit.fxyz, morphXYZ, mhOnAr)
+            vec3Project(neutralOnAr, arkit.fxyz, neutralXYZ, mhOnAr)
+            vec3Project(morphOnAr, arkit.fxyz, morphXYZ, mhOnAr)
 
             vec3.sub(neutralOnAr, morphOnAr, neutralOnAr)
 

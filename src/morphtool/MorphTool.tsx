@@ -10,7 +10,7 @@ import { Button, Table } from 'toad.js'
 import { ComboBox } from 'toad.js/view/ComboBox'
 import { ButtonVariant } from 'toad.js/view/Button'
 import { FaceRenderer } from './FaceRenderer'
-import { FaceARKitLoader2 } from './FaceARKitLoader2'
+import { ARKitBlendshapeMesh } from './ARKitBlendshapeMesh'
 import { di } from 'lib/di'
 import { mat4 } from 'gl-matrix'
 import { deg2rad } from 'gl/algorithms/deg2rad'
@@ -40,7 +40,7 @@ import { deg2rad } from 'gl/algorithms/deg2rad'
  * Tool to morph face meshes.
  */
 export function MorphTool(props: { app: Application }) {
-    const faceRenderer = new FaceRenderer(di.get(FaceARKitLoader2).preload())
+    const faceRenderer = new FaceRenderer(di.get(ARKitBlendshapeMesh).preload())
     const model = new MorphToolModel()
     const renderer = new MorphRenderer(props.app, model, faceRenderer)
     model.renderer = renderer

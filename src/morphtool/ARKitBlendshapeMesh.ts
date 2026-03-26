@@ -4,7 +4,7 @@ import { WavefrontObj } from 'mesh/WavefrontObj'
 import { MorphTarget } from 'target/MorphTarget'
 import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
 
-export class FaceARKitLoader2 implements BlendshapeMeshAPI {
+export class ARKitBlendshapeMesh implements BlendshapeMeshAPI {
     _targets = new Array<MorphTarget>(Blendshape.SIZE);
     _xyz = new Array<Float32Array>(Blendshape.SIZE);
     _neutral?: WavefrontObj
@@ -12,7 +12,7 @@ export class FaceARKitLoader2 implements BlendshapeMeshAPI {
     /**
      * Load all blendshapes. Useful when doing live animation.
      */
-    preload(): FaceARKitLoader2 {
+    preload(): ARKitBlendshapeMesh {
         for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
             this.getMorphTarget(blendshape)
         }

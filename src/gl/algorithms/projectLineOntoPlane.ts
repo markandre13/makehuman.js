@@ -14,6 +14,9 @@ export interface Projection {
     d: number
 }
 
+const V = vec3.create()
+const T = vec3.create()
+
 /**
  * Project line L + l * D onto plane O + a * A + b * B and return {a, b} or
  * in case the area between A and B is 0, return undefined.
@@ -21,9 +24,9 @@ export interface Projection {
  * Originally intended to map point onto triangle, which is the case when a ≥ 0 ∧ b ≥ 0 ∧ a+b ≤ 1.
  */
 export function projectLineOntoPlane(L: ReadonlyVec3, D: ReadonlyVec3, O: ReadonlyVec3, A: ReadonlyVec3, B: ReadonlyVec3): Projection | undefined {
-    const n = vec3.cross(vec3.create(), A, B)
+    const n = vec3.cross(V, A, B)
     vec3.normalize(n, n)
-    const P = intersectLineAndPlane(L, D, O, n)
+    const P = intersectLineAndPlane(T, L, D, O, n)
     if (!P) {
         return undefined
     }
@@ -32,5 +35,5 @@ export function projectLineOntoPlane(L: ReadonlyVec3, D: ReadonlyVec3, O: Readon
         return param
     }
     const d = vec3.distance(L, P)
-    return { ...param, P, d }
+    return { ...param, P: vec3.clone(P), d }
 }

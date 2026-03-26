@@ -2,13 +2,13 @@ import { RenderMesh } from 'render/RenderMesh'
 import { FlatMesh } from './FlatMesh'
 import { Blendshape } from 'mediapipe/blendshapeNames'
 import { di } from 'lib/di'
-import { FaceARKitLoader2 } from './FaceARKitLoader2'
+import { ARKitBlendshapeMesh } from './ARKitBlendshapeMesh'
 import { trianglesToFlatTriangles } from 'gl/algorithms/trianglesToFlatTriangles'
 
 export class ARKitFlat extends FlatMesh {
     constructor(gl: WebGL2RenderingContext) {
         super()
-        const arkit = di.get(FaceARKitLoader2).preload()
+        const arkit = di.get(ARKitBlendshapeMesh).preload()
 
         this.facesFlat = arkit._neutral!.fxyz
         this.vertexOrig = this.vertexFlat = arkit.getNeutral().xyz
