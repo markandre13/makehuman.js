@@ -47,9 +47,9 @@ export class RenderList {
 function renderSkeletonGlobal(humanMesh: HumanMesh) {
     const skel = humanMesh.skeleton
     const v = vec4.fromValues(0, 0, 0, 1)
-    const vertex = new Float32Array(skel.boneslist!.length * 6)
-    const indices = new Array<number>(skel.boneslist!.length * 2)
-    skel.boneslist!.forEach((bone, index) => {
+    const vertex = new Float32Array(skel.getBones().length * 6)
+    const indices = new Array<number>(skel.getBones().length * 2)
+    skel.getBones().forEach((bone, index) => {
         const m = bone.matPoseGlobal ? bone.matPoseGlobal : bone.matRestGlobal!
         const a = vec4.transformMat4(vec4.create(), v, m)
         const b = vec4.transformMat4(vec4.create(), bone.yvector4!, m)

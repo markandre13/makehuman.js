@@ -19,7 +19,7 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
      * in BlendshapeToPose
      */
     applyToSkeleton(blendshapeModel: BlendshapeModel) {
-        const ql = new Array<quat2 | undefined>(this.app.skeleton.boneslist!.length)
+        const ql = new Array<quat2 | undefined>(this.app.skeleton.getBones().length)
         ql.fill(undefined)
         blendshapeModel.forEach((blendshapeName, weight) => {
             const boneQuatList = this.app.blendshape2pose!.get(blendshapeName)
@@ -46,7 +46,7 @@ export class Blendshape2PoseConverter implements IBlendshapeConverter {
         //   but taken as is from the pose unit file
 
         ql.forEach((q, i) => {
-            const bone = this.app.skeleton.boneslist![i]
+            const bone = this.app.skeleton.getBones()[i]
             if (q !== undefined) {
                 switch (poseUnit2mapPose) {
                     case PoseUnit2MatPose.ONBLEND:

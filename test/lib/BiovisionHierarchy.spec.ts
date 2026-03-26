@@ -407,7 +407,7 @@ Frame Time: 0.041667
             // console.log("--------------------------------- check createAnimationTrack result")
             // we check createAnimationTrack() by comparing the mat4 references
             expect(anim0.data.length).to.equal(anim0.nFrames * anim0.nBones)
-            expect(anim0.nBones).to.equal(skeleton.boneslist?.length)
+            expect(anim0.nBones).to.equal(skeleton.getBones().length)
 
             for (let jointIdx = 0; jointIdx < bvh0.jointslist.length; ++jointIdx) {
                 const joint = bvh0.jointslist[jointIdx]
@@ -415,10 +415,10 @@ Frame Time: 0.041667
                     continue
                 }
                 const boneIndex = skeleton.getBone(joint.name).index
-                expect(boneIndex).to.be.lessThan(skeleton.boneslist!.length)
+                expect(boneIndex).to.be.lessThan(skeleton.getBones().length)
 
                 for (let frame = 0; frame < anim0.nFrames; ++frame) {
-                    const i = frame * skeleton.boneslist!.length + boneIndex
+                    const i = frame * skeleton.getBones().length + boneIndex
                     expect(i).to.be.lessThan(anim0.data.length)
                     const m = anim0.data[i]
                     expect(m).to.deep.almost.equal(joint.matrixPoses[frame])
@@ -592,11 +592,11 @@ Frame Time: 0.041667
 
         const anim1 = skeleton.getPose()
 
-        for (let boneIdx = 0; boneIdx < humanMesh.skeleton.boneslist!.length; ++boneIdx) {
+        for (let boneIdx = 0; boneIdx < humanMesh.skeleton.getBones().length; ++boneIdx) {
             const expected =  mat42float32array(anim0.data[boneIdx])
             const given =  mat42float32array(anim1[boneIdx])
             // TODO: this skips the offset... is it important?
-            expect(expected.slice(0, 12), `bone ${boneIdx} ${skeleton.boneslist![boneIdx].name}`).to.deep.almost.equal(
+            expect(expected.slice(0, 12), `bone ${boneIdx} ${skeleton.getBones()[boneIdx].name}`).to.deep.almost.equal(
                 given.slice(0, 12)
             )
         }

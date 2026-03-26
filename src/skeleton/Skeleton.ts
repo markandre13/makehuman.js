@@ -20,12 +20,12 @@ export class Skeleton {
     info: FileInformation
 
     bones = new Map<string, Bone>() // Bone lookup list by name
-    boneslist?: Bone[] // Breadth-first ordered list of all bones
+    private boneslist?: Bone[] // Breadth-first ordered list of all bones
     roots: Bone[] = [] // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
 
-    joint_pos_idxs = new Map<string, Array<number>>() // Lookup by joint name referencing vertex indices on the human, to determine joint position
+    private joint_pos_idxs = new Map<string, Array<number>>() // Lookup by joint name referencing vertex indices on the human, to determine joint position
     private planes = new Map<string, string[]>() // Named planes defined between joints, used for calculating bone roll angle
-    plane_map_strategy?: number = 3 // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
+    // private plane_map_strategy?: number = 3 // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
 
     getPlane(planeName: string) {
         return this.planes.get(planeName)
@@ -48,7 +48,7 @@ export class Skeleton {
             copyright: data.copyright,
             license: data.license,
         }
-        this.plane_map_strategy = data.plane_map_strategy
+        // this.plane_map_strategy = data.plane_map_strategy
 
         //
         // joint_pos_idxs[name] := vertex index

@@ -36,7 +36,7 @@ describe("Skeleton", function () {
     })
 
     this.beforeEach(function() {
-        skeleton.boneslist!.forEach(bone => {
+        skeleton.getBones().forEach(bone => {
             bone.matUserPoseRelative = mat4.create()
             bone.matUserPoseGlobal = undefined
         })

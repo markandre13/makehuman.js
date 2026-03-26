@@ -61,7 +61,7 @@ export class MHFacePoseUnits {
 
     setBlendshape2Bone(skeleton: Skeleton) {
         const identity = mat4.create()
-        const nBones = skeleton.boneslist!.length
+        const nBones = skeleton.getBones().length
 
         for (let [name, frame] of MHFacePoseUnits._poseUnitName2Frame) {
             const list: BoneQuat2[] = []
@@ -69,12 +69,12 @@ export class MHFacePoseUnits {
                 let m = MHFacePoseUnits._animationTrack[frame * nBones + b_idx]
 
                 if (poseUnit2mapPose == PoseUnit2MatPose.ONLOAD) {
-                    m = poseUnit2matPose(m, skeleton.boneslist![b_idx].matRestGlobal!)
+                    m = poseUnit2matPose(m, skeleton.getBones()[b_idx].matRestGlobal!)
                 }
 
                 if (!mat4.equals(identity, m)) {
                     list.push({
-                        bone: skeleton.boneslist![b_idx],
+                        bone: skeleton.getBones()[b_idx],
                         q: quat2.fromMat4(quat2.create(), m),
                     })
                 }

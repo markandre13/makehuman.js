@@ -132,7 +132,7 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
     const restTransforms: number[] = []
     const blenderBoneLength: number[] = []
 
-    for (const bone of humanMesh.skeleton.boneslist!) {
+    for (const bone of humanMesh.skeleton.getBones()) {
         let name = bone.name
         for (let parent = bone.parent; parent != undefined; parent = parent.parent) {
             name = `${parent.name}/${name}`
