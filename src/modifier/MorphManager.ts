@@ -152,7 +152,10 @@ export class MorphManager {
         // NOTE: no 'name=canonicalpath(name)' as the host filesystem is a detail to be ignored in the domain core
         if (value !== undefined && !isZero(value)) {
             // TODO: check if '&& isZero(value)' is a valid optimization
-            // console.log(`Human.setDetail('${targetName}', ${value})`)
+            console.log(`MorphManager.setDetail('${targetName}', ${value})`)
+            if (targetName == "data//targets/forehead/forehead-trans-backward.target") {
+                console.trace("foo")
+            }
             this.targetsDetailStack.set(targetName, value)
         } else {
             this.targetsDetailStack.delete(targetName)

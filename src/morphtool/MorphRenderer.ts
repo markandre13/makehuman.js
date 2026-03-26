@@ -27,6 +27,9 @@ import { HumanMesh } from 'mesh/HumanMesh'
 import { MorphManager } from 'modifier/MorphManager'
 import { Skeleton } from 'skeleton/Skeleton'
 import { deg2rad } from 'gl/algorithms/deg2rad'
+import { RenderMesh } from 'render/RenderMesh'
+import { prepareCanvas, prepareViewport } from 'render/util'
+import { UpdateManager } from 'UpdateManager'
 
 interface PickMesh {
     flat: FlatMesh
@@ -84,7 +87,48 @@ export class MorphRenderer extends RenderHandler {
     needToCalculateDistance = true
     needToCalculateMHBlendshapes = true
 
-    override paint(app: Application, view: RenderView): void {
+    paintX(app: Application, view: RenderView): void {
+        const gl = view.gl
+        const renderMeshMH = new RenderMesh(gl,
+            app.computedBlendShapesDebug!.xyzMH,
+            app.computedBlendShapesDebug!.fxyzMH,
+            undefined,
+            undefined,
+            true
+        )
+        const renderMeshAR = new RenderMesh(gl,
+            app.computedBlendShapesDebug!.xyzAR,
+            app.computedBlendShapesDebug!.fxyzAR,
+            undefined,
+            undefined,
+            false
+        )
+
+        view.prepareCanvas()
+        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
+        const shaderShadedMono = view.shaderShadedMono
+
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+
+        const canvas = view.canvas as HTMLCanvasElement
+        prepareCanvas(canvas)
+        prepareViewport(gl, canvas)
+
+        gl.disable(gl.CULL_FACE)
+        gl.depthMask(true)
+
+        shaderShadedMono.setColor(gl, [1, 0.5, 0, 1])
+        renderMeshMH.bind(shaderShadedMono)
+        // renderMeshMH.draw(shaderShadedMono, gl.TRIANGLES)
+        renderMeshMH.drawSubset(gl.TRIANGLES,
+            this.app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex,
+            this.app.humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length,
+        )
+        shaderShadedMono.setColor(gl, [0, 0.5, 1, 1])
+        renderMeshAR.draw(shaderShadedMono, gl.TRIANGLES)
+    }
+
+    paint(app: Application, view: RenderView): void {
         const gl = view.gl
         if (this.pickMeshes === undefined) {
             this.initPickMeshes(app, view)
@@ -597,9 +641,16 @@ const mhFaceIndices = [870, 867, 868, 5098, 869, 895, 871, 894, 3698, 917, 5294,
 const mhFaceIndicesSet = new Set(mhFaceIndices)
 
 export function computeBlendshapes(
+    updateManager: UpdateManager,
     morphManager: MorphManager,
     skeleton: Skeleton,
     humanMesh: HumanMesh,
+    debug?: {
+        fxyzMH: ArrayLike<number>,
+        xyzMH: Float32Array,
+        fxyzAR: ArrayLike<number>,
+        xyzAR: Float32Array,
+    }
 ): ComputedBlendshapeMesh {
     morphManager.reset()
     skeleton.reset()
@@ -613,21 +664,12 @@ export function computeBlendshapes(
     const mouth = morphManager.getModifier("mouth/mouth-trans-backward|forward")
     mouth!.model!.value = 0.1
 
-    // props.app.updateManager.updateFromLocalSettingsWithoutGL()
-    humanMesh.calculateVertexMorphed()
-    skeleton.updateJoints()
-    skeleton.build()
-
     const jaw = skeleton.getBone("jaw")!
     jaw.matUserPoseRelative = mat4.fromXRotation(mat4.create(), deg2rad(12))
 
-    skeleton.update()
+    updateManager.updateFromLocalSettingsWithoutGL()
 
-
-    // add blendshapes (do this when rigging, not on the morph!!!)
-    humanMesh.calculateVertexRigged()
-
-    const xyzMH = humanMesh.vertexMorphed
+    const xyzMH = humanMesh.vertexRigged
     const fxyzMH = humanMesh.baseMesh.fxyz
 
     const arkit = di.get(ARKitBlendshapeMesh).preload() // this one's already transformed to MH's mesh
@@ -635,7 +677,19 @@ export function computeBlendshapes(
     const xyzAR = new Float32Array(arkit.getNeutral().xyz)
     arkit.getMorphTarget(Blendshape.jawOpen)?.apply(xyzAR, 0.5)
 
+    if (debug !== undefined) {
+        debug.fxyzMH = fxyzMH
+        debug.xyzMH = xyzMH
+        debug.fxyzAR = fxyzAR
+        debug.xyzAR = xyzAR
+    }
+
     const mh2arProjection = new Map<number, ARKitProjection>()
     calculateDistance(fxyzMH, xyzMH, fxyzAR, xyzAR, mh2arProjection)
+
+    morphManager.reset()
+    mat4.identity(jaw.matUserPoseRelative)
+    updateManager.updateFromLocalSettingsWithoutGL()
+
     return computeBlendshapeMesh(humanMesh.baseMesh, mh2arProjection)
 }

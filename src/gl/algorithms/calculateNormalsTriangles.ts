@@ -10,7 +10,7 @@ import { vec3 } from "gl-matrix"
 export function calculateNormalsTriangles(
     normals: Float32Array,
     vertex: Float32Array,
-    indices: number[] | Uint16Array
+    indices: ArrayLike<number> | Uint16Array
 ): Float32Array {
     normals.fill(0)
     function addNormal(index: number, normal: vec3) {

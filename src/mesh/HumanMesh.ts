@@ -32,7 +32,7 @@ export class HumanMesh {
      * this.vertexMorphed := this.baseMesh.xyz + morph
      */
     calculateVertexMorphed() {
-        // console.log(`HumanMesh.calculateVertexMorphed()`)
+        console.log(`HumanMesh.calculateVertexMorphed(): ${this.morphManager.targetsDetailStack.size}`)
         if (this.vertexMorphed === this.baseMesh.xyz) {
             this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
         } else {
@@ -43,9 +43,8 @@ export class HumanMesh {
                 // console.log(`HumanMesh.update(): ignoring target ${targetName} with value NaN`)
                 return
             }
-
             if (isZero(value) || isNaN(value)) return
-            // console.log(`    apply target ${targetName} with value ${value}`)
+            console.log(`    apply target ${targetName} with value ${value}`)
             const target = getTarget(targetName)
             target.apply(this.vertexMorphed, value)
         })

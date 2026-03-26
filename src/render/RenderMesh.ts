@@ -28,7 +28,7 @@ export class RenderMesh {
     glNormal: NormalBuffer
     glTexture?: UVBuffer
 
-    fvertex: number[]
+    fvertex: ArrayLike<number>
     normal: Float32Array
     glData: GLXYZUV
     quads: boolean
@@ -36,7 +36,7 @@ export class RenderMesh {
     constructor(
         gl: WebGL2RenderingContext,
         vertex: Float32Array,
-        fvertex: number[],
+        fvertex: ArrayLike<number>,
         uvs?: Float32Array,
         fuvs?: number[],
         quads = true
@@ -146,9 +146,9 @@ export class RenderMesh {
 
 export function decoupleXYZandUV(
     xyz: Float32Array,
-    fxyz: Uint16Array | number[],
-    uv?: Float32Array | number[],
-    fuv?: Uint16Array | number[]
+    fxyz: ArrayLike<number>,
+    uv?: ArrayLike<number>,
+    fuv?: ArrayLike<number>
 ): GLXYZUV {
     if (fuv !== undefined && fxyz.length !== fuv.length) {
         throw Error(`fvertex and fuv must have the same length, instead it is ${fxyz.length} and ${fuv.length}`)

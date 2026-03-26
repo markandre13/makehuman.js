@@ -46,7 +46,11 @@ export class Bone {
 
     /** user defined relative pose */
     matUserPoseRelative: mat4
-    /** user defined global pose (when set, update() calculates matUserPoseRelative from it) */
+    /**
+     * user defined global pose 
+     * 
+     * (when set, update() calculates matUserPoseRelative from it)
+     */
     matUserPoseGlobal?: mat4
 
     // calculated pose positions

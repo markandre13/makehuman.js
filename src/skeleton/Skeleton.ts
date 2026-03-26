@@ -19,12 +19,29 @@ export class Skeleton {
 
     info: FileInformation
 
+    /**
+     * bone name -> bone
+     */
     bones = new Map<string, Bone>() // Bone lookup list by name
-    private boneslist?: Bone[] // Breadth-first ordered list of all bones
-    roots: Bone[] = [] // bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
+    /**
+     * breadth-first ordered list of all bones
+     * 
+     * see also getBones()
+     */
+    private boneslist?: Bone[]
+    /**
+     * bones with no parents (aka root bones) of this skeleton, a skeleton can have multiple root bones.
+     */
+    roots: Bone[] = []
 
-    private joint_pos_idxs = new Map<string, Array<number>>() // Lookup by joint name referencing vertex indices on the human, to determine joint position
-    private planes = new Map<string, string[]>() // Named planes defined between joints, used for calculating bone roll angle
+    /**
+     * joint name -> list of vertices whose median define the joint position
+     */
+    private joint_pos_idxs = new Map<string, Array<number>>() // 
+    /**
+     * Named planes defined between joints, used for calculating bone roll angle
+     */
+    private planes = new Map<string, string[]>() // 
     // private plane_map_strategy?: number = 3 // The remapping strategy used by addReferencePlanes() for remapping orientation planes from a reference skeleton
 
     getPlane(planeName: string) {
@@ -32,7 +49,9 @@ export class Skeleton {
     }
 
     vertexWeights?: VertexBoneWeights
-    // Source vertex weights, defined on the basemesh, for this skeleton
+    /**
+     * Source vertex weights, defined on the basemesh, for this skeleton
+     */
     has_custom_weights = false // True if this skeleton has its own .mhw file
 
     scale: number = 1
@@ -53,7 +72,6 @@ export class Skeleton {
         //
         // joint_pos_idxs[name] := vertex index
         //
-        // console.log(Object.getOwnPropertyNames(data.joints).length)
         for (let joint_name of Object.getOwnPropertyNames(data.joints)) {
             // console.log(joint_name)
             const v_idxs = data.joints[joint_name]
@@ -61,7 +79,7 @@ export class Skeleton {
                 this.joint_pos_idxs.set(joint_name, v_idxs)
             }
         }
-        console.log(`Skeleton.construction(): this.joint_pos_idxs.size = ${this.joint_pos_idxs.size}`)
+        // console.log(`Skeleton.construction(): this.joint_pos_idxs.size = ${this.joint_pos_idxs.size}`)
 
         // planes[name] = ...
         for (let plane of Object.getOwnPropertyNames(data.planes)) {
@@ -269,7 +287,7 @@ export class Skeleton {
     }
 
     reset() {
-        this.poseNodes.forEach( node => {
+        this.poseNodes.forEach(node => {
             node.x.value = 0
             node.y.value = 0
             node.z.value = 0
@@ -282,17 +300,18 @@ export class Skeleton {
     // line 269: autoBuildWeightReferences(self, referenceSkel)
     // line 341: addReferencePlanes(self, referenceSkel)
     // skeleton.py, line 421: getJointPosition(self, joint_name, human, rest_coord=True)
-    // Calculate the position of specified named joint from the current
-    // state of the human mesh. If this skeleton contains no vertex mapping
-    // for that joint name, it falls back to looking for a vertex group in the
-    // human basemesh with that joint name.
-    // okay, so in the .mhskel file, ["joints"][joint_name]["head"|"tail"] will point to a list of
-    // indices into mesh.coord, whose coords surround the head|tail position
+
+    /**
+     * Calculate the position of specified named joint from the current
+     * state of the human mesh. If this skeleton contains no vertex mapping
+     * for that joint name, it falls back to looking for a vertex group in the
+     * human basemesh with that joint name.
+     * okay, so in the .mhskel file, ["joints"][joint_name]["head"|"tail"] will point to a list of
+     * indices into mesh.coord, whose coords surround the head|tail position
+     */
     getJointPosition(joint_name: string, rest_coord = true): number[] {
-        if (this.joint_pos_idxs.has(joint_name)) {
-            // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from skeleton`)
-            const v_idx = this.joint_pos_idxs.get(joint_name)!
-            //
+        const v_idx = this.joint_pos_idxs.get(joint_name)
+        if (v_idx !== undefined) {
             let verts
             if (rest_coord) {
                 const meshCoords = this.humanMesh.getVertexMorphed()
@@ -312,21 +331,23 @@ export class Skeleton {
             vec3.scale(a, a, 1 / verts.length)
             return [a[0], a[1], a[2]]
         }
-        throw Error(`not implemented`)
+        throw Error(`NOT IMPLEMENTED YET`)
         // console.log(`Skeleton.getJointPosition(joint_name='${joint_name}', human=${human}, rest_coord=${rest_coord}) -> from base mesh`)
         // return _getHumanJointPosition(human, joint_name, rest_coord)
     }
 
-    updateJoints() {
+    updateJointPositions() {
         for (const bone of this.getBones()) {
             bone.updateJointPositions()
         }
     }
 
     // makehuman/shared/skeleton.py:518
-    // Rebuild bone rest matrices and determine local bone orientation
-    // (roll or bone normal). Pass a ref_skel to copy the bone orientation from
-    // the reference skeleton to the bones of this skeleton.
+    /**
+     * Rebuild bone rest matrices and determine local bone orientation
+     * (roll or bone normal). Pass a ref_skel to copy the bone orientation from
+     * the reference skeleton to the bones of this skeleton.
+     */
     build(ref_skel?: any) {
         this.boneslist = undefined
         for (const bone of this.getBones()) {

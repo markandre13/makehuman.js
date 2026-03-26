@@ -59,7 +59,13 @@ export class Application {
 
     status = new TextModel("")
 
-    computedBlendShapes?: ComputedBlendshapeMesh
+    computedBlendShapes: ComputedBlendshapeMesh
+    computedBlendShapesDebug?: {
+        fxyzMH: ArrayLike<number>,
+        xyzMH: Float32Array,
+        fxyzAR: ArrayLike<number>,
+        xyzAR: Float32Array,
+    }
 
     // makehuman
     morphManager: MorphManager // MorphManager / MorphController
@@ -150,15 +156,17 @@ export class Application {
 
         this.renderView = {} as any
 
-        // console.log("COMPUTE BLENDSHAPE")
-        // try {
-        // this.computedBlendShapes = computeBlendshapes(this.morphManager, this.skeleton, this.humanMesh)
-        // } catch(e) {
-        //     console.log(e)
-        //     throw e
-        // }
-        // console.log("COMPUTED BLENDSHAPE")
-        // console.log(this.computedBlendShapes)
+        console.log("COMPUTE BLENDSHAPE")
+        try {
+            this.computedBlendShapesDebug = {} as any
+            this.computedBlendShapes = computeBlendshapes(
+                this.updateManager,
+                this.morphManager, this.skeleton, this.humanMesh, this.computedBlendShapesDebug)
+        } catch (e) {
+            console.log(e)
+            throw e
+        }
+        console.log("COMPUTED BLENDSHAPE")
 
         // FIXME: OOP SMELL => replace ENUM with OBJECT
         this.tabModel = new EnumModel(TAB.PROXY, TAB)

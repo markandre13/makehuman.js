@@ -474,7 +474,7 @@ Frame Time: 0.041667
             const obj = new WavefrontObj("data/3dobjs/base.obj")
             const humanMesh = new HumanMesh(human, obj)
             const skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
-            skeleton.updateJoints()
+            skeleton.updateJointPositions()
             skeleton.build()
             skeleton.update()
 

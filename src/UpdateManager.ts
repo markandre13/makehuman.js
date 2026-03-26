@@ -252,7 +252,7 @@ export class UpdateManager {
         this.modifiedMorphSettings.clear()
 
         this.skeleton.humanMesh.calculateVertexMorphed()
-        this.skeleton.updateJoints()
+        this.skeleton.updateJointPositions()
         this.skeleton.build()
         this.skeletonChanged = true
     }

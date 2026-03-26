@@ -3,7 +3,7 @@ export class IndexBuffer {
     protected _gl: WebGL2RenderingContext
     protected _glbuffer?: WebGLBuffer
 
-    constructor(gl: WebGL2RenderingContext, data: number[] | Uint16Array) {
+    constructor(gl: WebGL2RenderingContext, data: ArrayLike<number> | Uint16Array) {
         this._gl = gl
         if (data instanceof Uint16Array) {
             this._data = data
