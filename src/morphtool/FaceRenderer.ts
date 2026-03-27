@@ -1,5 +1,5 @@
 import { Application } from 'Application'
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { calculateNormalsTriangles } from 'gl/algorithms/calculateNormalsTriangles'
 import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { NormalBuffer } from 'gl/buffers/NormalBuffer'
@@ -10,16 +10,15 @@ import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
 import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
 import { BlendshapeModel } from 'blendshapes/BlendshapeModel'
+import { deg2rad } from 'gl/algorithms/deg2rad'
+
+let rotate = 0
 
 /**
  * render animated blendshape mesh
  */
 export class FaceRenderer extends RenderHandler {
     private blendshapeMesh: BlendshapeMeshAPI
-    // blendshapeModel?: BlendshapeModel
-
-    // private blendshapeParams?: Float32Array
-    // private blendshapeTransform?: Float32Array
 
     private vertices!: VertexBuffer
     private normals!: NormalBuffer
@@ -28,7 +27,6 @@ export class FaceRenderer extends RenderHandler {
     constructor(blendshapeMesh: BlendshapeMeshAPI) {
         super()
         this.blendshapeMesh = blendshapeMesh
-        // this.blendshapeParams = new Float32Array(Blendshape.SIZE)
     }
 
     setBlendshapeMesh(blendshapeMesh: BlendshapeMeshAPI) {
@@ -47,8 +45,19 @@ export class FaceRenderer extends RenderHandler {
         const gl = view.gl
         const shaderShadedMono = view.shaderShadedMono
         view.prepareCanvas()
-        const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
-        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
+        const projectionMatrix = view.prepareProjection()
+
+        const modelViewMatrix = mat4.clone(view.ctx.camera)
+
+        let r = blendshapeModel.getRotation()
+        const t0 = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, 7, 1))
+        const t1 = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, -7, -1))
+        mat4.multiply(r, t0, r)
+        mat4.multiply(r, r, t1)
+
+        mat4.multiply(modelViewMatrix, modelViewMatrix, r)
+
+        shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix)
 
         gl.enable(gl.CULL_FACE)
         gl.cullFace(gl.BACK)

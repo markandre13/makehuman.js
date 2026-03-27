@@ -1,5 +1,6 @@
 import { Model } from "toad.js"
 import { Blendshape } from "./BlendShape"
+import { mat4 } from "gl-matrix"
 
 export class BlendshapeModel extends Model {
     params: Float32Array = new Float32Array(Blendshape.SIZE)
@@ -11,6 +12,15 @@ export class BlendshapeModel extends Model {
         this.transform = transform
         this.timestamp_ms = timestamp_ms
         this.signal.emit()
+    }
+
+    getRotation(): mat4 {
+        const t = this.transform
+        return mat4.fromValues(
+            t[0], t[4], t[8], 0,
+            t[1], t[5], t[9], 0,
+            t[2], t[6], t[10], 0,
+            0, 0, 0, 1)
     }
 
     // getBlendshapeWeight(blendshape: Blendshape): number {

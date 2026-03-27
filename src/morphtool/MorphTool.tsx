@@ -98,6 +98,7 @@ export function MorphTool(props: { app: Application }) {
                         }
                         break
                     case 'hidden':
+                        model.showAnimation.value = false
                         props.app.morphManager.reset()
                         props.app.skeleton.reset()
                         props.app.updateManager.updateFromLocalSettingsWithoutGL()

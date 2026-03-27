@@ -80,7 +80,7 @@ export class GLView extends View {
         }
     }
 
-    prepare() {
+    prepareProjection() {
         const gl = this.gl
         gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         const bg = this.ctx.background
@@ -104,6 +104,11 @@ export class GLView extends View {
             zNear,
             zFar
         )
+        return projectionMatrix
+    }
+
+    prepare() {
+        const projectionMatrix = this.prepareProjection()
 
         const modelViewMatrix = this.ctx.camera
 

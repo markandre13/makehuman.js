@@ -1,4 +1,4 @@
-import type { mat4 } from "gl-matrix"
+import { mat4 } from "gl-matrix"
 import type { ShaderHasPositions } from "../interfaces/ShaderHasPositions"
 import type { ShaderHasNormals } from "../interfaces/ShaderHasNormals"
 import { initShaderProgram } from "../detail/initShaderProgram"
@@ -30,7 +30,12 @@ export class ShaderShadedMono implements ShaderHasPositions, ShaderHasNormals {
         this.normalMatrix = gl.getUniformLocation(shaderProgram, "uNormalMatrix")!
     }
 
-    init(gl: WebGL2RenderingContext, projectionMatrix: mat4, modelViewMatrix: mat4, normalMatrix: mat4) {
+    init(gl: WebGL2RenderingContext, projectionMatrix: mat4, modelViewMatrix: mat4, normalMatrix?: mat4) {
+        if (normalMatrix === undefined) {
+            normalMatrix = mat4.create()
+            mat4.invert(normalMatrix, modelViewMatrix)
+            mat4.transpose(normalMatrix, normalMatrix)
+        }
         this.use(gl)
         this.setProjection(gl, projectionMatrix)
         this.setModelView(gl, modelViewMatrix)
@@ -39,13 +44,13 @@ export class ShaderShadedMono implements ShaderHasPositions, ShaderHasNormals {
 
     setProjection(gl: WebGL2RenderingContext, projectionMatrix: mat4) {
         // Set the shader uniforms
-        gl.uniformMatrix4fv(this.projectionMatrix, false,  mat42float32array(projectionMatrix))
+        gl.uniformMatrix4fv(this.projectionMatrix, false, mat42float32array(projectionMatrix))
     }
     setModelView(gl: WebGL2RenderingContext, modelViewMatrix: mat4) {
-        gl.uniformMatrix4fv(this.modelViewMatrix, false,  mat42float32array(modelViewMatrix))
+        gl.uniformMatrix4fv(this.modelViewMatrix, false, mat42float32array(modelViewMatrix))
     }
     setNormal(gl: WebGL2RenderingContext, normalMatrix: mat4) {
-        gl.uniformMatrix4fv(this.normalMatrix, false,  mat42float32array(normalMatrix))
+        gl.uniformMatrix4fv(this.normalMatrix, false, mat42float32array(normalMatrix))
     }
     setColor(gl: WebGL2RenderingContext, color: number[]) {
         gl.uniform4fv(this.color, color)
