@@ -5,7 +5,7 @@ import { ARKitFlat } from "../../src/morphtool/ARKitFlat"
 import { di } from "../../src/lib/di"
 import { mock } from "../mock"
 import { WavefrontObj } from "../../src/mesh/WavefrontObj"
-import { Blendshape } from "../../src/mediapipe/blendshapeNames"
+import { Blendshape } from "../../src/blendshapes/BlendShape"
 import { MorphTarget } from "../../src/target/MorphTarget"
 import { ARKitBlendshapeMesh } from "morphtool/ARKitBlendshapeMesh"
 

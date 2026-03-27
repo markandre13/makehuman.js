@@ -9,7 +9,7 @@ import { PickColorBuffer } from 'gl/buffers/PickColorBuffer'
 import { SelectionColorBuffer } from 'gl/buffers/SelectionColorBuffer'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { di } from 'lib/di'
-import { Blendshape } from 'mediapipe/blendshapeNames'
+import { Blendshape } from 'blendshapes/BlendShape'
 import { BaseMeshGroup } from 'mesh/BaseMeshGroup'
 import { WavefrontObj } from 'mesh/WavefrontObj'
 import { RenderHandler } from 'render/RenderHandler'
@@ -87,6 +87,9 @@ export class MorphRenderer extends RenderHandler {
     needToCalculateDistance = true
     needToCalculateMHBlendshapes = true
 
+    /**
+     * this was for debugging computeBlendshapeMesh()
+     */
     paintX(app: Application, view: RenderView): void {
         const gl = view.gl
         const renderMeshMH = new RenderMesh(gl,
@@ -198,6 +201,7 @@ export class MorphRenderer extends RenderHandler {
         // return
 
         const { projectionMatrix, modelViewMatrix, normalMatrix } = view.prepare()
+        // console.log(shaderShadedMono)
         shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix, normalMatrix)
         gl.depthMask(true)
         const alpha = 0.25

@@ -1,69 +1,38 @@
-import { Signal } from "toad.js"
+import { Model } from "toad.js"
+import { Blendshape } from "./BlendShape"
 
-/**
- * I provide blendshape data from Frontend_impl to the application.
- */
+export class BlendshapeModel extends Model {
+    params: Float32Array = new Float32Array(Blendshape.SIZE)
+    transform: Float32Array = new Float32Array(16)
+    timestamp_ms: bigint = 0n
 
-export class BlendshapeModel {
-    signal = new Signal();
-
-    private blendshapeName2Index = new Map<string, number>();
-    private blendshapeNames?: string[]
-    private blendshapesWeights?: Float32Array
-
-    transform!: Float32Array
-
-    forEach(cb: (name: string, weight: number) => void) {
-        if (this.blendshapeNames === undefined || this.blendshapesWeights === undefined) {
-            return
-        }
-        this.blendshapeNames.forEach((name, index) => {
-            cb(name, this.blendshapesWeights![index])
-        })
-    }
-
-    getBlendshapeWeight(name: string): number {
-        if (this.blendshapesWeights === undefined) {
-            return 0
-        }
-        const index = this.blendshapeName2Index.get(name)
-        if (index === undefined) {
-            return 0
-        }
-        return this.blendshapesWeights[index]
-    }
-
-    setBlendshapeNames(faceBlendshapeNames: Array<string>): void {
-        this.blendshapeNames = faceBlendshapeNames
-        this.blendshapeName2Index.clear()
-        faceBlendshapeNames.forEach((name, index) => {
-            this.blendshapeName2Index.set(name, index)
-        })
-    }
-
-    setBlendshapeWeights(blendshapes: Float32Array, transform: Float32Array): void {
-        this.blendshapesWeights = blendshapes
+    set(params: Float32Array, transform: Float32Array, timestamp_ms: bigint) {
+        this.params = params
         this.transform = transform
+        this.timestamp_ms = timestamp_ms
         this.signal.emit()
     }
 
-    reset() {
-        if (this.blendshapesWeights === undefined) {
-            this.blendshapesWeights = new Float32Array(this.blendshapeNames!.length!)
-        }
-        this.blendshapesWeights.fill(0)
-    }
-
-    setBlendshapeWeight(name: string, weight: number) {
-        if (this.blendshapesWeights === undefined) {
-            return
-        }
-        const index = this.blendshapeName2Index.get(name)!
-        if (this.blendshapesWeights[index] == weight) {
-            return
-        }
-        this.blendshapesWeights[index] = weight
-        // console.log(`BlendshapeModel.setBlendshapeWeight('${name}', ${weight}})`)
-        this.signal.emit()
-    }
+    // getBlendshapeWeight(blendshape: Blendshape): number {
+    //     return this._params[blendshape]
+    // }
+    // setBlendshapeWeights(blendshapes: Float32Array, transform: Float32Array): void {
+    //     this._params.set(blendshapes)
+    //     this._transform.set(transform)
+    //     this.signal.emit()
+    // }
+    // setBlendshapeWeight(blendshape: Blendshape, weight: number) {
+    //     this._params[blendshape] = weight
+    //     this.signal.emit()
+    // }
+    // reset() {
+    //     this._params.fill(0)
+    //     this._transform.set([
+    //         1, 0, 0, 0,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1
+    //     ])
+    //     this.signal.emit()
+    // }
 }

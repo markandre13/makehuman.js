@@ -1,6 +1,6 @@
 import { RenderMesh } from 'render/RenderMesh'
 import { FlatMesh } from './FlatMesh'
-import { Blendshape } from 'mediapipe/blendshapeNames'
+import { Blendshape } from 'blendshapes/BlendShape'
 import { di } from 'lib/di'
 import { ARKitBlendshapeMesh } from './ARKitBlendshapeMesh'
 import { trianglesToFlatTriangles } from 'gl/algorithms/trianglesToFlatTriangles'

@@ -12,17 +12,6 @@ import { FaceRenderer } from './FaceRenderer'
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
 import { ORB } from 'corba.js'
 
-class ARKitFaceReceiver extends ARKitFaceReceiver_skel {
-    private faceRenderer: FaceRenderer
-    constructor(orb: ORB, faceRenderer: FaceRenderer) {
-        super(orb)
-        this.faceRenderer = faceRenderer
-    }
-    override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
-        this.faceRenderer.faceLandmarks(blendshapes, transform, timestamp_ms)
-    }
-}
-
 export class MorphToolModel {
     renderer?: MorphRenderer
     faceRenderer?: FaceRenderer
@@ -107,9 +96,9 @@ export class MorphToolModel {
             this.morphGroups.setMapping(this.mapping)
         })
 
-        const connector = di.get(Connector)
-        this.connect = this.connect.bind(this)
-        connector.signal.add(this.connect)
+        // const connector = di.get(Connector)
+        // this.connect = this.connect.bind(this)
+        // connector.signal.add(this.connect)
     }
     private visibilitychange() {
         if (document.visibilityState === "hidden" && this.renderer) {
@@ -130,23 +119,23 @@ export class MorphToolModel {
             await fs.write("morphgroup.json", uint8Array)
         }
     }
-    private connect() {
-        const connector = di.get(Connector)
-        if (connector.state !== ConnectionState.CONNECTED) {
-            return
-        }
-        const backend = di.get(Application).frontend.backend as Backend
-        backend?.captureDevices().then((devices) => {
-            console.log(`connecting: found ${devices.length} capture devices`)
-            for (const device of devices) {
-                console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
-                if (device.device instanceof ARKitFaceDevice) {
-                    console.log("FOUND ARKitFaceDevice -> set receiver")
-                    device.device.receiver(new ARKitFaceReceiver(backend._orb, this.faceRenderer!))
-                }
-            }
-        })
-    }
+    // private connect() {
+    //     const connector = di.get(Connector)
+    //     if (connector.state !== ConnectionState.CONNECTED) {
+    //         return
+    //     }
+    //     const backend = di.get(Application).frontend.backend as Backend
+    //     backend?.captureDevices().then((devices) => {
+    //         console.log(`connecting: found ${devices.length} capture devices`)
+    //         for (const device of devices) {
+    //             console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
+    //             if (device.device instanceof ARKitFaceDevice) {
+    //                 console.log("FOUND ARKitFaceDevice -> set receiver")
+    //                 device.device.receiver(new ARKitFaceReceiver(backend._orb, this.faceRenderer!))
+    //             }
+    //         }
+    //     })
+    // }
 }
 
 

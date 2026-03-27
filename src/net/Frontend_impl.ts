@@ -4,21 +4,19 @@ import { FileSystem } from "net/fs"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { UpdateManager } from "UpdateManager"
 import { handleChordata } from "chordata/chordata"
-import { BlendshapeModel } from "blendshapes/BlendshapeModel"
 import { ValueModel } from "toad.js/model/ValueModel"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager
-    blendshapeModel: BlendshapeModel
 
     backend?: Backend
     filesystem?: FileSystem
     recorder = new ValueModel<Recorder | undefined>(undefined)
 
-    constructor(orb: ORB, updateManager: UpdateManager, blendshapeModel: BlendshapeModel) {
+    constructor(orb: ORB, updateManager: UpdateManager) {
         super(orb)
         this.updateManager = updateManager
-        this.blendshapeModel = blendshapeModel
+        // this.blendshapeModel = blendshapeModel
     }
 
     /*
@@ -33,27 +31,22 @@ export class Frontend_impl extends Frontend_skel {
      * blendshapes
      */
 
-    // // data received from mediapipe
-    landmarks?: Float32Array
-    _poseLandmarksTS = new ValueModel<bigint>(0n)
-    _poseLandmarks?: Float32Array
-
-    // list of blendshape names that will be send to faceLandmarks()
-    override faceBlendshapeNames(faceBlendshapeNames: Array<string>): void {
-        this.blendshapeModel.setBlendshapeNames(faceBlendshapeNames)
+    override faceBlendshapeNames(_faceBlendshapeNames: Array<string>): void {
+        console.warn(`Frontend_impl.faceBlendshapeNames() called but is deprecated`)
     }
 
     override faceLandmarks(
-        landmarks: Float32Array,
-        blendshapes: Float32Array,
-        transform: Float32Array,
-        timestamp_ms: bigint
+        _landmarks: Float32Array,
+        _blendshapes: Float32Array,
+        _transform: Float32Array,
+        _timestamp_ms: bigint
     ): void {
-        // console.log()
-        this.landmarks = landmarks
-        this.updateManager.invalidateView()
-        this.blendshapeModel.setBlendshapeWeights(blendshapes, transform)
+        console.warn(`Frontend_impl.faceLandmarks() called but is deprecated`)
     }
+
+    // data received from mediapipe/freemocap
+    _poseLandmarksTS = new ValueModel<bigint>(0n)
+    _poseLandmarks?: Float32Array
 
     override poseLandmarks(landmarks: Float32Array, timestamp_ms: bigint): void {
         // console.log(`got ${landmarks.length/3} pose landmarks, ${timestamp_ms}`)

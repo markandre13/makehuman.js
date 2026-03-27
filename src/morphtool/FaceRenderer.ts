@@ -5,19 +5,21 @@ import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { NormalBuffer } from 'gl/buffers/NormalBuffer'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { di } from 'lib/di'
-import { Blendshape } from 'mediapipe/blendshapeNames'
+import { Blendshape } from 'blendshapes/BlendShape'
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
 import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
+import { BlendshapeModel } from 'blendshapes/BlendshapeModel'
 
 /**
  * render animated blendshape mesh
  */
 export class FaceRenderer extends RenderHandler {
     private blendshapeMesh: BlendshapeMeshAPI
+    // blendshapeModel?: BlendshapeModel
 
-    private blendshapeParams?: Float32Array
-    private blendshapeTransform?: Float32Array
+    // private blendshapeParams?: Float32Array
+    // private blendshapeTransform?: Float32Array
 
     private vertices!: VertexBuffer
     private normals!: NormalBuffer
@@ -26,7 +28,7 @@ export class FaceRenderer extends RenderHandler {
     constructor(blendshapeMesh: BlendshapeMeshAPI) {
         super()
         this.blendshapeMesh = blendshapeMesh
-        this.blendshapeParams = new Float32Array(Blendshape.SIZE)
+        // this.blendshapeParams = new Float32Array(Blendshape.SIZE)
     }
 
     setBlendshapeMesh(blendshapeMesh: BlendshapeMeshAPI) {
@@ -36,27 +38,12 @@ export class FaceRenderer extends RenderHandler {
         this.blendshapeMesh = blendshapeMesh
         this.vertices = undefined as any // new mesh, new data structures
     }
-
-    /**
-     * set blendshape parameters
-     * 
-     * @param blendshapes 
-     * @param transform 
-     * @param timestamp_ms 
-     */
-    faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
-        // console.log("FaceRenderer::faceLandmarks()")
-        this.blendshapeParams = blendshapes
-        this.blendshapeTransform = transform
-        di.get(Application).glview.invalidate()
-    }
     override defaultCamera(): () => mat4 {
         return di.get(Application).headCamera
     }
     override paint(_app: Application, view: RenderView): void {
-        if (this.blendshapeParams === undefined) {
-            return
-        }
+        const blendshapeModel = _app.blendshapeModel
+
         const gl = view.gl
         const shaderShadedMono = view.shaderShadedMono
         view.prepareCanvas()
@@ -71,7 +58,7 @@ export class FaceRenderer extends RenderHandler {
         shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
 
         if (this.vertices === undefined) {
-            const vertex = this.blendshapeMesh.getVertex(this.blendshapeParams, this.blendshapeTransform!)
+            const vertex = this.blendshapeMesh.getVertex(blendshapeModel.params, blendshapeModel.transform)
             this.vertices = new VertexBuffer(gl, vertex)
             this.indices = new IndexBuffer(gl, this.blendshapeMesh.fxyz)
             this.normals = new NormalBuffer(gl, calculateNormalsTriangles(
@@ -80,7 +67,7 @@ export class FaceRenderer extends RenderHandler {
                 this.blendshapeMesh.fxyz
             ))
         } else {
-            this.blendshapeMesh.getVertex(this.blendshapeParams, this.blendshapeTransform!, this.vertices.data)
+            this.blendshapeMesh.getVertex(blendshapeModel.params, blendshapeModel.transform, this.vertices.data)
             this.vertices.update()
             calculateNormalsTriangles(
                 this.normals.data,

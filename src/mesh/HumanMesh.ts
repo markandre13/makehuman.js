@@ -3,7 +3,6 @@ import { MorphManager } from "../modifier/MorphManager"
 import { getTarget } from "../target/TargetFactory"
 import { Skeleton } from "../skeleton/Skeleton"
 import { WavefrontObj } from "./WavefrontObj"
-import { BooleanModel } from "toad.js"
 import { isZero } from "gl/algorithms/isZero"
 
 export class HumanMesh {
@@ -32,7 +31,7 @@ export class HumanMesh {
      * this.vertexMorphed := this.baseMesh.xyz + morph
      */
     calculateVertexMorphed() {
-        console.log(`HumanMesh.calculateVertexMorphed(): ${this.morphManager.targetsDetailStack.size}`)
+        // console.log(`HumanMesh.calculateVertexMorphed(): ${this.morphManager.targetsDetailStack.size}`)
         if (this.vertexMorphed === this.baseMesh.xyz) {
             this.vertexMorphed = new Float32Array(this.baseMesh.xyz)
         } else {
@@ -44,7 +43,7 @@ export class HumanMesh {
                 return
             }
             if (isZero(value) || isNaN(value)) return
-            console.log(`    apply target ${targetName} with value ${value}`)
+            // console.log(`    apply target ${targetName} with value ${value}`)
             const target = getTarget(targetName)
             target.apply(this.vertexMorphed, value)
         })

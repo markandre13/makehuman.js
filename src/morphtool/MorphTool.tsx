@@ -53,13 +53,12 @@ export function MorphTool(props: { app: Application }) {
         props.app.glview.invalidate()
     })
     model.showAnimation.signal.add(() => {
-        // MorphRenderer does some multiplexing...
-        // if (model.showAnimation.value) {
-        //     props.app.setRenderer(faceRenderer)
-        //     model.showMapping.value = false
-        // } else {
-        //     props.app.setRenderer(renderer)
-        // }
+        // MorphRenderer redirects to FaceRenderer when true
+        if (model.showAnimation.value) {
+            props.app.blendshapeModel.signal.add(props.app.glview.invalidate, renderer)
+        } else {
+            props.app.blendshapeModel.signal.remove(renderer)
+        }
         props.app.glview.invalidate()
     })
 
@@ -104,10 +103,6 @@ export function MorphTool(props: { app: Application }) {
                         props.app.updateManager.updateFromLocalSettingsWithoutGL()
 
                         props.app.glview.popInputHandler()
-                        // reset blendhape model
-                        props.app.updateManager.setBlendshapeModel(
-                            props.app.frontend.blendshapeModel
-                        )
                         break
                 }
             }}

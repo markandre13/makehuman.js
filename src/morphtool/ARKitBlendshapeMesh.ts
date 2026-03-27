@@ -1,5 +1,5 @@
 import { isZero } from 'gl/algorithms/isZero'
-import { Blendshape } from 'mediapipe/blendshapeNames'
+import { Blendshape } from 'blendshapes/BlendShape'
 import { WavefrontObj } from 'mesh/WavefrontObj'
 import { MorphTarget } from 'target/MorphTarget'
 import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'

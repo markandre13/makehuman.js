@@ -30,6 +30,10 @@ import { di } from "lib/di"
 import { ARKitBlendshapeMesh } from "morphtool/ARKitBlendshapeMesh"
 import { computeBlendshapes } from "morphtool/MorphRenderer"
 import { ComputedBlendshapeMesh } from "morphtool/ComputedBlendshapeMesh"
+import { ConnectionState } from "net/ConnectionState"
+import { CaptureDeviceType } from "net/makehuman"
+import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "./net/makehuman_skel"
+
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
 // this smoothes my crappy API design for now
@@ -121,7 +125,6 @@ export class Application {
         // blendshapes
         //
 
-
         // blendshape weights from backend (e.g. mediapipe, live link)
         this.blendshapeModel = new BlendshapeModel()
 
@@ -186,10 +189,33 @@ export class Application {
         this.orb.registerStubClass(Recorder)
         this.orb.registerStubClass(ARKitFaceDevice)
         this.orb.addProtocol(new WsProtocol())
-        this.frontend = new Frontend_impl(this.orb, this.updateManager, this.blendshapeModel)
+        this.frontend = new Frontend_impl(this.orb, this.updateManager)
 
-        this.connector = new Connector(this.frontend)
+        const connector = new Connector(this.frontend)
+        this.connector = connector
         this.connector.connectToBackend()
+
+        // request data for the blendshape model
+        // for now we automatically pick the 1st blendshape source we find on the backend
+        this.connector.signal.add(() => {
+            if (connector.state !== ConnectionState.CONNECTED) {
+                return
+            }
+            const backend = this.frontend.backend as Backend
+            backend?.captureDevices().then((devices) => {
+                console.log(`connecting: found ${devices.length} capture devices`)
+                for (const device of devices) {
+                    console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
+                    if (device.device instanceof ARKitFaceDevice) {
+                        console.log("FOUND ARKitFaceDevice -> set receiver")
+                        device.device.receiver(new ARKitFaceReceiver(backend._orb, (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => {
+                            this.blendshapeModel.set(blendshapes, transform, timestamp_ms)
+                        }))
+                        break
+                    }
+                }
+            })
+        })
     }
 
     renderer?: RenderHandler
@@ -223,4 +249,15 @@ export class Application {
         return camera
     }
 
+}
+
+class ARKitFaceReceiver extends ARKitFaceReceiver_skel {
+    private _delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void
+    constructor(orb: ORB, delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void ) {
+        super(orb)
+        this._delegate = delegate
+    }
+    override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
+        this._delegate(blendshapes, transform, timestamp_ms)
+    }
 }
