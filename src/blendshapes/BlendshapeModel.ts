@@ -23,9 +23,9 @@ export class BlendshapeModel extends Model {
             0, 0, 0, 1)
     }
 
-    // getBlendshapeWeight(blendshape: Blendshape): number {
-    //     return this._params[blendshape]
-    // }
+    getBlendshapeWeight(blendshape: Blendshape): number {
+        return this.params[blendshape]
+    }
     // setBlendshapeWeights(blendshapes: Float32Array, transform: Float32Array): void {
     //     this._params.set(blendshapes)
     //     this._transform.set(transform)

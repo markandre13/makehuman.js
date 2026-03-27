@@ -5,14 +5,9 @@ import { IndexBuffer } from 'gl/buffers/IndexBuffer'
 import { NormalBuffer } from 'gl/buffers/NormalBuffer'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { di } from 'lib/di'
-import { Blendshape } from 'blendshapes/BlendShape'
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
 import { BlendshapeMeshAPI } from './BlendshapeMeshAPI'
-import { BlendshapeModel } from 'blendshapes/BlendshapeModel'
-import { deg2rad } from 'gl/algorithms/deg2rad'
-
-let rotate = 0
 
 /**
  * render animated blendshape mesh
@@ -76,7 +71,7 @@ export class FaceRenderer extends RenderHandler {
                 this.blendshapeMesh.fxyz
             ))
         } else {
-            this.blendshapeMesh.getVertex(blendshapeModel.params, blendshapeModel.transform, this.vertices.data)
+            this.blendshapeMesh.getVertex(blendshapeModel.params, this.vertices.data)
             this.vertices.update()
             calculateNormalsTriangles(
                 this.normals.data,

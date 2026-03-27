@@ -152,7 +152,7 @@ export class MorphRenderer extends RenderHandler {
 
         // calculateDistance projects the MH mesh onto the arkit mesh
         if (this.needToCalculateDistance && (this.model.showMapping.value || this.model.showAnimation.value)) {
-            console.log("DEBUG 1")
+            // console.log("DEBUG 1")
             this.calculateDistance(gl)
             this.needToCalculateDistance = false
         }
@@ -162,7 +162,7 @@ export class MorphRenderer extends RenderHandler {
             !this.model.isARKitActive.value
         ) {
             // calculate the blendshapes?
-            console.log("DEBUG 2")
+            // console.log("DEBUG 2")
             this.computedBlendshapeMesh = computeBlendshapeMesh(app.humanMesh.baseMesh, this.mh2arProjection)
             // this.computedBlendshapeMesh = app.computedBlendShapes
 

@@ -13,6 +13,8 @@ import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
 import { deg2rad } from "gl/algorithms/deg2rad"
 import { VALUE } from "toad.js/model/ValueModel"
 import { ALL } from "toad.js/model/Model"
+import { Blendshape } from "blendshapes/BlendShape"
+import { rad2deg } from "gl/algorithms/rad2deg"
 
 export const REST_QUAT = quat2.create()
 
@@ -30,23 +32,6 @@ export class UpdateManager {
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
     modifiedPoseNodes = new Set<PoseNode>()
-
-    private blendshapeModel?: BlendshapeModel
-
-    setBlendshapeModel(blendshapeModel?: BlendshapeModel) {
-        if (this.blendshapeModel) {
-            this.blendshapeModel.signal.remove(this)
-        }
-        this.blendshapeModel = blendshapeModel
-        if (this.blendshapeModel) {
-            this.blendshapeModel.signal.add(() => {
-                this.blendshapeModelChanged = true
-            }, this)
-        }
-    }
-    getBlendshapeModel() {
-        return this.blendshapeModel
-    }
 
     //
     // flags for change detection
@@ -82,7 +67,6 @@ export class UpdateManager {
     constructor(app: Application) {
         this.app = app
         this.skeleton = app.skeleton
-        this.blendshapeModel = app.blendshapeModel
         const sliderNodes = app.sliderNodes
 
         // observe morph slider
@@ -143,8 +127,10 @@ export class UpdateManager {
                 }
             })
         })
-
-        this.setBlendshapeModel(app.blendshapeModel)
+        app.blendshapeModel.signal.add(() => {
+            this.blendshapeModelChanged = true
+            this.invalidateView()
+        })
     }
 
     renderList?: RenderList
@@ -181,7 +167,9 @@ export class UpdateManager {
 
         this.updateMorphManager()
 
-        this.updateFacePoseFromBlendShapes()
+        this.applyFaceBlendshapes()
+
+        this.applyFacePoseFromBlendShapes()
         this.updateBodyPoseFromBlazePose()
 
         // UPDATE_SKINNING_MATRIX
@@ -250,34 +238,83 @@ export class UpdateManager {
         this.skeletonChanged = true
     }
 
-    updateFacePoseFromBlendShapes() {
-        // this converts the blendshape parameters to MakeHuman's face pose units
-        // the outcome isn't very convincing:
-        // * because both are different
-        // * MH's face rig can not mimic ARKits blendshapes as needed
+    _skip = new Set([
+        Blendshape.jawOpen, Blendshape.jawForward, Blendshape.jawLeft, Blendshape.jawRight,
+        // Blendshape.eyeLookOutLeft, Blendshape.eyeLookInLeft, Blendshape.eyeLookUpLeft, Blendshape.eyeLookDownLeft
+    ])
+    applyFaceBlendshapes() {
+        this.app.computedBlendShapes.getVertex(
+            this.app.blendshapeModel.params,
+            this.app.humanMesh.vertexMorphed,
+            this._skip
+        )
+    }
 
-        // this.blendshapeConverter!.applyToSkeleton(this.blendshapeModel!, this.skeleton)
+    applyFacePoseFromBlendShapes() {
         this.blendshapeModelChanged = false
 
-        // // experimental head rotation
-        // // real neck and head positioning would actually require two transforms: neck AND head.
-        // // as an approximation, this just evenly distributes the head rotation over neck and head joints
-        // if (this.app.frontend.blendshapeModel.transform) {
-        //     const neck1 = this.skeleton.getBone("neck01")
-        //     const neck2 = this.skeleton.getBone("neck02")
-        //     const neck3 = this.skeleton.getBone("neck03")
-        //     const head = this.skeleton.getBone("head")
+        // experimental head rotation
+        // real neck and head positioning would actually require two transforms: neck AND head.
+        // as an approximation, this just evenly distributes the head rotation over neck and head joints
+        const neck1 = this.skeleton.getBone("neck01")
+        const neck2 = this.skeleton.getBone("neck02")
+        const neck3 = this.skeleton.getBone("neck03")
+        const head = this.skeleton.getBone("head")
 
-        //     const t = this.app.frontend.blendshapeModel.transform
-        //     let m = mat4.fromValues(t[0], t[1], t[2], 0, t[4], t[5], t[6], 0, t[8], t[9], t[10], 0, 0, 0, 0, 1)
-        //     let q = quat2.create()
-        //     quat2.fromMat4(q, m)
-        //     q = quaternion_slerp(REST_QUAT, q, 0.25)
-        //     mat4.fromQuat2(head.matPose, q)
-        //     mat4.fromQuat2(neck1.matPose, q)
-        //     mat4.fromQuat2(neck2.matPose, q)
-        //     mat4.fromQuat2(neck3.matPose, q)
-        // }
+        const neckM = this.app.blendshapeModel.getRotation()
+        let neckQ = quat2.fromMat4(quat2.create(), neckM)
+        neckQ = quaternion_slerp(REST_QUAT, neckQ, 0.25)
+        mat4.fromQuat2(head.matUserPoseRelative, neckQ)
+        mat4.fromQuat2(neck1.matUserPoseRelative, neckQ)
+        mat4.fromQuat2(neck2.matUserPoseRelative, neckQ)
+        mat4.fromQuat2(neck3.matUserPoseRelative, neckQ)
+
+        // When the mouth was fully opened, the linear measurement of condylar 
+        // movement was 20.5 ± 4.0 mm in men and 18.1 ± 2.5 mm in women, and 
+        // the angular measurements of the rotation of the mandibular ramus 
+        // were 39.1 ± 5.9 ° in men and 36.3 ± 4.3 ° in women. These differences 
+        // were statistically significant (P < .01).
+        //
+        // Muto, T., & Kanazawa, M. (1996). Linear and angular measurements of
+        // the mandible during maximal mouth opening. Journal of oral and 
+        // maxillofacial surgery : official journal of the American Association
+        // of Oral and Maxillofacial Surgeons, 54(8), 970–974.
+        // https://doi.org/10.1016/s0278-2391(96)90394-8
+        const jawOpen = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.jawOpen)
+        const jawLeft = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.jawLeft)
+        const jawRight = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.jawRight)
+
+        const jawM = mat4.create()
+        mat4.rotateY(jawM, jawM, deg2rad(jawLeft * -10))
+        mat4.rotateY(jawM, jawM, deg2rad(jawRight * 10))
+        mat4.rotateX(jawM, jawM, deg2rad(jawOpen * 30))
+
+        const jaw = this.app.skeleton.getBone("jaw")!
+        jaw.matUserPoseRelative = jawM
+
+        const eyeDownL = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookDownLeft)
+        const eyeUpL = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookUpLeft)
+        const eyeOutL = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookOutLeft)
+        const eyeInL = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookInLeft)
+        const eyeLM = mat4.create()
+        mat4.rotateZ(eyeLM, eyeLM, deg2rad(eyeInL * -20)) // in
+        mat4.rotateZ(eyeLM, eyeLM, deg2rad(eyeOutL * 30)) // out
+        mat4.rotateX(eyeLM, eyeLM, deg2rad(eyeUpL * 20)) // up
+        mat4.rotateX(eyeLM, eyeLM, deg2rad(eyeDownL * -20)) // down
+        const eyeL = this.app.skeleton.getBone("eye.L")!
+        eyeL.matUserPoseRelative = eyeLM
+
+        const eyeDownR = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookDownRight)
+        const eyeUpR = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookUpRight)
+        const eyeOutR = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookOutRight)
+        const eyeInR = this.app.blendshapeModel.getBlendshapeWeight(Blendshape.eyeLookInRight)
+        const eyeRM = mat4.create()
+        mat4.rotateZ(eyeRM, eyeRM, deg2rad(eyeInR * 20)) // in
+        mat4.rotateZ(eyeRM, eyeRM, deg2rad(eyeOutR * -30)) // out
+        mat4.rotateX(eyeRM, eyeRM, deg2rad(eyeUpR * 20)) // up
+        mat4.rotateX(eyeRM, eyeRM, deg2rad(eyeDownR * -20)) // down
+        const eyeR = this.app.skeleton.getBone("eye.R")!
+        eyeR.matUserPoseRelative = eyeRM
 
         this.skeletonChanged = true
     }

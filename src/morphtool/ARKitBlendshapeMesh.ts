@@ -83,7 +83,7 @@ export class ARKitBlendshapeMesh implements BlendshapeMeshAPI {
      * @param blendshapeParams
      * @returns
      */
-    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array {
+    getVertex(blendshapeParams: Float32Array, vertex?: Float32Array, skip?: Set<Blendshape>): Float32Array {
         // copy 'neutral' to 'vertex'
         const neutral = this.getNeutral()
         if (vertex === undefined) {
@@ -92,6 +92,9 @@ export class ARKitBlendshapeMesh implements BlendshapeMeshAPI {
         vertex.set(this._neutral!.xyz)
         // apply blendshapes to 'vertex'
         for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
+            if (skip && skip.has(blendshape)) {
+                continue
+            }
             const weight = blendshapeParams[blendshape]
             if (isZero(weight)) {
                 continue

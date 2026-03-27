@@ -20,12 +20,19 @@ export class ComputedBlendshapeMesh implements BlendshapeMeshAPI {
     get fxyz(): number[] {
         return this._fxyz
     }
-    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array {
+    getVertex(
+        blendshapeParams: Float32Array,
+        vertex?: Float32Array,
+        skip?: Set<Blendshape>
+    ): Float32Array {
         if (vertex === undefined) {
             vertex = new Float32Array(this._xyz.length)
         }
         vertex.set(this._xyz)
         for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
+            if (skip && skip.has(blendshape)) {
+                continue
+            }
             const weight = blendshapeParams[blendshape]
             if (isZero(weight)) {
                 continue

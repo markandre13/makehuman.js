@@ -1,3 +1,5 @@
+import { Blendshape } from "blendshapes/BlendShape"
+
 /**
  * API providing data to render face blendshapes
  */
@@ -10,5 +12,5 @@ export interface BlendshapeMeshAPI {
      * @param blendshapeTransform transform for head
      * @param vertex destination
      */
-    getVertex(blendshapeParams: Float32Array, blendshapeTransform: Float32Array, vertex?: Float32Array): Float32Array
+    getVertex(blendshapeParams: Float32Array, vertex?: Float32Array, skip?: Set<Blendshape>): Float32Array
 }
