@@ -22,6 +22,8 @@
 //     extends: adds additional files
 //
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+
 import { platform, homedir } from "os"
 import { lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs"
 import { execSync } from "child_process"
@@ -83,7 +85,7 @@ function getMakehumanDirName() {
 function checkGitLFS() {
     try {
         exec('git lfs install')
-    } catch(error) {
+    } catch (error) {
         console.error(`\nplease install git lfs to download makehuman assets`)
         console.error((error as any).message.trim())
         exit(1)
@@ -102,7 +104,7 @@ function updateAssetDirectory(assetDirectory: string) {
 function cloneAssetDirectory(repository: string, branch: string, makehumanDir: string) {
     console.log(`downloading makehuman assets into directory '${makehumanDir}${sep}official_assets'`)
     try {
-        mkdirSync(makehumanDir, {recursive: true})
+        mkdirSync(makehumanDir, { recursive: true })
         exec(`git -C ${makehumanDir} clone -b '${branch}' '${repository}' official_assets`)
     } catch (error) {
         console.error(`\nunable to clone directory '${assetDirectory}'`)
@@ -113,10 +115,10 @@ function cloneAssetDirectory(repository: string, branch: string, makehumanDir: s
 
 function copyFiles(sourceRoot: string, sourcePath: string = "") {
     const source = `${sourceRoot}${sep}${sourcePath}`
-    let dir 
+    let dir
     try {
         dir = readdirSync(source)
-    } catch(e) {
+    } catch (e) {
         if (e instanceof Error) {
             throw Error(`${source}: ${e.name} ${e.message}`)
         } else {
@@ -318,7 +320,7 @@ async function downloadARKitFaceBlendshapes() {
     }
 
     const blendshapeUrl = `${url}/static/js/main.fdacbc90.chunk.js`
-    const chunkResponse = await fetch(blendshapeUrl)
+    const chunkResponse = await fetch(blendshapeUrl, { redirect: "follow" })
     const chunk = await chunkResponse.text()
     if (!chunkResponse.ok) {
         throw Error(`failed to fetch ${blendshapeUrl}: ${chunkResponse.status} ${chunkResponse.statusText} ${chunk}`)
@@ -337,7 +339,7 @@ async function downloadARKitFaceBlendshapes() {
 
         console.log(`download ${fileIn} to ${fileOut}`)
 
-        const objResponse = await fetch(fileIn)
+        const objResponse = await fetch(fileIn, { redirect: "follow" })
         const obj = await objResponse.text()
         if (!objResponse.ok) {
             throw Error(`failed to fetch ${fileIn}: ${objResponse.status} ${objResponse.statusText} ${obj}`)
@@ -391,7 +393,7 @@ async function downloadICTFaceKitBlendshapes() {
                 continue
             }
             console.log(`download ${fileIn} to ${fileOut}`)
-            const objResponse = await fetch(fileIn)
+            const objResponse = await fetch(fileIn, { redirect: "follow" })
             const obj = await objResponse.text()
             if (!objResponse.ok) {
                 throw Error(`failed to fetch ${fileIn}: ${objResponse.status} ${objResponse.statusText}`)
