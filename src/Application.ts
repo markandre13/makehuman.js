@@ -5,7 +5,6 @@ import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { HumanMesh } from "./mesh/HumanMesh"
 import { PoseNode } from "expression/PoseNode"
-// import { PoseModel } from "pose/PoseModel"
 import { ProxyManager } from "./ProxyManager"
 import { TAB, initHistoryManager } from "HistoryManager"
 import { UpdateManager } from "UpdateManager"
@@ -16,7 +15,7 @@ import { ChordataSettings } from "chordata/ChordataSettings"
 import { Skeleton } from "skeleton/Skeleton"
 import { RenderHandler } from 'render/RenderHandler'
 import { ORB } from "corba.js"
-import { ARKitFaceDevice, Backend, MediaPipeTask, Recorder, VideoCamera } from "net/makehuman_stub"
+import { ARKitFaceDevice, Backend, HolisticDevice, MediaPipeTask, Recorder, VideoCamera } from "net/makehuman_stub"
 import { FileSystem } from "net/fs_stub"
 import { WsProtocol } from "corba.js/net/browser"
 import { Frontend_impl } from "net/Frontend_impl"
@@ -32,7 +31,7 @@ import { computeBlendshapes } from "morphtool/MorphRenderer"
 import { ComputedBlendshapeMesh } from "morphtool/ComputedBlendshapeMesh"
 import { ConnectionState } from "net/ConnectionState"
 import { CaptureDeviceType } from "net/makehuman"
-import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "./net/makehuman_skel"
+import { ARKitFaceReceiver as ARKitFaceReceiver_skel, HolisticReceiver as HolisticReceiver_skel } from "./net/makehuman_skel"
 
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
@@ -79,8 +78,6 @@ export class Application {
     renderMode: EnumModel<RenderMode>
     morphControls: TreeNodeModel<SliderNode>
     poseControls: TreeNodeModel<PoseNode>
-    // expressionManager: ExpressionManager
-    // poseModel: PoseModel
     updateManager: UpdateManager
     chordataSettings: ChordataSettings
     tabModel: EnumModel<TAB>
@@ -139,7 +136,7 @@ export class Application {
 
         this.renderView = {} as any
 
-        console.log("COMPUTE BLENDSHAPE")
+        // console.log("COMPUTE BLENDSHAPE")
         try {
             this.computedBlendShapesDebug = {} as any
             this.computedBlendShapes = computeBlendshapes(
@@ -149,7 +146,7 @@ export class Application {
             console.log(e)
             throw e
         }
-        console.log("COMPUTED BLENDSHAPE")
+        // console.log("COMPUTED BLENDSHAPE")
 
         // FIXME: OOP SMELL => replace ENUM with OBJECT
         this.tabModel = new EnumModel(TAB.PROXY, TAB)
@@ -188,6 +185,7 @@ export class Application {
         this.orb.registerStubClass(MediaPipeTask)
         this.orb.registerStubClass(Recorder)
         this.orb.registerStubClass(ARKitFaceDevice)
+        this.orb.registerStubClass(HolisticDevice)
         this.orb.addProtocol(new WsProtocol())
         this.frontend = new Frontend_impl(this.orb, this.updateManager)
 
@@ -206,9 +204,16 @@ export class Application {
                 console.log(`connecting: found ${devices.length} capture devices`)
                 for (const device of devices) {
                     console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
-                    if (device.device instanceof ARKitFaceDevice) {
-                        console.log("FOUND ARKitFaceDevice -> set receiver")
-                        device.device.receiver(new ARKitFaceReceiver(backend._orb, (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => {
+                    // if (device.device instanceof ARKitFaceDevice) {
+                    //     console.log("FOUND ARKitFaceDevice -> set receiver")
+                    //     device.device.receiver(new ARKitFaceReceiver(backend._orb, (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => {
+                    //         this.blendshapeModel.set(blendshapes, transform, timestamp_ms)
+                    //     }))
+                    //     break
+                    // }
+                    if (device.device instanceof HolisticDevice) {
+                        console.log("FOUND HolisticDevice -> set receiver")
+                        device.device.receiver(new HolisticReceiver(backend._orb, (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => {
                             this.blendshapeModel.set(blendshapes, transform, timestamp_ms)
                         }))
                         break
@@ -248,16 +253,33 @@ export class Application {
         mat4.translate(camera, camera, [0, 0, -25])
         return camera
     }
-
 }
 
 class ARKitFaceReceiver extends ARKitFaceReceiver_skel {
     private _delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void
-    constructor(orb: ORB, delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void ) {
+    constructor(orb: ORB, delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void) {
         super(orb)
         this._delegate = delegate
     }
     override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
         this._delegate(blendshapes, transform, timestamp_ms)
+    }
+}
+
+class HolisticReceiver extends HolisticReceiver_skel {
+    private _delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void
+    private _transform = new Float32Array([
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,0,0,1
+    ])
+    constructor(orb: ORB, delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void) {
+        super(orb)
+        this._delegate = delegate
+    }
+    override landmarks(blendshapes: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint): void {
+        console.log(`got holistic landmarks`)
+        this._delegate(blendshapes, this._transform, timestamp_ms)
     }
 }

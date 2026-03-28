@@ -3,21 +3,6 @@ interface Frontend {
     // callback to receive raw chordata frame
     oneway void chordata(in sequence<octet> data);
 
-    // callbacks to receive face data
-    // names for the entries in faceLandmarks() blendshapes sequence
-
-    // send at the beginning or whenever that list of names changes
-    oneway void faceBlendshapeNames(in sequence<string> faceBlendshapeNames);
-    oneway void faceLandmarks(
-        in sequence<float> landmarks,
-        in sequence<float> blendshapes,
-        in sequence<float> transform,
-        in unsigned long long timestamp_ms);
-
-    oneway void poseLandmarks(
-        in sequence<float> landmarks,
-        in unsigned long long timestamp_ms);
-
     // temporary hack
     oneway void frame(in unsigned long frame);
 };
@@ -25,7 +10,8 @@ interface Frontend {
 enum CaptureDeviceType {
     BODY,
     FACE,
-    HAND
+    HAND,
+    HOLISTIC
 };
 
 interface CaptureDevice {
@@ -49,6 +35,19 @@ interface ARKitFaceDevice: CaptureDevice {
     attribute ARKitFaceReceiver receiver;
 };
 
+interface HolisticReceiver {
+    oneway void landmarks(
+        in sequence<float> blendshapes,
+        in sequence<float> pose,
+        in sequence<float> lhand,
+        in sequence<float> rhand,
+        in unsigned long long timestamp_ms);
+};
+
+interface HolisticDevice: CaptureDevice {
+    attribute HolisticReceiver receiver;
+};
+
 /**
  * video camera available on the host
  */
@@ -59,7 +58,7 @@ interface VideoCamera {
 };
 
 /**
- * media pipe task use use the video camera
+ * media pipe tasks use the video camera
  */
 interface MediaPipeTask {
     readonly attribute string name;

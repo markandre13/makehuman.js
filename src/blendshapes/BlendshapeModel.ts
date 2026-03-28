@@ -4,7 +4,12 @@ import { mat4 } from "gl-matrix"
 
 export class BlendshapeModel extends Model {
     params: Float32Array = new Float32Array(Blendshape.SIZE)
-    transform: Float32Array = new Float32Array(16)
+    transform: Float32Array = new Float32Array([
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,0,0,1
+    ])
     timestamp_ms: bigint = 0n
 
     set(params: Float32Array, transform: Float32Array, timestamp_ms: bigint) {
