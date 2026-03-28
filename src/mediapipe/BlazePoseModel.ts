@@ -31,4 +31,11 @@ export class BlazePoseModel extends Model {
             out[o++] = V[2]
         }
     }
+    getVisibility(i: number) {
+        return this.pose[i*5+3]
+    }
+    getPresence(i: number) {
+        return this.pose[i*5+3]
+    }
+
 }

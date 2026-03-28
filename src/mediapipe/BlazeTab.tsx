@@ -1,6 +1,5 @@
 import { Application } from 'Application'
 import { IndexBuffer } from 'gl/buffers/IndexBuffer'
-import { NormalBuffer } from 'gl/buffers/NormalBuffer'
 import { VertexBuffer } from 'gl/buffers/VertexBuffer'
 import { TAB } from 'HistoryManager'
 import { di } from 'lib/di'
@@ -9,6 +8,8 @@ import { RenderView } from 'render/RenderView'
 import { Tab } from 'toad.js/view/Tab'
 import { AxisIndicator } from './AxisIndicator'
 import { Blaze } from './pose/Blaze'
+import { ColorBuffer } from 'gl/buffers/ColorBuffer'
+import { Form } from 'toad.js/view/Form'
 
 /**
  * Tool to morph face meshes.
@@ -60,7 +61,13 @@ export function BlazeTab(props: { app: Application }) {
                 }
             }}
         >
-            W.I.P.
+            <Form>
+                Visualization of incoming Blaze pose data:
+                <ul>
+                    <li>blue: good visibility</li>
+                    <li>red: bad visibility</li>
+                </ul>
+            </Form>
         </Tab>
     )
 }
@@ -95,22 +102,23 @@ export class BlazeRenderer extends RenderHandler {
         // head
         [Blaze.RIGHT_EAR, Blaze.LEFT_EAR, Blaze.NOSE, Blaze.RIGHT_EAR]
     ]
-
     static blazePoseLines() {
         const out: number[] = []
         for (const path of this.blazePoseLinePaths) {
             for (let i = 0; i < path.length; ++i) {
                 out.push(path[i])
-                if (i > 0 && i<path.length-1) {
+                if (i > 0 && i < path.length - 1) {
                     out.push(path[i])
                 }
             }
         }
         return out
     }
+    static lines = BlazeRenderer.blazePoseLines()
 
-    _xyz?: VertexBuffer
-    _fxyz?: IndexBuffer
+    _vertex?: VertexBuffer
+    _index?: IndexBuffer
+    _color?: ColorBuffer
 
     _axis = di.get(AxisIndicator)
 
@@ -122,29 +130,42 @@ export class BlazeRenderer extends RenderHandler {
         gl.disable(gl.CULL_FACE)
         gl.depthMask(true)
 
-        const shaderColored = view.shaderColored
-        shaderColored.init(gl, projectionMatrix, modelViewMatrix)
+        const shader = view.shaderColored
+        shader.init(gl, projectionMatrix, modelViewMatrix)
 
-        const shaderMono = view.shaderMono
-        shaderMono.init(gl, projectionMatrix, modelViewMatrix)
+        if (this._vertex === undefined) {
+            const xyz = new Float32Array(33 * 3)
+            this.app.poseModel.getXYZ(xyz)
+            this._vertex = new VertexBuffer(gl, xyz)
 
-        if (this._xyz === undefined) {
-            const data = new Float32Array(33 * 3)
-            this.app.poseModel.getXYZ(data)
-            this._xyz = new VertexBuffer(gl, data)
-            this._fxyz = new IndexBuffer(gl, BlazeRenderer.blazePoseLines())
+            const color = new Float32Array(33 * 3)
+            color.fill(1)
+            this._color = new ColorBuffer(gl, color)
+
+            this._index = new IndexBuffer(gl, BlazeRenderer.lines)
         } else {
-            this.app.poseModel.getXYZ(this._xyz.data)
-            this._xyz.update()
+            this.app.poseModel.getXYZ(this._vertex.data)
+            this._vertex.update()
+
+            // indicate visibility of the vertices
+            const c = this._color!.data
+            for (let i = 0, o = 0; i < 33; ++i) {
+                const b = this.app.poseModel.getVisibility(i)
+                const r = 1 - b
+                const g = b
+                c[o++] = r
+                c[o++] = g
+                c[o++] = b
+            }
+            this._color!.update()
         }
 
-        shaderColored.use(gl)
+        shader.use(gl)
         this._axis.paint(view)
 
-        shaderMono.use(gl)
-        shaderMono.setColor(gl, [1, 1, 1, 1])
-        this._xyz.bind(shaderMono)
-        this._fxyz!.bind()
-        this._fxyz!.drawLines()
+        this._vertex.bind(shader)
+        this._color!.bind(shader)
+        this._index!.bind()
+        this._index!.drawLines()
     }
 }
