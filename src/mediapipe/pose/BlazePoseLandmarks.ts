@@ -5,7 +5,6 @@ import { euler2matrix } from "gl/algorithms/euler"
 /**
  * Wrapper for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
  */
-
 export class BlazePoseLandmarks {
     data: Float32Array
     constructor(data: Float32Array = new Float32Array(3 * 33).fill(0)) {

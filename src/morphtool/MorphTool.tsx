@@ -64,7 +64,7 @@ export function MorphTool(props: { app: Application }) {
 
     return (
         <Tab
-            label="Morph"
+            label="Face"
             value={TAB.FACE}
             visibilityChange={(state) => {
                 switch (state) {

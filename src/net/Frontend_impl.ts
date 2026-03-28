@@ -33,7 +33,7 @@ export class Frontend_impl extends Frontend_skel {
 
     // data received from mediapipe/freemocap
     _poseLandmarksTS = new ValueModel<bigint>(0n)
-    _poseLandmarks?: Float32Array
+    _poseLandmarks = new Float32Array(3 * 33)
 
     frameHandler?: (frame: number) => void
     override frame(frame: number): void {

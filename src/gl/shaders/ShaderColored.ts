@@ -40,6 +40,11 @@ export class ShaderColored implements ShaderHasPositions, ShaderHasColors {
     use(gl: WebGL2RenderingContext) {
         gl.useProgram(this.program)
     }
+    init(gl: WebGL2RenderingContext, projectionMatrix: mat4, modelViewMatrix: mat4) {
+        this.use(gl)
+        this.setProjection(gl, projectionMatrix)
+        this.setModelView(gl, modelViewMatrix)
+    }
 }
 
 export function mat42float32array(m: mat4): Float32Array {

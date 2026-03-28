@@ -32,6 +32,7 @@ import { ComputedBlendshapeMesh } from "morphtool/ComputedBlendshapeMesh"
 import { ConnectionState } from "net/ConnectionState"
 import { CaptureDeviceType } from "net/makehuman"
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel, HolisticReceiver as HolisticReceiver_skel } from "./net/makehuman_skel"
+import { BlazePoseModel } from "mediapipe/BlazePoseModel"
 
 
 // the Tab.visibilityChange callback is a bit too boilerplaty to handle,
@@ -50,6 +51,7 @@ export class Application {
     frontend: Frontend_impl
     connector: Connector
     blendshapeModel: BlendshapeModel
+    poseModel: BlazePoseModel
 
     status = new TextModel("")
 
@@ -118,12 +120,9 @@ export class Application {
         this.chordataSettings = new ChordataSettings()
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)
 
-        //
-        // blendshapes
-        //
-
         // blendshape weights from backend (e.g. mediapipe, live link)
         this.blendshapeModel = new BlendshapeModel()
+        this.poseModel = new BlazePoseModel()
 
         // needs skeleton, blendshapeModel, blendshapeConverter, 
         this.updateManager = new UpdateManager(this)
@@ -215,7 +214,11 @@ export class Application {
                         console.log("FOUND HolisticDevice -> set receiver")
                         device.device.receiver(new HolisticReceiver(backend._orb, (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => {
                             this.blendshapeModel.set(face, null, timestamp_ms)
+                            this.poseModel.set(pose, timestamp_ms)
                             // this.poseModel.set(pose, timestamp_ms)
+                            // this.frontend._poseLandmarks = pose
+                            this.poseModel.getXYZ(this.frontend._poseLandmarks)
+                            this.frontend._poseLandmarksTS.value = timestamp_ms
                         }))
                         break
                     }

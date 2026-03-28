@@ -52,6 +52,7 @@ import { PoseTab } from 'mediapipe/pose/PoseTab'
 import { MorphTool } from 'morphtool/MorphTool'
 import { RenderView } from 'render/RenderView'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
+import { BlazeTab } from 'mediapipe/BlazeTab'
 
 export async function main() {
     try {
@@ -124,9 +125,10 @@ async function run() {
                     {/* <PoseTab app={app} /> */}
                     {/* <BlendShapeTab app={app} /> */}
                     <MorphTool app={app} />
-                    <PoseTab app={app} />
+                    <BlazeTab app={app} />
+                    {/* <PoseTab app={app} /> */}
                     {/* <ExpressionTab app={app} /> */}
-                    <ChordataTab app={app} />
+                    {/* <ChordataTab app={app} /> */}
                 </Tabs>
                 {glview}
                 <div

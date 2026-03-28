@@ -8,6 +8,7 @@ export enum TAB {
     FACE = "morph2",
     POSE = "pose",
     POSE2 = "pose2",
+    BLAZE = "blaze",
     EXPORT = "export",
     MEDIAPIPE = "mediapipe",
     CHORDATA = "chordata"
