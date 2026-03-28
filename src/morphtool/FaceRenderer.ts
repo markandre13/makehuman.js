@@ -45,12 +45,14 @@ export class FaceRenderer extends RenderHandler {
         const modelViewMatrix = mat4.clone(view.ctx.camera)
 
         let r = blendshapeModel.getRotation()
-        const t0 = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, 7, 1))
-        const t1 = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, -7, -1))
-        mat4.multiply(r, t0, r)
-        mat4.multiply(r, r, t1)
+        if (r !== null) {
+            const t0 = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, 7, 1))
+            const t1 = mat4.fromTranslation(mat4.create(), vec3.fromValues(0, -7, -1))
+            mat4.multiply(r, t0, r)
+            mat4.multiply(r, r, t1)
 
-        mat4.multiply(modelViewMatrix, modelViewMatrix, r)
+            mat4.multiply(modelViewMatrix, modelViewMatrix, r)
+        }
 
         shaderShadedMono.init(gl, projectionMatrix, modelViewMatrix)
 
@@ -62,7 +64,7 @@ export class FaceRenderer extends RenderHandler {
         shaderShadedMono.setColor(gl, [1, 0.8, 0.7, 1])
 
         if (this.vertices === undefined) {
-            const vertex = this.blendshapeMesh.getVertex(blendshapeModel.params, blendshapeModel.transform)
+            const vertex = this.blendshapeMesh.getVertex(blendshapeModel.params)
             this.vertices = new VertexBuffer(gl, vertex)
             this.indices = new IndexBuffer(gl, this.blendshapeMesh.fxyz)
             this.normals = new NormalBuffer(gl, calculateNormalsTriangles(

@@ -213,8 +213,9 @@ export class Application {
                     // }
                     if (device.device instanceof HolisticDevice) {
                         console.log("FOUND HolisticDevice -> set receiver")
-                        device.device.receiver(new HolisticReceiver(backend._orb, (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => {
-                            this.blendshapeModel.set(blendshapes, transform, timestamp_ms)
+                        device.device.receiver(new HolisticReceiver(backend._orb, (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => {
+                            this.blendshapeModel.set(face, null, timestamp_ms)
+                            // this.poseModel.set(pose, timestamp_ms)
                         }))
                         break
                     }
@@ -267,19 +268,13 @@ class ARKitFaceReceiver extends ARKitFaceReceiver_skel {
 }
 
 class HolisticReceiver extends HolisticReceiver_skel {
-    private _delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void
-    private _transform = new Float32Array([
-        1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        0,0,0,1
-    ])
-    constructor(orb: ORB, delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void) {
+    private _delegate: (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => void
+    constructor(orb: ORB, delegate: (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => void) {
         super(orb)
         this._delegate = delegate
     }
-    override landmarks(blendshapes: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint): void {
-        console.log(`got holistic landmarks`)
-        this._delegate(blendshapes, this._transform, timestamp_ms)
+    override landmarks(face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint): void {
+        // console.log(`got holistic landmarks`)
+        this._delegate(face, pose, lhand, rhand, timestamp_ms)
     }
 }

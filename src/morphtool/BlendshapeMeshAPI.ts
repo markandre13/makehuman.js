@@ -7,10 +7,11 @@ export interface BlendshapeMeshAPI {
     preload(): BlendshapeMeshAPI
     get fxyz(): number[]
     /**
-     * xyz
+     * apply blendshapes to vertex
+     * 
      * @param blendshapeParams
-     * @param blendshapeTransform transform for head
      * @param vertex destination
+     * @param skip list of blendshapes to 
      */
     getVertex(blendshapeParams: Float32Array, vertex?: Float32Array, skip?: Set<Blendshape>): Float32Array
 }

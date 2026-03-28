@@ -262,12 +262,14 @@ export class UpdateManager {
         const head = this.skeleton.getBone("head")
 
         const neckM = this.app.blendshapeModel.getRotation()
-        let neckQ = quat2.fromMat4(quat2.create(), neckM)
-        neckQ = quaternion_slerp(REST_QUAT, neckQ, 0.25)
-        mat4.fromQuat2(head.matUserPoseRelative, neckQ)
-        mat4.fromQuat2(neck1.matUserPoseRelative, neckQ)
-        mat4.fromQuat2(neck2.matUserPoseRelative, neckQ)
-        mat4.fromQuat2(neck3.matUserPoseRelative, neckQ)
+        if (neckM !== null) {
+            let neckQ = quat2.fromMat4(quat2.create(), neckM)
+            neckQ = quaternion_slerp(REST_QUAT, neckQ, 0.25)
+            mat4.fromQuat2(head.matUserPoseRelative, neckQ)
+            mat4.fromQuat2(neck1.matUserPoseRelative, neckQ)
+            mat4.fromQuat2(neck2.matUserPoseRelative, neckQ)
+            mat4.fromQuat2(neck3.matUserPoseRelative, neckQ)
+        }
 
         // When the mouth was fully opened, the linear measurement of condylar 
         // movement was 20.5 ± 4.0 mm in men and 18.1 ± 2.5 mm in women, and 
