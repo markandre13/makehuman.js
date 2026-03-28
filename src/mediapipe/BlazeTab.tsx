@@ -8,6 +8,7 @@ import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
 import { Tab } from 'toad.js/view/Tab'
 import { AxisIndicator } from './AxisIndicator'
+import { Blaze } from './pose/Blaze'
 
 /**
  * Tool to morph face meshes.
@@ -72,15 +73,42 @@ export class BlazeRenderer extends RenderHandler {
     }
     override defaultCamera() { return this.app.bodyCamera }
 
-    line0 = [
-        11, 12, 12, 24, 24, 23, 23, 11, 11, 13, 13, 15, 12, 14, 14, 16, 24, 26, 26, 28, 23, 25, 25, 27,
-
-        20, 18, 18, 16, 16, 20, 15, 19, 19, 17, 17, 15,
-
-        28, 30, 30, 32, 32, 28, 27, 31, 31, 29, 29, 27,
-
-        8, 7, 7, 0, 0, 8,
+    static blazePoseLinePaths = [
+        // torso
+        [Blaze.LEFT_SHOULDER, Blaze.RIGHT_SHOULDER, Blaze.RIGHT_HIP, Blaze.LEFT_HIP, Blaze.LEFT_SHOULDER],
+        // left arm
+        [Blaze.LEFT_SHOULDER, Blaze.LEFT_ELBOW, Blaze.LEFT_WRIST],
+        // right arm
+        [Blaze.RIGHT_SHOULDER, Blaze.RIGHT_ELBOW, Blaze.RIGHT_WRIST],
+        // right leg
+        [Blaze.RIGHT_HIP, Blaze.RIGHT_KNEE, Blaze.RIGHT_ANKLE],
+        // left leg
+        [Blaze.LEFT_HIP, Blaze.LEFT_KNEE, Blaze.LEFT_ANKLE],
+        // right hand
+        [Blaze.RIGHT_INDEX, Blaze.RIGHT_PINKY, Blaze.RIGHT_WRIST, Blaze.RIGHT_INDEX],
+        // left hand
+        [Blaze.LEFT_INDEX, Blaze.LEFT_PINKY, Blaze.LEFT_WRIST, Blaze.LEFT_INDEX],
+        // right foot
+        [Blaze.RIGHT_ANKLE, Blaze.RIGHT_HEEL, Blaze.RIGHT_FOOT_INDEX, Blaze.RIGHT_ANKLE],
+        // left foot
+        [Blaze.LEFT_ANKLE, Blaze.LEFT_HEEL, Blaze.LEFT_FOOT_INDEX, Blaze.LEFT_ANKLE],
+        // head
+        [Blaze.RIGHT_EAR, Blaze.LEFT_EAR, Blaze.NOSE, Blaze.RIGHT_EAR]
     ]
+
+    static blazePoseLines() {
+        const out: number[] = []
+        for (const path of this.blazePoseLinePaths) {
+            for (let i = 0; i < path.length; ++i) {
+                out.push(path[i])
+                if (i > 0 && i<path.length-1) {
+                    out.push(path[i])
+                }
+            }
+        }
+        return out
+    }
+
     _xyz?: VertexBuffer
     _fxyz?: IndexBuffer
 
@@ -104,7 +132,7 @@ export class BlazeRenderer extends RenderHandler {
             const data = new Float32Array(33 * 3)
             this.app.poseModel.getXYZ(data)
             this._xyz = new VertexBuffer(gl, data)
-            this._fxyz = new IndexBuffer(gl, this.line0)
+            this._fxyz = new IndexBuffer(gl, BlazeRenderer.blazePoseLines())
         } else {
             this.app.poseModel.getXYZ(this._xyz.data)
             this._xyz.update()
@@ -114,7 +142,7 @@ export class BlazeRenderer extends RenderHandler {
         this._axis.paint(view)
 
         shaderMono.use(gl)
-        shaderMono.setColor(gl, [1,1,1,1])
+        shaderMono.setColor(gl, [1, 1, 1, 1])
         this._xyz.bind(shaderMono)
         this._fxyz!.bind()
         this._fxyz!.drawLines()

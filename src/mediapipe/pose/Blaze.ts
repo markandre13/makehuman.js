@@ -35,5 +35,4 @@ export enum Blaze {
     LEFT_HEEL,// 29
     RIGHT_HEEL,// 30
     LEFT_FOOT_INDEX,// 31
-    RIGHT_FOOT_INDEX
-}
+    RIGHT_FOOT_INDEX // 32

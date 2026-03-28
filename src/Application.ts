@@ -214,9 +214,9 @@ export class Application {
                         console.log("FOUND HolisticDevice -> set receiver")
                         device.device.receiver(new HolisticReceiver(backend._orb, (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => {
                             this.blendshapeModel.set(face, null, timestamp_ms)
+
                             this.poseModel.set(pose, timestamp_ms)
-                            // this.poseModel.set(pose, timestamp_ms)
-                            // this.frontend._poseLandmarks = pose
+
                             this.poseModel.getXYZ(this.frontend._poseLandmarks)
                             this.frontend._poseLandmarksTS.value = timestamp_ms
                         }))

@@ -31,6 +31,18 @@ This needs the [makehuman.js backend](https://github.com/markandre13/makehuman.j
 
 Once that is working, the next step will be to record animations and export them to Blender.
 
+Notes on MediaPipe:
+* better go through something like freemocap
+* on live preview
+    * older versions of MediaPipe had filters to reduce jitter, now we need to do it on our own
+        * Kalman seems to be a favourite
+        * Simple Moving Average (SMA)
+        * Savitzky-Golay filter needs lookahead
+        * EMA
+    * z-axis is not good when using world coordinates
+      * use pose_world_landmarks with translating with the root of pose_landmarks?
+    * the holistic task lacks good neck, hand and foot orientation
+
 ## Current Status
 
 * Have a look at [build 2023-10-31](https://markandre13.github.io/makehuman.js/)

@@ -408,10 +408,14 @@ export class UpdateManager {
         this.bpl.data = this.app.frontend._poseLandmarks!
         const hip = this.bpc.getHipWithAdjustment(this.bpl)
         const invHip = mat4.invert(mat4.create(), hip)!
-        const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
-        mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
-        setPose("root", hipWithTranslation)
-        // setPose("root", hip)
+
+        // root at pose_landmarks screen position
+        // const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
+        // mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
+        // setPose("root", hipWithTranslation)
+
+        // root a (0,0,0)
+        setPose("root", hip)
 
         setPoseX("upperleg01.L", this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
         setPoseX("lowerleg01.L", this.bpc.getLeftLowerLeg(this.bpl))
