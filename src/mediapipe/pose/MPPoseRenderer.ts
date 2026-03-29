@@ -13,7 +13,7 @@ import { BlazePoseConverter } from "./BlazePoseConverter"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
 import { Blaze } from "./Blaze"
 import { ArrowMesh } from "mediapipe/ArrowMesh"
-import { simulatedModel } from "./PoseTab"
+import { simulatedModel } from "./DevicesTab"
 import { mat4, vec3 } from "gl-matrix"
 import { di } from "lib/di"
 

@@ -11,59 +11,26 @@ import { TransportBar } from "./TransportBar"
 import { selectFile } from "./selectFile"
 import { FormText } from "toad.js/view/FormText"
 import { PoseModel } from "./PoseModel"
+import { RenderHuman } from "render/RenderHuman"
 
 export const simulatedModel = new SimulatedModel()
 
-// adobe spectrum h1-h..,
-// font-sizes: xxs, xs, s, m, l, xl, xxl, xxxl
-//             100, 200, 300, 500, 700, 900, 1100, 1300
-// https://spectrum.adobe.com/page/heading/
-// default font size:
-//   M (content-based UI)
-//   S (application UI)
-// <h2 class=" spectrum-Heading spectrum-Heading--sizeXXL "
-// <Heading level={4}>Edit</Heading>
-//   level: 1-6, default 3
 
-//  xxs: 14px
-//   xs: 16px
-//    s: 18px
-//    m: 22px
-//    l: 28px
-//   xl: 36px
-//  xxl: 58px
-// xxxl: 78px
-
-// f_i := f_0 * r ^ (i/n)
-// golden ratio (r = 1.618034)
-
-// https://spencermortensen.com/articles/typographic-scale/
-// This is the classic typographic scale, as recorded by Mr. Bringhurst in The Elements of Typographic Style:
-// 6 7 8 9 10 11 12 14 16 18 21 24 30 36 48 60 72
-//            11                
-
-export function PoseTab(props: { app: Application }) {
+export function DevicesTab(props: { app: Application }) {
     const poseModel = new PoseModel(props.app)
 
     return (
         <Tab
-            label="Pose"
-            value={TAB.POSE}
-            visibilityChange={
-                setRenderer(props.app, new FreeMoCapRenderer())
-                // setRenderer(props.app, new MPPoseRenderer())
-                // setRenderer(props.app, new RenderHuman())
-            }
-        >            
+            label="Devices"
+            value={TAB.DEVICES}
+            visibilityChange={setRenderer(props.app, new RenderHuman())}
+        >
             <div>
                 <Form>
                     <h6>Source</h6>
-                    <FormSelect model={poseModel.body} />
-                    <FormSelect model={poseModel.face} />
-                    <FormSelect model={poseModel.hand} />
+                    <FormSelect model={poseModel.device} />
                     <h6>Mediapipe</h6>
                     <FormSelect model={poseModel.camera} />
-                    <FormSelect model={poseModel.mediaPipeTask} />
                     <h6>Recorder</h6>
                     <FormLabel model={poseModel.videoFile} />
                     <FormField>

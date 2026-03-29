@@ -30,7 +30,7 @@ import { ARKitBlendshapeMesh } from "morphtool/ARKitBlendshapeMesh"
 import { computeBlendshapes } from "morphtool/MorphRenderer"
 import { ComputedBlendshapeMesh } from "morphtool/ComputedBlendshapeMesh"
 import { ConnectionState } from "net/ConnectionState"
-import { CaptureDeviceType } from "net/makehuman"
+import { CaptureDeviceInfo, CaptureDeviceType } from "net/makehuman"
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel, HolisticReceiver as HolisticReceiver_skel } from "./net/makehuman_skel"
 import { BlazePoseModel } from "mediapipe/BlazePoseModel"
 
@@ -159,11 +159,11 @@ export class Application {
                 case TAB.MEDIAPIPE:
                     this.renderMode.value = RenderMode.MEDIAPIPE
                     break
-                case TAB.POSE:
+                case TAB.DEVICES:
                 case TAB.EXPORT:
                     this.renderMode.value = RenderMode.WIREFRAME
                     break
-                case TAB.POSE2:
+                case TAB.POSE:
                     this.renderMode.value = RenderMode.POSE
                     break
                 case TAB.EXPRESSION:
@@ -191,40 +191,6 @@ export class Application {
         const connector = new Connector(this.frontend)
         this.connector = connector
         this.connector.connectToBackend()
-
-        // request data for the blendshape model
-        // for now we automatically pick the 1st blendshape source we find on the backend
-        this.connector.signal.add(() => {
-            if (connector.state !== ConnectionState.CONNECTED) {
-                return
-            }
-            const backend = this.frontend.backend as Backend
-            backend?.captureDevices().then((devices) => {
-                console.log(`connecting: found ${devices.length} capture devices`)
-                for (const device of devices) {
-                    console.log(`* ${CaptureDeviceType[device.type]} ${device.name}`)
-                    // if (device.device instanceof ARKitFaceDevice) {
-                    //     console.log("FOUND ARKitFaceDevice -> set receiver")
-                    //     device.device.receiver(new ARKitFaceReceiver(backend._orb, (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => {
-                    //         this.blendshapeModel.set(blendshapes, transform, timestamp_ms)
-                    //     }))
-                    //     break
-                    // }
-                    if (device.device instanceof HolisticDevice) {
-                        console.log("FOUND HolisticDevice -> set receiver")
-                        device.device.receiver(new HolisticReceiver(backend._orb, (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => {
-                            this.blendshapeModel.set(face, null, timestamp_ms)
-
-                            this.poseModel.set(pose, timestamp_ms)
-
-                            this.poseModel.getXYZ(this.frontend._poseLandmarks)
-                            this.frontend._poseLandmarksTS.value = timestamp_ms
-                        }))
-                        break
-                    }
-                }
-            })
-        })
     }
 
     renderer?: RenderHandler
@@ -259,25 +225,3 @@ export class Application {
     }
 }
 
-class ARKitFaceReceiver extends ARKitFaceReceiver_skel {
-    private _delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void
-    constructor(orb: ORB, delegate: (blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint) => void) {
-        super(orb)
-        this._delegate = delegate
-    }
-    override faceLandmarks(blendshapes: Float32Array, transform: Float32Array, timestamp_ms: bigint): void {
-        this._delegate(blendshapes, transform, timestamp_ms)
-    }
-}
-
-class HolisticReceiver extends HolisticReceiver_skel {
-    private _delegate: (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => void
-    constructor(orb: ORB, delegate: (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => void) {
-        super(orb)
-        this._delegate = delegate
-    }
-    override landmarks(face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint): void {
-        // console.log(`got holistic landmarks`)
-        this._delegate(face, pose, lhand, rhand, timestamp_ms)
-    }
-}

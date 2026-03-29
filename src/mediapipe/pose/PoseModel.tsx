@@ -1,23 +1,19 @@
 import { Application } from "Application"
 import { SMPTEConverter } from "lib/smpte"
-import { VideoCamera, MediaPipeTask, VideoSize } from "net/makehuman"
+import { VideoCamera, MediaPipeTask, VideoSize, CaptureDeviceInfo } from "net/makehuman"
 import { OptionModel, TextModel, BooleanModel } from "toad.js"
 import { IntegerModel } from "toad.js/model/IntegerModel"
-import { makeCamerasModel } from "./makeCamerasModel"
-import { makeMediaPipeTasksModel } from "./makeMediaPipeTasksModel"
+import { makeCamerasModel, makeCaptureDeviceModel } from "./makeCaptureDeviceModel"
 
 export class PoseModel {
     // animation sources
-    body: OptionModel<undefined | number>
-    face: OptionModel<undefined | number>
-    hand: OptionModel<undefined | number>
+    device: OptionModel<undefined | CaptureDeviceInfo>
     // body: none, mediapipe, freemocap, chordata
     // face: none, mediapipe, facelink
     // hand: none, mediapipe
 
     // mediapipe configuration
     camera: OptionModel<VideoCamera | undefined>
-    mediaPipeTask: OptionModel<MediaPipeTask | undefined> // face, pose, hand, holistic
 
     // configure record/playback
     videoFile: TextModel
@@ -39,17 +35,8 @@ export class PoseModel {
     fps: IntegerModel
 
     constructor(app: Application) {
-        this.body = new OptionModel(undefined, [[undefined, "None"], [0, "Mediapipe"], [1, "FreeMoCap"], [2, "Chordata"]], {
-            label: "Body"
-        })
-        this.face = new OptionModel(undefined, [[undefined, "None"], [0, "Mediapipe"], [2, "Live Link Face"]], {
-            label: "Face"
-        })
-        this.hand = new OptionModel(undefined, [[undefined, "None"], [0, "Mediapipe"]], {
-            label: "Hand"
-        })
+        this.device = makeCaptureDeviceModel(app)
         this.camera = makeCamerasModel(app)
-        this.mediaPipeTask = makeMediaPipeTasksModel(app)
         this.videoFile = new TextModel("video.mp4", { label: "Filename" })
         this.newFile = new BooleanModel(true, {
             label: "Timestamp",

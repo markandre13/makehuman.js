@@ -48,7 +48,7 @@ import { Application, setRenderer } from 'Application'
 import { RenderHuman } from 'render/RenderHuman'
 // import { BlendShapeTab } from 'blendshapes/BlendShapeTab'
 import { ConnectButton } from 'net/ConnectButton'
-import { PoseTab } from 'mediapipe/pose/PoseTab'
+import { DevicesTab } from 'mediapipe/pose/DevicesTab'
 import { MorphTool } from 'morphtool/MorphTool'
 import { RenderView } from 'render/RenderView'
 import { FormSwitch } from 'toad.js/view/FormSwitch'
@@ -126,7 +126,7 @@ async function run() {
                     {/* <BlendShapeTab app={app} /> */}
                     <MorphTool app={app} />
                     <BlazeTab app={app} />
-                    {/* <PoseTab app={app} /> */}
+                    <DevicesTab app={app} />
                     {/* <ExpressionTab app={app} /> */}
                     {/* <ChordataTab app={app} /> */}
                 </Tabs>
