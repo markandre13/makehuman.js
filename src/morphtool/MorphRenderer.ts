@@ -575,7 +575,7 @@ function calculateDistance(
  * @param mh2arProjection MH points projected on the ARKit mesh
  * @returns MH basemesh and face blendshapes
  */
-function computeBlendshapeMesh(baseMesh: WavefrontObj, mh2arProjection: Map<number, ARKitProjection>) {
+function computeBlendshapeMesh(baseMesh: WavefrontObj, mh2arProjection: Map<number, ARKitProjection>): ComputedBlendshapeMesh {
     // const baseMesh = app.humanMesh.baseMesh
 
     // convert skin quads to index of triangles

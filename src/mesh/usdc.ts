@@ -1,22 +1,25 @@
 import { Crate } from "@markandre13/usd.js/crate/Crate"
-import { PseudoRoot } from "@markandre13/usd.js/nodes/usd/PseudoRoot"
+import { Attribute } from "@markandre13/usd.js/nodes/attributes/Attribute"
 import { Mesh } from "@markandre13/usd.js/nodes/geometry/Mesh"
+import { Scope } from "@markandre13/usd.js/nodes/geometry/Scope"
 import { Xform } from "@markandre13/usd.js/nodes/geometry/Xform"
 import { Material } from "@markandre13/usd.js/nodes/shader/Material"
-import { UVMap } from "@markandre13/usd.js/nodes/shader/blender/UVMap"
 import { ImageTexture } from "@markandre13/usd.js/nodes/shader/blender/ImageTexture"
 import { PrincipledBSDF } from "@markandre13/usd.js/nodes/shader/blender/PrincipledBSDF"
+import { UVMap } from "@markandre13/usd.js/nodes/shader/blender/UVMap"
+import { BlendShape } from "@markandre13/usd.js/nodes/skeleton/BlendShape"
+import { SkelAnimation } from "@markandre13/usd.js/nodes/skeleton/SkelAnimation"
 import { SkelRoot } from "@markandre13/usd.js/nodes/skeleton/SkelRoot"
 import { Skeleton } from "@markandre13/usd.js/nodes/skeleton/Skeleton"
-import { Scope } from "@markandre13/usd.js/nodes/geometry/Scope"
+import { PseudoRoot } from "@markandre13/usd.js/nodes/usd/PseudoRoot"
 
-import { HumanMesh } from "./HumanMesh"
-import { BaseMeshGroup } from "./BaseMeshGroup"
-
-import { ProxyType } from "../proxy/Proxy"
+import { Application } from "Application"
+import { Blendshape } from "blendshapes/BlendShape"
 import { zipForEach } from "lib/zipForEach"
-import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
 import { Skeleton as MHSkeleton } from "skeleton/Skeleton"
+import { VertexBoneWeights } from "skeleton/VertexBoneWeights"
+import { ProxyType } from "../proxy/Proxy"
+import { BaseMeshGroup } from "./BaseMeshGroup"
 
 // TODO
 // [ ] export UV maps, same way as Blender 5.1 does (how is that done?)
@@ -43,11 +46,11 @@ export interface MeshExportDef {
     texture: string
 }
 
-//         this.bodyTexture = new Texture(this, "data/skins/textures/young_caucasian_female_special_suit.png")
+// this.bodyTexture = new Texture(this, "data/skins/textures/young_caucasian_female_special_suit.png")
 // this.eyeTexture = new Texture(this, "data/eyes/materials/green_eye.png")
 
-export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
-
+export function exportUSDC(app: Application): ArrayBuffer {
+    const humanMesh = app.humanMesh
     const proxy = humanMesh.proxies.get(ProxyType.Teeth)!
 
     const meshesToExport: MeshExportDef[] = [
@@ -179,11 +182,35 @@ export function exportUSDC(humanMesh: HumanMesh): ArrayBuffer {
         )
         mesh.jointIndices = { elementSize, indices: jointIndices }
         mesh.jointWeights = { elementSize, indices: jointWeights }
-        mesh.skeleton = skeleton
+
+        if (meshDef.name === "skin") {
+            const blendShapes: BlendShape[] = []
+            for (let i = Blendshape.neutral + 1; i < Blendshape.tongueOut; ++i) {
+                const name = Blendshape[i]
+                const target = app.computedBlendShapes.getMorphTarget(i)
+
+                const key = new BlendShape(mesh, name)
+                key.offsets = target.dxyz
+                key.pointIndices = target.indices.map( it => preparer.getNewIndex(it)!)
+
+                blendShapes.push(key)
+            }
+            mesh.blendShapes = blendShapes.map(it => it.name)
+            mesh.blendShapeTargets = blendShapes
+            mesh.skeleton = { prepend: [skeleton] }
+
+            const anim = new SkelAnimation(skeleton, "Anim")
+            anim.blendShapeWeights = []
+            anim.blendShapes = blendShapes.map(it => it.name)
+
+            skeleton.animationSource = { prepend: [anim] }
+        } else {
+            mesh.skeleton = skeleton
+        }
 
         const material = new Material(materialRoot, meshDef.name)
 
-                const uvmap = new UVMap(material, "uvmap")
+        const uvmap = new UVMap(material, "uvmap")
         uvmap.infoId = "UsdPrimvarReader_float2"
         uvmap.inputsVarname = "st"
 

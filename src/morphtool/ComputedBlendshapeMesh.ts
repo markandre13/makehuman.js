@@ -41,4 +41,7 @@ export class ComputedBlendshapeMesh implements BlendshapeMeshAPI {
         }
         return vertex
     }
+    getMorphTarget(blendshape: Blendshape) {
+        return this._targets[blendshape]
+    }
 }

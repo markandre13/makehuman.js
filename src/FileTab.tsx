@@ -7,7 +7,6 @@ import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
 import { exportUSDC } from "mesh/usdc"
-import { hexdump } from "lib/hexdump"
 
 const useBlenderProfile = new BooleanModel(true)
 const limitPrecision = new BooleanModel(false)
@@ -35,7 +34,7 @@ export default function (props: { app: Application }) {
 
                 <h3>Export USDC</h3>
 
-                <Button action={() => downloadUSDC(humanMesh)}>Export as USDC</Button>
+                <Button action={() => downloadUSDC(props.app)}>Export as USDC</Button>
             </div>
         </Tab>
     )
@@ -59,9 +58,9 @@ function makeUploadElement() {
 const download = makeDownloadElement()
 const upload = makeUploadElement()
 
-function downloadUSDC(humanMesh: HumanMesh) {
+function downloadUSDC(app: Application) {
     try { // FIXME: toad.js' signals should do the proper logging
-        let data = exportUSDC(humanMesh)
+        let data = exportUSDC(app)
 
         if (data.resizable) {
             const nonresizeableArrayBuffer = new ArrayBuffer(data.byteLength)
