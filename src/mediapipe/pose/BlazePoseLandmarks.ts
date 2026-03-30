@@ -1,6 +1,7 @@
 import { mat4, vec3 } from "gl-matrix"
 import { Blaze } from "./Blaze"
 import { euler2matrix } from "gl/algorithms/euler"
+import { assert } from "lib/assert"
 
 /**
  * Wrapper for Mediapipe's Pose Landmark Model (BlazePose GHUM 3D)
@@ -20,6 +21,8 @@ export class BlazePoseLandmarks {
         this.mul(euler2matrix(x, y, z))
     }
     mul(m: mat4) {
+        assert(m !== undefined)
+        assert(m !== null)
         for (let i = 0; i < 33; ++i) {
             const v = this.getVec(i)
             vec3.transformMat4(v, v, m)

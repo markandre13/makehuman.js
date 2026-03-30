@@ -206,11 +206,11 @@ export class BlazePoseConverter {
         this.leftLowerArm = mat4.clone(upper)
         mat4.rotateX(this.leftLowerArm, this.leftLowerArm, deg2rad(-angle))
 
-        const debug = document.getElementById("debug1")
-        if (debug != null) {
-            // debug.innerHTML = `adjustmentBy a: ${angle.toFixed(4)}, e: ${adjustmentByEffector.toFixed(4)}, l: ${adjustmentByLower.toFixed(4)}`
-            debug.innerHTML = `upper: ${str(upper)}, lower = ${str(this.leftLowerArm)}<br/>xxx`
-        }
+        // const debug = document.getElementById("debug1")
+        // if (debug != null) {
+        //     // debug.innerHTML = `adjustmentBy a: ${angle.toFixed(4)}, e: ${adjustmentByEffector.toFixed(4)}, l: ${adjustmentByLower.toFixed(4)}`
+        //     debug.innerHTML = `upper: ${str(upper)}, lower = ${str(this.leftLowerArm)}<br/>xxx`
+        // }
 
         return upper
     }

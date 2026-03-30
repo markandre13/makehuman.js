@@ -6,6 +6,7 @@ import { OptionModel } from "toad.js"
 // FIX in corba.js: create classes suffixed with _skel and _stub
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel, HolisticReceiver as HolisticReceiver_skel } from "../../net/makehuman_skel"
 import { ORB } from "corba.js"
+import { isZero } from "gl/algorithms/isZero"
 
 /**
  * Get list of cameras available on the backend
@@ -62,9 +63,21 @@ export function makeCaptureDeviceModel(app: Application) {
             currentDevice = device
             device.receiver(new HolisticReceiver(orb, (face: Float32Array, pose: Float32Array, lhand: Float32Array, rhand: Float32Array, timestamp_ms: bigint) => {
                 app.blendshapeModel.set(face, null, timestamp_ms)
-                app.poseModel.set(pose, timestamp_ms)
-                app.poseModel.getXYZ(app.frontend._poseLandmarks)
-                app.frontend._poseLandmarksTS.value = timestamp_ms
+
+                let allZero = true
+                for(const a of pose) {
+                    if (!isZero(a)) {
+                        allZero = false
+                        break
+                    }
+                }
+                if (allZero) {
+                    console.log(`blazepose at ${timestamp_ms} is all zeros`)
+                } else {
+                    app.poseModel.set(pose, timestamp_ms)
+                    app.poseModel.getXYZ(app.frontend._poseLandmarks)
+                    app.frontend._poseLandmarksTS.value = timestamp_ms
+                }
             }))
         }
     })

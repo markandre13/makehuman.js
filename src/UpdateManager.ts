@@ -410,12 +410,20 @@ export class UpdateManager {
         const invHip = mat4.invert(mat4.create(), hip)!
 
         // root at pose_landmarks screen position
-        // const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
-        // mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
-        // setPose("root", hipWithTranslation)
+        const hipWithTranslation = mat4.fromTranslation(mat4.create(), this.bpc.getHipCenter(this.bpl))
+        mat4.multiply(hipWithTranslation, hipWithTranslation, hip)
+        setPose("root", hipWithTranslation)
+
+        const debug = document.getElementById("debug1")
+        if (debug != null) {
+            // debug.innerHTML = `adjustmentBy a: ${angle.toFixed(4)}, e: ${adjustmentByEffector.toFixed(4)}, l: ${adjustmentByLower.toFixed(4)}`
+            const v = vec3.create()
+            mat4.getTranslation(v, hipWithTranslation)
+            debug.innerHTML = `hip at ${vec3.str(v)}<br/>`
+        }
 
         // root a (0,0,0)
-        setPose("root", hip)
+        // setPose("root", hip)
 
         setPoseX("upperleg01.L", this.bpc.getLeftUpperLegWithAdjustment(this.bpl))
         setPoseX("lowerleg01.L", this.bpc.getLeftLowerLeg(this.bpl))

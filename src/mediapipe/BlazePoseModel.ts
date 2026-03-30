@@ -16,12 +16,24 @@ export class BlazePoseModel extends Model {
     }
     getXYZ(out: Float32Array) {
         const M = mat4.create()
-        mat4.rotateX(M, M, deg2rad(160))
 
-        const s = 8
+        // adjustments for mediapipe
+        // mat4.rotateX(M, M, deg2rad(160))
+        // const s = 8
+        // mat4.scale(M, M, vec3.fromValues(s, s, s))
+        // // move left: x+=<0, move up: y+=<0
+        // // mat4.translate(M, M, vec3.fromValues(-.5, -.5, 0))
+
+        // adjustments for new freemocap
+        mat4.translate(M, M, vec3.fromValues(0,0,-60))
+        const s = 0.01
         mat4.scale(M, M, vec3.fromValues(s, s, s))
-        // move left: x+=<0, move up: y+=<0
-        // mat4.translate(M, M, vec3.fromValues(-.5, -.5, 0))
+        mat4.rotateY(M, M, deg2rad(180))
+
+        // adjustments for old freemocap
+        // mat4.rotateX(M, M, deg2rad(-90))
+        // const s = 0.01
+        // mat4.scale(M, M, vec3.fromValues(s, s, s))
 
         for (let i = 0, o = 0; i < this.pose.length; i += 2) {
             vec3.set(V, this.pose[i++], this.pose[i++], this.pose[i++])
