@@ -286,12 +286,15 @@ export class Skeleton {
         }
     }
 
+    /**
+     * reset user pose
+     */
     reset() {
-        this.poseNodes.forEach(node => {
-            node.x.value = 0
-            node.y.value = 0
-            node.z.value = 0
-        })
+        for(const bone of this.boneslist!) {
+            bone.matUserPoseGlobal = undefined
+            mat4.identity(bone.matUserPoseRelative)
+        }
+        this.update()
     }
 
     // line 122: toFile(self, filename, ref_weights=None)
