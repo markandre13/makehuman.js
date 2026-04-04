@@ -243,8 +243,9 @@ export class UpdateManager {
         // Blendshape.eyeLookOutLeft, Blendshape.eyeLookInLeft, Blendshape.eyeLookUpLeft, Blendshape.eyeLookDownLeft
     ])
     applyFaceBlendshapes() {
-        this.app.computedBlendShapes.getVertex(
+        this.app.computedBlendShapes.getVertex2(
             this.app.blendshapeModel.params,
+            this.skeletonChanged,
             this.app.humanMesh.vertexMorphed,
             this._skip
         )

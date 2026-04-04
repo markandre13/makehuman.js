@@ -41,6 +41,30 @@ export class ComputedBlendshapeMesh implements BlendshapeMeshAPI {
         }
         return vertex
     }
+
+    getVertex2(
+        blendshapeParams: Float32Array,
+        vertexUpdated: boolean,
+        vertex: Float32Array,
+        skip: Set<Blendshape>
+    ) {
+        if (vertexUpdated) {
+            this._xyz = new Float32Array(vertex)
+        } else {
+            vertex.set(this._xyz)
+        }
+        for (let blendshape = 1; blendshape < Blendshape.SIZE - 1; ++blendshape) {
+            if (skip.has(blendshape)) {
+                continue
+            }
+            const weight = blendshapeParams[blendshape]
+            if (isZero(weight)) {
+                continue
+            }
+            this._targets[blendshape].apply(vertex, weight)
+        }
+    }
+
     getMorphTarget(blendshape: Blendshape) {
         return this._targets[blendshape]
     }
