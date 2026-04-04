@@ -154,9 +154,9 @@ export function exportUSDC(app: Application): ArrayBuffer {
     skeleton.blenderBoneLength = blenderBoneLength
 
     for (const meshDef of meshesToExport) {
-        const meshRoot = new Xform(skelRoot, meshDef.name) // this node won't appear in blender
+        const mesh = new Mesh(skelRoot, meshDef.name) // this node won't appear in blender
 
-        const mesh = new Mesh(meshRoot, meshDef.name)
+        // const mesh = new Mesh(meshRoot, meshDef.name)
 
         // FIXME: calculate actual extent
         // mesh.extent = [-1, -1, -1, 1, 1, 1]
@@ -214,20 +214,20 @@ export function exportUSDC(app: Application): ArrayBuffer {
         uvmap.infoId = "UsdPrimvarReader_float2"
         uvmap.inputsVarname = "st"
 
-        const imageTexture = new ImageTexture(material, "Image_Texture")
-        imageTexture.infoId = "UsdUVTexture"
-        imageTexture.file = meshDef.texture
-        imageTexture.sourceColorSpace = "sRGB"
-        imageTexture.uvCoords = uvmap.outputsResult
-        imageTexture.wrapS = "repeat"
-        imageTexture.wrapT = "repeat"
+        const texture = new ImageTexture(material, "Image_Texture")
+        texture.infoId = "UsdUVTexture"
+        texture.file = meshDef.texture
+        texture.sourceColorSpace = "sRGB"
+        texture.uvCoords = uvmap.outputsResult
+        texture.wrapS = "repeat"
+        texture.wrapT = "repeat"
 
         const principledBSDF = new PrincipledBSDF(material, "Principled_BSDF")
         principledBSDF.infoId = "UsdPreviewSurface"
         principledBSDF.clearcoat = 0
         principledBSDF.clearcoatRoughness = 0.03
         // principledBSDF.diffuseColor = [meshDef.r, meshDef.g, meshDef.b]
-        principledBSDF.diffuseColor = imageTexture.outputsRGB
+        principledBSDF.diffuseColor = texture.outputsRGB
         principledBSDF.ior = 1.5
         principledBSDF.metallic = 0
         principledBSDF.opacity = 1
