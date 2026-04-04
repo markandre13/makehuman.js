@@ -54,6 +54,7 @@ export function exportUSDC(app: Application): ArrayBuffer {
     const proxy = humanMesh.proxies.get(ProxyType.Teeth)!
 
     app.skeleton.reset()
+    app.skeleton.update()
     humanMesh.calculateVertexMorphed()
 
     const meshesToExport: MeshExportDef[] = [

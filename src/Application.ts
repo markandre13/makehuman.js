@@ -4,7 +4,6 @@ import { loadSliders, SliderNode } from "./modifier/loadSliders"
 import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { WavefrontObj } from "mesh/WavefrontObj"
 import { HumanMesh } from "./mesh/HumanMesh"
-import { PoseNode } from "expression/PoseNode"
 import { ProxyManager } from "./ProxyManager"
 import { TAB, initHistoryManager } from "HistoryManager"
 import { UpdateManager } from "UpdateManager"
@@ -29,9 +28,6 @@ import { di } from "lib/di"
 import { ARKitBlendshapeMesh } from "morphtool/ARKitBlendshapeMesh"
 import { computeBlendshapes } from "morphtool/MorphRenderer"
 import { ComputedBlendshapeMesh } from "morphtool/ComputedBlendshapeMesh"
-import { ConnectionState } from "net/ConnectionState"
-import { CaptureDeviceInfo, CaptureDeviceType } from "net/makehuman"
-import { ARKitFaceReceiver as ARKitFaceReceiver_skel, HolisticReceiver as HolisticReceiver_skel } from "./net/makehuman_skel"
 import { BlazePoseModel } from "mediapipe/BlazePoseModel"
 
 
@@ -79,7 +75,6 @@ export class Application {
     proxyManager: ProxyManager
     renderMode: EnumModel<RenderMode>
     morphControls: TreeNodeModel<SliderNode>
-    poseControls: TreeNodeModel<PoseNode>
     updateManager: UpdateManager
     chordataSettings: ChordataSettings
     tabModel: EnumModel<TAB>
@@ -113,9 +108,6 @@ export class Application {
         console.log("everything is loaded...")
 
         this.proxyManager = new ProxyManager(this.humanMesh)
-
-        this.poseControls = new TreeNodeModel(PoseNode, this.skeleton.poseNodes)
-        // this.expressionManager = new ExpressionManager(this.skeleton)
 
         this.chordataSettings = new ChordataSettings()
         this.renderMode = new EnumModel(RenderMode.POLYGON, RenderMode)

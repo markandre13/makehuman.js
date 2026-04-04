@@ -1,5 +1,4 @@
 import { NumberRelModel } from "expression/NumberRelModel"
-import { PoseNode } from "expression/PoseNode"
 import { SliderNode } from "modifier/loadSliders"
 import { RenderList } from "render/RenderList"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
@@ -13,7 +12,6 @@ import { deg2rad } from "gl/algorithms/deg2rad"
 import { VALUE } from "toad.js/model/ValueModel"
 import { ALL } from "toad.js/model/Model"
 import { Blendshape } from "blendshapes/BlendShape"
-import { rad2deg } from "gl/algorithms/rad2deg"
 
 export const REST_QUAT = quat2.create()
 
@@ -30,7 +28,6 @@ export class UpdateManager {
     modifiedMorphSettings = new Set<SliderNode>()
     modifiedExpressionPoseUnits = new Set<NumberRelModel>()
     modifiedPosePoseUnits = new Set<NumberRelModel>()
-    modifiedPoseNodes = new Set<PoseNode>()
 
     //
     // flags for change detection
@@ -87,45 +84,6 @@ export class UpdateManager {
                 }
             })
         )
-
-        // observe bone pose nodes
-        function forEachBonePoseNode(node: PoseNode | undefined, cb: (node: PoseNode) => void) {
-            if (node === undefined) {
-                return
-            }
-            cb(node)
-            forEachBonePoseNode(node.next, cb)
-            forEachBonePoseNode(node.down, cb)
-        }
-        forEachBonePoseNode(this.skeleton.poseNodes, (poseNode) => {
-            poseNode.x.signal.add((event) => {
-                switch (event.type) {
-                    case ALL:
-                    case VALUE:
-                        // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
-                        this.invalidateView()
-                        this.modifiedPoseNodes.add(poseNode)
-                }
-            })
-            poseNode.y.signal.add((event) => {
-                switch (event.type) {
-                    case ALL:
-                    case VALUE:
-                        // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
-                        this.invalidateView()
-                        this.modifiedPoseNodes.add(poseNode)
-                }
-            })
-            poseNode.z.signal.add((event) => {
-                switch (event.type) {
-                    case ALL:
-                    case VALUE:
-                        // console.log(`UpdateManager: face pose unit '${poseNode.bone.name}' has changed}`)
-                        this.invalidateView()
-                        this.modifiedPoseNodes.add(poseNode)
-                }
-            })
-        })
         app.blendshapeModel.signal.add(() => {
             this.blendshapeModelChanged = true
             this.invalidateView()

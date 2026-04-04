@@ -24,12 +24,9 @@ TODO: IT'S TIME TO CLEAR UP THIS MESS
 */
 
 import { SliderNode } from './modifier/loadSliders'
-import { PoseNode } from 'expression/PoseNode'
 import { ProxyType } from 'proxy/Proxy'
 
 import FileTab from 'FileTab'
-import ChordataTab from 'chordata/chordata'
-import { PoseTreeAdapter } from 'ui/poseView'
 import { SliderTreeAdapter } from 'ui/morphView'
 import { TAB } from 'HistoryManager'
 
@@ -85,7 +82,6 @@ async function run() {
     // }
 
     TreeAdapter.register(SliderTreeAdapter, TreeNodeModel, SliderNode)
-    TreeAdapter.register(PoseTreeAdapter, TreeNodeModel, PoseNode)
 
     TableAdapter.register(StringArrayAdapter, StringArrayModel)
 

@@ -28,10 +28,10 @@ describe("Skeleton", function () {
         obj = new WavefrontObj("data/3dobjs/base.obj")
         humanMesh = new HumanMesh(human, obj)
         skeleton = loadSkeleton(humanMesh, "data/rigs/default.mhskel")
-        const node = skeleton.poseNodes.find("toe5-1.R")!
-        node.x.value = 15
-        node.y.value = 10
-        node.z.value = 5
+        // const node = skeleton.poseNodes.find("toe5-1.R")!
+        // node.x.value = 15
+        // node.y.value = 10
+        // node.z.value = 5
         console.log("loaded skeleton...")
     })
 

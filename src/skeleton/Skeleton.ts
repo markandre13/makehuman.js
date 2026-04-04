@@ -4,17 +4,12 @@ import { FileSystemAdapter } from "../filesystem/FileSystemAdapter"
 import { VertexBoneWeights, VertexBoneMapping } from "./VertexBoneWeights"
 import { mat4, vec3 } from "gl-matrix"
 import { HumanMesh } from "../mesh/HumanMesh"
-import { PoseNode } from "expression/PoseNode"
-import { Signal } from "toad.js/Signal"
 import { AnimationTrack } from "lib/BiovisionHierarchy"
 import { ChordataSkeleton as ChordataSkeleton } from "chordata/Skeleton"
-import { matrix2euler } from "gl/algorithms/euler"
+import { euler2matrix, matrix2euler } from "gl/algorithms/euler"
 import { isZero } from "gl/algorithms/isZero"
 
 export class Skeleton {
-    poseNodes: PoseNode
-    poseChanged = new Signal<PoseNode>()
-
     humanMesh: HumanMesh
 
     info: FileInformation
@@ -181,7 +176,6 @@ export class Skeleton {
             //     self.vertexWeights = VertexBoneWeights.fromFile(weights_file, mesh.getVertexCount() if mesh else None, rootBone=self.roots[0].name)
             //     self.has_custom_weights = True
         }
-        this.poseNodes = new PoseNode(this.roots[0], this.poseChanged)
     }
 
     /**
@@ -208,23 +202,28 @@ export class Skeleton {
     toMHP(): string {
         let out = `version v1.2.0\n`
         out += `name makehuman.js\n`
-        this.poseNodes.forEach((node) => {
-            out += `bone ${node.bone.name} ${node.x.value} ${node.y.value} ${node.z.value}\n`
+        this.boneslist?.forEach(bone => {
+            const { x, y, z } = matrix2euler(bone.matUserPoseRelative)
+            out += `bone ${bone.name} ${x} ${y} ${z}\n`
         })
+        // this.poseNodes.forEach((node) => {
+        //     out += `bone ${node.bone.name} ${node.x.value} ${node.y.value} ${node.z.value}\n`
+        // })
         return out
     }
     fromMHP(content: string) {
-        // this.reset()
+        this.reset()
         for (const line of content.split("\n")) {
             const token = line.split(" ")
             if (token[0] === "bone") {
-                const poseNode = this.poseNodes.find(token[1])
-                if (poseNode === undefined) {
+                const bone = this.bones.get(token[1])
+                if (bone === undefined) {
                     console.log(`unknown bone '${token[1]}' in mhp file`)
                 } else {
-                    poseNode.x.value = parseFloat(token[2])
-                    poseNode.y.value = parseFloat(token[3])
-                    poseNode.z.value = parseFloat(token[4])
+                    const x = parseFloat(token[2])
+                    const y = parseFloat(token[3])
+                    const z = parseFloat(token[4])
+                    bone.matUserPoseRelative = euler2matrix(x,y,z)
                 }
             }
         }
@@ -241,6 +240,8 @@ export class Skeleton {
     }
 
     setPose(anim: AnimationTrack, frame: number) {
+        this.reset()
+
         if (frame >= anim.nFrames) {
             throw new Error(`requested ${frame} frame does not exist, only ${anim.nFrames} available`)
         }
@@ -258,31 +259,7 @@ export class Skeleton {
             mat4.mul(m, m, bone.matRestGlobal!) // WTF? in the original it's mat4.mul(m, m, bone.matPoseGlobal!)
             // const m = mat4.copy(mat4.create(), anim.data[offset + boneIdx])
 
-            let { x, y, z } = matrix2euler(m)
-            // enforce zero: looks nicer in the ui and also avoids the math going crazy in some situations
-            if (isZero(x)) {
-                x = 0
-            }
-            if (isZero(y)) {
-                y = 0
-            }
-            if (isZero(z)) {
-                z = 0
-            }
-
-            // const check = euler_matrix(x, y, z)
-            // if (!mat4.equals(check, m)) {
-            //     console.log(`failed to set bone ${bone.name}`)
-            // }
-
-            const poseNode = this.poseNodes.find(bone.name)
-            if (!poseNode) {
-                console.log(`Skeleton.setPose(): no pose node found for bone ${bone.name}`)
-                continue
-            }
-            poseNode.x.value = poseNode.x.default = (x * 360) / (2 * Math.PI)
-            poseNode.y.value = poseNode.y.default = (y * 360) / (2 * Math.PI)
-            poseNode.z.value = poseNode.z.default = (z * 360) / (2 * Math.PI)
+            bone.matUserPoseRelative = m
         }
     }
 
@@ -290,11 +267,10 @@ export class Skeleton {
      * reset user pose
      */
     reset() {
-        for(const bone of this.boneslist!) {
+        for (const bone of this.boneslist!) {
             bone.matUserPoseGlobal = undefined
             mat4.identity(bone.matUserPoseRelative)
         }
-        this.update()
     }
 
     // line 122: toFile(self, filename, ref_weights=None)
