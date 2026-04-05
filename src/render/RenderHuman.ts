@@ -106,74 +106,54 @@ export function drawHumanCore(app: Application, view: RenderView) {
     renderList.base.bind(shaderShadedMono)
 
     interface MeshDefinition {
-        group: BaseMeshGroup,
+        group: BaseMeshGroup[],
         proxyType?: ProxyType,
         rgba: number[],
         glMode: number
     }
     const meshDefinitions: MeshDefinition[] = [
         {
-            group: BaseMeshGroup.SKIN,
+            group: [BaseMeshGroup.SKIN],
             proxyType: ProxyType.Proxymeshes,
             rgba: [1, 0.8, 0.7, alpha], glMode: gl.TRIANGLES
         },
         {
-            group: BaseMeshGroup.EYEBALL0,
+            group: [BaseMeshGroup.EYEBALL0, BaseMeshGroup.EYEBALL1],
             proxyType: ProxyType.Eyes,
             rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES
         },
         {
-            group: BaseMeshGroup.EYEBALL1,
-            proxyType: ProxyType.Eyes,
-            rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES
-        },
-        {
-            group: BaseMeshGroup.TEETH_TOP,
+            group: [BaseMeshGroup.TEETH_TOP, BaseMeshGroup.TEETH_BOTTOM],
             proxyType: ProxyType.Teeth,
             rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES
         },
         {
-            group: BaseMeshGroup.TEETH_BOTTOM,
-            proxyType: ProxyType.Teeth,
-            rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES
-        },
-        {
-            group: BaseMeshGroup.TOUNGE,
+            group: [BaseMeshGroup.TOUNGE],
             proxyType: ProxyType.Tongue,
             rgba: [1, 0, 0, alpha], glMode: gl.TRIANGLES
         },
-        { group: BaseMeshGroup.CUBE, rgba: [1, 0, 0.5, alpha], glMode: gl.LINE_STRIP },
+        { group: [BaseMeshGroup.CUBE], rgba: [1, 0, 0.5, alpha], glMode: gl.LINE_STRIP },
     ]
 
     for (let def of meshDefinitions) {
-        const group = def.group
-
-        if (group !== BaseMeshGroup.SKIN && wireframe) {
-            gl.depthMask(false)
-        } else {
-            gl.depthMask(true)
-        }
-
-        if (group === BaseMeshGroup.SKIN) {
+        if (def.proxyType !== undefined && renderList.proxies.has(def.proxyType)) {
             continue
         }
-        if (renderList.proxies.has(ProxyType.Eyes) &&
-            (group === BaseMeshGroup.EYEBALL0 || group === BaseMeshGroup.EYEBALL1)) {
-            continue
+        for (const group of def.group) {
+            if (group !== BaseMeshGroup.SKIN && wireframe) {
+                gl.depthMask(false)
+            } else {
+                gl.depthMask(true)
+            }
+            if (group === BaseMeshGroup.SKIN) {
+                continue
+            }
+            // render
+            shaderShadedMono.setColor(gl, def.rgba)
+            let offset = humanMesh.baseMesh.groups[group].startIndex * WORD_LENGTH
+            let length = humanMesh.baseMesh.groups[group].length
+            renderList.base.drawSubset(def.glMode, offset, length)
         }
-        if (renderList.proxies.has(ProxyType.Teeth) &&
-            (group === BaseMeshGroup.TEETH_TOP || group === BaseMeshGroup.TEETH_BOTTOM)) {
-            continue
-        }
-        if (renderList.proxies.has(ProxyType.Tongue) && group === BaseMeshGroup.TOUNGE) {
-            continue
-        }
-
-        // render
-        shaderShadedMono.setColor(gl, def.rgba)
-        let offset = humanMesh.baseMesh.groups[group].startIndex * WORD_LENGTH
-        let length = humanMesh.baseMesh.groups[group].length
-        renderList.base.drawSubset(def.glMode, offset, length)
     }
 
     //
