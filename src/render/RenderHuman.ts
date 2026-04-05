@@ -5,6 +5,7 @@ import { Application } from "Application"
 import { RenderMesh } from "./RenderMesh"
 import { RenderView } from "./RenderView"
 import { di } from "lib/di"
+import { Texture } from "gl/Texture"
 
 export class RenderHuman extends RenderHandler {
     private viewHead: boolean
@@ -84,7 +85,6 @@ export function drawHumanCore(app: Application, view: RenderView) {
     }
     shaderShadedTexture.setAlpha(alpha)
 
-    shaderShadedMono.use(gl)
     //
     // JOINTS AND SKELETON
     //
@@ -103,123 +103,137 @@ export function drawHumanCore(app: Application, view: RenderView) {
     //
     // BASEMESH
     //
-    renderList.base.bind(shaderShadedMono)
 
     interface MeshDefinition {
         group: BaseMeshGroup[],
         proxyType?: ProxyType,
         rgba: number[],
+        baseTexture?: Texture,
+        proxyTexture?: Texture,
         glMode: number
     }
     const meshDefinitions: MeshDefinition[] = [
         {
             group: [BaseMeshGroup.SKIN],
             proxyType: ProxyType.Proxymeshes,
-            rgba: [1, 0.8, 0.7, alpha], glMode: gl.TRIANGLES
+            rgba: [1, 0.8, 0.7, alpha], glMode: gl.TRIANGLES,
+            baseTexture: view.bodyTexture,
+            proxyTexture: view.bodyTexture
         },
         {
             group: [BaseMeshGroup.EYEBALL0, BaseMeshGroup.EYEBALL1],
             proxyType: ProxyType.Eyes,
-            rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES
+            rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES,
+            baseTexture: view.bodyTexture,
+            proxyTexture: view.eyeTexture
         },
         {
             group: [BaseMeshGroup.TEETH_TOP, BaseMeshGroup.TEETH_BOTTOM],
             proxyType: ProxyType.Teeth,
-            rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES
+            rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES,
+            baseTexture: view.bodyTexture,
         },
         {
             group: [BaseMeshGroup.TOUNGE],
             proxyType: ProxyType.Tongue,
-            rgba: [1, 0, 0, alpha], glMode: gl.TRIANGLES
+            rgba: [1, 0, 0, alpha], glMode: gl.TRIANGLES,
+            baseTexture: view.bodyTexture,
         },
         { group: [BaseMeshGroup.CUBE], rgba: [1, 0, 0.5, alpha], glMode: gl.LINE_STRIP },
     ]
 
     for (let def of meshDefinitions) {
-        if (def.proxyType !== undefined && renderList.proxies.has(def.proxyType)) {
-            continue
-        }
-        for (const group of def.group) {
-            if (group !== BaseMeshGroup.SKIN && wireframe) {
-                gl.depthMask(false)
-            } else {
-                gl.depthMask(true)
+        if (def.proxyType === undefined || !renderList.proxies.has(def.proxyType)) {
+            //
+            // render from base mesh
+            //
+            for (const group of def.group) {
+                let offset = humanMesh.baseMesh.groups[group].startIndex * WORD_LENGTH
+                let length = humanMesh.baseMesh.groups[group].length
+                if (def.baseTexture !== undefined) {
+                    shaderShadedTexture.use(gl)
+                    // gl.depthMask(false) // must be false, otherwise the texture ain't visible WHUT????
+                    if (def.proxyType !== ProxyType.Proxymeshes) {
+                        gl.depthMask(false)
+                    } else {
+                        gl.depthMask(true)
+                    }
+
+                    def.baseTexture.bind()
+                    renderList.base.bind(shaderShadedTexture)
+                    renderList.base.drawSubset(def.glMode, offset, length)
+                } else {
+                    // if (group !== BaseMeshGroup.SKIN && wireframe) {
+                    //     gl.depthMask(false)
+                    // } else {
+                    gl.depthMask(true)
+                    // }
+
+                    shaderShadedMono.use(gl)
+                    shaderShadedMono.setColor(gl, def.rgba)
+
+                    renderList.base.bind(shaderShadedMono)
+                    renderList.base.drawSubset(def.glMode, offset, length)
+                }
             }
-            if (group === BaseMeshGroup.SKIN) {
+        } else {
+            //
+            // render from proxy mesh
+            //
+            if (def.proxyType === undefined) {
                 continue
             }
-            // render
-            shaderShadedMono.setColor(gl, def.rgba)
-            let offset = humanMesh.baseMesh.groups[group].startIndex * WORD_LENGTH
-            let length = humanMesh.baseMesh.groups[group].length
-            renderList.base.drawSubset(def.glMode, offset, length)
+            // render from proxy
+            // console.log(`render proxy ${ProxyType[def.proxyType]}`)
+            const renderMesh = renderList.proxies.get(def.proxyType)!
+
+            if (def.proxyTexture !== undefined) {
+                shaderShadedTexture.use(gl)
+                // gl.depthMask(false) // must be false, otherwise the texture ain't visible WHUT????
+                if (def.proxyType !== ProxyType.Proxymeshes) {
+                    gl.depthMask(false)
+                } else {
+                    gl.depthMask(true)
+                }
+
+                def.proxyTexture.bind()
+                renderMesh.bind(shaderShadedTexture)
+                renderMesh.draw(shaderShadedTexture, gl.TRIANGLES)
+            } else {
+                // if (def.proxyType !== ProxyType.Proxymeshes && wireframe) {
+                //     gl.depthMask(false)
+                // } else {
+                gl.depthMask(true)
+                // }
+                shaderShadedMono.use(gl)
+                shaderShadedMono.setColor(gl, def.rgba)
+                renderMesh.draw(shaderShadedMono, gl.TRIANGLES)
+            }
         }
     }
-
-    //
-    // PROXIES
-    //
-    renderList.proxies.forEach((renderMesh, proxyType) => {
-        let rgba: number[] = [0.5, 0.5, 0.5, alpha]
-        if (proxyType !== ProxyType.Proxymeshes && wireframe) {
-            gl.depthMask(false)
-        } else {
-            gl.depthMask(true)
-        }
-        switch (proxyType) {
-            case ProxyType.Proxymeshes:
-                return
-                rgba = [1, 0.8, 0.7, alpha]
-                break
-            case ProxyType.Clothes:
-                rgba = [0.5, 0.5, 0.5, alpha]
-                break
-            case ProxyType.Hair:
-                rgba = [0.2, 0.1, 0.1, alpha]
-                break
-            case ProxyType.Eyes:
-                return
-                //     rgba = [0, 0.5, 1, alpha]
-                break
-            case ProxyType.Eyebrows:
-                rgba = [0, 0, 0, alpha]
-                break
-            case ProxyType.Eyelashes:
-                rgba = [0, 0, 0, alpha]
-                break
-            case ProxyType.Teeth:
-                rgba = [1, 1, 1, alpha]
-                break
-            case ProxyType.Tongue:
-                rgba = [1, 0, 0, alpha]
-                break
-        }
-        shaderShadedMono.setColor(gl, rgba)
-        renderMesh.draw(shaderShadedMono, gl.TRIANGLES)
-    })
 
     //
     // TEXTURED SKIN
     //
 
-    shaderShadedTexture.use(gl)
-    // programTex.texture(view.bodyTexture!, alpha)
-    view.bodyTexture.bind()
-    if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
-        let offset = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
-        let length = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
-        renderList.base.bind(shaderShadedTexture)
-        renderList.base.drawSubset(gl.TRIANGLES, offset, length)
-    }
+    // shaderShadedTexture.use(gl)
+    // // programTex.texture(view.bodyTexture!, alpha)
+    // view.bodyTexture.bind()
+    // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
+    //     let offset = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].startIndex * WORD_LENGTH
+    //     let length = humanMesh.baseMesh.groups[BaseMeshGroup.SKIN].length
+    //     renderList.base.bind(shaderShadedTexture)
+    //     renderList.base.drawSubset(gl.TRIANGLES, offset, length)
+    // }
 
-    if (renderList.proxies.has(ProxyType.Eyes)) {
-        gl.depthMask(false) // must be false, otherwise the texture ain't visible
-        const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
-        // programTex.texture(view.eyeTexture!, alpha)           
-        view.eyeTexture.bind()
-        renderMesh.bind(shaderShadedTexture)
-        renderMesh.draw(shaderShadedTexture, gl.TRIANGLES)
-    }
+    // if (renderList.proxies.has(ProxyType.Eyes)) {
+    //     gl.depthMask(false) // must be false, otherwise the texture ain't visible
+    //     const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
+    //     // programTex.texture(view.eyeTexture!, alpha)           
+    //     view.eyeTexture.bind()
+    //     renderMesh.bind(shaderShadedTexture)
+    //     renderMesh.draw(shaderShadedTexture, gl.TRIANGLES)
+    // }
 
     // renderList.base.bind(programTex)
 
