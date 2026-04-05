@@ -105,52 +105,75 @@ export function drawHumanCore(app: Application, view: RenderView) {
     //
     renderList.base.bind(shaderShadedMono)
 
-    const MESH_GROUP_INDEX = 0
-    const COLOR_INDEX = 1
-    const GLMODE_INDEX = 2
-    for (let x of [
-        [BaseMeshGroup.SKIN, [1, 0.8, 0.7, alpha], gl.TRIANGLES],
-        [BaseMeshGroup.EYEBALL0, [0, 0.5, 1, alpha], gl.TRIANGLES],
-        [BaseMeshGroup.EYEBALL1, [0, 0.5, 1, alpha], gl.TRIANGLES],
-        [BaseMeshGroup.TEETH_TOP, [1, 1, 1, alpha], gl.TRIANGLES],
-        [BaseMeshGroup.TEETH_BOTTOM, [1, 1, 1, alpha], gl.TRIANGLES],
-        [BaseMeshGroup.TOUNGE, [1, 0, 0, alpha], gl.TRIANGLES],
-        [BaseMeshGroup.CUBE, [1, 0, 0.5, alpha], gl.LINE_STRIP],
-    ]) {
-        const idx = x[MESH_GROUP_INDEX] as number
+    interface MeshDefinition {
+        group: BaseMeshGroup,
+        proxyType?: ProxyType,
+        rgba: number[],
+        glMode: number
+    }
+    const meshDefinitions: MeshDefinition[] = [
+        {
+            group: BaseMeshGroup.SKIN,
+            proxyType: ProxyType.Proxymeshes,
+            rgba: [1, 0.8, 0.7, alpha], glMode: gl.TRIANGLES
+        },
+        {
+            group: BaseMeshGroup.EYEBALL0,
+            proxyType: ProxyType.Eyes,
+            rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES
+        },
+        {
+            group: BaseMeshGroup.EYEBALL1,
+            proxyType: ProxyType.Eyes,
+            rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES
+        },
+        {
+            group: BaseMeshGroup.TEETH_TOP,
+            proxyType: ProxyType.Teeth,
+            rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES
+        },
+        {
+            group: BaseMeshGroup.TEETH_BOTTOM,
+            proxyType: ProxyType.Teeth,
+            rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES
+        },
+        {
+            group: BaseMeshGroup.TOUNGE,
+            proxyType: ProxyType.Tongue,
+            rgba: [1, 0, 0, alpha], glMode: gl.TRIANGLES
+        },
+        { group: BaseMeshGroup.CUBE, rgba: [1, 0, 0.5, alpha], glMode: gl.LINE_STRIP },
+    ]
 
-        if (idx !== BaseMeshGroup.SKIN && wireframe) {
+    for (let def of meshDefinitions) {
+        const group = def.group
+
+        if (group !== BaseMeshGroup.SKIN && wireframe) {
             gl.depthMask(false)
         } else {
             gl.depthMask(true)
         }
 
-        if (idx === BaseMeshGroup.SKIN) {
+        if (group === BaseMeshGroup.SKIN) {
             continue
         }
         if (renderList.proxies.has(ProxyType.Eyes) &&
-            (idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1)) {
+            (group === BaseMeshGroup.EYEBALL0 || group === BaseMeshGroup.EYEBALL1)) {
             continue
         }
-        // if (idx === BaseMeshGroup.EYEBALL0 || idx === BaseMeshGroup.EYEBALL1) {
-        //     continue
-        // }
         if (renderList.proxies.has(ProxyType.Teeth) &&
-            (idx === BaseMeshGroup.TEETH_TOP || idx === BaseMeshGroup.TEETH_BOTTOM)) {
+            (group === BaseMeshGroup.TEETH_TOP || group === BaseMeshGroup.TEETH_BOTTOM)) {
             continue
         }
-        if (renderList.proxies.has(ProxyType.Tongue) && idx === BaseMeshGroup.TOUNGE) {
+        if (renderList.proxies.has(ProxyType.Tongue) && group === BaseMeshGroup.TOUNGE) {
             continue
         }
 
         // render
-        const rgba = x[COLOR_INDEX] as number[]
-        shaderShadedMono.setColor(gl, rgba)
-        let offset = humanMesh.baseMesh.groups[idx].startIndex * WORD_LENGTH
-        let length = humanMesh.baseMesh.groups[idx].length
-
-        const mode = x[GLMODE_INDEX] as number
-        renderList.base.drawSubset(mode, offset, length)
+        shaderShadedMono.setColor(gl, def.rgba)
+        let offset = humanMesh.baseMesh.groups[group].startIndex * WORD_LENGTH
+        let length = humanMesh.baseMesh.groups[group].length
+        renderList.base.drawSubset(def.glMode, offset, length)
     }
 
     //
@@ -209,8 +232,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
         renderList.base.drawSubset(gl.TRIANGLES, offset, length)
     }
 
-    {
-        // // if (!renderList.proxies.has(ProxyType.Proxymeshes)) {
+    if (renderList.proxies.has(ProxyType.Eyes)) {
         gl.depthMask(false) // must be false, otherwise the texture ain't visible
         const renderMesh = renderList.proxies.get(ProxyType.Eyes)!
         // programTex.texture(view.eyeTexture!, alpha)           
