@@ -26,7 +26,7 @@ export class RenderMesh {
     glIndices: IndexBuffer
     glVertex: VertexBuffer
     glNormal: NormalBuffer
-    glTexture?: UVBuffer
+    glUVCoords?: UVBuffer
 
     fvertex: ArrayLike<number>
     normal: Float32Array
@@ -62,7 +62,7 @@ export class RenderMesh {
         this.glIndices = new IndexBuffer(gl, glData.indices)
         this.glVertex = new VertexBuffer(gl, glData.vertex)
         if (glData.texcoord) {
-            this.glTexture = new UVBuffer(gl, glData.texcoord)
+            this.glUVCoords = new UVBuffer(gl, glData.texcoord)
         }
 
         this.normal = new Float32Array(glData.vertex.length)
@@ -112,8 +112,8 @@ export class RenderMesh {
         if (shader instanceof ShaderShadedMono || shader instanceof ShaderShadedTextured) {
             this.glNormal.bind(shader)
         }
-        if (this.glTexture && shader instanceof ShaderShadedTextured) {
-            this.glTexture.bind(shader)
+        if (this.glUVCoords && shader instanceof ShaderShadedTextured) {
+            this.glUVCoords.bind(shader)
         }
     }
 

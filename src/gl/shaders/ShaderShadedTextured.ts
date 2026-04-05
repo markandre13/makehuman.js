@@ -115,5 +115,8 @@ export const fsSource = `
     void main(void) {
         highp vec4 texelColor = texture2D(uSampler, vTextureCoord);
         gl_FragColor = vec4(texelColor.rgb * vLighting, uAlpha);
+        if (texelColor.a < 0.5) {
+            discard;
+        }
     }
 `

@@ -70,6 +70,7 @@ export class RenderView extends GLView {
         this.app.wireframe.signal.add(() => this.app.updateManager.invalidateView())
 
         this.bodyTexture = new Texture(this, "data/skins/textures/young_caucasian_female_special_suit.png")
+        // this.bodyTexture = new Texture(this, "data/eyes/materials/green_eye.png")
         this.eyeTexture = new Texture(this, "data/eyes/materials/green_eye.png")
     }
 
