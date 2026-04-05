@@ -8,7 +8,6 @@ export const D = 180 / Math.PI
 /**
  * Fly Mode similar to Blender
  */
-
 export class FlyMode extends InputHandler {
     // private _ctx!: Context
     private _view: GLView
@@ -109,41 +108,6 @@ export class FlyMode extends InputHandler {
 
         this.invalidate()
     }
-    override keyup(ev: KeyboardEvent): void {
-        ev.preventDefault()
-        switch (ev.code) {
-            case 'KeyW': // forward
-                if (this._move[2] > 0) {
-                    this._move[2] = 0
-                }
-                break
-            case 'KeyS': // backward
-                if (this._move[2] < 0) {
-                    this._move[2] = 0
-                }
-                break
-            case 'KeyA': // left
-                if (this._move[0] > 0) {
-                    this._move[0] = 0
-                }
-                break
-            case 'KeyD': // right
-                if (this._move[0] < 0) {
-                    this._move[0] = 0
-                }
-                break
-            case 'KeyQ': // down
-                if (this._move[1] > 0) {
-                    this._move[1] = 0
-                }
-                break
-            case 'KeyE': // up
-                if (this._move[1] < 0) {
-                    this._move[1] = 0
-                }
-                break
-        }
-    }
     override keydown(ev: KeyboardEvent): void {
         ev.preventDefault()
         if (ev.repeat) {
@@ -192,11 +156,52 @@ export class FlyMode extends InputHandler {
         }
         this.invalidate()
     }
+    override keyup(ev: KeyboardEvent): void {
+        ev.preventDefault()
+        switch (ev.code) {
+            case 'KeyW': // forward
+                if (this._move[2] > 0) {
+                    this._move[2] = 0
+                }
+                break
+            case 'KeyS': // backward
+                if (this._move[2] < 0) {
+                    this._move[2] = 0
+                }
+                break
+            case 'KeyA': // left
+                if (this._move[0] > 0) {
+                    this._move[0] = 0
+                }
+                break
+            case 'KeyD': // right
+                if (this._move[0] < 0) {
+                    this._move[0] = 0
+                }
+                break
+            case 'KeyQ': // down
+                if (this._move[1] > 0) {
+                    this._move[1] = 0
+                }
+                break
+            case 'KeyE': // up
+                if (this._move[1] < 0) {
+                    this._move[1] = 0
+                }
+                break
+        }
+    }
+    /**
+     * quit fly mode and keep current position
+     */
     confirm() {
         this._view.popInputHandler()
         // this._osd?.destructor()
         this._view.invalidate()
     }
+    /**
+     * quit fly mode and reset postion to when fly mode was started
+     */
     cancel() {
         this._view.ctx.camera = this._initial
         this.confirm()
