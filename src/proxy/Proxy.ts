@@ -24,6 +24,9 @@ export enum ProxyType {
     Tongue
 }
 
+/**
+ * container for MakeHuman .mhclo/.proxy files
+ */
 export class Proxy {
     name!: string
     // license
