@@ -41,7 +41,7 @@ export class ARKitBlendshapeMesh implements BlendshapeMeshAPI {
 
     transformToMatchMakehumanFace(xyz: Float32Array | Array<number>) {
         const scale = 9.4
-        const dy = 7.08
+        const dy = 7.08 + 0.035
         const dz = 0.93
 
         for (let i = 0; i < xyz.length; ++i) {

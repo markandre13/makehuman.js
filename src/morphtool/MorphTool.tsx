@@ -76,6 +76,9 @@ export function MorphTool(props: { app: Application }) {
                         const jaw = props.app.skeleton.getBone("jaw")!
                         jaw.matUserPoseRelative = mat4.fromXRotation(mat4.create(), deg2rad(12))
 
+                        const scaleHeadVert = props.app.morphManager.getModifier("head/head-scale-vert-decr|incr")
+                        scaleHeadVert!.model!.value = -0.1696875 // -0.37132812500000006
+
                         // move eye
                         const leftEye = props.app.morphManager.getModifier("eyes/l-eye-trans-down|up")
                         leftEye!.model!.value = -1
