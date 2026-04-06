@@ -6,9 +6,6 @@ import { RenderMesh } from "./RenderMesh"
 import { RenderView } from "./RenderView"
 import { di } from "lib/di"
 import { Texture } from "gl/Texture"
-import { IndexBuffer } from "gl/buffers/IndexBuffer"
-import { VertexBuffer } from "gl/buffers/VertexBuffer"
-import { NormalBuffer } from "gl/buffers/NormalBuffer"
 
 export class RenderHuman extends RenderHandler {
     private viewHead: boolean
@@ -102,7 +99,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
     interface MeshDefinition {
         group: BaseMeshGroup[],
         proxyType?: ProxyType,
-        rgba: number[],
+        rgb: number[],
         baseTexture?: Texture,
         proxyTexture?: Texture,
         glMode: number
@@ -110,27 +107,43 @@ export function drawHumanCore(app: Application, view: RenderView) {
     const meshDefinitions: MeshDefinition[] = [{
         group: [BaseMeshGroup.SKIN],
         proxyType: ProxyType.Proxymeshes,
-        rgba: [1, 0.8, 0.7, alpha], glMode: gl.TRIANGLES,
+        rgb: [1, 0.8, 0.7], glMode: gl.TRIANGLES,
         baseTexture: view.bodyTexture,
         proxyTexture: view.bodyTexture
     }, {
         group: [BaseMeshGroup.EYEBALL0, BaseMeshGroup.EYEBALL1],
         proxyType: ProxyType.Eyes,
-        rgba: [0, 0.5, 1, alpha], glMode: gl.TRIANGLES,
+        rgb: [0, 0.5, 1], glMode: gl.TRIANGLES,
         baseTexture: view.bodyTexture,
         proxyTexture: view.eyeTexture
     }, {
         group: [BaseMeshGroup.TEETH_TOP, BaseMeshGroup.TEETH_BOTTOM],
         proxyType: ProxyType.Teeth,
-        rgba: [1, 1, 1, alpha], glMode: gl.TRIANGLES,
+        rgb: [1, 1, 1], glMode: gl.TRIANGLES,
         baseTexture: view.bodyTexture,
     }, {
         group: [BaseMeshGroup.TOUNGE],
         proxyType: ProxyType.Tongue,
-        rgba: [1, 0, 0, alpha], glMode: gl.TRIANGLES,
+        rgb: [1, 0, 0], glMode: gl.TRIANGLES,
         baseTexture: view.bodyTexture,
     }, {
-        group: [BaseMeshGroup.CUBE], rgba: [1, 0, 0.5, alpha], glMode: gl.LINE_STRIP
+        group: [],
+        proxyType: ProxyType.Hair,
+        rgb: [0.5, 0, 0], glMode: gl.TRIANGLES,
+    }, {
+        group: [],
+        proxyType: ProxyType.Eyebrows,
+        rgb: [0, 0, 0], glMode: gl.TRIANGLES,
+    }, {
+        group: [],
+        proxyType: ProxyType.Eyelashes,
+        rgb: [0, 0, 0], glMode: gl.TRIANGLES,
+    }, {
+        group: [],
+        proxyType: ProxyType.Clothes,
+        rgb: [1, 1, 1], glMode: gl.TRIANGLES,
+    }, {
+        group: [BaseMeshGroup.CUBE], rgb: [1, 0, 0.5], glMode: gl.LINE_STRIP
     }]
 
     // NOTE: base.glIndices has the quads from the wavefront file as triangles,
@@ -171,7 +184,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
         }
         if (!def.baseTexture) {
             for (const group of def.group) {
-                shaderShadedMono.setColor(gl, def.rgba)
+                shaderShadedMono.setColor(gl, [...def.rgb, alpha])
                 const offset = baseMesh.groups[group].startIndex * WORD_LENGTH
                 const length = baseMesh.groups[group].length
                 gl.drawElements(def.glMode, (length / 4) * 6, gl.UNSIGNED_SHORT, (offset / 4) * 6)
@@ -190,7 +203,7 @@ export function drawHumanCore(app: Application, view: RenderView) {
 
         if (def.proxyTexture === undefined) {
             shaderShadedMono.use(gl)
-            shaderShadedMono.setColor(gl, def.rgba)
+            shaderShadedMono.setColor(gl, [...def.rgb, alpha])
             renderMesh.draw(shaderShadedMono, gl.TRIANGLES)
         } else {
             shaderShadedTexture.use(gl)
