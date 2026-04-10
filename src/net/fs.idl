@@ -39,9 +39,9 @@ interface FileSystem {
     void rmdir(in string name);
 
     // read file
-    sequence<octet> read(in string name);
+    @js_mapping(type=Uint8Array) sequence<octet> read(in string name);
     // write file
-    void write(in string name, in sequence<octet> data);
+    void write(in string name, @js_mapping(type=Uint8Array) in sequence<octet> data);
     // remove file
     void rm(in string name);
 };

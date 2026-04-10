@@ -1,7 +1,9 @@
 // frontend is called by the backend
 interface Frontend {
     // callback to receive raw chordata frame
-    oneway void chordata(in sequence<octet> data);
+    oneway void chordata(
+        @js_mapping(type=Uint8Array) in sequence<octet> data
+    );
 
     // temporary hack
     oneway void frame(in unsigned long frame);
@@ -26,8 +28,8 @@ struct CaptureDeviceInfo {
 
 interface ARKitFaceReceiver {
     oneway void faceLandmarks(
-        in sequence<float> blendshapes,
-        in sequence<float> transform,
+        @js_mapping(type=Float32Array) in sequence<float> blendshapes,
+        @js_mapping(type=Float32Array) in sequence<float> transform,
         in unsigned long long timestamp_ms);
 };
 
@@ -37,10 +39,10 @@ interface ARKitFaceDevice: CaptureDevice {
 
 interface HolisticReceiver {
     oneway void landmarks(
-        in sequence<float> blendshapes,
-        in sequence<float> pose,
-        in sequence<float> lhand,
-        in sequence<float> rhand,
+        @js_mapping(type=Float32Array) in sequence<float> blendshapes,
+        @js_mapping(type=Float32Array) in sequence<float> pose,
+        @js_mapping(type=Float32Array) in sequence<float> lhand,
+        @js_mapping(type=Float32Array) in sequence<float> rhand,
         in unsigned long long timestamp_ms);
 };
 

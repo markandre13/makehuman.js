@@ -31,7 +31,7 @@
     },
     "dependencies": {
         "@markandre13/usd.js": "^0.0.7",
-        "corba.js": "^0.1.20",
+        "corba.js": "^0.2.0",
         "fflate": "^0.8.2",
         "gl-matrix": "^3.4.4",
         "toad.js": "^0.2.5"
