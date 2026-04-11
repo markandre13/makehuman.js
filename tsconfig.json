@@ -33,6 +33,7 @@
     "include": [
         "src/**/*",
         "test/**/*",
+        "scripts/**/*"
     ],
     "exclude": [
         "data",
