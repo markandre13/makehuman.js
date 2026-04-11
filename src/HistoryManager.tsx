@@ -17,6 +17,7 @@ function makeUrl(tabModel: EnumModel<TAB>) {
     return `${location.origin}${location.pathname}#${tabModel.value}`
 }
 
+// TODO: in solidjs this is done by HashRouter, queryparams are not to be used by single page apps?
 export function initHistoryManager(tabModel: EnumModel<TAB>) {
     if (location.hash.length > 1) {
         const value = location.hash.substring(1) as any

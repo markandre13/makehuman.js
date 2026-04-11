@@ -18,7 +18,19 @@ export function makeCaptureDeviceModel(app: Application) {
     const devices = new OptionModel<CaptureDeviceInfo | undefined>(
         undefined,
         [[undefined, "None"]],
-        { label: "Capture Device" }
+        {
+            label: "Capture Device", local: {
+                name: "capture-device",
+                toJSON: (value) => value !== undefined ? value.id : "null",
+                // TypeScript struggles with the following line
+                //   fromJSON: (str) => devices.find((it) => it?.id === str)
+                // but accepts the following workaround:
+                fromJSON: (str) => {
+                    const model = devices as OptionModel<CaptureDeviceInfo | undefined>
+                    return model.find( it => it?.id == str)
+                }
+            }
+        }
     )
 
     let currentDevice: CaptureDevice | undefined
@@ -65,7 +77,7 @@ export function makeCaptureDeviceModel(app: Application) {
                 app.blendshapeModel.set(face, null, timestamp_ms)
 
                 let allZero = true
-                for(const a of pose) {
+                for (const a of pose) {
                     if (!isZero(a)) {
                         allZero = false
                         break
