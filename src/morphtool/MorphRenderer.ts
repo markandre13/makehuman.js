@@ -693,7 +693,6 @@ export function computeBlendshapes(
 
     morphManager.reset()
     mat4.identity(jaw.matUserPoseRelative)
-    updateManager.updateFromLocalSettingsWithoutGL()
 
     return computeBlendshapeMesh(humanMesh.baseMesh, mh2arProjection)
 }
