@@ -2,11 +2,12 @@ import { Application } from "Application"
 import { ConnectionState } from "net/ConnectionState"
 import { CaptureDeviceInfo, VideoCamera } from "net/makehuman"
 import { ARKitFaceDevice, CaptureDevice, HolisticDevice } from "net/makehuman_stub"
-import { OptionModel } from "toad.js"
 // FIX in corba.js: create classes suffixed with _skel and _stub
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel, HolisticReceiver as HolisticReceiver_skel } from "../../net/makehuman_skel"
 import { ORB } from "corba.js"
 import { isZero } from "gl/algorithms/isZero"
+import { OptionModel } from "toad.js/appkit/OptionModel"
+import { makeOptionMapping } from "toad.js/appkit/OptionModelBase"
 
 /**
  * Get list of cameras available on the backend
@@ -17,19 +18,14 @@ import { isZero } from "gl/algorithms/isZero"
 export function makeCaptureDeviceModel(app: Application) {
     const devices = new OptionModel<CaptureDeviceInfo | undefined>(
         undefined,
-        [[undefined, "None"]],
+        [undefined],
+        value => makeOptionMapping(
+            value !== undefined ? value.id : "null",
+            value !== undefined ? value.name : "None"
+        ),
         {
-            label: "Capture Device", local: {
-                name: "capture-device",
-                toJSON: (value) => value !== undefined ? value.id : "null",
-                // TypeScript struggles with the following line
-                //   fromJSON: (str) => devices.find((it) => it?.id === str)
-                // but accepts the following workaround:
-                fromJSON: (str) => {
-                    const model = devices as OptionModel<CaptureDeviceInfo | undefined>
-                    return model.find( it => it?.id == str)
-                }
-            }
+            label: "Capture Device",
+            local: "capture-device"
         }
     )
 

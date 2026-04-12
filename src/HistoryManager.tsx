@@ -1,4 +1,4 @@
-import { EnumModel } from "toad.js/model/EnumModel"
+import { EnumModel } from "toad.js/appkit/EnumModel"
 
 
 export enum TAB {

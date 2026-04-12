@@ -1,5 +1,4 @@
-import { Tab } from "toad.js/view/Tab"
-import { Button, Checkbox, BooleanModel } from "toad.js"
+import { Tab } from "toad.js/viewkit/Tab"
 import { TAB } from "HistoryManager"
 import { AnimationTrack, BiovisionHierarchy } from "lib/BiovisionHierarchy"
 import { HumanMesh } from "./mesh/HumanMesh"
@@ -7,6 +6,8 @@ import { loadSkeleton } from "./skeleton/loadSkeleton"
 import { Application, setRenderer } from "Application"
 import { RenderHuman } from "render/RenderHuman"
 import { exportUSDC } from "mesh/usdc"
+import { BooleanModel } from "toad.js/appkit/BooleanModel"
+import { Button } from "toad.js/viewkit/Button"
 
 const useBlenderProfile = new BooleanModel(true)
 const limitPrecision = new BooleanModel(false)

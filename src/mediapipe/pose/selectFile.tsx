@@ -1,22 +1,20 @@
 import { DirectoryEntry, FileSystem } from "net/fs"
-import {
-    Action,
-    Button,
-    OptionModel,
-    SelectionModel,
-    Table,
-    TableEditMode,
-    TableModel,
-    TablePos,
-    text,
-    TextModel,
-} from "toad.js"
-import { ALL } from "toad.js/model/Model"
+import { ALL } from "toad.js/appkit/Model"
 import { TableAdapter } from "toad.js/table/adapter/TableAdapter"
-import { Form } from "toad.js/view/Form"
-import { FormSelect } from "toad.js/view/FormSelect"
-import { FormText } from "toad.js/view/FormText"
-import { FormDisplay } from "toad.js/view/FormDisplay"
+import { Form } from "toad.js/viewkit/Form"
+import { FormSelect } from "toad.js/viewkit/FormSelect"
+import { FormText } from "toad.js/viewkit/FormText"
+import { FormDisplay } from "toad.js/viewkit/FormDisplay"
+import { TableModel } from "toad.js/table/model/TableModel"
+import { text } from "toad.js/util/lsx"
+import { TablePos } from "toad.js/table/TablePos"
+import { Action } from "toad.js/appkit/Action"
+import { OptionModel } from "toad.js/appkit/OptionModel"
+import { TextModel } from "toad.js/appkit/TextModel"
+import { SelectionModel } from "toad.js/table/model/SelectionModel"
+import { TableEditMode } from "toad.js/table/TableEditMode"
+import { Table } from "toad.js/table/Table"
+import { Button } from "toad.js/viewkit/Button"
 
 class FileListModel extends TableModel {
     _data: DirectoryEntry[]

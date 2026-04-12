@@ -4,7 +4,7 @@ import { FileSystem } from "net/fs"
 import { Frontend as Frontend_skel } from "net/makehuman_skel"
 import { UpdateManager } from "UpdateManager"
 import { handleChordata } from "chordata/chordata"
-import { ValueModel } from "toad.js/model/ValueModel"
+import { ValueModel } from "toad.js/appkit/ValueModel"
 
 export class Frontend_impl extends Frontend_skel {
     updateManager: UpdateManager

@@ -1,12 +1,8 @@
-import { OptionModel } from "toad.js"
-import { ModelOptions } from "toad.js/model/Model"
+import { OptionModel } from "toad.js/appkit/OptionModel"
 
 export class RemoteOptionModel<V> extends OptionModel<V> {
     protected _callback?: (value: V) => void
-    constructor(value: V, mapping: readonly (readonly [V, string | number | HTMLElement] | string)[], options?: ModelOptions) {
-        super(value, mapping, options)
-        this.setMapping(mapping)
-    }
+
     // sets a callback to be called when the view changes the model's value
     callback(cb: (value: V) => void) {
         this._callback = cb

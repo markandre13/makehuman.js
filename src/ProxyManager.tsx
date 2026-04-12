@@ -1,7 +1,7 @@
 import { HumanMesh } from "./mesh/HumanMesh"
 import { loadProxy, ProxyType } from "proxy/Proxy"
 import { FileSystemAdapter } from "./filesystem/FileSystemAdapter"
-import { OptionModel } from "toad.js"
+import { OptionModel } from "toad.js/appkit/OptionModel"
 
 // NOT WORKING YET
 // female_casualsuit01

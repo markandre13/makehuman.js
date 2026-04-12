@@ -34,7 +34,7 @@
         "corba.js": "^0.2.0",
         "fflate": "^0.8.2",
         "gl-matrix": "^3.4.4",
-        "toad.js": "^0.2.6"
+        "toad.js": "^0.3.0"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^29.0.2",

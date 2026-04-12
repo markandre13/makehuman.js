@@ -1,4 +1,3 @@
-import { Action, BooleanModel, OptionModel, TextModel } from 'toad.js'
 import { MorphRenderer } from './MorphRenderer'
 import { MorphGroupDB } from './MorphGroupDB'
 import { di } from 'lib/di'
@@ -11,6 +10,11 @@ import { ConnectionState } from 'net/ConnectionState'
 import { FaceRenderer } from './FaceRenderer'
 import { ARKitFaceReceiver as ARKitFaceReceiver_skel } from "../net/makehuman_skel"
 import { ORB } from 'corba.js'
+import { BooleanModel } from 'toad.js/appkit/BooleanModel'
+import { OptionModel } from 'toad.js/appkit/OptionModel'
+
+import { TextModel } from 'toad.js/appkit/TextModel'
+import { Action } from 'toad.js/appkit/Action'
 
 export class MorphToolModel {
     renderer?: MorphRenderer

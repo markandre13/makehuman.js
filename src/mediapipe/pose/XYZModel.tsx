@@ -1,7 +1,7 @@
 import { euler2matrix } from "gl/algorithms/euler"
 import { deg2rad } from "gl/algorithms/deg2rad"
-import { Model, NumberModel } from "toad.js"
-import { ModelOptions } from "toad.js/model/Model"
+import { Model, ModelOptions } from "toad.js/appkit/Model"
+import { NumberModel } from "toad.js/appkit/NumberModel"
 
 export class XYZModel extends Model {
     x = new NumberModel(0, { label: "X", min: -190, max: 190, step: 5 });

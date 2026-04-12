@@ -1,6 +1,6 @@
 import { FileSystemAdapter } from '../filesystem/FileSystemAdapter'
 import { MorphManager } from './MorphManager'
-import { NumberModel } from 'toad.js/model/NumberModel'
+import { NumberModel } from 'toad.js/appkit/NumberModel'
 import { TreeNode } from 'toad.js/table/model/TreeNode'
 import { Modifier } from './Modifier'
 

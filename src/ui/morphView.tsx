@@ -2,8 +2,8 @@ import { TablePos } from 'toad.js/table/TablePos'
 import { TreeNodeModel } from 'toad.js/table/model/TreeNodeModel'
 import { TreeAdapter } from 'toad.js/table/adapter/TreeAdapter'
 
-import { TextField } from 'toad.js/view/TextField'
-import { Slider } from 'toad.js/view/Slider'
+import { TextField } from 'toad.js/viewkit/TextField'
+import { Slider } from 'toad.js/viewkit/Slider'
 import { Fragment } from "toad.jsx"
 
 import { SliderNode } from '../modifier/loadSliders'

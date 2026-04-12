@@ -1,7 +1,8 @@
 import { vec3 } from "gl-matrix"
-import { BooleanModel, NumberModel, Signal } from "toad.js"
-import { NumberModelEvent } from "toad.js/model/NumberModel"
-import { ValueModel } from "toad.js/model/ValueModel"
+import { BooleanModel } from "toad.js/appkit/BooleanModel"
+import { NumberModel, NumberModelEvent } from "toad.js/appkit/NumberModel"
+import { ValueModel } from "toad.js/appkit/ValueModel"
+import { Signal } from "toad.js/reactive/Signal"
 
 export class Rot3Model extends ValueModel<vec3, NumberModelEvent> {
     x: NumberModel

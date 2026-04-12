@@ -1,6 +1,6 @@
 import { mat4, vec3 } from "gl-matrix"
 import { deg2rad } from "gl/algorithms/deg2rad"
-import { Model } from "toad.js"
+import { Model } from "toad.js/appkit/Model"
 
 const V = vec3.create()
 const M = mat4.create()

@@ -1,7 +1,6 @@
-import { TextField } from "toad.js"
-import { FormLabel, FormField, FormHelp } from "toad.js/view/Form"
+import { FormLabel, FormField, FormHelp } from "toad.js/viewkit/Form"
 import { XYZModel } from "./XYZModel"
-
+import { TextField } from "toad.js/viewkit/TextField"
 
 export function XYZView(props: { model: XYZModel} ) {
     return (

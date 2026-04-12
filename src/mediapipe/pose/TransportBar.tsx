@@ -1,4 +1,4 @@
-import { Button, TextField } from "toad.js"
+import { Button } from "toad.js/viewkit/Button"
 import { PoseModel } from "./PoseModel"
 import { Frontend_impl } from "net/Frontend_impl"
 

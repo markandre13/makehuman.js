@@ -1,8 +1,7 @@
 import { TargetRef } from './TargetRef'
 import { MorphManager } from './MorphManager'
 import { getTargetWeights } from './getTargetWeights'
-
-import { NumberModel } from 'toad.js'
+import { NumberModel } from 'toad.js/appkit/NumberModel'
 
 // from apps/humanmodifier.py
 export abstract class Modifier {

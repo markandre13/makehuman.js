@@ -5,11 +5,11 @@ import { TAB } from 'HistoryManager'
 import { di } from 'lib/di'
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from 'render/RenderView'
-import { Tab } from 'toad.js/view/Tab'
+import { Tab } from 'toad.js/viewkit/Tab'
 import { AxisIndicator } from './AxisIndicator'
 import { Blaze } from './pose/Blaze'
 import { ColorBuffer } from 'gl/buffers/ColorBuffer'
-import { Form } from 'toad.js/view/Form'
+import { Form } from 'toad.js/viewkit/Form'
 
 /**
  * Tool to morph face meshes.

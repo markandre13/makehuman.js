@@ -1,8 +1,9 @@
 import { mat4, vec3 } from "gl-matrix"
 import type { Context } from "./input/Context"
 import type { InputHandler } from "./input/InputHandler"
-import { HTMLElementProps, ref, View } from "toad.js"
 import { deg2rad } from "./algorithms/deg2rad"
+import { HTMLElementProps, ref } from "toad.jsx/lib/jsx-runtime"
+import { View } from "toad.js/viewkit/View"
 
 export interface GLViewProps extends HTMLElementProps {
     ctx: Context

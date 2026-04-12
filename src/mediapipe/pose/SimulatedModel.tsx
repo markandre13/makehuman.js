@@ -1,10 +1,10 @@
 import { deg2rad } from "gl/algorithms/deg2rad"
-import { BooleanModel } from "toad.js"
 import { Blaze } from "./Blaze"
 import { BlazePoseLandmarks } from "./BlazePoseLandmarks"
 import { DrawStack } from "./DrawStack"
 import { XYZModel } from "./XYZModel"
 import { euler2matrix } from "gl/algorithms/euler"
+import { BooleanModel } from "toad.js/appkit/BooleanModel"
 
 /**
  * Create BlazePoseLandmarks for testing

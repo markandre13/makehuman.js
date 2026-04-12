@@ -7,14 +7,13 @@ import {
     skeleton,
     renderChordata,
 } from "chordata/renderChordata"
-import { Action, Display, NumberModel, TextField, TextModel } from "toad.js"
-import { Button, ButtonVariant } from "toad.js/view/Button"
-import { Tab } from "toad.js/view/Tab"
+import { Button, ButtonVariant } from "toad.js/viewkit/Button"
+import { Tab } from "toad.js/viewkit/Tab"
 import { UpdateManager } from "UpdateManager"
-import { Form, FormField, FormHelp, FormLabel } from "toad.js/view/Form"
-import { FormText } from "toad.js/view/FormText"
-import { FormSelect } from "toad.js/view/FormSelect"
-import { FormSwitch } from "toad.js/view/FormSwitch"
+import { Form, FormField, FormHelp, FormLabel } from "toad.js/viewkit/Form"
+import { FormText } from "toad.js/viewkit/FormText"
+import { FormSelect } from "toad.js/viewkit/FormSelect"
+import { FormSwitch } from "toad.js/viewkit/FormSwitch"
 import { ChordataSettings, Rot3Model } from "./ChordataSettings"
 import { RemoteOptionModel } from "./RemoteOptionModel"
 import { Application, setRenderer } from "Application"
@@ -22,6 +21,11 @@ import { RenderHuman } from "render/RenderHuman"
 import { RenderHandler } from 'render/RenderHandler'
 import { RenderView } from "render/RenderView"
 import { di } from "lib/di"
+import { TextModel } from "toad.js/appkit/TextModel"
+import { Action } from "toad.js/appkit/Action"
+import { NumberModel } from "toad.js/appkit/NumberModel"
+import { Display } from "toad.js/viewkit/Display"
+import { TextField } from "toad.js/viewkit/TextField"
 
 class Notochord {
     processState = new TextModel("UNAVAILABLE", {

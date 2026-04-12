@@ -1,6 +1,6 @@
-import { NumberModel } from "toad.js/model/NumberModel"
-import { Converter } from "toad.js/model/Converter"
-import { ValueModelOptions } from "toad.js/model/ValueModel"
+import { NumberModel } from "toad.js/appkit/NumberModel"
+import { Converter } from "toad.js/appkit/Converter"
+import { ValueModelOptions } from "toad.js/appkit/ValueModel"
 
 export class SMPTEConverter extends Converter<string> {
     private _frame: NumberModel

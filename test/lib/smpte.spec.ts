@@ -1,6 +1,6 @@
 import { expect } from "chai"
-import { NumberModel } from "toad.js"
 import { number2smpte, smpte2number, SMPTEConverter } from "../../src/lib/smpte"
+import { NumberModel } from "toad.js/appkit/NumberModel"
 
 describe("SMPTE", () => {
     it("class SMPTEConverter", () => {

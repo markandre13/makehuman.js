@@ -1,4 +1,4 @@
-import { Model } from "toad.js"
+import { Model } from "toad.js/appkit/Model"
 import { Blendshape } from "./BlendShape"
 import { mat4 } from "gl-matrix"
 

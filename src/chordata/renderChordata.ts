@@ -8,7 +8,7 @@ import {
 } from "../render/util"
 import { ChordataSettings } from "./ChordataSettings"
 import { HumanMesh } from "mesh/HumanMesh"
-import { span, text } from "toad.js"
+import { span, text } from "toad.js/util/lsx"
 import { ChordataSkeleton } from "./Skeleton"
 import { Context } from "gl/input/Context"
 import { Projection } from "gl/Projection"

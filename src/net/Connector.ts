@@ -1,10 +1,12 @@
-import { NumberModel, Signal, TextModel } from "toad.js"
 import { ConnectionState } from "net/ConnectionState"
 import { Frontend_impl } from "./Frontend_impl"
 import { Backend } from "./makehuman_stub"
 import { FileSystem } from "./fs_stub"
 import { ORB } from "corba.js"
 import { di } from "lib/di"
+import { Signal } from "toad.js/reactive/Signal"
+import { TextModel } from "toad.js/appkit/TextModel"
+import { NumberModel } from "toad.js/appkit/NumberModel"
 
 /**
  * handles connecting the frontend to the backend

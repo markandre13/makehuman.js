@@ -9,8 +9,8 @@ import { quaternion_slerp } from "gl/algorithms/quaternion_slerp"
 import { BlazePoseConverter } from "mediapipe/pose/BlazePoseConverter"
 import { BlazePoseLandmarks } from "mediapipe/pose/BlazePoseLandmarks"
 import { deg2rad } from "gl/algorithms/deg2rad"
-import { VALUE } from "toad.js/model/ValueModel"
-import { ALL } from "toad.js/model/Model"
+import { VALUE } from "toad.js/appkit/ValueModel"
+import { ALL } from "toad.js/appkit/Model"
 import { Blendshape } from "blendshapes/BlendShape"
 
 export const REST_QUAT = quat2.create()

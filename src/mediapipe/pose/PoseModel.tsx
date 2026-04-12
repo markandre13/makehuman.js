@@ -1,9 +1,11 @@
 import { Application } from "Application"
 import { SMPTEConverter } from "lib/smpte"
 import { VideoCamera, MediaPipeTask, VideoSize, CaptureDeviceInfo } from "net/makehuman"
-import { OptionModel, TextModel, BooleanModel } from "toad.js"
-import { IntegerModel } from "toad.js/model/IntegerModel"
+import { IntegerModel } from "toad.js/appkit/IntegerModel"
 import { makeCamerasModel, makeCaptureDeviceModel } from "./makeCaptureDeviceModel"
+import { OptionModel } from "toad.js/appkit/OptionModel"
+import { TextModel } from "toad.js/appkit/TextModel"
+import { BooleanModel } from "toad.js/appkit/BooleanModel"
 
 export class PoseModel {
     // animation sources
